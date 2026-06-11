@@ -1,0 +1,21 @@
+id,brand,productName,rulingType,grammage,size
+paper_001,Traveler's,Refill 001,줄,52,Regular
+paper_002,Clairefontaine,Age Bag,줄,90,A5
+paper_003,Leuchtturm1917,Master,점선,80,A4+
+paper_004,Rhodia,Webnotebook,모눈,90,A5
+paper_005,Midori,MD Notebook,무지,69,A5
+paper_006,Midori,MD Notebook,줄,69,A5
+paper_007,Midori,MD Notebook,모눈,69,A5
+paper_008,Clairefontaine,Triomphe,무지,90,A4
+paper_009,Rhodia,Bloc No.16,모눈,80,A5
+paper_010,Rhodia,Bloc No.13,모눈,80,A6
+paper_011,Leuchtturm1917,A5 Notebook,점선,80,A5
+paper_012,Leuchtturm1917,A5 Notebook,모눈,80,A5
+paper_013,Maruman,Mnemosyne,무지,70,A5
+paper_014,Maruman,Mnemosyne,줄,70,A4
+paper_015,Hobonichi,Techo,무지,52,A6
+paper_016,Hobonichi,Cousin,무지,52,A5
+paper_017,Stalogy,Editor's Series,무지,80,A5
+paper_018,Stalogy,Editor's Series,줄,80,B5
+paper_019,Kokuyo,Campus Notebook,줄,60,B5
+paper_020,Life,Noble Note,무지,90,B5

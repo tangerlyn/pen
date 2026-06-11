@@ -1,0 +1,13 @@
+{
+  "name": "nibpen-scripts",
+  "version": "1.0.0",
+  "description": "Scripts for nibpen Firestore administration",
+  "main": "upload_csv.js",
+  "scripts": {
+    "upload": "node upload_csv.js"
+  },
+  "dependencies": {
+    "csv-parser": "^3.0.0",
+    "firebase-admin": "^12.1.0"
+  }
+}

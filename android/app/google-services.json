@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "254124539900",
+    "project_id": "nibpen",
+    "storage_bucket": "nibpen.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:254124539900:android:21628dc5f09f56e484fc79",
+        "android_client_info": {
+          "package_name": "com.nibpen.nibpen"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyChMv0Wz9Egvs_phMyUuqfile3E3Ee9doE"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

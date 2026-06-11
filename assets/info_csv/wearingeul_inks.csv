@@ -1,0 +1,160 @@
+id,brand,name,colorFamily,hexColor,inkType
+ink_w001,글입다,유리알 유희,,,shimmer
+ink_w002,글입다,홀로 아득한 매화 향기,,,normal
+ink_w003,글입다,떠도는 구름,,,normal
+ink_w004,글입다,키다리 아저씨,,,shimmer
+ink_w005,글입다,카르밀라,,,normal
+ink_w006,글입다,봄바람의 고민,,,shimmer
+ink_w007,글입다,줄리엣,,,shimmer
+ink_w008,글입다,꽃의 귀양,,,normal
+ink_w009,글입다,놓인 그 꽃,,,normal
+ink_w010,글입다,체셔 캣,,,normal
+ink_w011,글입다,박제가 되어버린 천재,,,sheen
+ink_w012,글입다,오만과 편견,,,sheen
+ink_w013,글입다,안나 카레니나,,,shimmer
+ink_w014,글입다,드라큘라,,,shimmer
+ink_w015,글입다,장미의 요정,,,shimmer
+ink_w016,글입다,젊은 왕,,,shimmer
+ink_w017,글입다,헨리 지킬,,,normal
+ink_w018,글입다,빨간 구두,,,normal
+ink_w019,글입다,빨간머리 앤,,,sheen
+ink_w020,글입다,주홍색 연구,,,normal
+ink_w021,글입다,납치당한 산타클로스,,,shimmer
+ink_w022,글입다,제천대성,,,shimmer
+ink_w023,글입다,퀸 오브 하트,,,shimmer
+ink_w024,글입다,페르온 소브 에페란토,,,normal
+ink_w025,글입다,후크 선장,,,normal
+ink_w026,글입다,인간문제,,,normal
+ink_w027,글입다,1984,,,shimmer
+ink_w028,글입다,바스커빌가의 개,,,sheen
+ink_w029,글입다,변신,,,sheen
+ink_w030,글입다,오셀로,,,shimmer
+ink_w031,글입다,아누비스,,,shimmer
+ink_w032,글입다,돈키호테,,,normal
+ink_w033,글입다,연옥,,,normal
+ink_w034,글입다,석공의 노래,,,normal
+ink_w035,글입다,제미나,,,shimmer
+ink_w036,글입다,봄감자,,,normal
+ink_w037,글입다,갈잎의 노래,,,normal
+ink_w038,글입다,나이팅게일과 장미,,,shimmer
+ink_w039,글입다,착,,,shimmer
+ink_w040,글입다,화이트 래빗,,,normal
+ink_w041,글입다,제페토,,,normal
+ink_w042,글입다,별아이,,,shimmer
+ink_w043,글입다,건축무한육면각체,,,sheen
+ink_w044,글입다,장난감 병정,,,normal
+ink_w045,글입다,이방인,,,shimmer
+ink_w046,글입다,겁쟁이 사자,,,normal
+ink_w047,글입다,싯다르타,,,normal
+ink_w048,글입다,헤임달,,,normal
+ink_w049,글입다,경희,,,normal
+ink_w050,글입다,별과 꽃 사이,,,normal
+ink_w051,글입다,별빛이 나린 언덕,,,shimmer
+ink_w052,글입다,산시로,,,normal
+ink_w053,글입다,레일라,,,shimmer
+ink_w054,글입다,프시케 폴리,,,shimmer
+ink_w055,글입다,풀섶 이슬,,,normal
+ink_w056,글입다,허수아비,,,normal
+ink_w057,글입다,도정,,,shimmer
+ink_w058,글입다,팅커벨,,,shimmer
+ink_w059,글입다,순수의 시대,,,normal
+ink_w060,글입다,피터 팬,,,normal
+ink_w061,글입다,톰 소여의 모험,,,normal
+ink_w062,글입다,매드 해터,,,normal
+ink_w063,글입다,천년 뒤 이 가을 밤,,,shimmer
+ink_w064,글입다,죄와 벌,,,sheen
+ink_w065,글입다,흘러가는 잎,,,shimmer
+ink_w066,글입다,비밀의 화원,,,shimmer
+ink_w067,글입다,타피오,,,normal
+ink_w068,글입다,바유,,,normal
+ink_w069,글입다,잎새에 이는 바람,,,normal
+ink_w070,글입다,피노키오,,,shimmer
+ink_w071,글입다,희망의 정수박이,,,normal
+ink_w072,글입다,수레바퀴 아래서,,,normal
+ink_w073,글입다,한 줄의 참회록,,,normal
+ink_w074,글입다,한여름 밤의 꿈,,,shimmer
+ink_w075,글입다,틱톡 크록,,,normal
+ink_w076,글입다,카라마조프가의 형제들,,,sheen
+ink_w077,글입다,누구를 위하여 종은 울리나,,,sheen
+ink_w078,글입다,13인의 아해,,,sheen
+ink_w079,글입다,Mature,,,normal
+ink_w080,글입다,노인과 바다,,,shimmer
+ink_w081,글입다,행인,,,shimmer
+ink_w082,글입다,운디네,,,normal
+ink_w083,글입다,Lost,,,normal
+ink_w084,글입다,로빈슨 크루소,,,normal
+ink_w085,글입다,부활,,,normal
+ink_w086,글입다,이슬 젖은 별빛,,,shimmer
+ink_w087,글입다,인어공주,,,shimmer
+ink_w088,글입다,애너벨 리,,,shimmer
+ink_w089,글입다,응앙응앙,,,shimmer
+ink_w090,글입다,백야,,,shimmer
+ink_w091,글입다,앨리스,,,shimmer
+ink_w092,글입다,웬디 달링,,,shimmer
+ink_w093,글입다,물 먹은 별,,,shimmer
+ink_w094,글입다,소공자,,,shimmer
+ink_w095,글입다,엔키,,,shimmer
+ink_w096,글입다,환웅,,,normal
+ink_w097,글입다,천국,,,shimmer
+ink_w098,글입다,모비딕,,,normal
+ink_w099,글입다,Hope,,,normal
+ink_w100,글입다,행복한 왕자,,,shimmer
+ink_w101,글입다,몽테크리스토 백작,,,shimmer
+ink_w102,글입다,이아로스 오르나 에페란토,,,shimmer
+ink_w103,글입다,해저 2만 리,,,shimmer
+ink_w104,글입다,세드나,,,normal
+ink_w105,글입다,칠색 바다,,,sheen
+ink_w106,글입다,오페라의 유령,,,sheen
+ink_w107,글입다,계절이 지나가는 하늘,,,normal
+ink_w108,글입다,도로시,,,normal
+ink_w109,글입다,마음,,,normal
+ink_w110,글입다,이반 일리치의 죽음,,,shimmer
+ink_w111,글입다,급류,,,normal
+ink_w112,글입다,존재의 이유,,,shimmer
+ink_w113,글입다,지구에서 달까지,,,shimmer
+ink_w114,글입다,마티어스,,,shimmer
+ink_w115,글입다,삼총사,,,normal
+ink_w116,글입다,공포의 계곡,,,sheen
+ink_w117,글입다,가을 속의 별들,,,shimmer
+ink_w118,글입다,햄릿,,,shimmer
+ink_w119,글입다,위키드 위치,,,sheen
+ink_w120,글입다,인형의 집,,,sheen
+ink_w121,글입다,소영위제,,,shimmer
+ink_w122,글입다,프랑켄슈타인,,,shimmer
+ink_w123,글입다,위대한 개츠비,,,sheen
+ink_w124,글입다,메데이아 벨리아르,,,shimmer
+ink_w125,글입다,베레트라그나,,,sheen
+ink_w126,글입다,페르세포네,,,shimmer
+ink_w127,글입다,에드워드 하이드,,,sheen
+ink_w128,글입다,네 사람의 서명,,,shimmer
+ink_w129,글입다,갈까마귀,,,shimmer
+ink_w130,글입다,인간실격,,,normal
+ink_w131,글입다,포도빛 밤,,,shimmer
+ink_w132,글입다,슬픈 천명,,,normal
+ink_w133,글입다,츠쿠요미,,,normal
+ink_w134,글입다,제인 에어,,,normal
+ink_w135,글입다,이해 없는 세상에서,,,normal
+ink_w136,글입다,해가 지는 곳으로,,,normal
+ink_w137,글입다,소공녀,,,shimmer
+ink_w138,글입다,꿈속의 꿈,,,shimmer
+ink_w139,글입다,누아다 아르게틀람,,,shimmer
+ink_w140,글입다,도리언 그레이의 초상,,,normal
+ink_w141,글입다,양철 나무꾼,,,normal
+ink_w142,글입다,거울 속의 나,,,shimmer
+ink_w143,글입다,헬리오 트로피움,,,shimmer
+ink_w144,글입다,멕베스,,,shimmer
+ink_w145,글입다,로미오,,,shimmer
+ink_w146,글입다,하데스,,,shimmer
+ink_w147,글입다,검은 튤립,,,shimmer
+ink_w148,글입다,검은 꿈,,,shimmer
+ink_w149,글입다,지옥,,,sheen
+ink_w150,글입다,파우스트,,,sheen
+ink_w151,글입다,나르치스와 골드문트,,,shimmer
+ink_w152,글입다,달을 쏘다,,,normal
+ink_w153,글입다,빛 죽은 반달,,,shimmer
+ink_w154,글입다,나는 고양이로소이다,,,shimmer
+ink_w155,글입다,젊은 베르테르의 슬픔,,,normal
+ink_w156,글입다,미운 오리 새끼,,,normal
+ink_w157,글입다,자기만의 방,,,shimmer
+ink_w158,글입다,리어 왕,,,shimmer
+ink_w159,글입다,페스트,,,sheen

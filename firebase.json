@@ -1,0 +1,37 @@
+{
+  "flutter": {
+    "platforms": {
+      "android": {
+        "default": {
+          "projectId": "nibpen",
+          "appId": "1:254124539900:android:21628dc5f09f56e484fc79",
+          "fileOutput": "android/app/google-services.json"
+        }
+      },
+      "ios": {
+        "default": {
+          "projectId": "nibpen",
+          "appId": "1:254124539900:ios:c613a93627c35d8484fc79",
+          "uploadDebugSymbols": false,
+          "fileOutput": "ios/Runner/GoogleService-Info.plist"
+        }
+      },
+      "dart": {
+        "lib/firebase_options.dart": {
+          "projectId": "nibpen",
+          "configurations": {
+            "android": "1:254124539900:android:21628dc5f09f56e484fc79",
+            "ios": "1:254124539900:ios:c613a93627c35d8484fc79"
+          }
+        }
+      }
+    }
+  },
+  "functions": [
+    {
+      "source": "functions",
+      "codebase": "default",
+      "ignore": ["node_modules", ".git"]
+    }
+  ]
+}

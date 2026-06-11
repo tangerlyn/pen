@@ -1,0 +1,21 @@
+id,brand,modelName,lineup,nibSizes,nibMaterial,fillType,priceRange
+pen_001,Pilot,Custom Heritage 92,,F|M|B,금닙,피스톤,20~30만원
+pen_002,LAMY,Safari,,EF|F|M|B,스틸닙,카트리지·컨버터,3~5만원
+pen_003,Pelikan,M800,Souveran,F|M|B|BB,금닙,피스톤,50~80만원
+pen_004,Sailor,Pro Gear Slim,,MF|M|B,금닙,카트리지·컨버터,15~25만원
+pen_005,Kaweco,Sport,,EF|F|M|B|BB,스틸닙,카트리지,3~5만원
+pen_006,Pilot,Kakuno,,F|M|B,스틸닙,카트리지·컨버터,1~2만원
+pen_007,Pilot,Metropolitan,,M,스틸닙,카트리지·컨버터,2~4만원
+pen_008,TWSBI,Eco,,EF|F|M|B|1.1|1.5,스틸닙,피스톤,5~8만원
+pen_009,TWSBI,Diamond 580,,EF|F|M|B|1.1|1.5,스틸닙,피스톤,10~15만원
+pen_010,Sailor,1911 Large,,F|M|B|Z,금닙,카트리지·컨버터,20~35만원
+pen_011,Platinum,Century 3776,,UEF|EF|F|M|B|C,금닙,카트리지·컨버터,15~25만원
+pen_012,Platinum,Preppy,,EF|F|M,스틸닙,카트리지,1만원 미만
+pen_013,Pilot,Falcon,,SF|SM|SB,금닙,카트리지·컨버터,20~30만원
+pen_014,Montblanc,149,Meisterstück,EF|F|M|B|BB,금닙,피스톤,100만원 이상
+pen_015,Montblanc,146,Meisterstück,EF|F|M|B,금닙,피스톤,70~100만원
+pen_016,Aurora,Optima,,F|M|B,금닙,피스톤,50~80만원
+pen_017,Visconti,Homo Sapiens,Opera,F|M|B,금닙,피스톤,100만원 이상
+pen_018,Faber-Castell,Loom,,F|M|B,스틸닙,카트리지·컨버터,5~10만원
+pen_019,Faber-Castell,Ambition,,F|M|B,스틸닙,카트리지·컨버터,8~15만원
+pen_020,LAMY,2000,,EF|F|M|B,금닙,피스톤,25~35만원
