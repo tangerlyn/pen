@@ -1,7 +1,19 @@
-# nibpen (닙펜)
+<div align="center">
 
-만년필·잉크·종이 덕후를 위한 커뮤니티 앱.  
+# 닙펜 (nibpen)
+
+**만년필 · 잉크 · 종이 덕후를 위한 커뮤니티 앱**
+
 제품 아카이브 탐색, 잉크 리뷰 공유, 커뮤니티 소통, 잉크 차트 관리까지 한 곳에서.
+
+<br/>
+
+[![Flutter](https://img.shields.io/badge/Flutter-3.x-02569B?style=for-the-badge&logo=flutter&logoColor=white)](https://flutter.dev)
+[![Dart](https://img.shields.io/badge/Dart-3.x-0175C2?style=for-the-badge&logo=dart&logoColor=white)](https://dart.dev)
+[![Firebase](https://img.shields.io/badge/Firebase-FFCA28?style=for-the-badge&logo=firebase&logoColor=black)](https://firebase.google.com)
+[![Riverpod](https://img.shields.io/badge/Riverpod-2.x-00BCD4?style=for-the-badge&logo=dart&logoColor=white)](https://riverpod.dev)
+
+</div>
 
 ---
 
@@ -21,13 +33,36 @@
 
 ## 기술 스택
 
-- **Framework** — Flutter 3 (Dart 3)
-- **상태 관리** — Riverpod 2 (StateNotifier, AsyncNotifier, StreamProvider)
-- **라우팅** — go_router
-- **백엔드** — Firebase (Auth, Firestore, Storage, Messaging, Remote Config)
-- **소셜 로그인** — 카카오, 네이버, Apple
-- **이미지** — image_picker, flutter_image_compress, cached_network_image
-- **기타** — shared_preferences, timeago, smooth_page_indicator, palette_generator
+<table>
+  <tr>
+    <td><b>Framework</b></td>
+    <td>Flutter 3 / Dart 3</td>
+  </tr>
+  <tr>
+    <td><b>상태 관리</b></td>
+    <td>Riverpod 2 (StateNotifier, AsyncNotifier, StreamProvider)</td>
+  </tr>
+  <tr>
+    <td><b>라우팅</b></td>
+    <td>go_router</td>
+  </tr>
+  <tr>
+    <td><b>백엔드</b></td>
+    <td>Firebase Auth · Firestore · Storage · Messaging · Remote Config</td>
+  </tr>
+  <tr>
+    <td><b>소셜 로그인</b></td>
+    <td>카카오 · 네이버 · Apple</td>
+  </tr>
+  <tr>
+    <td><b>이미지</b></td>
+    <td>image_picker · flutter_image_compress · cached_network_image</td>
+  </tr>
+  <tr>
+    <td><b>기타</b></td>
+    <td>shared_preferences · timeago · smooth_page_indicator · palette_generator</td>
+  </tr>
+</table>
 
 ---
 
@@ -69,20 +104,18 @@ flutter pub get
 
 # 실행 (iOS/Android)
 flutter run
-
-# Firebase 설정 필요
-# - google-services.json  →  android/app/
-# - GoogleService-Info.plist  →  ios/Runner/
-# - lib/core/constants/app_secrets.dart  (gitignore 처리됨)
 ```
+
+> **Firebase 설정 필요**
+> - `google-services.json` → `android/app/`
+> - `GoogleService-Info.plist` → `ios/Runner/`
+> - `lib/core/constants/app_secrets.dart` (gitignore 처리됨)
 
 ---
 
 ## 페이지별 상세 문서
 
-`docs/` 폴더 참고.
-
-| 파일 | 내용 |
+| 문서 | 내용 |
 |---|---|
 | [auth.md](docs/auth.md) | 로그인·회원가입 플로우 |
 | [home.md](docs/home.md) | 홈 피드 (디스커버리) |
