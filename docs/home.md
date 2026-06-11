@@ -1,0 +1,50 @@
+# 홈 (Home)
+
+## 개요
+
+앱 진입 후 가장 먼저 보이는 디스커버리 피드. 인기 리뷰·최근 커뮤니티 글을 한 화면에서 보여주고, 플로팅 버튼으로 리뷰/게시글 작성에 빠르게 접근.
+
+---
+
+## 화면 목록
+
+### `home_screen.dart`
+- 경로: `/`
+- **구성 섹션**
+  - 인기 리뷰 캐러셀 (수평 스크롤)
+  - 최근 커뮤니티 게시글 리스트
+  - FAB(+) 클릭 시 바텀 시트 — "리뷰 작성" / "게시글 작성" 선택
+- 스크롤 300px 이상 내리면 맨 위로 버튼 표시
+- 상단 우측: 알림 아이콘 (미읽 배지)
+
+### `notification_screen.dart`
+- 경로: `/notifications`
+- 좋아요·댓글·팔로우 알림 목록 (최신순)
+- 알림 탭 시 해당 콘텐츠 화면으로 이동
+- 읽음 처리 자동 반영
+
+### `review_detail_screen.dart`
+- 경로: `/review/:reviewId`
+- **상단** — 이미지 PageView (스와이프), smooth_page_indicator 도트
+- **중간** — 별점, 제품 태그(잉크/만년필), 작성자 프로필, 본문, 작성 시간
+- **댓글** — 댓글·대댓글 트리. 좋아요, 신고, 삭제(본인)
+- **하단 입력창** — 대댓글 타겟 닉네임 표시, 전송
+- 본문 더보기/접기, 긴 텍스트 truncate
+- 작성자·댓글 작성자 프로필 탭 → `/profile/:uid`
+
+---
+
+## 상태 관리
+
+- `homeDiscoveryProvider` — 인기 리뷰 + 최근 게시글 FutureProvider
+- `notificationProvider` — 알림 목록 StreamProvider
+- `reviewDetailProvider` — 리뷰 상세 + 댓글 StreamProvider
+
+---
+
+## 관련 파일
+
+- `lib/features/home/providers/home_discovery_provider.dart`
+- `lib/features/home/providers/review_detail_provider.dart`
+- `lib/features/home/providers/notification_provider.dart`
+- `lib/features/home/providers/feed_provider.dart`
