@@ -107,7 +107,7 @@ class _BottomNav extends StatelessWidget {
       child: Container(
         height: 58,
         decoration: BoxDecoration(
-          color: AppColors.primary,
+          color: AppColors.surface,
           borderRadius: BorderRadius.circular(29),
           boxShadow: AppShadows.nav,
         ),
@@ -148,8 +148,8 @@ class _NavItem extends StatelessWidget {
     return Expanded(
       child: InkWell(
         borderRadius: BorderRadius.circular(29),
-        splashColor: Colors.white.withValues(alpha: 0.1),
-        highlightColor: Colors.white.withValues(alpha: 0.05),
+        splashColor: AppColors.primary.withValues(alpha: 0.08),
+        highlightColor: AppColors.primary.withValues(alpha: 0.04),
         onTap: () {
           if (index == shell.currentIndex) {
             // 같은 탭 재탭: context.go()로 스택 강제 리셋
@@ -165,7 +165,7 @@ class _NavItem extends StatelessWidget {
           children: [
             Icon(
               isActive ? activeIcon : icon,
-              color: isActive ? Colors.white : Colors.white.withValues(alpha: 0.45),
+              color: isActive ? AppColors.primary : AppColors.textTertiary,
               size: 22,
             ),
             const SizedBox(height: 2),
@@ -174,7 +174,7 @@ class _NavItem extends StatelessWidget {
               style: TextStyle(
                 fontSize: 9,
                 fontWeight: isActive ? FontWeight.w600 : FontWeight.w400,
-                color: isActive ? Colors.white : Colors.white.withValues(alpha: 0.45),
+                color: isActive ? AppColors.primary : AppColors.textTertiary,
               ),
             ),
           ],

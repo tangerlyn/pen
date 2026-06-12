@@ -3,9 +3,9 @@ import 'package:flutter/material.dart';
 // ── Colors ────────────────────────────────────────────────────────────────
 
 abstract class AppColors {
-  static const primary = Color(0xFF1C1208);
-  static const secondary = Color(0xFF8B7355);
-  static const accent = Color(0xFFC07C37);
+  static const primary = Color(0xFF1B2E4B);
+  static const secondary = Color(0xFF2E4A6E);
+  static const accent = Color(0xFF3D6A9E);
   static const background = Color(0xFFF5F1EB);
   static const surface = Color(0xFFFFFFFF);
   static const error = Color(0xFFE53935);
@@ -18,7 +18,7 @@ abstract class AppColors {
 
   static const divider = Color(0xFFE5E0D8);
   static const chipBackground = Color(0xFFEDE9E2);
-  static const chipSelected = Color(0xFF1C1208);
+  static const chipSelected = Color(0xFF1B2E4B);
 
   static const mannerHot = Color(0xFFFF5722);
   static const mannerWarm = Color(0xFFFF9800);
