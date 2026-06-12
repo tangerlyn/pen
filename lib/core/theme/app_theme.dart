@@ -6,18 +6,18 @@ abstract class AppColors {
   static const primary = Color(0xFF1B2E4B);
   static const secondary = Color(0xFF2E4A6E);
   static const accent = Color(0xFF3D6A9E);
-  static const background = Color(0xFFF5F1EB);
+  static const background = Color(0xFFF8F9FA);
   static const surface = Color(0xFFFFFFFF);
   static const error = Color(0xFFE53935);
   static const success = Color(0xFF43A047);
   static const warning = Color(0xFFFB8C00);
 
-  static const textPrimary = Color(0xFF1A1208);
-  static const textSecondary = Color(0xFF6B6258);
-  static const textTertiary = Color(0xFFABA59A);
+  static const textPrimary = Color(0xFF1A1A1A);
+  static const textSecondary = Color(0xFF757575);
+  static const textTertiary = Color(0xFFBDBDBD);
 
-  static const divider = Color(0xFFE5E0D8);
-  static const chipBackground = Color(0xFFEDE9E2);
+  static const divider = Color(0xFFEEEEEE);
+  static const chipBackground = Color(0xFFF2F4F7);
   static const chipSelected = Color(0xFF1B2E4B);
 
   static const mannerHot = Color(0xFFFF5722);
