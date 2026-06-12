@@ -3,10 +3,9 @@ import 'package:flutter/material.dart';
 // ── Colors ────────────────────────────────────────────────────────────────
 
 abstract class AppColors {
+  // ★ 앱 포인트 네이비 — 버튼, 아이콘, 강조 전체에서 이 색 하나만 사용
   static const primary = Color(0xFF1B2E4B);
-  static const secondary = Color(0xFF2E4A6E);
-  static const accent = Color(0xFF3D6A9E);
-  static const background = Colors.transparent; // 탭 화면은 루트 그라데이션 투영
+  static const background = Colors.white;
   static const surface = Color(0xFFFFFFFF);
   static const error = Color(0xFFE53935);
   static const success = Color(0xFF43A047);
@@ -25,8 +24,8 @@ abstract class AppColors {
   static const mannerNormal = Color(0xFF4CAF50);
   static const mannerCool = Color(0xFF2196F3);
 
-  // Shadow helpers
-  static const cardShadowColor = Color(0x0F000000); // black 6%
+  // Shadow — 네이비 기반 그림자 (검은색 대신 포인트 네이비 사용)
+  static const cardShadowColor = Color(0x141B2E4B); // navy 8%
 }
 
 // ── Glass ────────────────────────────────────────────────────────────────
@@ -51,22 +50,33 @@ abstract class AppGlass {
 // ── Shadows ───────────────────────────────────────────────────────────────
 
 abstract class AppShadows {
+  // 카드 — 기본
   static const List<BoxShadow> card = [
     BoxShadow(
-      color: Color(0x12000000),
+      color: Color(0x141B2E4B), // navy 8%
       blurRadius: 10,
       offset: Offset(0, 2),
     ),
   ];
 
+  // 카드 — 중간 (홈 카드 등)
+  static const List<BoxShadow> cardMd = [
+    BoxShadow(
+      color: Color(0x181B2E4B), // navy 9%
+      blurRadius: 16,
+      offset: Offset(0, 4),
+    ),
+  ];
+
+  // 바텀 네비게이션
   static const List<BoxShadow> nav = [
     BoxShadow(
-      color: Color(0x30000000),
+      color: Color(0x2E1B2E4B), // navy 18%
       blurRadius: 24,
       offset: Offset(0, 8),
     ),
     BoxShadow(
-      color: Color(0x10000000),
+      color: Color(0x141B2E4B), // navy 8%
       blurRadius: 6,
       offset: Offset(0, 2),
     ),
@@ -173,7 +183,7 @@ class AppTheme {
           brightness: Brightness.light,
           surface: AppColors.surface,
         ),
-        scaffoldBackgroundColor: const Color(0xFFF8F9FF),
+        scaffoldBackgroundColor: Colors.white,
         pageTransitionsTheme: const PageTransitionsTheme(
           builders: {
             TargetPlatform.android: CupertinoPageTransitionsBuilder(),
@@ -182,15 +192,17 @@ class AppTheme {
         ),
         fontFamily: 'Pretendard',
         appBarTheme: const AppBarTheme(
-          backgroundColor: AppColors.surface,
-          foregroundColor: AppColors.textPrimary,
+          backgroundColor: Color(0xFFF0F5FD), // 투명한 네이비 틴트
+          foregroundColor: Color(0xFF1B2E4B),
           elevation: 0,
-          scrolledUnderElevation: 0.5,
+          scrolledUnderElevation: 0,
+          iconTheme: IconThemeData(color: Color(0xFF1B2E4B)),
+          actionsIconTheme: IconThemeData(color: Color(0xFF1B2E4B)),
           titleTextStyle: TextStyle(
             fontFamily: 'Pretendard',
             fontSize: 18,
             fontWeight: FontWeight.w600,
-            color: AppColors.textPrimary,
+            color: Color(0xFF1B2E4B),
           ),
         ),
         bottomNavigationBarTheme: const BottomNavigationBarThemeData(

@@ -220,6 +220,69 @@ class PostRepository {
         .update({'body': body, 'updatedAt': FieldValue.serverTimestamp()});
   }
 
+  Stream<List<PostModel>> watchScrappedPosts(String uid) {
+    return _db
+        .collectionGroup('scraps')
+        .where('uid', isEqualTo: uid)
+        .snapshots()
+        .asyncMap((snap) async {
+          final futures = snap.docs
+              .where((doc) => doc.reference.parent.parent?.parent.id == 'posts')
+              .map((doc) async {
+            final postRef = doc.reference.parent.parent!;
+            final postDoc = await postRef.get();
+            if (!postDoc.exists) return null;
+            return PostModel.fromMap(
+                postDoc.data() as Map<String, dynamic>, postDoc.id);
+          });
+          return (await Future.wait(futures)).whereType<PostModel>().toList();
+        });
+  }
+
+  Future<List<PostModel>> getScrappedPosts(String uid) async {
+    final querySnapshot = await _db
+        .collectionGroup('scraps')
+        .where('uid', isEqualTo: uid)
+        .get();
+
+    final futures = querySnapshot.docs
+        .where((doc) => doc.reference.parent.parent?.parent.id == 'posts')
+        .map((doc) async {
+      final postRef = doc.reference.parent.parent!;
+      final postDoc = await postRef.get();
+      if (!postDoc.exists) return null;
+      return PostModel.fromMap(postDoc.data() as Map<String, dynamic>, postDoc.id);
+    });
+
+    return (await Future.wait(futures)).whereType<PostModel>().toList();
+  }
+
+  Stream<bool> watchScrapStatus(String postId, String uid) {
+    return _db
+        .collection('posts')
+        .doc(postId)
+        .collection('scraps')
+        .doc(uid)
+        .snapshots()
+        .map((doc) => doc.exists);
+  }
+
+  Future<void> toggleScrap(String postId, String uid) async {
+    final scrapRef =
+        _db.collection('posts').doc(postId).collection('scraps').doc(uid);
+    final postRef = _db.collection('posts').doc(postId);
+    final doc = await scrapRef.get();
+    final batch = _db.batch();
+    if (doc.exists) {
+      batch.delete(scrapRef);
+      batch.update(postRef, {'scrapCount': FieldValue.increment(-1)});
+    } else {
+      batch.set(scrapRef, {'uid': uid, 'createdAt': FieldValue.serverTimestamp()});
+      batch.update(postRef, {'scrapCount': FieldValue.increment(1)});
+    }
+    await batch.commit();
+  }
+
   Stream<bool> watchLikeStatus(String postId, String uid) {
     return _db
         .collection('posts')

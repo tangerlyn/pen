@@ -4,6 +4,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../../../core/theme/app_theme.dart';
 import '../../../data/models/user_model.dart';
+import '../../../data/models/review_model.dart';
+import '../../../data/models/post_model.dart';
 import '../../../shared/providers/providers.dart';
 import '../../../shared/providers/user_providers.dart';
 import '../../../shared/providers/ink_book_providers.dart';
@@ -231,7 +233,26 @@ class _MyCommunityList extends ConsumerWidget {
   }
 }
 
-// ── 스크랩북 탭 (리스트) ─────────────────────────────────────────────
+// ── 스크랩북 아이템 타입 ──────────────────────────────────────────────
+sealed class _ScrapItem {
+  DateTime get createdAt;
+}
+
+final class _ReviewScrap extends _ScrapItem {
+  _ReviewScrap(this.review);
+  final ReviewModel review;
+  @override
+  DateTime get createdAt => review.createdAt;
+}
+
+final class _PostScrap extends _ScrapItem {
+  _PostScrap(this.post);
+  final PostModel post;
+  @override
+  DateTime get createdAt => post.createdAt;
+}
+
+// ── 스크랩북 탭 (리뷰 + 커뮤니티 혼합) ──────────────────────────────────
 class _ScrapbookGrid extends ConsumerWidget {
   const _ScrapbookGrid();
 
@@ -240,38 +261,60 @@ class _ScrapbookGrid extends ConsumerWidget {
     final uid = ref.watch(currentUidProvider);
     if (uid == null) return const SizedBox.shrink();
 
-    final scrapsAsync = ref.watch(scrappedReviewsProvider(uid));
+    final reviewsAsync = ref.watch(scrappedReviewsProvider(uid));
+    final postsAsync = ref.watch(scrappedPostsProvider(uid));
 
-    return scrapsAsync.when(
-      data: (reviews) {
-        if (reviews.isEmpty) {
-          return RefreshIndicator(
-            onRefresh: () => ref.refresh(scrappedReviewsProvider(uid).future),
-            child: ListView(
-              children: const [
-                SizedBox(height: 120),
-                EmptyStateWidget(
-                  icon: Icons.bookmark_border,
-                  message: '스크랩한 리뷰가 없습니다',
-                ),
-              ],
+    if (reviewsAsync.isLoading && postsAsync.isLoading) {
+      return const Center(child: CircularProgressIndicator());
+    }
+
+    Future<void> refresh() async {
+      ref.invalidate(scrappedReviewsProvider(uid));
+      ref.invalidate(scrappedPostsProvider(uid));
+    }
+
+    final reviews = reviewsAsync.valueOrNull ?? [];
+    final posts = postsAsync.valueOrNull ?? [];
+
+    final items = <_ScrapItem>[
+      ...reviews.map(_ReviewScrap.new),
+      ...posts.map(_PostScrap.new),
+    ]..sort((a, b) => b.createdAt.compareTo(a.createdAt));
+
+    if (items.isEmpty) {
+      return RefreshIndicator(
+        onRefresh: refresh,
+        child: ListView(
+          children: const [
+            SizedBox(height: 120),
+            EmptyStateWidget(
+              icon: Icons.bookmark_border,
+              message: '스크랩한 게시물이 없습니다',
             ),
-          );
-        }
-        return RefreshIndicator(
-          onRefresh: () => ref.refresh(scrappedReviewsProvider(uid).future),
-          child: ListView.separated(
-            itemCount: reviews.length,
-            separatorBuilder: (_, __) => const Divider(height: 1),
-            itemBuilder: (_, i) => ReviewListCard(
-              review: reviews[i],
-              onTap: () => context.push('/review/${reviews[i].id}'),
-            ),
-          ),
-        );
-      },
-      loading: () => const Center(child: CircularProgressIndicator()),
-      error: (e, _) => Center(child: Text('오류: $e')),
+          ],
+        ),
+      );
+    }
+
+    return RefreshIndicator(
+      onRefresh: refresh,
+      child: ListView.separated(
+        itemCount: items.length,
+        separatorBuilder: (_, __) => const Divider(height: 1),
+        itemBuilder: (_, i) {
+          final item = items[i];
+          return switch (item) {
+            _ReviewScrap(:final review) => ReviewListCard(
+                review: review,
+                onTap: () => context.push('/review/${review.id}'),
+              ),
+            _PostScrap(:final post) => PostCard(
+                post: post,
+                onTap: () => context.push('/community/${post.id}'),
+              ),
+          };
+        },
+      ),
     );
   }
 }

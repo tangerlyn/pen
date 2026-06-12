@@ -182,9 +182,10 @@ class ReviewRepository {
         .where('uid', isEqualTo: uid)
         .get();
 
-    final futures = querySnapshot.docs.map((doc) async {
-      final reviewRef = doc.reference.parent.parent;
-      if (reviewRef == null) return null;
+    final futures = querySnapshot.docs
+        .where((doc) => doc.reference.parent.parent?.parent.id == 'reviews')
+        .map((doc) async {
+      final reviewRef = doc.reference.parent.parent!;
       final reviewDoc = await reviewRef.get();
       if (!reviewDoc.exists) return null;
       return ReviewModel.fromMap(reviewDoc.data() as Map<String, dynamic>, reviewDoc.id);
@@ -199,9 +200,10 @@ class ReviewRepository {
         .where('uid', isEqualTo: uid)
         .snapshots()
         .asyncMap((snap) async {
-          final futures = snap.docs.map((doc) async {
-            final reviewRef = doc.reference.parent.parent;
-            if (reviewRef == null) return null;
+          final futures = snap.docs
+              .where((doc) => doc.reference.parent.parent?.parent.id == 'reviews')
+              .map((doc) async {
+            final reviewRef = doc.reference.parent.parent!;
             final reviewDoc = await reviewRef.get();
             if (!reviewDoc.exists) return null;
             return ReviewModel.fromMap(

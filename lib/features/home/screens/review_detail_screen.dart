@@ -8,6 +8,7 @@ import '../../../core/constants/app_constants.dart';
 import '../../../core/theme/app_theme.dart';
 import '../../../core/utils/network_utils.dart';
 import '../../../core/utils/profile_navigation.dart';
+import '../../../core/utils/toast_utils.dart';
 import '../../../shared/widgets/image_viewer_screen.dart';
 import '../../../data/models/review_model.dart';
 import '../../../data/models/reply_model.dart';
@@ -218,6 +219,32 @@ class _ReviewDetailScreenState extends ConsumerState<ReviewDetailScreen> {
                   onPressed: () => Navigator.pop(context),
                 ),
                 const Spacer(),
+                if (currentUid != null)
+                  IconButton(
+                    icon: Icon(
+                      review.isScrapped ? Icons.bookmark : Icons.bookmark_border,
+                      color: review.isScrapped ? AppColors.primary : null,
+                    ),
+                    onPressed: () async {
+                      final willScrap = !review.isScrapped;
+                      try {
+                        await ref
+                            .read(reviewDetailProvider(widget.reviewId).notifier)
+                            .toggleScrap();
+                        if (willScrap && context.mounted) {
+                          showScrapToast(context);
+                        }
+                      } catch (_) {
+                        if (!context.mounted) return;
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          const SnackBar(
+                            content: Text('인터넷 연결을 확인해주세요'),
+                            duration: Duration(seconds: 3),
+                          ),
+                        );
+                      }
+                    },
+                  ),
                 IconButton(
                   icon: const Icon(Icons.more_vert),
                   onPressed: () => _showMoreOptions(context, review, isOwner),
@@ -353,21 +380,6 @@ class _ReviewDetailScreenState extends ConsumerState<ReviewDetailScreen> {
                       await ref
                           .read(reviewDetailProvider(widget.reviewId).notifier)
                           .toggleLike();
-                    } catch (_) {
-                      if (!context.mounted) return;
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(
-                          content: Text('인터넷 연결을 확인해주세요'),
-                          duration: Duration(seconds: 3),
-                        ),
-                      );
-                    }
-                  },
-                  onScrap: () async {
-                    try {
-                      await ref
-                          .read(reviewDetailProvider(widget.reviewId).notifier)
-                          .toggleScrap();
                     } catch (_) {
                       if (!context.mounted) return;
                       ScaffoldMessenger.of(context).showSnackBar(
@@ -794,12 +806,10 @@ class _ActionBar extends StatelessWidget {
     required this.review,
     required this.currentUid,
     required this.onLike,
-    required this.onScrap,
   });
   final ReviewModel review;
   final String? currentUid;
   final VoidCallback onLike;
-  final VoidCallback onScrap;
 
   @override
   Widget build(BuildContext context) {
@@ -818,13 +828,6 @@ class _ActionBar extends StatelessWidget {
             icon: Icons.chat_bubble_outline,
             label: '${review.commentCount}',
             onTap: () {},
-          ),
-          const SizedBox(width: 16),
-          _ActionButton(
-            icon: review.isScrapped ? Icons.bookmark : Icons.bookmark_border,
-            label: '${review.scrapCount}',
-            color: review.isScrapped ? AppColors.secondary : null,
-            onTap: onScrap,
           ),
         ],
       ),

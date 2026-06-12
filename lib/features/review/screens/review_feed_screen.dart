@@ -12,7 +12,8 @@ import '../../home/widgets/feed_filter_bar.dart';
 import '../../../shared/widgets/common/skeletons.dart';
 
 class ReviewFeedScreen extends ConsumerStatefulWidget {
-  const ReviewFeedScreen({super.key});
+  const ReviewFeedScreen({super.key, this.showAppBar = true});
+  final bool showAppBar;
 
   @override
   ConsumerState<ReviewFeedScreen> createState() => _ReviewFeedScreenState();
@@ -85,16 +86,17 @@ class _ReviewFeedScreenState extends ConsumerState<ReviewFeedScreen> {
             child: NestedScrollView(
               key: _scrollKey,
               headerSliverBuilder: (context, _) => [
-                SliverAppBar(
-                  pinned: true,
-                  title: const Text('리뷰',
-                      style: TextStyle(fontWeight: FontWeight.w700)),
-                  actions: [
-                    IconButton(
-                        icon: const Icon(Icons.search),
-                        onPressed: () => context.push('/search?type=review')),
-                  ],
-                ),
+                if (widget.showAppBar)
+                  SliverAppBar(
+                    pinned: true,
+                    title: const Text('리뷰',
+                        style: TextStyle(fontWeight: FontWeight.w700)),
+                    actions: [
+                      IconButton(
+                          icon: const Icon(Icons.search),
+                          onPressed: () => context.push('/search?type=review')),
+                    ],
+                  ),
                 SliverToBoxAdapter(
                   child: ColoredBox(
                     color: AppColors.surface,

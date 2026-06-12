@@ -100,25 +100,24 @@ class _BottomNav extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final bottomPad = MediaQuery.of(context).viewPadding.bottom;
     return Container(
-      color: AppColors.background,
-      padding: EdgeInsets.fromLTRB(20, 8, 20, bottomPad + 10),
-      child: Container(
-        height: 58,
-        decoration: BoxDecoration(
-          color: AppColors.surface,
-          borderRadius: BorderRadius.circular(29),
-          boxShadow: AppShadows.nav,
-        ),
-        child: Row(
-          children: [
-            _NavItem(icon: Icons.home_outlined, activeIcon: Icons.home, label: '홈', index: 0, shell: shell),
-            _NavItem(icon: Icons.grid_view_outlined, activeIcon: Icons.grid_view, label: '리뷰', index: 1, shell: shell),
-            _NavItem(icon: Icons.forum_outlined, activeIcon: Icons.forum, label: '커뮤니티', index: 2, shell: shell),
-            _NavItem(icon: Icons.book_outlined, activeIcon: Icons.book, label: '아카이브', index: 3, shell: shell),
-            _NavItem(icon: Icons.person_outline, activeIcon: Icons.person, label: '마이', index: 4, shell: shell),
-          ],
+      decoration: const BoxDecoration(
+        color: Colors.white,
+        border: Border(top: BorderSide(color: AppColors.divider)),
+      ),
+      child: SafeArea(
+        top: false,
+        child: SizedBox(
+          height: 56,
+          child: Row(
+            children: [
+              _NavItem(icon: Icons.home_outlined, activeIcon: Icons.home, label: '홈', index: 0, shell: shell),
+              _NavItem(icon: Icons.grid_view_outlined, activeIcon: Icons.grid_view, label: '리뷰', index: 1, shell: shell),
+              _NavItem(icon: Icons.forum_outlined, activeIcon: Icons.forum, label: '커뮤니티', index: 2, shell: shell),
+              _NavItem(icon: Icons.book_outlined, activeIcon: Icons.book, label: '아카이브', index: 3, shell: shell),
+              _NavItem(icon: Icons.person_outline, activeIcon: Icons.person, label: '마이', index: 4, shell: shell),
+            ],
+          ),
         ),
       ),
     );
@@ -147,7 +146,7 @@ class _NavItem extends StatelessWidget {
     final isActive = shell.currentIndex == index;
     return Expanded(
       child: InkWell(
-        borderRadius: BorderRadius.circular(29),
+        borderRadius: BorderRadius.circular(8),
         splashColor: AppColors.primary.withValues(alpha: 0.08),
         highlightColor: AppColors.primary.withValues(alpha: 0.04),
         onTap: () {

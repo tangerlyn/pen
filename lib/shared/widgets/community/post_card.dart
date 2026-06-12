@@ -3,11 +3,16 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:timeago/timeago.dart' as timeago;
 import '../../../data/models/post_model.dart';
+import '../../../data/models/user_model.dart';
 import '../../../core/theme/app_theme.dart';
 import '../../../core/utils/profile_navigation.dart';
 import '../../providers/providers.dart';
-import '../../widgets/glass_card.dart';
 import '../../../features/community/providers/community_provider.dart';
+
+final _postCardAuthorProvider =
+    FutureProvider.family<UserModel?, String>((ref, uid) {
+  return ref.read(userRepoProvider).getUser(uid);
+});
 
 class PostCard extends ConsumerWidget {
   const PostCard(
@@ -30,12 +35,11 @@ class PostCard extends ConsumerWidget {
     final hasImage = post.imageUrls.isNotEmpty;
     final showBadge = post.category == '질문' || post.category == '정보공유';
 
-    return GlassCard(
-      margin: const EdgeInsets.symmetric(horizontal: 12, vertical: 5),
-      borderRadius: AppRadius.lg,
+    return InkWell(
       onTap: onTap,
-      padding: EdgeInsets.fromLTRB(AppSpacing.lg, topPadding, AppSpacing.lg, AppSpacing.sm),
-      child: Row(
+      child: Padding(
+        padding: EdgeInsets.fromLTRB(AppSpacing.lg, topPadding, AppSpacing.lg, AppSpacing.sm),
+          child: Row(
           crossAxisAlignment: CrossAxisAlignment.end,
           children: [
             Expanded(
@@ -72,11 +76,9 @@ class PostCard extends ConsumerWidget {
                     children: [
                       GestureDetector(
                         onTap: () => navigateToProfile(context, ref, post.authorId),
-                        child: Text(
-                          post.authorNickname,
-                          style: AppTextStyles.bodySmall.copyWith(
-                              color: AppColors.textTertiary,
-                              fontWeight: FontWeight.w500),
+                        child: _AuthorRow(
+                          authorId: post.authorId,
+                          fallbackNickname: post.authorNickname,
                         ),
                       ),
                       const SizedBox(width: AppSpacing.sm),
@@ -150,7 +152,8 @@ class PostCard extends ConsumerWidget {
             ],
           ],
         ),
-      );
+      ),
+    );
   }
 }
 
@@ -179,6 +182,44 @@ class _CategoryBadge extends StatelessWidget {
           color: color,
         ),
       ),
+    );
+  }
+}
+
+// ── 작성자 프사 + 닉네임 ───────────────────────────────────────────────────
+class _AuthorRow extends ConsumerWidget {
+  const _AuthorRow({
+    required this.authorId,
+    required this.fallbackNickname,
+  });
+  final String authorId;
+  final String fallbackNickname;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final authorAsync = ref.watch(_postCardAuthorProvider(authorId));
+    final user = authorAsync.valueOrNull;
+
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        CircleAvatar(
+          radius: 11,
+          backgroundColor: AppColors.chipBackground,
+          backgroundImage: user?.profileImageUrl != null
+              ? CachedNetworkImageProvider(user!.profileImageUrl!)
+              : null,
+          child: user?.profileImageUrl == null
+              ? const Icon(Icons.person, size: 13, color: AppColors.textTertiary)
+              : null,
+        ),
+        const SizedBox(width: 5),
+        Text(
+          user?.nickname ?? fallbackNickname,
+          style: AppTextStyles.bodySmall.copyWith(
+              color: AppColors.textTertiary, fontWeight: FontWeight.w500),
+        ),
+      ],
     );
   }
 }

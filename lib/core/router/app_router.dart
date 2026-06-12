@@ -8,6 +8,7 @@ import '../../features/auth/screens/signup_interests_screen.dart';
 import '../../features/home/screens/home_screen.dart';
 import '../../features/home/screens/review_detail_screen.dart';
 import '../../features/review/screens/review_feed_screen.dart';
+import '../../features/community/screens/community_screen.dart';
 import '../../features/archive/screens/archive_screen.dart';
 import '../../features/archive/screens/archive_detail_screen.dart';
 import '../../features/mypage/screens/mypage_screen.dart';
@@ -17,7 +18,6 @@ import '../../features/mypage/screens/blocked_users_screen.dart';
 import '../../features/chat/screens/chat_list_screen.dart';
 import '../../features/chat/screens/chat_room_screen.dart';
 import '../../features/review/screens/review_write_screen.dart';
-import '../../features/community/screens/community_screen.dart';
 import '../../features/community/screens/post_detail_screen.dart';
 import '../../features/community/screens/post_write_screen.dart';
 import '../../features/search/screens/search_screen.dart';
@@ -167,7 +167,7 @@ final routerProvider = Provider<GoRouter>((ref) {
         builder: (_, state) => PostDetailScreen(postId: state.pathParameters['postId']!),
       ),
 
-      // 글로벌 라우트 (탭 외부)
+      // 채팅 (글로벌)
       GoRoute(
         path: '/chat',
         builder: (_, __) => const ChatListScreen(),
@@ -178,6 +178,7 @@ final routerProvider = Provider<GoRouter>((ref) {
           ),
         ],
       ),
+
       GoRoute(
         path: '/write/review',
         builder: (_, state) => ReviewWriteScreen(

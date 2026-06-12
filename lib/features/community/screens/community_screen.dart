@@ -4,11 +4,19 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../../../core/theme/app_theme.dart';
 import '../providers/community_provider.dart';
+import '../../../data/models/user_model.dart';
+import '../../../shared/providers/providers.dart';
 import '../../../shared/widgets/community/post_card.dart';
 import '../../../shared/widgets/common/skeletons.dart';
 
+final _popularCardAuthorProvider =
+    FutureProvider.family<UserModel?, String>((ref, uid) {
+  return ref.read(userRepoProvider).getUser(uid);
+});
+
 class CommunityScreen extends ConsumerStatefulWidget {
-  const CommunityScreen({super.key});
+  const CommunityScreen({super.key, this.showAppBar = true});
+  final bool showAppBar;
 
   @override
   ConsumerState<CommunityScreen> createState() => _CommunityScreenState();
@@ -58,16 +66,18 @@ class _CommunityScreenState extends ConsumerState<CommunityScreen> {
 
     return Scaffold(
       backgroundColor: AppColors.background,
-      appBar: AppBar(
-        title: const Text('커뮤니티',
-            style: TextStyle(fontWeight: FontWeight.w700)),
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.search),
-            onPressed: () => context.push('/search?type=community'),
-          ),
-        ],
-      ),
+      appBar: widget.showAppBar
+          ? AppBar(
+              title: const Text('커뮤니티',
+                  style: TextStyle(fontWeight: FontWeight.w700)),
+              actions: [
+                IconButton(
+                  icon: const Icon(Icons.search),
+                  onPressed: () => context.push('/search?type=community'),
+                ),
+              ],
+            )
+          : null,
       body: Stack(
         children: [
           Column(
@@ -115,7 +125,7 @@ class _CommunityScreenState extends ConsumerState<CommunityScreen> {
                               itemCount: posts.length +
                                   (hasPopular ? 1 : 0) +
                                   (feedState.isLoadingMore ? 1 : 0),
-                              separatorBuilder: (_, i) => const SizedBox.shrink(),
+                              separatorBuilder: (_, i) => const Divider(height: 1),
                               itemBuilder: (_, i) {
                                 final normalStart = hasPopular ? 1 : 0;
                                 final normalEnd = posts.length + normalStart;
@@ -286,100 +296,9 @@ class _PopularSectionState extends State<_PopularSection> {
               onPageChanged: (i) => setState(() => _page = i),
               itemBuilder: (_, i) {
                 final post = posts[i];
-                final hasThumbnail = post.imageUrls.isNotEmpty == true;
-                return GestureDetector(
+                return _PopularCard(
+                  post: post,
                   onTap: () => widget.onTap(post.id),
-                  child: Container(
-                    margin: const EdgeInsets.symmetric(horizontal: 6),
-                    padding: const EdgeInsets.all(14),
-                    decoration: BoxDecoration(
-                      color: const Color(0xFFFFFCF5),
-                      borderRadius: BorderRadius.circular(14),
-                      boxShadow: const [
-                        BoxShadow(
-                          color: Color(0x1A000000),
-                          blurRadius: 10,
-                          offset: Offset(0, 3),
-                        ),
-                      ],
-                    ),
-                    child: Row(
-                      children: [
-                        Expanded(
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                            children: [
-                              Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  Text(
-                                    post.title,
-                                    style: const TextStyle(
-                                      fontSize: 14,
-                                      fontWeight: FontWeight.w700,
-                                      color: AppColors.textPrimary,
-                                    ),
-                                    maxLines: 1,
-                                    overflow: TextOverflow.ellipsis,
-                                  ),
-                                  const SizedBox(height: 6),
-                                  Text(
-                                    post.body,
-                                    style: const TextStyle(
-                                      fontSize: 12,
-                                      color: AppColors.textSecondary,
-                                      height: 1.4,
-                                    ),
-                                    maxLines: 2,
-                                    overflow: TextOverflow.ellipsis,
-                                  ),
-                                ],
-                              ),
-                              Row(
-                                children: [
-                                  Text(
-                                    post.authorNickname,
-                                    style: const TextStyle(
-                                        fontSize: 11,
-                                        color: AppColors.textTertiary),
-                                  ),
-                                  const Spacer(),
-                                  const Icon(Icons.favorite_border,
-                                      size: 11, color: AppColors.textTertiary),
-                                  const SizedBox(width: 2),
-                                  Text('${post.likeCount}',
-                                      style: const TextStyle(
-                                          fontSize: 11,
-                                          color: AppColors.textTertiary)),
-                                  const SizedBox(width: 8),
-                                  const Icon(Icons.chat_bubble_outline,
-                                      size: 11, color: AppColors.textTertiary),
-                                  const SizedBox(width: 2),
-                                  Text('${post.commentCount}',
-                                      style: const TextStyle(
-                                          fontSize: 11,
-                                          color: AppColors.textTertiary)),
-                                ],
-                              ),
-                            ],
-                          ),
-                        ),
-                        if (hasThumbnail) ...[
-                          const SizedBox(width: 12),
-                          ClipRRect(
-                            borderRadius: BorderRadius.circular(8),
-                            child: CachedNetworkImage(
-                              imageUrl: post.imageUrls.first,
-                              width: 72,
-                              height: 72,
-                              fit: BoxFit.cover,
-                            ),
-                          ),
-                        ],
-                      ],
-                    ),
-                  ),
                 );
               },
             ),
@@ -419,6 +338,122 @@ class _PopularSectionState extends State<_PopularSection> {
             ),
           ),
         ],
+      ),
+    );
+  }
+}
+
+// ── 인기글 카드 ────────────────────────────────────────────────────────────
+class _PopularCard extends ConsumerWidget {
+  const _PopularCard({required this.post, required this.onTap});
+  final dynamic post;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final authorAsync = ref.watch(_popularCardAuthorProvider(post.authorId as String));
+    final user = authorAsync.valueOrNull;
+    final hasThumbnail = (post.imageUrls as List).isNotEmpty == true;
+
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        margin: const EdgeInsets.symmetric(horizontal: 6),
+        padding: const EdgeInsets.all(14),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(14),
+          border: Border.all(
+            color: Colors.white.withValues(alpha: 0.7),
+            width: 1.5,
+          ),
+          boxShadow: AppShadows.card,
+        ),
+        child: Row(
+          children: [
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        post.title as String,
+                        style: const TextStyle(
+                          fontSize: 14,
+                          fontWeight: FontWeight.w700,
+                          color: AppColors.textPrimary,
+                        ),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                      const SizedBox(height: 6),
+                      Text(
+                        post.body as String,
+                        style: const TextStyle(
+                          fontSize: 12,
+                          color: AppColors.textSecondary,
+                          height: 1.4,
+                        ),
+                        maxLines: 2,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    ],
+                  ),
+                  Row(
+                    children: [
+                      CircleAvatar(
+                        radius: 10,
+                        backgroundColor: AppColors.chipBackground,
+                        backgroundImage: user?.profileImageUrl != null
+                            ? CachedNetworkImageProvider(user!.profileImageUrl!)
+                            : null,
+                        child: user?.profileImageUrl == null
+                            ? const Icon(Icons.person,
+                                size: 11, color: AppColors.textTertiary)
+                            : null,
+                      ),
+                      const SizedBox(width: 5),
+                      Text(
+                        user?.nickname ?? post.authorNickname as String,
+                        style: const TextStyle(
+                            fontSize: 11, color: AppColors.textTertiary),
+                      ),
+                      const Spacer(),
+                      const Icon(Icons.favorite_border,
+                          size: 11, color: AppColors.textTertiary),
+                      const SizedBox(width: 2),
+                      Text('${post.likeCount}',
+                          style: const TextStyle(
+                              fontSize: 11, color: AppColors.textTertiary)),
+                      const SizedBox(width: 8),
+                      const Icon(Icons.chat_bubble_outline,
+                          size: 11, color: AppColors.textTertiary),
+                      const SizedBox(width: 2),
+                      Text('${post.commentCount}',
+                          style: const TextStyle(
+                              fontSize: 11, color: AppColors.textTertiary)),
+                    ],
+                  ),
+                ],
+              ),
+            ),
+            if (hasThumbnail) ...[
+              const SizedBox(width: 12),
+              ClipRRect(
+                borderRadius: BorderRadius.circular(8),
+                child: CachedNetworkImage(
+                  imageUrl: (post.imageUrls as List).first as String,
+                  width: 72,
+                  height: 72,
+                  fit: BoxFit.cover,
+                ),
+              ),
+            ],
+          ],
+        ),
       ),
     );
   }

@@ -34,6 +34,12 @@ final postLikeStatusProvider =
   return ref.watch(postRepositoryProvider).watchLikeStatus(postId, uid);
 });
 
+final postScrapStatusProvider =
+    StreamProvider.family<bool, (String, String)>((ref, args) {
+  final (postId, uid) = args;
+  return ref.watch(postRepositoryProvider).watchScrapStatus(postId, uid);
+});
+
 final postDetailProvider = StreamProvider.family<PostModel?, String>((ref, postId) {
   return ref.watch(postRepositoryProvider).watchPost(postId);
 });

@@ -13,6 +13,7 @@ import '../providers/community_provider.dart';
 import '../../../data/models/post_model.dart';
 import '../../../data/models/reply_model.dart';
 import '../../../data/models/user_model.dart';
+import '../../../core/utils/toast_utils.dart';
 import '../../../shared/widgets/content_moderation.dart';
 import '../../../shared/widgets/image_viewer_screen.dart';
 import '../../../shared/widgets/common/skeletons.dart';
@@ -281,6 +282,12 @@ class _PostDetailScreenState extends ConsumerState<PostDetailScreen> {
                 .valueOrNull ??
             false
         : false;
+    final isScrapped = currentUid != null
+        ? ref
+                .watch(postScrapStatusProvider((widget.postId, currentUid)))
+                .valueOrNull ??
+            false
+        : false;
 
     return Scaffold(
       backgroundColor: AppColors.background,
@@ -288,6 +295,22 @@ class _PostDetailScreenState extends ConsumerState<PostDetailScreen> {
       appBar: AppBar(
         title: const Text('게시글'),
         actions: [
+          if (currentUid != null)
+            IconButton(
+              icon: Icon(
+                isScrapped ? Icons.bookmark : Icons.bookmark_border,
+                color: isScrapped ? AppColors.primary : null,
+              ),
+              onPressed: () async {
+                final willScrap = !isScrapped;
+                await ref
+                    .read(postRepositoryProvider)
+                    .toggleScrap(widget.postId, currentUid!);
+                if (willScrap && context.mounted) {
+                  showScrapToast(context);
+                }
+              },
+            ),
           postAsync.when(
             data: (post) {
               if (post == null) return const SizedBox.shrink();
@@ -317,9 +340,9 @@ class _PostDetailScreenState extends ConsumerState<PostDetailScreen> {
                   child: ListView(
                     padding: EdgeInsets.zero,
                     children: [
-                      // 헤더 영역 (크림 배경)
+                      // 헤더 영역
                       Container(
-                        color: const Color(0xFFF5F0E8),
+                        color: Colors.white,
                         padding: const EdgeInsets.fromLTRB(20, 20, 20, 16),
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
@@ -713,18 +736,45 @@ class _EditorialByline extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final authorAsync = ref.watch(_postAuthorProvider(post.authorId));
-    final nickname = authorAsync.valueOrNull?.nickname ?? post.authorNickname;
+    final user = authorAsync.valueOrNull;
     final timeStr = timeago.format(post.createdAt, locale: 'ko');
 
     return GestureDetector(
       onTap: () => navigateToProfile(context, ref, post.authorId),
-      child: Text(
-        'by $nickname  ·  $timeStr',
-        style: const TextStyle(
-          fontSize: 12,
-          color: AppColors.textTertiary,
-          letterSpacing: 0.2,
-        ),
+      child: Row(
+        children: [
+          CircleAvatar(
+            radius: 16,
+            backgroundColor: AppColors.chipBackground,
+            backgroundImage: user?.profileImageUrl != null
+                ? CachedNetworkImageProvider(user!.profileImageUrl!)
+                : null,
+            child: user?.profileImageUrl == null
+                ? const Icon(Icons.person, size: 16, color: AppColors.textTertiary)
+                : null,
+          ),
+          const SizedBox(width: 8),
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                user?.nickname ?? post.authorNickname,
+                style: const TextStyle(
+                  fontSize: 13,
+                  fontWeight: FontWeight.w600,
+                  color: AppColors.textPrimary,
+                ),
+              ),
+              Text(
+                timeStr,
+                style: const TextStyle(
+                  fontSize: 11,
+                  color: AppColors.textTertiary,
+                ),
+              ),
+            ],
+          ),
+        ],
       ),
     );
   }

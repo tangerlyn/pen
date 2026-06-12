@@ -11,6 +11,7 @@ import '../../../data/models/review_model.dart';
 import '../../../data/models/ink_model.dart';
 import '../../../data/models/pen_model.dart';
 import '../../../shared/widgets/common/skeletons.dart';
+import '../../../shared/widgets/ink_drop_circle.dart';
 
 class HomeScreen extends ConsumerStatefulWidget {
   const HomeScreen({super.key});
@@ -299,18 +300,22 @@ class _ReviewCard extends StatelessWidget {
         width: 150,
         margin: const EdgeInsets.only(right: AppSpacing.md),
         decoration: BoxDecoration(
-          color: AppColors.surface,
-          borderRadius: BorderRadius.circular(12),
+          color: Colors.white.withValues(alpha: 0.82),
+          borderRadius: BorderRadius.circular(14),
+          border: Border.all(
+            color: Colors.white.withValues(alpha: 0.70),
+            width: 1.2,
+          ),
           boxShadow: const [
             BoxShadow(
               color: AppColors.cardShadowColor,
-              blurRadius: 8,
-              offset: Offset(0, 2),
+              blurRadius: 16,
+              offset: Offset(0, 4),
             ),
           ],
         ),
         child: ClipRRect(
-          borderRadius: BorderRadius.circular(12),
+          borderRadius: BorderRadius.circular(14),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
@@ -424,22 +429,7 @@ class _InkCircleItem extends StatelessWidget {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Container(
-              width: 56,
-              height: 56,
-              decoration: BoxDecoration(
-                color: ink.inkColor,
-                shape: BoxShape.circle,
-                border: Border.all(color: AppColors.divider),
-                boxShadow: [
-                  BoxShadow(
-                    color: ink.inkColor.withValues(alpha: 0.4),
-                    blurRadius: 6,
-                    offset: const Offset(0, 2),
-                  ),
-                ],
-              ),
-            ),
+            InkDropCircle(color: ink.inkColor, size: 56),
             const SizedBox(height: AppSpacing.sm - 2),
             Text(
               ink.name,
@@ -580,13 +570,17 @@ class _PenCard extends StatelessWidget {
         padding: AppSpacing.cardPadding
             .add(const EdgeInsets.all(AppSpacing.xs)),
         decoration: BoxDecoration(
-          color: AppColors.surface,
-          borderRadius: BorderRadius.circular(12),
+          color: Colors.white.withValues(alpha: 0.82),
+          borderRadius: BorderRadius.circular(14),
+          border: Border.all(
+            color: Colors.white.withValues(alpha: 0.70),
+            width: 1.2,
+          ),
           boxShadow: const [
             BoxShadow(
               color: AppColors.cardShadowColor,
-              blurRadius: 8,
-              offset: Offset(0, 2),
+              blurRadius: 16,
+              offset: Offset(0, 4),
             ),
           ],
         ),
