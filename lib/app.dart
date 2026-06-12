@@ -14,6 +14,11 @@ class NibpenApp extends ConsumerWidget {
       theme: AppTheme.light,
       routerConfig: router,
       debugShowCheckedModeBanner: false,
+      // 모든 라우트(탭 + 상세 화면 전부)의 루트 배경 = 글래스 그라데이션
+      builder: (context, child) => Container(
+        decoration: const BoxDecoration(gradient: AppGlass.backgroundGradient),
+        child: child!,
+      ),
     );
   }
 }
