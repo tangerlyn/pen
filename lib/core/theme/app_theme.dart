@@ -29,6 +29,27 @@ abstract class AppColors {
   static const cardShadowColor = Color(0x0F000000); // black 6%
 }
 
+// ── Glass ────────────────────────────────────────────────────────────────
+
+abstract class AppGlass {
+  static const Color cardColor = Color(0xCCFFFFFF);       // 80% 흰색
+  static const Color cardBorderColor = Color(0x99FFFFFF); // 60% 흰 테두리
+  static const double blur = 10.0;
+  static const double cardOpacity = 0.80;
+
+  // 앱 전체 배경 그라데이션 (라벤더 → 연파랑)
+  static const LinearGradient backgroundGradient = LinearGradient(
+    begin: Alignment.topLeft,
+    end: Alignment.bottomRight,
+    colors: [
+      Color(0xFFECE8F8), // 연보라
+      Color(0xFFE5EDF8), // 연파랑
+      Color(0xFFEEF2FA), // 거의 흰 블루
+    ],
+    stops: [0.0, 0.55, 1.0],
+  );
+}
+
 // ── Shadows ───────────────────────────────────────────────────────────────
 
 abstract class AppShadows {
@@ -154,7 +175,7 @@ class AppTheme {
           brightness: Brightness.light,
           surface: AppColors.surface,
         ),
-        scaffoldBackgroundColor: AppColors.background,
+        scaffoldBackgroundColor: Colors.transparent,
         fontFamily: 'Pretendard',
         appBarTheme: const AppBarTheme(
           backgroundColor: AppColors.surface,

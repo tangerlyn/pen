@@ -6,6 +6,7 @@ import '../../../data/models/post_model.dart';
 import '../../../core/theme/app_theme.dart';
 import '../../../core/utils/profile_navigation.dart';
 import '../../providers/providers.dart';
+import '../../widgets/glass_card.dart';
 import '../../../features/community/providers/community_provider.dart';
 
 class PostCard extends ConsumerWidget {
@@ -29,21 +30,12 @@ class PostCard extends ConsumerWidget {
     final hasImage = post.imageUrls.isNotEmpty;
     final showBadge = post.category == '질문' || post.category == '정보공유';
 
-    return Container(
+    return GlassCard(
       margin: const EdgeInsets.symmetric(horizontal: 12, vertical: 5),
-      decoration: BoxDecoration(
-        boxShadow: AppShadows.card,
-        borderRadius: AppRadius.cardAll,
-      ),
-      child: Material(
-        color: AppColors.surface,
-        borderRadius: AppRadius.cardAll,
-        clipBehavior: Clip.antiAlias,
-        child: InkWell(
-          onTap: onTap,
-          child: Padding(
-        padding: EdgeInsets.fromLTRB(AppSpacing.lg, topPadding, AppSpacing.lg, AppSpacing.sm),
-        child: Row(
+      borderRadius: AppRadius.lg,
+      onTap: onTap,
+      padding: EdgeInsets.fromLTRB(AppSpacing.lg, topPadding, AppSpacing.lg, AppSpacing.sm),
+      child: Row(
           crossAxisAlignment: CrossAxisAlignment.end,
           children: [
             Expanded(
@@ -158,10 +150,7 @@ class PostCard extends ConsumerWidget {
             ],
           ],
         ),
-      ),
-    ),
-  ),
-);
+      );
   }
 }
 

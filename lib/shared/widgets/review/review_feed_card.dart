@@ -17,9 +17,20 @@ class ReviewFeedCard extends ConsumerWidget {
       onTap: onTap,
       child: Container(
         decoration: BoxDecoration(
-          color: AppColors.surface,
+          color: Colors.white.withValues(alpha: 0.82),
           borderRadius: AppRadius.cardAll,
-          boxShadow: AppShadows.card,
+          border: Border.all(
+            color: Colors.white.withValues(alpha: 0.7),
+            width: 1.5,
+          ),
+          boxShadow: const [
+            BoxShadow(
+              color: Color(0x12000000),
+              blurRadius: 16,
+              spreadRadius: 0,
+              offset: Offset(0, 4),
+            ),
+          ],
         ),
         clipBehavior: Clip.antiAlias,
         child: Column(

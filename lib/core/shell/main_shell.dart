@@ -62,31 +62,40 @@ class _MainShellState extends ConsumerState<MainShell> {
     final isOnline = ref.watch(connectivityProvider).valueOrNull ?? true;
 
     return Scaffold(
-      body: Column(
+      body: Stack(
+        fit: StackFit.expand,
         children: [
-          AnimatedSize(
-            duration: const Duration(milliseconds: 250),
-            curve: Curves.easeInOut,
-            child: isOnline
-                ? const SizedBox.shrink()
-                : Container(
-                    width: double.infinity,
-                    color: Colors.grey[800],
-                    padding: const EdgeInsets.symmetric(vertical: 6),
-                    child: const Row(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        Icon(Icons.wifi_off, size: 14, color: Colors.white),
-                        SizedBox(width: 6),
-                        Text(
-                          '인터넷 연결이 없어요',
-                          style: TextStyle(color: Colors.white, fontSize: 12),
-                        ),
-                      ],
-                    ),
-                  ),
+          // 글래스모피즘 배경 그라데이션
+          const DecoratedBox(
+            decoration: BoxDecoration(gradient: AppGlass.backgroundGradient),
           ),
-          Expanded(child: widget.shell),
+          Column(
+            children: [
+              AnimatedSize(
+                duration: const Duration(milliseconds: 250),
+                curve: Curves.easeInOut,
+                child: isOnline
+                    ? const SizedBox.shrink()
+                    : Container(
+                        width: double.infinity,
+                        color: Colors.grey[800],
+                        padding: const EdgeInsets.symmetric(vertical: 6),
+                        child: const Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Icon(Icons.wifi_off, size: 14, color: Colors.white),
+                            SizedBox(width: 6),
+                            Text(
+                              '인터넷 연결이 없어요',
+                              style: TextStyle(color: Colors.white, fontSize: 12),
+                            ),
+                          ],
+                        ),
+                      ),
+              ),
+              Expanded(child: widget.shell),
+            ],
+          ),
         ],
       ),
       bottomNavigationBar: _BottomNav(shell: widget.shell),
