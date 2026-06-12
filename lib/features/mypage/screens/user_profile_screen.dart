@@ -6,6 +6,9 @@ import '../../../core/theme/app_theme.dart';
 import '../../../data/models/user_model.dart';
 import '../../../shared/providers/providers.dart';
 import '../../../shared/providers/user_providers.dart';
+import '../../../shared/widgets/common/empty_state.dart';
+import '../../../shared/widgets/community/post_card.dart';
+import '../../../shared/widgets/review/review_list_card.dart';
 import '../providers/user_activity_provider.dart';
 
 // 아날로그 감성 색상
@@ -415,7 +418,7 @@ class _PillTabDelegate extends SliverPersistentHeaderDelegate {
       old.tabController != tabController;
 }
 
-// ── 리뷰 그리드 ──────────────────────────────────────────────────────────────
+// ── 리뷰 목록 ────────────────────────────────────────────────────────────────
 
 class _ReviewGrid extends ConsumerWidget {
   const _ReviewGrid({required this.uid});
@@ -429,35 +432,17 @@ class _ReviewGrid extends ConsumerWidget {
       error: (_, __) => const SizedBox.shrink(),
       data: (reviews) {
         if (reviews.isEmpty) {
-          return const Center(
-            child: Text('작성한 리뷰가 없습니다',
-                style: TextStyle(color: AppColors.textSecondary)),
+          return const EmptyStateWidget(
+            icon: Icons.camera_alt_outlined,
+            message: '아직 작성한 리뷰가 없습니다',
           );
         }
-        return GridView.builder(
-          padding: const EdgeInsets.all(12),
-          gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-            crossAxisCount: 3,
-            crossAxisSpacing: 4,
-            mainAxisSpacing: 4,
-          ),
+        return ListView.separated(
           itemCount: reviews.length,
-          itemBuilder: (_, i) => GestureDetector(
+          separatorBuilder: (_, __) => const Divider(height: 1),
+          itemBuilder: (_, i) => ReviewListCard(
+            review: reviews[i],
             onTap: () => context.push('/review/${reviews[i].id}'),
-            child: ClipRRect(
-              borderRadius: BorderRadius.circular(6),
-              child: CachedNetworkImage(
-                imageUrl: reviews[i].thumbnailUrl,
-                fit: BoxFit.cover,
-                placeholder: (_, __) =>
-                    Container(color: AppColors.chipBackground),
-                errorWidget: (_, __, ___) => Container(
-                  color: AppColors.chipBackground,
-                  child: const Icon(Icons.image_not_supported,
-                      color: AppColors.textTertiary),
-                ),
-              ),
-            ),
           ),
         );
       },
@@ -479,43 +464,18 @@ class _PostList extends ConsumerWidget {
       error: (_, __) => const SizedBox.shrink(),
       data: (posts) {
         if (posts.isEmpty) {
-          return const Center(
-            child: Text('작성한 게시글이 없습니다',
-                style: TextStyle(color: AppColors.textSecondary)),
+          return const EmptyStateWidget(
+            icon: Icons.article_outlined,
+            message: '아직 작성한 게시글이 없습니다',
           );
         }
         return ListView.separated(
-          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
           itemCount: posts.length,
-          separatorBuilder: (_, __) =>
-              const Divider(height: 1, color: Color(0xFFEDE8DF)),
-          itemBuilder: (_, i) {
-            final post = posts[i];
-            return Container(
-              color: AppColors.surface,
-              child: ListTile(
-                onTap: () => context.push('/community/${post.id}'),
-                contentPadding:
-                    const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                title: Text(
-                  post.title,
-                  style: const TextStyle(
-                      fontSize: 15, fontWeight: FontWeight.w600),
-                  maxLines: 2,
-                  overflow: TextOverflow.ellipsis,
-                ),
-                subtitle: Text(
-                  post.body,
-                  style: const TextStyle(
-                      fontSize: 13, color: AppColors.textSecondary),
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                ),
-                trailing: const Icon(Icons.chevron_right,
-                    color: AppColors.textTertiary, size: 18),
-              ),
-            );
-          },
+          separatorBuilder: (_, __) => const Divider(height: 1),
+          itemBuilder: (_, i) => PostCard(
+            post: posts[i],
+            onTap: () => context.push('/community/${posts[i].id}'),
+          ),
         );
       },
     );

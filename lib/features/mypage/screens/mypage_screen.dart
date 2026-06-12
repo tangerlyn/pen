@@ -2,15 +2,14 @@ import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-import 'package:timeago/timeago.dart' as timeago;
 import '../../../core/theme/app_theme.dart';
-import '../../../data/models/review_model.dart';
 import '../../../data/models/user_model.dart';
 import '../../../shared/providers/providers.dart';
 import '../../../shared/providers/user_providers.dart';
 import '../../../shared/providers/ink_book_providers.dart';
 import '../../../shared/widgets/common/empty_state.dart';
 import '../../../shared/widgets/community/post_card.dart';
+import '../../../shared/widgets/review/review_list_card.dart';
 import '../providers/user_activity_provider.dart';
 
 // ── 메인 화면 ─────────────────────────────────────────────────────────
@@ -186,7 +185,7 @@ class _MyReviewGrid extends ConsumerWidget {
         return ListView.separated(
           itemCount: reviews.length,
           separatorBuilder: (_, __) => const Divider(height: 1),
-          itemBuilder: (_, i) => _ReviewListCard(
+          itemBuilder: (_, i) => ReviewListCard(
             review: reviews[i],
             onTap: () => context.push('/review/${reviews[i].id}'),
           ),
@@ -264,7 +263,7 @@ class _ScrapbookGrid extends ConsumerWidget {
           child: ListView.separated(
             itemCount: reviews.length,
             separatorBuilder: (_, __) => const Divider(height: 1),
-            itemBuilder: (_, i) => _ReviewListCard(
+            itemBuilder: (_, i) => ReviewListCard(
               review: reviews[i],
               onTap: () => context.push('/review/${reviews[i].id}'),
             ),
@@ -273,129 +272,6 @@ class _ScrapbookGrid extends ConsumerWidget {
       },
       loading: () => const Center(child: CircularProgressIndicator()),
       error: (e, _) => Center(child: Text('오류: $e')),
-    );
-  }
-}
-
-// ── 리뷰 리스트 카드 (PostCard 레이아웃 동일) ─────────────────────────
-class _ReviewListCard extends StatelessWidget {
-  const _ReviewListCard({required this.review, required this.onTap});
-  final ReviewModel review;
-  final VoidCallback onTap;
-
-  @override
-  Widget build(BuildContext context) {
-    final hasImage = review.imageUrls.isNotEmpty;
-    final stars = review.rating.toStringAsFixed(1);
-
-    return InkWell(
-      onTap: onTap,
-      child: Container(
-        color: AppColors.surface,
-        padding: const EdgeInsets.fromLTRB(AppSpacing.lg, 8, AppSpacing.lg, AppSpacing.sm),
-        child: Row(
-          crossAxisAlignment: CrossAxisAlignment.end,
-          children: [
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Row(
-                    crossAxisAlignment: CrossAxisAlignment.center,
-                    children: [
-                      Container(
-                        padding: const EdgeInsets.symmetric(horizontal: AppSpacing.sm, vertical: 3),
-                        decoration: BoxDecoration(
-                          color: const Color(0xFFFFF3E0),
-                          borderRadius: BorderRadius.circular(4),
-                        ),
-                        child: Row(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            const Icon(Icons.star, size: 11, color: Color(0xFFFFA000)),
-                            const SizedBox(width: 2),
-                            Text(
-                              stars,
-                              style: const TextStyle(
-                                fontSize: 11,
-                                fontWeight: FontWeight.w600,
-                                color: Color(0xFFFFA000),
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                      const SizedBox(width: 6),
-                      Expanded(
-                        child: Text(
-                          review.body,
-                          style: AppTextStyles.titleSmall.copyWith(
-                              fontSize: 15, color: AppColors.textPrimary),
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                        ),
-                      ),
-                    ],
-                  ),
-                  if (review.body.isNotEmpty) ...[
-                    const SizedBox(height: 6),
-                    Text(
-                      review.body,
-                      style: AppTextStyles.labelMedium,
-                      maxLines: hasImage ? 1 : 2,
-                      overflow: TextOverflow.ellipsis,
-                    ),
-                  ],
-                  const SizedBox(height: 10),
-                  Row(
-                    children: [
-                      Text(
-                        timeago.format(review.createdAt, locale: 'ko'),
-                        style: AppTextStyles.bodySmall
-                            .copyWith(color: AppColors.textTertiary),
-                      ),
-                      const Spacer(),
-                      const Icon(Icons.chat_bubble_outline,
-                          size: 14, color: AppColors.textTertiary),
-                      const SizedBox(width: 3),
-                      Text(
-                        '${review.commentCount}',
-                        style: AppTextStyles.bodySmall
-                            .copyWith(color: AppColors.textTertiary),
-                      ),
-                      const SizedBox(width: 10),
-                      const Icon(Icons.favorite_border,
-                          size: 14, color: AppColors.textTertiary),
-                      const SizedBox(width: 3),
-                      Text(
-                        '${review.likeCount}',
-                        style: AppTextStyles.bodySmall
-                            .copyWith(color: AppColors.textTertiary),
-                      ),
-                    ],
-                  ),
-                ],
-              ),
-            ),
-            if (hasImage) ...[
-              const SizedBox(width: AppSpacing.md),
-              Align(
-                alignment: Alignment.bottomCenter,
-                child: ClipRRect(
-                  borderRadius: BorderRadius.circular(AppSpacing.sm),
-                  child: CachedNetworkImage(
-                    imageUrl: review.imageUrls.first,
-                    width: 72,
-                    height: 72,
-                    fit: BoxFit.cover,
-                    errorWidget: (_, __, ___) => const SizedBox.shrink(),
-                  ),
-                ),
-              ),
-            ],
-          ],
-        ),
-      ),
     );
   }
 }
