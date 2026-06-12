@@ -29,6 +29,21 @@ abstract class AppColors {
   static const cardShadowColor = Color(0x0F000000); // black 6%
 }
 
+// ── Border Radius ────────────────────────────────────────────────────────
+abstract class AppRadius {
+  static const double xs = 4.0;   // 뱃지, 태그
+  static const double sm = 8.0;   // 칩, 입력 필드
+  static const double md = 12.0;  // 카드, 바텀시트, 이미지
+  static const double lg = 16.0;  // 모달, 대형 카드
+  static const double xl = 20.0;  // 필 버튼
+  static const double full = 100.0; // 완전 원형
+
+  static BorderRadius get cardAll => BorderRadius.circular(md);
+  static BorderRadius get imageAll => BorderRadius.circular(md);
+  static BorderRadius get buttonAll => BorderRadius.circular(sm);
+  static BorderRadius get chipAll => BorderRadius.circular(xl);
+}
+
 // ── Text Styles ───────────────────────────────────────────────────────────
 
 abstract class AppTextStyles {

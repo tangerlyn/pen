@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import '../../../core/theme/app_theme.dart';
 
+
 // ── Editor block types ────────────────────────────────────────
 sealed class EditorBlock {}
 
@@ -162,7 +163,7 @@ class BlogBodyEditorState extends State<BlogBodyEditor> {
         child: Stack(
           children: [
             ClipRRect(
-              borderRadius: BorderRadius.circular(10),
+              borderRadius: BorderRadius.circular(AppRadius.md),
               child: block.url != null
                   ? CachedNetworkImage(
                       imageUrl: block.url!,
@@ -205,18 +206,15 @@ class _InsertImageButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return GestureDetector(
-      onTap: onTap,
-      behavior: HitTestBehavior.opaque,
-      child: Padding(
-        padding: const EdgeInsets.fromLTRB(16, 12, 16, 20),
-        child: Row(
-          mainAxisSize: MainAxisSize.min,
-          children: const [
-            Icon(Icons.add_photo_alternate_outlined, size: 15, color: AppColors.textTertiary),
-            SizedBox(width: 4),
-            Text('사진 삽입', style: TextStyle(fontSize: 12, color: AppColors.textTertiary)),
-          ],
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(16, 12, 16, 20),
+      child: OutlinedButton.icon(
+        onPressed: onTap,
+        icon: const Icon(Icons.add_photo_alternate_outlined, size: 16),
+        label: const Text('사진 삽입', style: TextStyle(fontSize: 13)),
+        style: OutlinedButton.styleFrom(
+          minimumSize: const Size(0, 38),
+          padding: const EdgeInsets.symmetric(horizontal: 14),
         ),
       ),
     );
