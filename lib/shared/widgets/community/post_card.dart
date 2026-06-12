@@ -29,10 +29,19 @@ class PostCard extends ConsumerWidget {
     final hasImage = post.imageUrls.isNotEmpty;
     final showBadge = post.category == '질문' || post.category == '정보공유';
 
-    return InkWell(
-      onTap: onTap,
-      child: Container(
+    return Container(
+      margin: const EdgeInsets.symmetric(horizontal: 12, vertical: 5),
+      decoration: BoxDecoration(
+        boxShadow: AppShadows.card,
+        borderRadius: AppRadius.cardAll,
+      ),
+      child: Material(
         color: AppColors.surface,
+        borderRadius: AppRadius.cardAll,
+        clipBehavior: Clip.antiAlias,
+        child: InkWell(
+          onTap: onTap,
+          child: Padding(
         padding: EdgeInsets.fromLTRB(AppSpacing.lg, topPadding, AppSpacing.lg, AppSpacing.sm),
         child: Row(
           crossAxisAlignment: CrossAxisAlignment.end,
@@ -150,7 +159,9 @@ class PostCard extends ConsumerWidget {
           ],
         ),
       ),
-    );
+    ),
+  ),
+);
   }
 }
 

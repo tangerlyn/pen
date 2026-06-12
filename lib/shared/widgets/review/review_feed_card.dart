@@ -16,7 +16,12 @@ class ReviewFeedCard extends ConsumerWidget {
     return GestureDetector(
       onTap: onTap,
       child: Container(
-        color: AppColors.surface,
+        decoration: BoxDecoration(
+          color: AppColors.surface,
+          borderRadius: AppRadius.cardAll,
+          boxShadow: AppShadows.card,
+        ),
+        clipBehavior: Clip.antiAlias,
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
@@ -41,7 +46,7 @@ class ReviewFeedCard extends ConsumerWidget {
                       child: Container(
                         padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 3),
                         decoration: BoxDecoration(
-                          color: Colors.black.withOpacity(0.55),
+                          color: Colors.black.withValues(alpha: 0.55),
                           borderRadius: BorderRadius.circular(10),
                         ),
                         child: Row(

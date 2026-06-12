@@ -100,19 +100,26 @@ class _BottomNav extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return BottomAppBar(
-      height: 64,
-      padding: EdgeInsets.zero,
-      color: AppColors.surface,
-      elevation: 8,
-      child: Row(
-        children: [
-          _NavItem(icon: Icons.home_outlined, activeIcon: Icons.home, label: '홈', index: 0, shell: shell),
-          _NavItem(icon: Icons.grid_view_outlined, activeIcon: Icons.grid_view, label: '리뷰', index: 1, shell: shell),
-          _NavItem(icon: Icons.forum_outlined, activeIcon: Icons.forum, label: '커뮤니티', index: 2, shell: shell),
-          _NavItem(icon: Icons.book_outlined, activeIcon: Icons.book, label: '아카이브', index: 3, shell: shell),
-          _NavItem(icon: Icons.person_outline, activeIcon: Icons.person, label: '마이', index: 4, shell: shell),
-        ],
+    final bottomPad = MediaQuery.of(context).viewPadding.bottom;
+    return Container(
+      color: AppColors.background,
+      padding: EdgeInsets.fromLTRB(20, 8, 20, bottomPad + 10),
+      child: Container(
+        height: 58,
+        decoration: BoxDecoration(
+          color: AppColors.primary,
+          borderRadius: BorderRadius.circular(29),
+          boxShadow: AppShadows.nav,
+        ),
+        child: Row(
+          children: [
+            _NavItem(icon: Icons.home_outlined, activeIcon: Icons.home, label: '홈', index: 0, shell: shell),
+            _NavItem(icon: Icons.grid_view_outlined, activeIcon: Icons.grid_view, label: '리뷰', index: 1, shell: shell),
+            _NavItem(icon: Icons.forum_outlined, activeIcon: Icons.forum, label: '커뮤니티', index: 2, shell: shell),
+            _NavItem(icon: Icons.book_outlined, activeIcon: Icons.book, label: '아카이브', index: 3, shell: shell),
+            _NavItem(icon: Icons.person_outline, activeIcon: Icons.person, label: '마이', index: 4, shell: shell),
+          ],
+        ),
       ),
     );
   }
@@ -140,6 +147,9 @@ class _NavItem extends StatelessWidget {
     final isActive = shell.currentIndex == index;
     return Expanded(
       child: InkWell(
+        borderRadius: BorderRadius.circular(29),
+        splashColor: Colors.white.withValues(alpha: 0.1),
+        highlightColor: Colors.white.withValues(alpha: 0.05),
         onTap: () {
           if (index == shell.currentIndex) {
             // 같은 탭 재탭: context.go()로 스택 강제 리셋
@@ -155,16 +165,16 @@ class _NavItem extends StatelessWidget {
           children: [
             Icon(
               isActive ? activeIcon : icon,
-              color: isActive ? AppColors.primary : AppColors.textTertiary,
-              size: 24,
+              color: isActive ? Colors.white : Colors.white.withValues(alpha: 0.45),
+              size: 22,
             ),
             const SizedBox(height: 2),
             Text(
               label,
               style: TextStyle(
-                fontSize: 10,
+                fontSize: 9,
                 fontWeight: isActive ? FontWeight.w600 : FontWeight.w400,
-                color: isActive ? AppColors.primary : AppColors.textTertiary,
+                color: isActive ? Colors.white : Colors.white.withValues(alpha: 0.45),
               ),
             ),
           ],

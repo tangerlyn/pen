@@ -115,11 +115,7 @@ class _CommunityScreenState extends ConsumerState<CommunityScreen> {
                               itemCount: posts.length +
                                   (hasPopular ? 1 : 0) +
                                   (feedState.isLoadingMore ? 1 : 0),
-                              separatorBuilder: (_, i) {
-                                if (hasPopular && i == 0)
-                                  return const SizedBox.shrink();
-                                return const Divider(height: 1);
-                              },
+                              separatorBuilder: (_, i) => const SizedBox.shrink(),
                               itemBuilder: (_, i) {
                                 final normalStart = hasPopular ? 1 : 0;
                                 final normalEnd = posts.length + normalStart;

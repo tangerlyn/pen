@@ -3,22 +3,22 @@ import 'package:flutter/material.dart';
 // ── Colors ────────────────────────────────────────────────────────────────
 
 abstract class AppColors {
-  static const primary = Color(0xFF2C2C2C);
-  static const secondary = Color(0xFF5C6BC0);
-  static const accent = Color(0xFF7E57C2);
-  static const background = Color(0xFFFAFAFA);
+  static const primary = Color(0xFF1C1208);
+  static const secondary = Color(0xFF8B7355);
+  static const accent = Color(0xFFC07C37);
+  static const background = Color(0xFFF5F1EB);
   static const surface = Color(0xFFFFFFFF);
   static const error = Color(0xFFE53935);
   static const success = Color(0xFF43A047);
   static const warning = Color(0xFFFB8C00);
 
-  static const textPrimary = Color(0xFF1A1A1A);
-  static const textSecondary = Color(0xFF757575);
-  static const textTertiary = Color(0xFFBDBDBD);
+  static const textPrimary = Color(0xFF1A1208);
+  static const textSecondary = Color(0xFF6B6258);
+  static const textTertiary = Color(0xFFABA59A);
 
-  static const divider = Color(0xFFEEEEEE);
-  static const chipBackground = Color(0xFFF5F5F5);
-  static const chipSelected = Color(0xFF2C2C2C);
+  static const divider = Color(0xFFE5E0D8);
+  static const chipBackground = Color(0xFFEDE9E2);
+  static const chipSelected = Color(0xFF1C1208);
 
   static const mannerHot = Color(0xFFFF5722);
   static const mannerWarm = Color(0xFFFF9800);
@@ -27,6 +27,31 @@ abstract class AppColors {
 
   // Shadow helpers
   static const cardShadowColor = Color(0x0F000000); // black 6%
+}
+
+// ── Shadows ───────────────────────────────────────────────────────────────
+
+abstract class AppShadows {
+  static const List<BoxShadow> card = [
+    BoxShadow(
+      color: Color(0x12000000),
+      blurRadius: 10,
+      offset: Offset(0, 2),
+    ),
+  ];
+
+  static const List<BoxShadow> nav = [
+    BoxShadow(
+      color: Color(0x30000000),
+      blurRadius: 24,
+      offset: Offset(0, 8),
+    ),
+    BoxShadow(
+      color: Color(0x10000000),
+      blurRadius: 6,
+      offset: Offset(0, 2),
+    ),
+  ];
 }
 
 // ── Border Radius ────────────────────────────────────────────────────────
