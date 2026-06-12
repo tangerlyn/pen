@@ -321,6 +321,17 @@ class ReviewRepository {
         .map((s) => s.docs.map((d) => ReviewModel.fromMap(d.data() as Map<String, dynamic>, d.id)).toList());
   }
 
+  Stream<List<ReviewModel>> watchProductReviews({String? inkId, String? penId, int limit = 30}) {
+    Query query = _reviews.orderBy('createdAt', descending: true);
+    if (inkId != null) {
+      query = query.where('inkIds', arrayContains: inkId);
+    } else if (penId != null) {
+      query = query.where('penIds', arrayContains: penId);
+    }
+    return query.limit(limit).snapshots()
+        .map((s) => s.docs.map((d) => ReviewModel.fromMap(d.data() as Map<String, dynamic>, d.id)).toList());
+  }
+
   // ── 제품별 실시간 통계 (리뷰 개수, 평균 별점) ────────────────
   Future<(int reviewCount, double avgRating)> getProductStats(String type, String productId) async {
     final queryField = '${type}Ids'; // inkIds, penIds, paperIds

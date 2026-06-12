@@ -17,16 +17,14 @@ final archiveDetailProvider = FutureProviderFamily<dynamic, ArchiveDetailArgs>((
 });
 
 final productReviewsProvider =
-    FutureProviderFamily<List<ReviewModel>, ArchiveDetailArgs>((ref, args) async {
+    StreamProviderFamily<List<ReviewModel>, ArchiveDetailArgs>((ref, args) {
   final repo = ref.read(reviewRepoProvider);
   switch (args.type) {
     case 'ink':
-      final (reviews, _) = await repo.getFeed(inkId: args.productId, limit: 30);
-      return reviews;
+      return repo.watchProductReviews(inkId: args.productId);
     case 'pen':
-      final (reviews, _) = await repo.getFeed(penId: args.productId, limit: 30);
-      return reviews;
+      return repo.watchProductReviews(penId: args.productId);
     default:
-      return [];
+      return const Stream.empty();
   }
 });
