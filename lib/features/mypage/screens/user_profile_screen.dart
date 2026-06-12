@@ -54,9 +54,7 @@ class _UserProfileScreenState extends ConsumerState<UserProfileScreen>
     final userAsync = ref.watch(profileUserProvider(widget.uid));
 
     return Scaffold(
-      backgroundColor: _kCream,
       appBar: AppBar(
-        backgroundColor: _kCream,
         scrolledUnderElevation: 0,
         elevation: 0,
         title: userAsync.when(
@@ -381,7 +379,7 @@ class _PillTabDelegate extends SliverPersistentHeaderDelegate {
   Widget build(
       BuildContext context, double shrinkOffset, bool overlapsContent) {
     return Container(
-      color: _kCream,
+      color: AppColors.background,
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
       child: Container(
         decoration: BoxDecoration(
