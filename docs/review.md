@@ -16,6 +16,7 @@
 - 스켈레톤 로딩 UI (ReviewGridSkeleton / ReviewListSkeleton)
 - 스크롤 맨 위로 버튼
 - 상단 검색 아이콘 → `/search?type=review`
+- `showAppBar` 파라미터 지원 — `false`일 때 SliverAppBar 숨김 (FeedScreen 임베드용)
 
 ### `review_write_screen.dart`
 - 경로: `/write/review`
@@ -30,25 +31,43 @@
 
 ---
 
+## 리뷰 상세 (`review_detail_screen.dart`)
+- 경로: `/review/:reviewId`
+- **상단 커스텀 AppBar** — 뒤로가기, 스크랩 북마크 버튼(로그인 시), more_vert 메뉴
+  - 스크랩 버튼: 북마크 아이콘, 스크랩 상태 반영 (파랑 활성화)
+  - 스크랩 시 화면 중앙 토스트("스크랩되었습니다") 표시, 취소 시 미표시
+- **중간** — 이미지 PageView (스와이프), 별점, 제품 태그(잉크/만년필), 작성자 프로필, 본문, 작성 시간
+- **액션 바** — 좋아요(하트) + 좋아요 수, 댓글 아이콘 + 댓글 수
+- **댓글** — 댓글·대댓글 트리. 좋아요, 신고, 삭제(본인)
+- **하단 입력창** — 대댓글 타겟 닉네임 표시, 전송
+- 작성자·댓글 작성자 프로필 탭 → `/profile/:uid`
+
+---
+
 ## 데이터 구조 (ReviewModel)
 
 ```
-reviewId, uid, nickname, profileImageUrl
+reviewId, authorId
 inkIds[], penIds[]
 rating (0.5 단위)
-content
+title, body
+contentBlocks[]          // 블로그 형식 본문 (선택)
 imageUrls[]
-likeCount, commentCount
+likeCount, commentCount, scrapCount
 createdAt, updatedAt
+isScrapped, isLiked      // 현재 유저 상태 (클라이언트 조합)
 ```
+
+스크랩 서브컬렉션: `reviews/{reviewId}/scraps/{uid}` — `{ uid, createdAt }`
 
 ---
 
 ## 상태 관리
 
 - `feedProvider` — StateNotifier. 필터·커서·정렬 상태 보유. `loadMore()` 메서드로 페이지 추가
+- `reviewDetailProvider` — StateNotifierProvider.family. 리뷰 상세 + 좋아요/스크랩 토글
 - `reviewWriteProvider` — 작성 폼 상태 (제품 태그, 이미지, 별점, 텍스트)
-- `archiveDetailProvider` — 제품 태깅 시 제품 정보 조회에 재사용
+- `scrappedReviewsProvider` — StreamProvider.family, 실시간 스크랩 목록
 
 ---
 
@@ -56,6 +75,7 @@ createdAt, updatedAt
 
 - `lib/features/review/providers/review_write_provider.dart`
 - `lib/features/home/providers/feed_provider.dart`
+- `lib/features/home/providers/review_detail_provider.dart`
 - `lib/data/repositories/review_repository.dart`
 - `lib/shared/widgets/review/review_feed_card.dart`
-- `lib/shared/widgets/review/comment_tile.dart`
+- `lib/core/utils/toast_utils.dart`

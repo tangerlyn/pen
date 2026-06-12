@@ -15,8 +15,15 @@
 - 잉크 차트 바로가기 버튼 → `/ink-chart`
 - **탭 3개**
   - 내 리뷰 — 작성한 리뷰 그리드
-  - 스크랩 — 북마크한 리뷰
+  - 스크랩 — 북마크한 리뷰 + 커뮤니티 게시글 혼합, 최신순 정렬
   - 게시글 — 작성한 커뮤니티 글
+
+#### 스크랩 탭 (`_ScrapbookGrid`)
+- `scrappedReviewsProvider(uid)` + `scrappedPostsProvider(uid)` 동시 구독 (실시간 Stream)
+- 둘을 합쳐 `createdAt` 내림차순으로 정렬
+- 타입 판별: Dart 3 sealed class (`_ScrapItem`, `_ReviewScrap`, `_PostScrap`)로 type-safe 분기
+- 리뷰 → `ReviewListCard`, 게시글 → `PostCard` 위젯으로 렌더링
+- 당겨서 새로고침: `ref.invalidate()` 사용 (StreamProvider 호환)
 
 ### `user_profile_screen.dart`
 - 경로: `/profile/:uid`
@@ -88,9 +95,17 @@
 
 ---
 
+## 상태 관리
+
+- `scrappedReviewsProvider` — StreamProvider.family, 실시간 스크랩 리뷰 목록
+- `scrappedPostsProvider` — StreamProvider.family, 실시간 스크랩 게시글 목록
+
+---
+
 ## 관련 파일
 
 - `lib/features/mypage/providers/` — 알림 설정, 유저 활동 providers
 - `lib/data/repositories/user_repository.dart`
 - `lib/shared/providers/ink_book_providers.dart`
 - `lib/data/repositories/ink_book_repository.dart`
+- `lib/shared/providers/user_providers.dart`
