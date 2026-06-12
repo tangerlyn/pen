@@ -6,7 +6,7 @@ abstract class AppColors {
   static const primary = Color(0xFF1B2E4B);
   static const secondary = Color(0xFF2E4A6E);
   static const accent = Color(0xFF3D6A9E);
-  static const background = Color(0xFFF8F9FA);
+  static const background = Colors.transparent; // 탭 화면은 루트 그라데이션 투영
   static const surface = Color(0xFFFFFFFF);
   static const error = Color(0xFFE53935);
   static const success = Color(0xFF43A047);
@@ -173,7 +173,7 @@ class AppTheme {
           brightness: Brightness.light,
           surface: AppColors.surface,
         ),
-        scaffoldBackgroundColor: Colors.transparent,
+        scaffoldBackgroundColor: const Color(0xFFF8F9FF),
         pageTransitionsTheme: const PageTransitionsTheme(
           builders: {
             TargetPlatform.android: CupertinoPageTransitionsBuilder(),
