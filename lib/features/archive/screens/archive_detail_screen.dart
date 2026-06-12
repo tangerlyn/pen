@@ -141,21 +141,86 @@ class _InkHeroBackground extends StatelessWidget {
     } catch (_) {
       color = Colors.grey.shade300;
     }
+    final lighter = Color.lerp(color, Colors.white, 0.35)!;
+    final darker  = Color.lerp(color, Colors.black, 0.25)!;
+
     return Container(
       decoration: BoxDecoration(
         gradient: LinearGradient(
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
-          colors: [color.withOpacity(0.6), color],
+          colors: [
+            Color.lerp(color, Colors.white, 0.55)!,
+            color.withValues(alpha: 0.85),
+          ],
         ),
       ),
       child: Center(
         child: Container(
           width: 80,
           height: 80,
-          decoration: BoxDecoration(color: color, shape: BoxShape.circle, boxShadow: [
-            BoxShadow(color: color.withOpacity(0.5), blurRadius: 20, spreadRadius: 4),
-          ]),
+          decoration: BoxDecoration(
+            shape: BoxShape.circle,
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withValues(alpha: 0.25),
+                blurRadius: 16,
+                offset: const Offset(2, 5),
+              ),
+            ],
+          ),
+          child: ClipOval(
+            child: Stack(
+              children: [
+                Container(
+                  decoration: BoxDecoration(
+                    gradient: RadialGradient(
+                      center: const Alignment(-0.25, -0.35),
+                      radius: 0.85,
+                      colors: [lighter, color, darker],
+                      stops: const [0.0, 0.52, 1.0],
+                    ),
+                  ),
+                ),
+                Positioned(
+                  left: 13,
+                  top:  9,
+                  child: Container(
+                    width: 27,
+                    height: 19,
+                    decoration: BoxDecoration(
+                      borderRadius: BorderRadius.circular(11),
+                      gradient: LinearGradient(
+                        begin: Alignment.topCenter,
+                        end:   Alignment.bottomCenter,
+                        colors: [
+                          Colors.white.withValues(alpha: 0.88),
+                          Colors.white.withValues(alpha: 0.0),
+                        ],
+                      ),
+                    ),
+                  ),
+                ),
+                Positioned(
+                  right: 10,
+                  bottom: 8,
+                  child: Container(
+                    width: 18,
+                    height: 18,
+                    decoration: BoxDecoration(
+                      shape: BoxShape.circle,
+                      gradient: RadialGradient(
+                        colors: [
+                          Colors.white.withValues(alpha: 0.28),
+                          Colors.white.withValues(alpha: 0.0),
+                        ],
+                      ),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
         ),
       ),
     );

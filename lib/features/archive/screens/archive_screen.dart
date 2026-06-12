@@ -556,15 +556,7 @@ class _InkList extends ConsumerWidget {
                     child: Column(
                       mainAxisSize: MainAxisSize.min,
                       children: [
-                        Container(
-                          width: 56,
-                          height: 56,
-                          decoration: BoxDecoration(
-                            color: ink.inkColor,
-                            shape: BoxShape.circle,
-                            border: Border.all(color: AppColors.divider, width: 1),
-                          ),
-                        ),
+                        _InkGlassBall(color: ink.inkColor, size: 56),
                         const SizedBox(height: 6),
                         Text(
                           ink.name,
@@ -684,6 +676,90 @@ class _ProductRequestFooter extends StatelessWidget {
               SnackBar(content: Text('$name 이(가) 등록됐어요!')),
             );
           },
+        ),
+      ),
+    );
+  }
+}
+
+
+// ── 유리구슬 잉크 원 ──────────────────────────────────────────
+class _InkGlassBall extends StatelessWidget {
+  const _InkGlassBall({required this.color, this.size = 56});
+  final Color color;
+  final double size;
+
+  @override
+  Widget build(BuildContext context) {
+    final lighter = Color.lerp(color, Colors.white, 0.50)!;
+    final darker  = Color.lerp(color, Colors.black, 0.18)!;
+
+    return Container(
+      width: size,
+      height: size,
+      decoration: BoxDecoration(
+        shape: BoxShape.circle,
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.20),
+            blurRadius: 8,
+            offset: const Offset(1.5, 3),
+          ),
+        ],
+      ),
+      child: ClipOval(
+        child: Stack(
+          children: [
+            // ① 베이스 — 방사형 그라데이션으로 구형 입체감
+            Container(
+              decoration: BoxDecoration(
+                gradient: RadialGradient(
+                  center: const Alignment(-0.25, -0.35),
+                  radius: 0.85,
+                  colors: [lighter, color, darker],
+                  stops: const [0.0, 0.52, 1.0],
+                ),
+              ),
+            ),
+            // ② 주 스페큘러 하이라이트 — 빤질빤질한 광택점
+            Positioned(
+              left: size * 0.16,
+              top:  size * 0.11,
+              child: Container(
+                width:  size * 0.34,
+                height: size * 0.24,
+                decoration: BoxDecoration(
+                  borderRadius: BorderRadius.circular(size * 0.14),
+                  gradient: LinearGradient(
+                    begin: Alignment.topCenter,
+                    end:   Alignment.bottomCenter,
+                    colors: [
+                      Colors.white.withValues(alpha: 0.88),
+                      Colors.white.withValues(alpha: 0.0),
+                    ],
+                  ),
+                ),
+              ),
+            ),
+            // ③ 하단 반사광 — 유리 안쪽 빛 번짐
+            Positioned(
+              right:  size * 0.12,
+              bottom: size * 0.10,
+              child: Container(
+                width:  size * 0.22,
+                height: size * 0.22,
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  gradient: RadialGradient(
+                    colors: [
+                      Colors.white.withValues(alpha: 0.28),
+                      Colors.white.withValues(alpha: 0.0),
+                    ],
+                  ),
+                ),
+              ),
+            ),
+          ],
         ),
       ),
     );
