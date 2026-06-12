@@ -550,7 +550,8 @@ class _InkList extends ConsumerWidget {
               delegate: SliverChildBuilderDelegate(
                 (_, i) {
                   final ink = state.inks[i];
-                  return GestureDetector(
+                  return RepaintBoundary(
+                    child: GestureDetector(
                     onTap: () => context.push('/archive/ink/${ink.id}'),
                     child: Column(
                       mainAxisSize: MainAxisSize.min,
@@ -562,13 +563,6 @@ class _InkList extends ConsumerWidget {
                             color: ink.inkColor,
                             shape: BoxShape.circle,
                             border: Border.all(color: AppColors.divider, width: 1),
-                            boxShadow: [
-                              BoxShadow(
-                                color: ink.inkColor.withValues(alpha: 0.4),
-                                blurRadius: 6,
-                                offset: const Offset(0, 2),
-                              ),
-                            ],
                           ),
                         ),
                         const SizedBox(height: 6),
@@ -581,6 +575,7 @@ class _InkList extends ConsumerWidget {
                         ),
                       ],
                     ),
+                  ),
                   );
                 },
                 childCount: state.inks.length,

@@ -37,13 +37,13 @@ abstract class AppGlass {
   static const double blur = 10.0;
   static const double cardOpacity = 0.80;
 
-  // 앱 전체 배경 — 흰색에 아주 살짝 파란기
+  // 앱 전체 배경 — 흰색에 파란기 극히 미세하게
   static const LinearGradient backgroundGradient = LinearGradient(
     begin: Alignment.topLeft,
     end: Alignment.bottomRight,
     colors: [
-      Color(0xFFF4F7FF), // 흰색 + 미세한 블루
-      Color(0xFFF8FAFF), // 거의 흰색
+      Color(0xFFF8F9FF), // 거의 흰색, 파란기 1%
+      Color(0xFFFBFCFF), // 거의 흰색
     ],
   );
 }
