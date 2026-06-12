@@ -37,16 +37,14 @@ abstract class AppGlass {
   static const double blur = 10.0;
   static const double cardOpacity = 0.80;
 
-  // 앱 전체 배경 그라데이션 (라벤더 → 연파랑)
+  // 앱 전체 배경 — 흰색에 아주 살짝 파란기
   static const LinearGradient backgroundGradient = LinearGradient(
     begin: Alignment.topLeft,
     end: Alignment.bottomRight,
     colors: [
-      Color(0xFFECE8F8), // 연보라
-      Color(0xFFE5EDF8), // 연파랑
-      Color(0xFFEEF2FA), // 거의 흰 블루
+      Color(0xFFF4F7FF), // 흰색 + 미세한 블루
+      Color(0xFFF8FAFF), // 거의 흰색
     ],
-    stops: [0.0, 0.55, 1.0],
   );
 }
 
@@ -176,6 +174,12 @@ class AppTheme {
           surface: AppColors.surface,
         ),
         scaffoldBackgroundColor: Colors.transparent,
+        pageTransitionsTheme: const PageTransitionsTheme(
+          builders: {
+            TargetPlatform.android: CupertinoPageTransitionsBuilder(),
+            TargetPlatform.iOS: CupertinoPageTransitionsBuilder(),
+          },
+        ),
         fontFamily: 'Pretendard',
         appBarTheme: const AppBarTheme(
           backgroundColor: AppColors.surface,
