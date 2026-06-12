@@ -158,6 +158,7 @@ class PostWriteNotifier extends StateNotifier<PostWriteState> {
     required String body,
     List<String> imageUrls = const [],
     String? category,
+    List<Map<String, dynamic>>? contentBlocks,
   }) async {
     state = const PostWriteState(isSubmitting: true);
     try {
@@ -168,6 +169,7 @@ class PostWriteNotifier extends StateNotifier<PostWriteState> {
         body: body,
         imageUrls: imageUrls,
         category: category,
+        contentBlocks: contentBlocks,
       );
       // 커뮤니티 글 작성 EXP 지급 + 레벨업 체크
       final levelUp = await _ref.read(userRepoProvider).addExpAndCheck(authorId, LevelSystem.expPost);

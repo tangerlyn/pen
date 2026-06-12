@@ -131,6 +131,75 @@ class _ReviewDetailScreenState extends ConsumerState<ReviewDetailScreen> {
     );
   }
 
+  List<Widget> _buildReviewContentBlocks(
+    BuildContext context,
+    List<Map<String, dynamic>> blocks,
+    List<String> allImageUrls,
+  ) {
+    final widgets = <Widget>[];
+    for (final block in blocks) {
+      if (block['type'] == 'text') {
+        final text = block['content'] as String? ?? '';
+        if (text.isNotEmpty) {
+          widgets.add(Padding(
+            padding: const EdgeInsets.only(bottom: 12),
+            child: Text(text, style: const TextStyle(fontSize: 15, height: 1.75)),
+          ));
+        }
+      } else if (block['type'] == 'image') {
+        final url = block['url'] as String? ?? '';
+        if (url.isNotEmpty) {
+          final imgIndex = allImageUrls.indexOf(url);
+          widgets.add(Padding(
+            padding: const EdgeInsets.only(bottom: 12),
+            child: GestureDetector(
+              onTap: () => Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (_) => ImageViewerScreen(
+                    imageUrls: allImageUrls.isNotEmpty ? allImageUrls : [url],
+                    initialIndex: imgIndex >= 0 ? imgIndex : 0,
+                  ),
+                ),
+              ),
+              child: ClipRRect(
+                borderRadius: BorderRadius.circular(10),
+                child: CachedNetworkImage(
+                  imageUrl: url,
+                  width: double.infinity,
+                  fit: BoxFit.cover,
+                ),
+              ),
+            ),
+          ));
+        }
+      }
+    }
+    return widgets;
+  }
+
+  List<Widget> _buildLegacyImages(BuildContext context, List<String> imageUrls) {
+    return imageUrls.asMap().entries.map((e) => Padding(
+      padding: const EdgeInsets.only(bottom: 12),
+      child: GestureDetector(
+        onTap: () => Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (_) => ImageViewerScreen(imageUrls: imageUrls, initialIndex: e.key),
+          ),
+        ),
+        child: ClipRRect(
+          borderRadius: BorderRadius.circular(10),
+          child: CachedNetworkImage(
+            imageUrl: e.value,
+            width: double.infinity,
+            fit: BoxFit.cover,
+          ),
+        ),
+      ),
+    )).toList();
+  }
+
   Widget _buildContent(BuildContext context, ReviewModel review, String? currentUid) {
     final isOwner = review.authorId == currentUid;
 
@@ -164,10 +233,7 @@ class _ReviewDetailScreenState extends ConsumerState<ReviewDetailScreen> {
             behavior: HitTestBehavior.translucent,
             child: CustomScrollView(
             slivers: [
-              // 사진 슬라이더
-              SliverToBoxAdapter(
-                child: _PhotoSlider(review: review, controller: _pageController),
-              ),
+              // ── LAYOUT A: 블로그 형식 ─────────────────────
               // 프로필
               SliverToBoxAdapter(
                 child: _ProfileRow(review: review, currentUid: currentUid),
@@ -180,56 +246,57 @@ class _ReviewDetailScreenState extends ConsumerState<ReviewDetailScreen> {
                     child: Text(
                       review.title,
                       style: const TextStyle(
-                        fontSize: 20,
-                        fontWeight: FontWeight.w700,
-                        height: 1.3,
+                        fontSize: 22,
+                        fontWeight: FontWeight.w800,
+                        height: 1.35,
+                        letterSpacing: -0.3,
                       ),
                     ),
                   ),
                 ),
               // 장비 카드
               SliverToBoxAdapter(child: _GearCard(review: review)),
-              // 별점 + 본문
+              // 별점
+              SliverToBoxAdapter(
+                child: Padding(
+                  padding: const EdgeInsets.fromLTRB(16, 0, 16, 0),
+                  child: StarRatingDisplay(rating: review.rating),
+                ),
+              ),
+              const SliverToBoxAdapter(child: SizedBox(height: 12)),
+              // 블로그 본문 (contentBlocks 또는 기존 body+imageUrls 폴백)
               SliverToBoxAdapter(
                 child: Padding(
                   padding: const EdgeInsets.symmetric(horizontal: 16),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      StarRatingDisplay(rating: review.rating),
-                      const SizedBox(height: 12),
-                      if (review.body.isNotEmpty) ...[
-                        GestureDetector(
-                          onTap: () => setState(() => _expanded = !_expanded),
-                          child: Text(
+                      if (review.contentBlocks != null && review.contentBlocks!.isNotEmpty)
+                        ..._buildReviewContentBlocks(context, review.contentBlocks!, review.imageUrls)
+                      else ...[
+                        if (review.imageUrls.isNotEmpty)
+                          ..._buildLegacyImages(context, review.imageUrls),
+                        if (review.body.isNotEmpty) ...[
+                          Text(
                             review.body,
-                            maxLines: _expanded ? null : 3,
-                            overflow: _expanded ? null : TextOverflow.ellipsis,
-                            style: const TextStyle(fontSize: 15, height: 1.6),
+                            style: const TextStyle(fontSize: 15, height: 1.75),
                           ),
-                        ),
-                        if (!_expanded && review.body.length > 100)
-                          GestureDetector(
-                            onTap: () => setState(() => _expanded = true),
-                            child: const Text(
-                              '더보기',
-                              style: TextStyle(
-                                  color: AppColors.textSecondary, fontSize: 13),
-                            ),
-                          ),
-                        const SizedBox(height: 12),
+                          const SizedBox(height: 12),
+                        ],
                       ],
                       const SizedBox(height: 8),
                       Row(
                         children: [
                           Text(
                             timeago.format(review.createdAt, locale: 'ko'),
-                            style: const TextStyle(color: AppColors.textTertiary, fontSize: 12),
+                            style: const TextStyle(
+                                color: AppColors.textTertiary, fontSize: 12),
                           ),
                           if (review.updatedAt != null) ...[
                             const SizedBox(width: 6),
                             const Text('· 수정됨',
-                                style: TextStyle(color: AppColors.textTertiary, fontSize: 12)),
+                                style: TextStyle(
+                                    color: AppColors.textTertiary, fontSize: 12)),
                           ],
                         ],
                       ),
@@ -238,6 +305,44 @@ class _ReviewDetailScreenState extends ConsumerState<ReviewDetailScreen> {
                   ),
                 ),
               ),
+              // ── LAYOUT B: 기존 형식 (사진 슬라이더 상단) ─────
+              // SliverToBoxAdapter(
+              //   child: _PhotoSlider(review: review, controller: _pageController),
+              // ),
+              // SliverToBoxAdapter(
+              //   child: _ProfileRow(review: review, currentUid: currentUid),
+              // ),
+              // if (review.title.isNotEmpty)
+              //   SliverToBoxAdapter(
+              //     child: Padding(
+              //       padding: const EdgeInsets.fromLTRB(16, 4, 16, 0),
+              //       child: Text(review.title,
+              //           style: const TextStyle(fontSize: 20, fontWeight: FontWeight.w700, height: 1.3)),
+              //     ),
+              //   ),
+              // SliverToBoxAdapter(child: _GearCard(review: review)),
+              // SliverToBoxAdapter(
+              //   child: Padding(
+              //     padding: const EdgeInsets.symmetric(horizontal: 16),
+              //     child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+              //       StarRatingDisplay(rating: review.rating),
+              //       const SizedBox(height: 12),
+              //       if (review.body.isNotEmpty) ...[
+              //         Text(review.body, style: const TextStyle(fontSize: 15, height: 1.6)),
+              //         const SizedBox(height: 12),
+              //       ],
+              //       Row(children: [
+              //         Text(timeago.format(review.createdAt, locale: 'ko'),
+              //             style: const TextStyle(color: AppColors.textTertiary, fontSize: 12)),
+              //         if (review.updatedAt != null) ...[
+              //           const SizedBox(width: 6),
+              //           const Text('· 수정됨', style: TextStyle(color: AppColors.textTertiary, fontSize: 12)),
+              //         ],
+              //       ]),
+              //       const SizedBox(height: 8),
+              //     ]),
+              //   ),
+              // ),
               // 액션 바
               SliverToBoxAdapter(
                 child: _ActionBar(

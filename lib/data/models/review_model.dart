@@ -5,6 +5,7 @@ class ReviewModel {
     required this.id,
     required this.authorId,
     required this.imageUrls,
+    this.contentBlocks,
     this.title = '',
     this.body = '',
     this.rating = 0.0,
@@ -23,6 +24,8 @@ class ReviewModel {
   final String id;
   final String authorId;
   final List<String> imageUrls;
+  // 블로그 형식 본문 (null이면 기존 body+imageUrls 사용)
+  final List<Map<String, dynamic>>? contentBlocks;
   final String title;
   final String body;
   final double rating;
@@ -44,6 +47,9 @@ class ReviewModel {
       id: id,
       authorId: data['authorId'] as String? ?? '',
       imageUrls: List<String>.from(data['imageUrls'] as List? ?? []),
+      contentBlocks: (data['contentBlocks'] as List?)
+          ?.map((e) => Map<String, dynamic>.from(e as Map))
+          .toList(),
       title: data['title'] as String? ?? '',
       body: data['body'] as String? ?? '',
       rating: (data['rating'] as num?)?.toDouble() ?? 0.0,
@@ -53,11 +59,11 @@ class ReviewModel {
       likeCount: (data['likeCount'] as num?)?.toInt() ?? 0,
       scrapCount: (data['scrapCount'] as num?)?.toInt() ?? 0,
       commentCount: (data['commentCount'] as num?)?.toInt() ?? 0,
-      createdAt: data['createdAt'] is Timestamp 
-          ? (data['createdAt'] as Timestamp).toDate() 
+      createdAt: data['createdAt'] is Timestamp
+          ? (data['createdAt'] as Timestamp).toDate()
           : (data['createdAt'] as DateTime? ?? DateTime.now()),
-      updatedAt: data['updatedAt'] is Timestamp 
-          ? (data['updatedAt'] as Timestamp).toDate() 
+      updatedAt: data['updatedAt'] is Timestamp
+          ? (data['updatedAt'] as Timestamp).toDate()
           : (data['updatedAt'] as DateTime?),
     );
   }
@@ -65,6 +71,7 @@ class ReviewModel {
   Map<String, dynamic> toMap() => {
         'authorId': authorId,
         'imageUrls': imageUrls,
+        if (contentBlocks != null) 'contentBlocks': contentBlocks,
         'title': title,
         'body': body,
         'rating': rating,
@@ -79,14 +86,17 @@ class ReviewModel {
       };
 
   ReviewModel copyWith({
-    String? id, String? authorId, List<String>? imageUrls, String? title,
-    String? body, double? rating, List<String>? inkIds, List<String>? penIds,
+    String? id, String? authorId, List<String>? imageUrls,
+    List<Map<String, dynamic>>? contentBlocks,
+    String? title, String? body, double? rating,
+    List<String>? inkIds, List<String>? penIds,
     int? likeCount, int? scrapCount, int? commentCount,
     DateTime? createdAt, DateTime? updatedAt, bool? isLiked, bool? isScrapped,
   }) {
     return ReviewModel(
       id: id ?? this.id, authorId: authorId ?? this.authorId,
       imageUrls: imageUrls ?? this.imageUrls,
+      contentBlocks: contentBlocks ?? this.contentBlocks,
       title: title ?? this.title, body: body ?? this.body,
       rating: rating ?? this.rating,
       inkIds: inkIds ?? this.inkIds, penIds: penIds ?? this.penIds,

@@ -130,38 +130,37 @@ class ReviewWriteNotifier extends StateNotifier<ReviewWriteState> {
   void setBody(String body) => state = state.copyWith(body: body);
   void setRating(double rating) => state = state.copyWith(rating: rating);
 
-  Future<String> submit() async {
+  void reset() => state = const ReviewWriteState();
+
+  /// 블로그 에디터로 빌드된 contentBlocks를 받아 저장.
+  /// imageUrls: contentBlocks에서 추출한 이미지 URL 목록 (썸네일 등 하위호환용).
+  /// body: 텍스트 블록들 합산 (검색/미리보기 하위호환용).
+  Future<String> submitWithBlocks({
+    required List<Map<String, dynamic>> contentBlocks,
+    required List<String> imageUrls,
+    required String body,
+  }) async {
     final authState = _ref.read(authUserProvider);
     if (authState.isLoading) throw Exception('잠시 후 다시 시도해주세요.');
     final uid = authState.value;
     if (uid == null) throw Exception('로그인이 필요합니다.');
-    
-    // 수정 모드가 아니고 이미지가 없으면 에러
-    if (state.editingReviewId == null && state.images.isEmpty) {
-      throw Exception('사진을 1장 이상 추가해주세요.');
-    }
 
     state = state.copyWith(isLoading: true);
     try {
       if (state.editingReviewId != null) {
-        // 수정 모드: 새 이미지만 업로드하고 기존 URL + 새 URL 합쳐서 업데이트
-        final newImageUrls = state.images.isNotEmpty
-            ? await withRetry(() => _ref.read(storageServiceProvider).uploadReviewImages(state.images, state.editingReviewId!))
-            : [];
-        final allImageUrls = [...state.existingImageUrls, ...newImageUrls];
-
         final categories = <String>[];
         if (state.inkIds.isNotEmpty) categories.add('잉크');
         if (state.penIds.isNotEmpty) categories.add('만년필');
 
         await withRetry(() => _ref.read(reviewRepoProvider).updateReview(state.editingReviewId!, {
           'title': state.title,
-          'body': state.body,
+          'body': body,
           'rating': state.rating,
           'inkIds': state.inkIds,
           'penIds': state.penIds,
           'categories': categories,
-          'imageUrls': allImageUrls,
+          'imageUrls': imageUrls,
+          'contentBlocks': contentBlocks,
           'updatedAt': FieldValue.serverTimestamp(),
         }));
 
@@ -175,18 +174,13 @@ class ReviewWriteNotifier extends StateNotifier<ReviewWriteState> {
 
       // 작성 모드
       final reviewId = _uuid.v4();
-      debugPrint('[ReviewWrite] 이미지 업로드 시작: ${state.images.length}장');
-      final imageUrls = await withRetry(
-        () => _ref.read(storageServiceProvider).uploadReviewImages(state.images, reviewId),
-      );
-      debugPrint('[ReviewWrite] 이미지 업로드 완료: $imageUrls');
-
       final review = ReviewModel(
         id: reviewId,
         authorId: uid,
         imageUrls: imageUrls,
+        contentBlocks: contentBlocks,
         title: state.title,
-        body: state.body,
+        body: body,
         rating: state.rating,
         inkIds: state.inkIds,
         penIds: state.penIds,
@@ -197,16 +191,12 @@ class ReviewWriteNotifier extends StateNotifier<ReviewWriteState> {
       await withRetry(() => _ref.read(reviewRepoProvider).createReview(review));
       debugPrint('[ReviewWrite] Firestore 저장 완료');
 
-      // 리뷰 작성 경험치 부여 + 레벨업 체크
       final levelUp = await _ref.read(userRepoProvider).addExpAndCheck(uid, LevelSystem.expReview);
       if (levelUp != null) {
         _ref.read(levelUpProvider.notifier).state = levelUp;
       }
-      debugPrint('[ReviewWrite] 경험치 부여 완료');
 
       _ref.invalidate(feedProvider);
-      debugPrint('[ReviewWrite] 홈 피드 새로고침 요청됨');
-
       state = const ReviewWriteState();
       return reviewId;
     } catch (e, stack) {

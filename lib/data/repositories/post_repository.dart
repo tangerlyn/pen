@@ -96,6 +96,7 @@ class PostRepository {
     required String body,
     List<String> imageUrls = const [],
     String? category,
+    List<Map<String, dynamic>>? contentBlocks,
   }) async {
     final ref = await _db.collection('posts').add(PostModel(
       id: '',
@@ -104,6 +105,7 @@ class PostRepository {
       title: title,
       body: body,
       imageUrls: imageUrls,
+      contentBlocks: contentBlocks,
       category: category,
       createdAt: DateTime.now(),
     ).toMap());

@@ -8,6 +8,7 @@ class PostModel {
     required this.title,
     required this.body,
     this.imageUrls = const [],
+    this.contentBlocks,
     this.likeCount = 0,
     this.commentCount = 0,
     required this.createdAt,
@@ -21,11 +22,13 @@ class PostModel {
   final String title;
   final String body;
   final List<String> imageUrls;
+  // 블로그 형식 본문 (null이면 기존 body+imageUrls 사용)
+  final List<Map<String, dynamic>>? contentBlocks;
   final int likeCount;
   final int commentCount;
   final DateTime createdAt;
   final bool isLiked;
-  final String? category; // 질문, 정보공유, 자랑
+  final String? category;
 
   factory PostModel.fromMap(Map<String, dynamic> data, String id) {
     return PostModel(
@@ -35,6 +38,9 @@ class PostModel {
       title: data['title'] as String? ?? '',
       body: data['body'] as String? ?? '',
       imageUrls: List<String>.from(data['imageUrls'] as List? ?? []),
+      contentBlocks: (data['contentBlocks'] as List?)
+          ?.map((e) => Map<String, dynamic>.from(e as Map))
+          .toList(),
       likeCount: (data['likeCount'] as num?)?.toInt() ?? 0,
       commentCount: (data['commentCount'] as num?)?.toInt() ?? 0,
       createdAt: data['createdAt'] is Timestamp
@@ -50,6 +56,7 @@ class PostModel {
         'title': title,
         'body': body,
         'imageUrls': imageUrls,
+        if (contentBlocks != null) 'contentBlocks': contentBlocks,
         'likeCount': likeCount,
         'commentCount': commentCount,
         'createdAt': FieldValue.serverTimestamp(),

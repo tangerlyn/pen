@@ -1,14 +1,14 @@
-import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:image_picker/image_picker.dart';
 import 'package:go_router/go_router.dart';
 import '../../../core/constants/app_constants.dart';
 import '../../../core/theme/app_theme.dart';
 import '../../../core/utils/network_utils.dart';
 import '../../../shared/providers/providers.dart';
+import '../../../shared/widgets/editor/blog_body_editor.dart';
 import '../providers/community_provider.dart';
 import '../../../data/models/post_model.dart';
+import '../../../data/repositories/post_repository.dart';
 
 class PostWriteScreen extends ConsumerStatefulWidget {
   const PostWriteScreen({super.key, this.postToEdit});
@@ -20,47 +20,49 @@ class PostWriteScreen extends ConsumerStatefulWidget {
 
 class _PostWriteScreenState extends ConsumerState<PostWriteScreen> {
   late final TextEditingController _titleController;
-  late final TextEditingController _bodyController;
-  final List<XFile> _pickedImages = [];
-  late List<String> _existingImageUrls;
   String? _selectedCategory;
   bool _isSubmitting = false;
+  final _editorKey = GlobalKey<BlogBodyEditorState>();
+  List<EditorBlock>? _initialEditorBlocks;
 
   bool get _isEditing => widget.postToEdit != null;
 
   @override
   void initState() {
     super.initState();
-    _titleController = TextEditingController(text: widget.postToEdit?.title ?? '');
-    _bodyController = TextEditingController(text: widget.postToEdit?.body ?? '');
-    _existingImageUrls = List<String>.from(widget.postToEdit?.imageUrls ?? []);
-    _selectedCategory = widget.postToEdit?.category;
+    final post = widget.postToEdit;
+    _titleController = TextEditingController(text: post?.title ?? '');
+    _selectedCategory = post?.category;
+
+    if (post != null) {
+      if (post.contentBlocks != null && post.contentBlocks!.isNotEmpty) {
+        _initialEditorBlocks = editorBlocksFromMap(post.contentBlocks!);
+      } else {
+        _initialEditorBlocks = editorBlocksFromLegacy(
+          body: post.body,
+          imageUrls: post.imageUrls,
+        );
+      }
+    }
   }
 
   @override
   void dispose() {
     _titleController.dispose();
-    _bodyController.dispose();
     super.dispose();
-  }
-
-  Future<void> _pickImage() async {
-    final picker = ImagePicker();
-    final images = await picker.pickMultiImage();
-    if (images.isNotEmpty) {
-      setState(() => _pickedImages.addAll(images));
-    }
   }
 
   Future<void> _submit() async {
     final title = _titleController.text.trim();
-    final body = _bodyController.text.trim();
-    if (title.isEmpty || body.isEmpty) {
+    if (title.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('제목과 내용을 입력해주세요.')),
+        const SnackBar(content: Text('제목을 입력해주세요.')),
       );
       return;
     }
+
+    final editorState = _editorKey.currentState;
+    if (editorState == null) return;
 
     final user = ref.read(currentUserProvider).value;
     if (user == null) return;
@@ -68,37 +70,47 @@ class _PostWriteScreenState extends ConsumerState<PostWriteScreen> {
     setState(() => _isSubmitting = true);
 
     try {
-      List<String> newImageUrls = [];
-      if (_pickedImages.isNotEmpty) {
-        try {
-          final storage = ref.read(storageServiceProvider);
-          for (final img in _pickedImages) {
-            final url = await withRetry(
-              () => storage.uploadImage(file: File(img.path), folder: 'posts'),
-            );
-            newImageUrls.add(url);
-          }
-        } catch (_) {
-          if (mounted) {
-            ScaffoldMessenger.of(context).showSnackBar(
-              const SnackBar(
-                content: Text('이미지 업로드에 실패했어요. 다시 시도해주세요.'),
-                backgroundColor: Color(0xFFE53935),
-                duration: Duration(seconds: 3),
-              ),
-            );
-            setState(() => _isSubmitting = false);
-          }
-          return;
+      // 이미지 업로드 + contentBlocks 빌드
+      List<Map<String, dynamic>> contentBlocks;
+      try {
+        contentBlocks = await editorState.buildContentBlocks(
+          uploadImage: (file) => ref.read(storageServiceProvider).uploadImage(
+            file: file,
+            folder: 'posts',
+          ),
+        );
+      } catch (_) {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('이미지 업로드에 실패했어요. 다시 시도해주세요.'),
+              backgroundColor: Color(0xFFE53935),
+              duration: Duration(seconds: 3),
+            ),
+          );
+          setState(() => _isSubmitting = false);
         }
+        return;
       }
 
-      final allImageUrls = [..._existingImageUrls, ...newImageUrls];
+      final imageUrls = contentBlocks
+          .where((b) => b['type'] == 'image')
+          .map((b) => b['url'] as String)
+          .toList();
+      final body = contentBlocks
+          .where((b) => b['type'] == 'text')
+          .map((b) => b['content'] as String)
+          .join('\n');
 
       if (_isEditing) {
         await withRetry(() => ref.read(postRepositoryProvider).updatePost(
           widget.postToEdit!.id,
-          {'title': title, 'body': body, 'imageUrls': allImageUrls},
+          {
+            'title': title,
+            'body': body,
+            'imageUrls': imageUrls,
+            'contentBlocks': contentBlocks,
+          },
         ));
         if (mounted) context.pop();
       } else {
@@ -107,8 +119,9 @@ class _PostWriteScreenState extends ConsumerState<PostWriteScreen> {
               authorNickname: user.nickname,
               title: title,
               body: body,
-              imageUrls: allImageUrls,
+              imageUrls: imageUrls,
               category: _selectedCategory,
+              contentBlocks: contentBlocks,
             ));
         if (mounted && postId != null) {
           context.pop();
@@ -129,132 +142,129 @@ class _PostWriteScreenState extends ConsumerState<PostWriteScreen> {
     }
   }
 
+  bool _hasContent() {
+    if (_titleController.text.isNotEmpty) return true;
+    if (_selectedCategory != null) return true;
+    final blocks = _editorKey.currentState?.getBlocks() ?? [];
+    return blocks.any((b) {
+      if (b is TextEditorBlock) return b.controller.text.isNotEmpty;
+      if (b is ImageEditorBlock) return true;
+      return false;
+    });
+  }
+
+  Future<bool> _confirmDiscard() async {
+    if (!_hasContent()) return true;
+    return await showDialog<bool>(
+          context: context,
+          builder: (ctx) => AlertDialog(
+            title: const Text('작성 중인 내용이 있어요'),
+            content: const Text('지금 나가면 작성한 내용이 모두 삭제됩니다.'),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.pop(ctx, false),
+                child: const Text('계속 작성'),
+              ),
+              TextButton(
+                onPressed: () => Navigator.pop(ctx, true),
+                child: Text(
+                  '삭제하고 나가기',
+                  style: TextStyle(color: Theme.of(context).colorScheme.error),
+                ),
+              ),
+            ],
+          ),
+        ) ??
+        false;
+  }
+
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: Text(_isEditing ? '게시글 수정' : '글쓰기'),
+    return PopScope(
+      canPop: false,
+      onPopInvokedWithResult: (didPop, _) async {
+        if (didPop) return;
+        final leave = await _confirmDiscard();
+        if (leave && mounted) Navigator.of(context).pop();
+      },
+      child: Scaffold(
+        appBar: AppBar(
+          title: Text(_isEditing ? '게시글 수정' : '글쓰기'),
         actions: [
           _isSubmitting
-              ? const Padding(
-                  padding: EdgeInsets.all(16),
-                  child: SizedBox(width: 20, height: 20, child: CircularProgressIndicator(strokeWidth: 2)),
-                )
-              : TextButton(
-                  onPressed: _submit,
-                  child: Text(
-                    _isEditing ? '수정' : '등록',
-                    style: const TextStyle(color: AppColors.primary, fontWeight: FontWeight.w600),
+                  ? const Padding(
+                      padding: EdgeInsets.all(16),
+                      child: SizedBox(
+                        width: 20,
+                        height: 20,
+                        child: CircularProgressIndicator(strokeWidth: 2),
+                      ),
+                    )
+                  : TextButton(
+                      onPressed: _submit,
+                      child: Text(
+                        _isEditing ? '수정' : '등록',
+                        style: const TextStyle(
+                            color: AppColors.primary, fontWeight: FontWeight.w600),
+                      ),
+                    ),
+        ],
+        ),
+        body: GestureDetector(
+          onTap: () => FocusScope.of(context).unfocus(),
+          behavior: HitTestBehavior.translucent,
+          child: ListView(
+            padding: const EdgeInsets.only(bottom: 80),
+            children: [
+              // 카테고리 선택
+              Padding(
+                padding: const EdgeInsets.fromLTRB(16, 12, 16, 0),
+                child: Wrap(
+                  spacing: 8,
+                  children: ['질문', '정보공유'].map((cat) {
+                    final isSelected = _selectedCategory == cat;
+                    return ChoiceChip(
+                      label: Text(cat),
+                      selected: isSelected,
+                      onSelected: (_) => setState(
+                        () => _selectedCategory = isSelected ? null : cat,
+                      ),
+                      selectedColor: AppColors.primary,
+                      labelStyle: TextStyle(
+                        color: isSelected ? Colors.white : AppColors.textPrimary,
+                        fontWeight: FontWeight.w500,
+                      ),
+                    );
+                  }).toList(),
+                ),
+              ),
+              const SizedBox(height: 8),
+              // 제목
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 16),
+                child: TextField(
+                  controller: _titleController,
+                  decoration: const InputDecoration(
+                    hintText: '제목',
+                    border: InputBorder.none,
+                    counterText: '',
                   ),
-                ),
-        ],
-      ),
-      body: ListView(
-        padding: const EdgeInsets.all(16),
-        children: [
-          Wrap(
-            spacing: 8,
-            children: ['질문', '정보공유'].map((cat) {
-              final isSelected = _selectedCategory == cat;
-              return ChoiceChip(
-                label: Text(cat),
-                selected: isSelected,
-                onSelected: (_) => setState(
-                  () => _selectedCategory = isSelected ? null : cat,
-                ),
-                selectedColor: AppColors.primary,
-                labelStyle: TextStyle(
-                  color: isSelected ? Colors.white : AppColors.textPrimary,
-                  fontWeight: FontWeight.w500,
-                ),
-              );
-            }).toList(),
-          ),
-          const SizedBox(height: 12),
-          TextField(
-            controller: _titleController,
-            decoration: const InputDecoration(hintText: '제목', border: InputBorder.none, counterText: ''),
-            style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w600),
-            maxLength: AppConstants.maxPostTitle,
-          ),
-          const Divider(),
-          TextField(
-            controller: _bodyController,
-            decoration: const InputDecoration(hintText: '내용을 입력하세요', border: InputBorder.none, counterText: ''),
-            maxLines: null,
-            minLines: 10,
-            maxLength: AppConstants.maxPostBody,
-            style: const TextStyle(fontSize: 15, height: 1.6),
-          ),
-          const SizedBox(height: 16),
-          // 기존 이미지 (수정 시)
-          if (_existingImageUrls.isNotEmpty) ...[
-            SizedBox(
-              height: 100,
-              child: ListView.separated(
-                scrollDirection: Axis.horizontal,
-                itemCount: _existingImageUrls.length,
-                separatorBuilder: (_, __) => const SizedBox(width: 8),
-                itemBuilder: (_, i) => Stack(
-                  children: [
-                    ClipRRect(
-                      borderRadius: BorderRadius.circular(8),
-                      child: Image.network(_existingImageUrls[i], width: 100, height: 100, fit: BoxFit.cover),
-                    ),
-                    Positioned(
-                      top: 4,
-                      right: 4,
-                      child: GestureDetector(
-                        onTap: () => setState(() => _existingImageUrls.removeAt(i)),
-                        child: Container(
-                          decoration: const BoxDecoration(color: Colors.black54, shape: BoxShape.circle),
-                          child: const Icon(Icons.close, size: 16, color: Colors.white),
-                        ),
-                      ),
-                    ),
-                  ],
+                  style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w600),
+                  maxLength: AppConstants.maxPostTitle,
                 ),
               ),
-            ),
-            const SizedBox(height: 12),
-          ],
-          // 새로 추가된 이미지
-          if (_pickedImages.isNotEmpty) ...[
-            SizedBox(
-              height: 100,
-              child: ListView.separated(
-                scrollDirection: Axis.horizontal,
-                itemCount: _pickedImages.length,
-                separatorBuilder: (_, __) => const SizedBox(width: 8),
-                itemBuilder: (_, i) => Stack(
-                  children: [
-                    ClipRRect(
-                      borderRadius: BorderRadius.circular(8),
-                      child: Image.file(File(_pickedImages[i].path), width: 100, height: 100, fit: BoxFit.cover),
-                    ),
-                    Positioned(
-                      top: 4,
-                      right: 4,
-                      child: GestureDetector(
-                        onTap: () => setState(() => _pickedImages.removeAt(i)),
-                        child: Container(
-                          decoration: const BoxDecoration(color: Colors.black54, shape: BoxShape.circle),
-                          child: const Icon(Icons.close, size: 16, color: Colors.white),
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
+              const Divider(height: 1),
+              const SizedBox(height: 4),
+              // 블로그 에디터 (본문 + 인라인 이미지)
+              BlogBodyEditor(
+                key: _editorKey,
+                hintText: '내용을 입력하세요',
+                initialBlocks: _initialEditorBlocks,
+                maxTextLength: AppConstants.maxPostBody,
               ),
-            ),
-            const SizedBox(height: 12),
-          ],
-          OutlinedButton.icon(
-            onPressed: _pickImage,
-            icon: const Icon(Icons.photo_outlined),
-            label: const Text('사진 첨부'),
+            ],
           ),
-        ],
+        ),
       ),
     );
   }

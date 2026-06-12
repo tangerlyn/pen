@@ -219,6 +219,57 @@ class _PostDetailScreenState extends ConsumerState<PostDetailScreen> {
     );
   }
 
+  // contentBlocks를 Widget 목록으로 변환 (블로그 형식 렌더링)
+  List<Widget> _buildContentBlocks(
+    BuildContext context,
+    List<Map<String, dynamic>> blocks,
+    List<String> allImageUrls,
+  ) {
+    final widgets = <Widget>[];
+    for (final block in blocks) {
+      if (block['type'] == 'text') {
+        final text = block['content'] as String? ?? '';
+        if (text.isNotEmpty) {
+          widgets.add(Padding(
+            padding: const EdgeInsets.only(bottom: 12),
+            child: Text(
+              text,
+              style: const TextStyle(fontSize: 15, height: 1.75, color: AppColors.textPrimary),
+            ),
+          ));
+        }
+      } else if (block['type'] == 'image') {
+        final url = block['url'] as String? ?? '';
+        if (url.isNotEmpty) {
+          final imgIndex = allImageUrls.indexOf(url);
+          widgets.add(Padding(
+            padding: const EdgeInsets.only(bottom: 12),
+            child: GestureDetector(
+              onTap: () => Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (_) => ImageViewerScreen(
+                    imageUrls: allImageUrls.isNotEmpty ? allImageUrls : [url],
+                    initialIndex: imgIndex >= 0 ? imgIndex : 0,
+                  ),
+                ),
+              ),
+              child: ClipRRect(
+                borderRadius: BorderRadius.circular(10),
+                child: CachedNetworkImage(
+                  imageUrl: url,
+                  width: double.infinity,
+                  fit: BoxFit.cover,
+                ),
+              ),
+            ),
+          ));
+        }
+      }
+    }
+    return widgets;
+  }
+
   @override
   Widget build(BuildContext context) {
     final postAsync = ref.watch(postDetailProvider(widget.postId));
@@ -262,116 +313,308 @@ class _PostDetailScreenState extends ConsumerState<PostDetailScreen> {
                 return GestureDetector(
                   onTap: () => FocusScope.of(context).unfocus(),
                   behavior: HitTestBehavior.translucent,
+                  // ── LAYOUT A: 에디토리얼 ─────────────────────────────
                   child: ListView(
-                  padding: const EdgeInsets.all(16),
-                  children: [
-                    Text(post.title,
-                        style: const TextStyle(
-                            fontSize: 20, fontWeight: FontWeight.w700)),
-                    const SizedBox(height: 12),
-                    _PostProfileRow(post: post, currentUid: currentUid),
-                    const Divider(height: 24),
-                    Text(post.body,
-                        style: const TextStyle(fontSize: 15, height: 1.6)),
-                    if (post.imageUrls.isNotEmpty) ...[
-                      const SizedBox(height: 16),
-                      ...post.imageUrls.asMap().entries.map((e) => Padding(
-                            padding: const EdgeInsets.only(bottom: 8),
-                            child: GestureDetector(
-                              onTap: () => Navigator.push(
-                                context,
-                                MaterialPageRoute(
-                                  builder: (_) => ImageViewerScreen(
-                                    imageUrls: post.imageUrls,
-                                    initialIndex: e.key,
+                    padding: EdgeInsets.zero,
+                    children: [
+                      // 헤더 영역 (크림 배경)
+                      Container(
+                        color: const Color(0xFFF5F0E8),
+                        padding: const EdgeInsets.fromLTRB(20, 20, 20, 16),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            // 카테고리 뱃지
+                            if (post.category != null && post.category!.isNotEmpty)
+                              Container(
+                                padding: const EdgeInsets.symmetric(
+                                    horizontal: 8, vertical: 3),
+                                decoration: BoxDecoration(
+                                  color: AppColors.primary.withValues(alpha: 0.1),
+                                  borderRadius: BorderRadius.circular(4),
+                                ),
+                                child: Text(
+                                  post.category!,
+                                  style: const TextStyle(
+                                    fontSize: 11,
+                                    fontWeight: FontWeight.w600,
+                                    color: AppColors.primary,
                                   ),
                                 ),
                               ),
-                              child: ClipRRect(
-                                borderRadius: BorderRadius.circular(8),
-                                child: CachedNetworkImage(
-                                    imageUrl: e.value, fit: BoxFit.cover),
+                            const SizedBox(height: 10),
+                            // 제목 (크고 굵게)
+                            Text(
+                              post.title,
+                              style: const TextStyle(
+                                fontSize: 22,
+                                fontWeight: FontWeight.w800,
+                                height: 1.35,
+                                letterSpacing: -0.3,
                               ),
                             ),
-                          )),
-                    ],
-                    const Divider(height: 32),
-                    Row(
-                      children: [
-                        GestureDetector(
-                          behavior: HitTestBehavior.opaque,
-                          onTap: currentUid != null
-                              ? () async {
-                                  try {
-                                    await withRetry(() => ref
-                                        .read(postRepositoryProvider)
-                                        .toggleLike(post.id, currentUid, post.authorId));
-                                  } catch (_) {
-                                    if (!context.mounted) return;
-                                    ScaffoldMessenger.of(context).showSnackBar(
-                                      const SnackBar(
-                                        content: Text('인터넷 연결을 확인해주세요'),
-                                        duration: Duration(seconds: 3),
-                                      ),
-                                    );
-                                  }
-                                }
-                              : null,
-                          child: Row(
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              Icon(
-                                isLiked
-                                    ? Icons.favorite
-                                    : Icons.favorite_border,
-                                size: 18,
-                                color: isLiked
-                                    ? AppColors.error
-                                    : AppColors.textTertiary,
-                              ),
-                              const SizedBox(width: 4),
-                              Text('${post.likeCount}',
-                                  style: const TextStyle(
-                                      color: AppColors.textTertiary,
-                                      fontSize: 13)),
-                            ],
-                          ),
+                            const SizedBox(height: 12),
+                            // by-line
+                            _EditorialByline(post: post),
+                          ],
                         ),
-                        const SizedBox(width: 16),
-                        const Icon(Icons.chat_bubble_outline,
-                            size: 18, color: AppColors.textTertiary),
-                        const SizedBox(width: 4),
-                        Text('${post.commentCount}',
-                            style: const TextStyle(
-                                color: AppColors.textTertiary, fontSize: 13)),
-                      ],
-                    ),
-                    const Divider(height: 24),
-                    const Text('댓글',
-                        style: TextStyle(
-                            fontSize: 15, fontWeight: FontWeight.w600)),
-                    const SizedBox(height: 12),
-                    commentsAsync.when(
-                      data: (comments) => Column(
-                        children: comments
-                            .map((c) => _CommentTile(
-                                  comment: c,
-                                  postId: widget.postId,
-                                  currentUid: currentUid,
-                                  onReplyTap: _startReply,
-                                  onEditStart: () => setState(
-                                      () => _hasActiveEdit = true),
-                                  onEditEnd: () => setState(
-                                      () => _hasActiveEdit = false),
-                                ))
-                            .toList(),
                       ),
-                      loading: () =>
-                          const Center(child: CircularProgressIndicator()),
-                      error: (_, __) => const SizedBox.shrink(),
-                    ),
-                  ],
-                ),
+                      // 본문 + 이미지 영역
+                      Padding(
+                        padding: const EdgeInsets.fromLTRB(20, 20, 20, 0),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            // ── 블로그 형식 (contentBlocks) ──
+                            if (post.contentBlocks != null && post.contentBlocks!.isNotEmpty)
+                              ..._buildContentBlocks(context, post.contentBlocks!, post.imageUrls)
+                            // ── 기존 형식 폴백 ──
+                            else ...[
+                              if (post.imageUrls.isNotEmpty) ...[
+                                GestureDetector(
+                                  onTap: () => Navigator.push(
+                                    context,
+                                    MaterialPageRoute(
+                                      builder: (_) => ImageViewerScreen(
+                                        imageUrls: post.imageUrls,
+                                        initialIndex: 0,
+                                      ),
+                                    ),
+                                  ),
+                                  child: ClipRRect(
+                                    borderRadius: BorderRadius.circular(10),
+                                    child: CachedNetworkImage(
+                                      imageUrl: post.imageUrls.first,
+                                      width: double.infinity,
+                                      fit: BoxFit.cover,
+                                    ),
+                                  ),
+                                ),
+                                const SizedBox(height: 20),
+                              ],
+                              Text(
+                                post.body,
+                                style: const TextStyle(
+                                    fontSize: 15, height: 1.75, color: AppColors.textPrimary),
+                              ),
+                              if (post.imageUrls.length > 1) ...[
+                                const SizedBox(height: 20),
+                                ...post.imageUrls.skip(1).toList().asMap().entries.map(
+                                  (e) => Padding(
+                                    padding: const EdgeInsets.only(bottom: 10),
+                                    child: GestureDetector(
+                                      onTap: () => Navigator.push(
+                                        context,
+                                        MaterialPageRoute(
+                                          builder: (_) => ImageViewerScreen(
+                                            imageUrls: post.imageUrls,
+                                            initialIndex: e.key + 1,
+                                          ),
+                                        ),
+                                      ),
+                                      child: ClipRRect(
+                                        borderRadius: BorderRadius.circular(10),
+                                        child: CachedNetworkImage(
+                                          imageUrl: e.value,
+                                          width: double.infinity,
+                                          fit: BoxFit.cover,
+                                        ),
+                                      ),
+                                    ),
+                                  ),
+                                ),
+                              ],
+                            ],
+                            const SizedBox(height: 24),
+                            // 좋아요 · 댓글 수
+                            Row(
+                              children: [
+                                GestureDetector(
+                                  behavior: HitTestBehavior.opaque,
+                                  onTap: currentUid != null
+                                      ? () async {
+                                          try {
+                                            await withRetry(() => ref
+                                                .read(postRepositoryProvider)
+                                                .toggleLike(post.id, currentUid, post.authorId));
+                                          } catch (_) {
+                                            if (!context.mounted) return;
+                                            ScaffoldMessenger.of(context).showSnackBar(
+                                              const SnackBar(
+                                                content: Text('인터넷 연결을 확인해주세요'),
+                                                duration: Duration(seconds: 3),
+                                              ),
+                                            );
+                                          }
+                                        }
+                                      : null,
+                                  child: Row(
+                                    mainAxisSize: MainAxisSize.min,
+                                    children: [
+                                      Icon(
+                                        isLiked ? Icons.favorite : Icons.favorite_border,
+                                        size: 18,
+                                        color: isLiked ? AppColors.error : AppColors.textTertiary,
+                                      ),
+                                      const SizedBox(width: 4),
+                                      Text('${post.likeCount}',
+                                          style: const TextStyle(
+                                              color: AppColors.textTertiary, fontSize: 13)),
+                                    ],
+                                  ),
+                                ),
+                                const SizedBox(width: 16),
+                                const Icon(Icons.chat_bubble_outline,
+                                    size: 18, color: AppColors.textTertiary),
+                                const SizedBox(width: 4),
+                                Text('${post.commentCount}',
+                                    style: const TextStyle(
+                                        color: AppColors.textTertiary, fontSize: 13)),
+                              ],
+                            ),
+                            const SizedBox(height: 16),
+                          ],
+                        ),
+                      ),
+                      const Divider(height: 1),
+                      // 댓글 섹션
+                      Padding(
+                        padding: const EdgeInsets.fromLTRB(20, 16, 20, 0),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            const Text('댓글',
+                                style: TextStyle(
+                                    fontSize: 15, fontWeight: FontWeight.w600)),
+                            const SizedBox(height: 12),
+                            commentsAsync.when(
+                              data: (comments) => Column(
+                                children: comments
+                                    .map((c) => _CommentTile(
+                                          comment: c,
+                                          postId: widget.postId,
+                                          currentUid: currentUid,
+                                          onReplyTap: _startReply,
+                                          onEditStart: () => setState(
+                                              () => _hasActiveEdit = true),
+                                          onEditEnd: () => setState(
+                                              () => _hasActiveEdit = false),
+                                        ))
+                                    .toList(),
+                              ),
+                              loading: () => const Center(
+                                  child: CircularProgressIndicator()),
+                              error: (_, __) => const SizedBox.shrink(),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
+                  ),
+                  // ── LAYOUT B: 기존 (인스타/당근 스타일) ─────────────────
+                  // child: ListView(
+                  //   padding: const EdgeInsets.all(16),
+                  //   children: [
+                  //     Text(post.title,
+                  //         style: const TextStyle(
+                  //             fontSize: 20, fontWeight: FontWeight.w700)),
+                  //     const SizedBox(height: 12),
+                  //     _PostProfileRow(post: post, currentUid: currentUid),
+                  //     const Divider(height: 24),
+                  //     Text(post.body,
+                  //         style: const TextStyle(fontSize: 15, height: 1.6)),
+                  //     if (post.imageUrls.isNotEmpty) ...[
+                  //       const SizedBox(height: 16),
+                  //       ...post.imageUrls.asMap().entries.map((e) => Padding(
+                  //             padding: const EdgeInsets.only(bottom: 8),
+                  //             child: GestureDetector(
+                  //               onTap: () => Navigator.push(
+                  //                 context,
+                  //                 MaterialPageRoute(
+                  //                   builder: (_) => ImageViewerScreen(
+                  //                     imageUrls: post.imageUrls,
+                  //                     initialIndex: e.key,
+                  //                   ),
+                  //                 ),
+                  //               ),
+                  //               child: ClipRRect(
+                  //                 borderRadius: BorderRadius.circular(8),
+                  //                 child: CachedNetworkImage(
+                  //                     imageUrl: e.value, fit: BoxFit.cover),
+                  //               ),
+                  //             ),
+                  //           )),
+                  //     ],
+                  //     const Divider(height: 32),
+                  //     Row(
+                  //       children: [
+                  //         GestureDetector(
+                  //           behavior: HitTestBehavior.opaque,
+                  //           onTap: currentUid != null
+                  //               ? () async {
+                  //                   try {
+                  //                     await withRetry(() => ref
+                  //                         .read(postRepositoryProvider)
+                  //                         .toggleLike(post.id, currentUid, post.authorId));
+                  //                   } catch (_) {
+                  //                     if (!context.mounted) return;
+                  //                     ScaffoldMessenger.of(context).showSnackBar(
+                  //                       const SnackBar(
+                  //                         content: Text('인터넷 연결을 확인해주세요'),
+                  //                         duration: Duration(seconds: 3),
+                  //                       ),
+                  //                     );
+                  //                   }
+                  //                 }
+                  //               : null,
+                  //           child: Row(
+                  //             mainAxisSize: MainAxisSize.min,
+                  //             children: [
+                  //               Icon(
+                  //                 isLiked ? Icons.favorite : Icons.favorite_border,
+                  //                 size: 18,
+                  //                 color: isLiked ? AppColors.error : AppColors.textTertiary,
+                  //               ),
+                  //               const SizedBox(width: 4),
+                  //               Text('${post.likeCount}',
+                  //                   style: const TextStyle(
+                  //                       color: AppColors.textTertiary, fontSize: 13)),
+                  //             ],
+                  //           ),
+                  //         ),
+                  //         const SizedBox(width: 16),
+                  //         const Icon(Icons.chat_bubble_outline,
+                  //             size: 18, color: AppColors.textTertiary),
+                  //         const SizedBox(width: 4),
+                  //         Text('${post.commentCount}',
+                  //             style: const TextStyle(
+                  //                 color: AppColors.textTertiary, fontSize: 13)),
+                  //       ],
+                  //     ),
+                  //     const Divider(height: 24),
+                  //     const Text('댓글',
+                  //         style: TextStyle(fontSize: 15, fontWeight: FontWeight.w600)),
+                  //     const SizedBox(height: 12),
+                  //     commentsAsync.when(
+                  //       data: (comments) => Column(
+                  //         children: comments
+                  //             .map((c) => _CommentTile(
+                  //                   comment: c,
+                  //                   postId: widget.postId,
+                  //                   currentUid: currentUid,
+                  //                   onReplyTap: _startReply,
+                  //                   onEditStart: () =>
+                  //                       setState(() => _hasActiveEdit = true),
+                  //                   onEditEnd: () =>
+                  //                       setState(() => _hasActiveEdit = false),
+                  //                 ))
+                  //             .toList(),
+                  //       ),
+                  //       loading: () => const Center(child: CircularProgressIndicator()),
+                  //       error: (_, __) => const SizedBox.shrink(),
+                  //     ),
+                  //   ],
+                  // ),
                 );
               },
               loading: () => const SingleChildScrollView(child: DetailSkeleton()),
@@ -457,6 +700,31 @@ class _PostDetailScreenState extends ConsumerState<PostDetailScreen> {
               ),
             ),
         ],
+      ),
+    );
+  }
+}
+
+// ── 에디토리얼 바이라인 (LAYOUT A) ────────────────────────────────────
+class _EditorialByline extends ConsumerWidget {
+  const _EditorialByline({required this.post});
+  final PostModel post;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final authorAsync = ref.watch(_postAuthorProvider(post.authorId));
+    final nickname = authorAsync.valueOrNull?.nickname ?? post.authorNickname;
+    final timeStr = timeago.format(post.createdAt, locale: 'ko');
+
+    return GestureDetector(
+      onTap: () => navigateToProfile(context, ref, post.authorId),
+      child: Text(
+        'by $nickname  ·  $timeStr',
+        style: const TextStyle(
+          fontSize: 12,
+          color: AppColors.textTertiary,
+          letterSpacing: 0.2,
+        ),
       ),
     );
   }
