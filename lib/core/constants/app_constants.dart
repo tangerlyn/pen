@@ -24,8 +24,12 @@ abstract class AppConstants {
   static const int maxListingImages = 10;
   static const int maxReviewTags = 5;
   static const int maxNickname = 12;
-  static const int maxReviewBody = 500;
   static const int maxBio = 100;
+  static const int maxReviewBody = 500;
+  static const int maxPostTitle = 50;
+  static const int maxPostBody = 2000;
+  static const int maxComment = 300;
+  static const int maxReply = 200;
 
   // 카카오
   static const String kakaoNativeAppKey = 'YOUR_KAKAO_NATIVE_APP_KEY';

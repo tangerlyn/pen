@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:timeago/timeago.dart' as timeago;
+import '../../../core/constants/app_constants.dart';
 import '../../../core/theme/app_theme.dart';
 import '../../../core/utils/level_system.dart';
 import '../../../core/utils/network_utils.dart';
@@ -428,8 +429,12 @@ class _PostDetailScreenState extends ConsumerState<PostDetailScreen> {
                                   : '댓글을 입력하세요',
                               border: InputBorder.none,
                               isDense: true,
+                              counterText: '',
                             ),
                             maxLines: null,
+                            maxLength: _replyTargetNickname != null
+                                ? AppConstants.maxReply
+                                : AppConstants.maxComment,
                           ),
                         ),
                         _isSubmitting
@@ -798,8 +803,10 @@ class _CommentTileState extends ConsumerState<_CommentTile> {
                             isDense: true,
                             contentPadding: EdgeInsets.symmetric(
                                 horizontal: 8, vertical: 6),
+                            counterText: '',
                           ),
                           maxLines: null,
+                          maxLength: AppConstants.maxComment,
                         ),
                         Row(
                           mainAxisAlignment: MainAxisAlignment.end,
@@ -1046,8 +1053,10 @@ class _PostReplyTileState extends ConsumerState<_PostReplyTile> {
                       isDense: true,
                       contentPadding: EdgeInsets.symmetric(
                           horizontal: 8, vertical: 6),
+                      counterText: '',
                     ),
                     maxLines: null,
+                    maxLength: AppConstants.maxReply,
                   ),
                   Row(
                     mainAxisAlignment: MainAxisAlignment.end,

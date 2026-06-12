@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:go_router/go_router.dart';
+import '../../../core/constants/app_constants.dart';
 import '../../../core/theme/app_theme.dart';
 import '../../../core/utils/network_utils.dart';
 import '../../../shared/providers/providers.dart';
@@ -172,15 +173,17 @@ class _PostWriteScreenState extends ConsumerState<PostWriteScreen> {
           const SizedBox(height: 12),
           TextField(
             controller: _titleController,
-            decoration: const InputDecoration(hintText: '제목', border: InputBorder.none),
+            decoration: const InputDecoration(hintText: '제목', border: InputBorder.none, counterText: ''),
             style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w600),
+            maxLength: AppConstants.maxPostTitle,
           ),
           const Divider(),
           TextField(
             controller: _bodyController,
-            decoration: const InputDecoration(hintText: '내용을 입력하세요', border: InputBorder.none),
+            decoration: const InputDecoration(hintText: '내용을 입력하세요', border: InputBorder.none, counterText: ''),
             maxLines: null,
             minLines: 10,
+            maxLength: AppConstants.maxPostBody,
             style: const TextStyle(fontSize: 15, height: 1.6),
           ),
           const SizedBox(height: 16),

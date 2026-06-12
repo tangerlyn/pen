@@ -4,6 +4,7 @@ import 'package:cached_network_image/cached_network_image.dart';
 import 'package:go_router/go_router.dart';
 import 'package:smooth_page_indicator/smooth_page_indicator.dart';
 import 'package:timeago/timeago.dart' as timeago;
+import '../../../core/constants/app_constants.dart';
 import '../../../core/theme/app_theme.dart';
 import '../../../core/utils/network_utils.dart';
 import '../../../core/utils/profile_navigation.dart';
@@ -854,8 +855,12 @@ class _CommentInput extends StatelessWidget {
                         : '댓글을 입력하세요...',
                     contentPadding:
                         const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+                    counterText: '',
                   ),
                   maxLines: null,
+                  maxLength: replyTargetNickname != null
+                      ? AppConstants.maxReply
+                      : AppConstants.maxComment,
                 ),
               ),
               const SizedBox(width: 8),
