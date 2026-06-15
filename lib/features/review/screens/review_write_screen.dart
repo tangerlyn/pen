@@ -151,7 +151,7 @@ class _ReviewWriteScreenState extends ConsumerState<ReviewWriteScreen> {
                 _Divider(),
 
                 // ── 2. 리뷰 내용 (제목 + 블로그 에디터) ──────
-                _SectionHeader(title: '리뷰 내용', subtitle: '선택'),
+                _SectionHeader(title: '리뷰 내용', subtitle: '사진 1장 이상 필수'),
                 const _TitleSection(),
                 const Divider(height: 1, indent: 16, endIndent: 16),
                 const SizedBox(height: 4),
