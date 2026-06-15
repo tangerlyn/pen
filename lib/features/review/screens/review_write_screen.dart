@@ -189,6 +189,24 @@ class _ReviewWriteScreenState extends ConsumerState<ReviewWriteScreen> {
     final editorState = _editorKey.currentState;
     if (editorState == null) return;
 
+    final hasImage = editorState.getBlocks().any((b) => b is ImageEditorBlock);
+    if (!hasImage) {
+      await showDialog(
+        context: context,
+        builder: (_) => AlertDialog(
+          title: const Text('사진을 추가해주세요'),
+          content: const Text('리뷰에는 사진이 1장 이상 필요해요.'),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context),
+              child: const Text('확인'),
+            ),
+          ],
+        ),
+      );
+      return;
+    }
+
     // 이미지 업로드 + contentBlocks 빌드
     List<Map<String, dynamic>> contentBlocks;
     try {
