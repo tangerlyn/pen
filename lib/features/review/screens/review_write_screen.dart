@@ -40,10 +40,11 @@ class _ReviewWriteScreenState extends ConsumerState<ReviewWriteScreen> {
       }
     }
 
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (review != null) {
-        ref.read(reviewWriteProvider.notifier).initForEdit(review);
-      } else {
+    if (review != null) {
+      // initState에서 직접 호출해야 _TitleSection.initState()가 올바른 제목을 읽음
+      ref.read(reviewWriteProvider.notifier).initForEdit(review);
+    } else {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
         // 새 작성 진입 시 이전 세션 캐시 제거
         ref.read(reviewWriteProvider.notifier).reset();
         if (widget.initialType != null && widget.initialProductId != null) {
@@ -54,8 +55,8 @@ class _ReviewWriteScreenState extends ConsumerState<ReviewWriteScreen> {
               ref.read(reviewWriteProvider.notifier).addPen(widget.initialProductId!);
           }
         }
-      }
-    });
+      });
+    }
   }
 
   bool _hasContent() {
