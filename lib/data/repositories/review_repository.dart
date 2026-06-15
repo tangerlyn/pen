@@ -5,6 +5,7 @@ import '../models/review_model.dart';
 import '../models/reply_model.dart';
 import '../../core/constants/app_constants.dart';
 import '../../core/utils/level_system.dart';
+import '../../core/utils/search_utils.dart';
 
 class ReviewRepository {
   final FirebaseFirestore _firestore = FirebaseFirestore.instanceFor(app: Firebase.app());
@@ -90,6 +91,8 @@ class ReviewRepository {
     if (review.penIds.isNotEmpty) categories.add('만년필');
     reviewData['categories'] = categories;
 
+    reviewData['searchIndex'] = SearchUtils.buildIndex(review.title, review.body);
+
     await docRef.set(reviewData);
     return docRef.id;
   }
@@ -99,6 +102,11 @@ class ReviewRepository {
   }
 
   Future<void> updateReview(String reviewId, Map<String, dynamic> data) async {
+    final title = data['title'] as String? ?? '';
+    final body = data['body'] as String? ?? '';
+    if (title.isNotEmpty || body.isNotEmpty) {
+      data['searchIndex'] = SearchUtils.buildIndex(title, body);
+    }
     await _reviews.doc(reviewId).update(data);
   }
 

@@ -1,8 +1,10 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-import 'package:flutter/foundation.dart';
 import '../../../core/theme/app_theme.dart';
+import '../../../core/utils/search_utils.dart';
 import '../../../shared/providers/providers.dart';
 import '../providers/notification_settings_provider.dart';
 
@@ -91,10 +93,72 @@ class SettingsScreen extends ConsumerWidget {
                 }
               },
             ),
+            ListTile(
+              title: const Text('검색 인덱스 생성 (1회용)'),
+              subtitle: const Text('기존 리뷰·게시글에 searchIndex 필드 추가'),
+              trailing: const Icon(Icons.manage_search),
+              onTap: () => _runSearchIndexMigration(context),
+            ),
           ],
         ],
       ),
     );
+  }
+
+  Future<void> _runSearchIndexMigration(BuildContext context) async {
+    final db = FirebaseFirestore.instance;
+    int updated = 0;
+    int failed = 0;
+
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(content: Text('검색 인덱스 생성 중...')),
+    );
+
+    try {
+      // reviews
+      final reviewSnap = await db.collection('reviews').get();
+      for (final doc in reviewSnap.docs) {
+        try {
+          final data = doc.data();
+          final title = data['title'] as String? ?? '';
+          final body = data['body'] as String? ?? '';
+          await doc.reference.update({
+            'searchIndex': SearchUtils.buildIndex(title, body),
+          });
+          updated++;
+        } catch (_) {
+          failed++;
+        }
+      }
+
+      // posts
+      final postSnap = await db.collection('posts').get();
+      for (final doc in postSnap.docs) {
+        try {
+          final data = doc.data();
+          final title = data['title'] as String? ?? '';
+          final body = data['body'] as String? ?? '';
+          await doc.reference.update({
+            'searchIndex': SearchUtils.buildIndex(title, body),
+          });
+          updated++;
+        } catch (_) {
+          failed++;
+        }
+      }
+
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('완료: $updated건 업데이트, $failed건 실패')),
+        );
+      }
+    } catch (e) {
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('오류: $e')),
+        );
+      }
+    }
   }
 
   void _showLogoutDialog(BuildContext context, WidgetRef ref) {

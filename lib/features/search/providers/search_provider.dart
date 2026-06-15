@@ -1,11 +1,9 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import '../../../core/utils/search_utils.dart';
 import '../../../data/models/review_model.dart';
 import '../../../data/models/post_model.dart';
-
-// Firestore 접두어 검색: q ~ q+ 범위로 시작하는 문서 검색
-String _searchEnd(String q) => q + String.fromCharCode(0xF8FF);
 
 // ── 정렬 옵션 ─────────────────────────────────────────────────────────
 enum ReviewSortOption {
@@ -80,9 +78,6 @@ class SearchState {
     this.error,
     this.reviewSort = ReviewSortOption.newest,
     this.postSort = PostSortOption.newest,
-    this.hasMoreReviews = false,
-    this.hasMorePosts = false,
-    this.isLoadingMore = false,
   });
 
   final bool isLoading;
@@ -94,9 +89,11 @@ class SearchState {
   final String? error;
   final ReviewSortOption reviewSort;
   final PostSortOption postSort;
-  final bool hasMoreReviews;
-  final bool hasMorePosts;
-  final bool isLoadingMore;
+
+  // UI compat shims — always false (pagination not needed with indexed search)
+  bool get hasMoreReviews => false;
+  bool get hasMorePosts => false;
+  bool get isLoadingMore => false;
 
   static const _sentinel = Object();
 
@@ -110,9 +107,6 @@ class SearchState {
     Object? error = _sentinel,
     ReviewSortOption? reviewSort,
     PostSortOption? postSort,
-    bool? hasMoreReviews,
-    bool? hasMorePosts,
-    bool? isLoadingMore,
   }) {
     return SearchState(
       isLoading: isLoading ?? this.isLoading,
@@ -124,9 +118,6 @@ class SearchState {
       error: identical(error, _sentinel) ? this.error : error as String?,
       reviewSort: reviewSort ?? this.reviewSort,
       postSort: postSort ?? this.postSort,
-      hasMoreReviews: hasMoreReviews ?? this.hasMoreReviews,
-      hasMorePosts: hasMorePosts ?? this.hasMorePosts,
-      isLoadingMore: isLoadingMore ?? this.isLoadingMore,
     );
   }
 }
@@ -138,23 +129,11 @@ class SearchNotifier extends StateNotifier<SearchState> {
   final String _type;
   final _db = FirebaseFirestore.instance;
 
-  static const _pageSize = 20;
-
-  String _currentQuery = '';
-  DocumentSnapshot? _lastReviewDoc;
-  DocumentSnapshot? _lastPostTitleDoc;
-  DocumentSnapshot? _lastPostBodyDoc;
-  final _seenPostIds = <String>{};
+  static const _limit = 50;
 
   Future<void> search(String query) async {
     final q = query.trim();
     if (q.isEmpty) return;
-
-    _currentQuery = q;
-    _lastReviewDoc = null;
-    _lastPostTitleDoc = null;
-    _lastPostBodyDoc = null;
-    _seenPostIds.clear();
 
     state = state.copyWith(
       isLoading: true,
@@ -166,80 +145,61 @@ class SearchNotifier extends StateNotifier<SearchState> {
       rawPosts: [],
       reviewSort: ReviewSortOption.newest,
       postSort: PostSortOption.newest,
-      hasMoreReviews: false,
-      hasMorePosts: false,
-      isLoadingMore: false,
     );
 
     try {
+      final tokens = SearchUtils.queryTokens(q);
+      if (tokens.isEmpty) {
+        state = state.copyWith(isLoading: false);
+        return;
+      }
+
       final reviews = <ReviewModel>[];
       final posts = <PostModel>[];
 
       if (_type == 'review' || _type == 'all') {
-        final snap = await _reviewQuery(q, null);
-        reviews.addAll(snap.docs.map((d) => ReviewModel.fromMap(d.data(), d.id)));
-        _lastReviewDoc = snap.docs.length >= _pageSize ? snap.docs.last : null;
+        final snap = await _db
+            .collection('reviews')
+            .where('searchIndex', arrayContainsAny: tokens)
+            .limit(_limit)
+            .get();
+        final candidates = snap.docs
+            .map((d) => ReviewModel.fromMap(d.data(), d.id))
+            .where((r) => SearchUtils.matchesQuery('${r.title} ${r.body}', q))
+            .toList();
+        reviews.addAll(candidates);
       }
 
       if (_type == 'community' || _type == 'all') {
-        await _fetchPosts(q, posts);
+        final snap = await _db
+            .collection('posts')
+            .where('searchIndex', arrayContainsAny: tokens)
+            .limit(_limit)
+            .get();
+        final candidates = snap.docs
+            .map((d) => PostModel.fromMap(d.data(), d.id))
+            .where((p) => SearchUtils.matchesQuery('${p.title} ${p.body}', q))
+            .toList();
+        posts.addAll(candidates);
       }
 
-      final rawReviews = reviews..sort((a, b) => b.createdAt.compareTo(a.createdAt));
-      final rawPosts = posts..sort((a, b) => b.createdAt.compareTo(a.createdAt));
+      final sortedReviews = _sortReviews(reviews, ReviewSortOption.newest);
+      final sortedPosts = _sortPosts(posts, PostSortOption.newest);
 
       state = state.copyWith(
         isLoading: false,
-        reviews: rawReviews,
-        rawReviews: rawReviews,
-        posts: rawPosts,
-        rawPosts: rawPosts,
-        hasMoreReviews: _lastReviewDoc != null,
-        hasMorePosts: _lastPostTitleDoc != null || _lastPostBodyDoc != null,
+        reviews: sortedReviews,
+        rawReviews: sortedReviews,
+        posts: sortedPosts,
+        rawPosts: sortedPosts,
       );
     } catch (e) {
       state = state.copyWith(isLoading: false, error: e.toString());
     }
   }
 
-  Future<void> loadMore() async {
-    if (state.isLoadingMore || state.isLoading) return;
-    final canMoreReviews = (_type == 'review' || _type == 'all') && state.hasMoreReviews;
-    final canMorePosts = (_type == 'community' || _type == 'all') && state.hasMorePosts;
-    if (!canMoreReviews && !canMorePosts) return;
-
-    state = state.copyWith(isLoadingMore: true);
-
-    try {
-      final newReviews = <ReviewModel>[];
-      final newPosts = <PostModel>[];
-
-      if (canMoreReviews) {
-        final snap = await _reviewQuery(_currentQuery, _lastReviewDoc);
-        newReviews.addAll(snap.docs.map((d) => ReviewModel.fromMap(d.data(), d.id)));
-        _lastReviewDoc = snap.docs.length >= _pageSize ? snap.docs.last : null;
-      }
-
-      if (canMorePosts) {
-        await _fetchPostsMore(_currentQuery, newPosts);
-      }
-
-      final allRawReviews = [...state.rawReviews, ...newReviews];
-      final allRawPosts = [...state.rawPosts, ...newPosts];
-
-      state = state.copyWith(
-        isLoadingMore: false,
-        rawReviews: allRawReviews,
-        reviews: _sortReviews(allRawReviews, state.reviewSort),
-        rawPosts: allRawPosts,
-        posts: _sortPosts(allRawPosts, state.postSort),
-        hasMoreReviews: _lastReviewDoc != null,
-        hasMorePosts: _lastPostTitleDoc != null || _lastPostBodyDoc != null,
-      );
-    } catch (_) {
-      state = state.copyWith(isLoadingMore: false);
-    }
-  }
+  // No-op: pagination not needed with indexed full-text search
+  void loadMore() {}
 
   void setReviewSort(ReviewSortOption sort) {
     state = state.copyWith(
@@ -256,95 +216,7 @@ class SearchNotifier extends StateNotifier<SearchState> {
   }
 
   void reset() {
-    _currentQuery = '';
-    _lastReviewDoc = null;
-    _lastPostTitleDoc = null;
-    _lastPostBodyDoc = null;
-    _seenPostIds.clear();
     state = const SearchState();
-  }
-
-  // ── 내부 쿼리 헬퍼 ─────────────────────────────────────────────────
-
-  Future<QuerySnapshot<Map<String, dynamic>>> _reviewQuery(
-      String q, DocumentSnapshot? lastDoc) {
-    var query = _db
-        .collection('reviews')
-        .where('body', isGreaterThanOrEqualTo: q)
-        .where('body', isLessThanOrEqualTo: _searchEnd(q))
-        .orderBy('body')
-        .limit(_pageSize);
-    if (lastDoc != null) query = query.startAfterDocument(lastDoc);
-    return query.get();
-  }
-
-  // 첫 페이지 — 양쪽 서브쿼리 실행
-  Future<void> _fetchPosts(String q, List<PostModel> out) async {
-    final end = _searchEnd(q);
-
-    final titleSnap = await _db
-        .collection('posts')
-        .where('title', isGreaterThanOrEqualTo: q)
-        .where('title', isLessThanOrEqualTo: end)
-        .orderBy('title')
-        .limit(_pageSize)
-        .get();
-
-    final bodySnap = await _db
-        .collection('posts')
-        .where('body', isGreaterThanOrEqualTo: q)
-        .where('body', isLessThanOrEqualTo: end)
-        .orderBy('body')
-        .limit(_pageSize)
-        .get();
-
-    _lastPostTitleDoc = titleSnap.docs.length >= _pageSize ? titleSnap.docs.last : null;
-    _lastPostBodyDoc = bodySnap.docs.length >= _pageSize ? bodySnap.docs.last : null;
-
-    for (final doc in [...titleSnap.docs, ...bodySnap.docs]) {
-      if (_seenPostIds.add(doc.id)) {
-        out.add(PostModel.fromMap(doc.data(), doc.id));
-      }
-    }
-  }
-
-  // 추가 페이지 — 소진되지 않은 서브쿼리만 실행
-  Future<void> _fetchPostsMore(String q, List<PostModel> out) async {
-    final end = _searchEnd(q);
-
-    if (_lastPostTitleDoc != null) {
-      final snap = await _db
-          .collection('posts')
-          .where('title', isGreaterThanOrEqualTo: q)
-          .where('title', isLessThanOrEqualTo: end)
-          .orderBy('title')
-          .limit(_pageSize)
-          .startAfterDocument(_lastPostTitleDoc!)
-          .get();
-      _lastPostTitleDoc = snap.docs.length >= _pageSize ? snap.docs.last : null;
-      for (final doc in snap.docs) {
-        if (_seenPostIds.add(doc.id)) {
-          out.add(PostModel.fromMap(doc.data(), doc.id));
-        }
-      }
-    }
-
-    if (_lastPostBodyDoc != null) {
-      final snap = await _db
-          .collection('posts')
-          .where('body', isGreaterThanOrEqualTo: q)
-          .where('body', isLessThanOrEqualTo: end)
-          .orderBy('body')
-          .limit(_pageSize)
-          .startAfterDocument(_lastPostBodyDoc!)
-          .get();
-      _lastPostBodyDoc = snap.docs.length >= _pageSize ? snap.docs.last : null;
-      for (final doc in snap.docs) {
-        if (_seenPostIds.add(doc.id)) {
-          out.add(PostModel.fromMap(doc.data(), doc.id));
-        }
-      }
-    }
   }
 
   // ── 정렬 ──────────────────────────────────────────────────────────

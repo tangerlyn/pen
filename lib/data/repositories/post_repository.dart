@@ -1,6 +1,7 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import '../../core/constants/app_constants.dart';
 import '../../core/utils/level_system.dart';
+import '../../core/utils/search_utils.dart';
 import '../models/post_model.dart';
 import '../models/reply_model.dart';
 
@@ -86,6 +87,11 @@ class PostRepository {
   }
 
   Future<void> updatePost(String postId, Map<String, dynamic> data) async {
+    final title = data['title'] as String? ?? '';
+    final body = data['body'] as String? ?? '';
+    if (title.isNotEmpty || body.isNotEmpty) {
+      data['searchIndex'] = SearchUtils.buildIndex(title, body);
+    }
     await _db.collection('posts').doc(postId).update(data);
   }
 
@@ -98,7 +104,7 @@ class PostRepository {
     String? category,
     List<Map<String, dynamic>>? contentBlocks,
   }) async {
-    final ref = await _db.collection('posts').add(PostModel(
+    final data = PostModel(
       id: '',
       authorId: authorId,
       authorNickname: authorNickname,
@@ -108,7 +114,9 @@ class PostRepository {
       contentBlocks: contentBlocks,
       category: category,
       createdAt: DateTime.now(),
-    ).toMap());
+    ).toMap();
+    data['searchIndex'] = SearchUtils.buildIndex(title, body);
+    final ref = await _db.collection('posts').add(data);
     return ref.id;
   }
 
