@@ -41,8 +41,8 @@ final routerNotifierProvider =
 class RouterNotifier extends Notifier<void> with ChangeNotifier {
   @override
   void build() {
-    ref.listen(authUserProvider, (_, __) => notifyListeners());
-    ref.listen(currentUserProvider, (_, __) => notifyListeners());
+    ref.listen(authUserProvider, (_, _) => notifyListeners());
+    ref.listen(currentUserProvider, (_, _) => notifyListeners());
   }
 
   String? redirect(BuildContext context, GoRouterState state) {
@@ -87,10 +87,10 @@ final routerProvider = Provider<GoRouter>((ref) {
     redirect: notifier.redirect,
     routes: [
       // 인증 화면
-      GoRoute(path: '/login', builder: (_, __) => const LoginScreen()),
-      GoRoute(path: '/signup/nickname', builder: (_, __) => const SignupNicknameScreen()),
-      GoRoute(path: '/signup/profile', builder: (_, __) => const SignupProfileScreen()),
-      GoRoute(path: '/signup/interests', builder: (_, __) => const SignupInterestsScreen()),
+      GoRoute(path: '/login', pageBuilder: (_, state) => _fadePage(state, const LoginScreen())),
+      GoRoute(path: '/signup/nickname', pageBuilder: (_, state) => _fadePage(state, const SignupNicknameScreen())),
+      GoRoute(path: '/signup/profile', pageBuilder: (_, state) => _fadePage(state, const SignupProfileScreen())),
+      GoRoute(path: '/signup/interests', pageBuilder: (_, state) => _fadePage(state, const SignupInterestsScreen())),
 
       // 메인 탭 Shell
       StatefulShellRoute.indexedStack(
@@ -98,50 +98,47 @@ final routerProvider = Provider<GoRouter>((ref) {
         branches: [
           // 0. 홈 (디스커버리)
           StatefulShellBranch(routes: [
-            GoRoute(path: '/', builder: (_, __) => const HomeScreen()),
+            GoRoute(path: '/', builder: (_, _) => const HomeScreen()),
           ]),
           // 1. 리뷰 피드
           StatefulShellBranch(routes: [
-            GoRoute(path: '/review', builder: (_, __) => const ReviewFeedScreen()),
+            GoRoute(path: '/review', builder: (_, _) => const ReviewFeedScreen()),
           ]),
           // 2. 커뮤니티
           StatefulShellBranch(routes: [
-            GoRoute(path: '/community', builder: (_, __) => const CommunityScreen()),
+            GoRoute(path: '/community', builder: (_, _) => const CommunityScreen()),
           ]),
           // 3. 아카이브
           StatefulShellBranch(routes: [
-            GoRoute(
-              path: '/archive',
-              builder: (_, __) => const ArchiveScreen(),
-            ),
+            GoRoute(path: '/archive', builder: (_, _) => const ArchiveScreen()),
           ]),
           // 4. 마이페이지
           StatefulShellBranch(routes: [
             GoRoute(
               path: '/mypage',
-              builder: (_, __) => const MypageScreen(),
+              builder: (_, _) => const MypageScreen(),
               routes: [
-                GoRoute(path: 'edit', builder: (_, __) => const ProfileEditScreen()),
+                GoRoute(path: 'edit', pageBuilder: (_, state) => _slidePage(state, const ProfileEditScreen())),
                 GoRoute(
                   path: 'settings',
-                  builder: (_, __) => const SettingsScreen(),
+                  pageBuilder: (_, state) => _slidePage(state, const SettingsScreen()),
                   routes: [
-                    GoRoute(path: 'blocked', builder: (_, __) => const BlockedUsersScreen()),
+                    GoRoute(path: 'blocked', pageBuilder: (_, state) => _slidePage(state, const BlockedUsersScreen())),
                     GoRoute(
                       path: 'inquiries',
-                      builder: (_, __) => const InquiryListScreen(),
+                      pageBuilder: (_, state) => _slidePage(state, const InquiryListScreen()),
                       routes: [
-                        GoRoute(path: 'write', builder: (_, __) => const InquiryWriteScreen()),
+                        GoRoute(path: 'write', pageBuilder: (_, state) => _slideUpPage(state, const InquiryWriteScreen())),
                         GoRoute(
                           path: ':inquiryId',
-                          builder: (_, state) => InquiryDetailScreen(
+                          pageBuilder: (_, state) => _slidePage(state, InquiryDetailScreen(
                             inquiryId: state.pathParameters['inquiryId']!,
-                          ),
+                          )),
                         ),
                       ],
                     ),
-                    GoRoute(path: 'terms', builder: (_, __) => const TermsScreen()),
-                    GoRoute(path: 'privacy', builder: (_, __) => const PrivacyScreen()),
+                    GoRoute(path: 'terms', pageBuilder: (_, state) => _slidePage(state, const TermsScreen())),
+                    GoRoute(path: 'privacy', pageBuilder: (_, state) => _slidePage(state, const PrivacyScreen())),
                   ],
                 ),
               ],
@@ -151,66 +148,66 @@ final routerProvider = Provider<GoRouter>((ref) {
       ),
 
       // 아카이브 글로벌 라우트
-      GoRoute(path: '/archive/search', builder: (_, __) => const ArchiveSearchScreen()),
+      GoRoute(path: '/archive/search', pageBuilder: (_, state) => _slidePage(state, const ArchiveSearchScreen())),
       GoRoute(
         path: '/archive/:type/:productId',
-        builder: (_, state) => ArchiveDetailScreen(
+        pageBuilder: (_, state) => _slidePage(state, ArchiveDetailScreen(
           type: state.pathParameters['type']!,
           productId: state.pathParameters['productId']!,
-        ),
+        )),
       ),
 
       // 커뮤니티 글로벌 라우트
-      GoRoute(path: '/community/write', builder: (_, __) => const PostWriteScreen()),
+      GoRoute(path: '/community/write', pageBuilder: (_, state) => _slideUpPage(state, const PostWriteScreen())),
       GoRoute(
         path: '/community/:postId',
-        builder: (_, state) => PostDetailScreen(postId: state.pathParameters['postId']!),
+        pageBuilder: (_, state) => _slidePage(state, PostDetailScreen(postId: state.pathParameters['postId']!)),
       ),
 
       // 채팅 (글로벌)
       GoRoute(
         path: '/chat',
-        builder: (_, __) => const ChatListScreen(),
+        pageBuilder: (_, state) => _slidePage(state, const ChatListScreen()),
         routes: [
           GoRoute(
             path: ':chatId',
-            builder: (_, state) => ChatRoomScreen(chatId: state.pathParameters['chatId']!),
+            pageBuilder: (_, state) => _slidePage(state, ChatRoomScreen(chatId: state.pathParameters['chatId']!)),
           ),
         ],
       ),
 
       GoRoute(
         path: '/write/review',
-        builder: (_, state) => ReviewWriteScreen(
+        pageBuilder: (_, state) => _slideUpPage(state, ReviewWriteScreen(
           initialType: state.uri.queryParameters['type'],
           initialProductId: state.uri.queryParameters['productId'],
-        ),
+        )),
       ),
       GoRoute(
         path: '/review/:reviewId',
-        builder: (_, state) => ReviewDetailScreen(reviewId: state.pathParameters['reviewId']!),
+        pageBuilder: (_, state) => _slidePage(state, ReviewDetailScreen(reviewId: state.pathParameters['reviewId']!)),
       ),
       GoRoute(
         path: '/search',
-        builder: (_, state) => SearchScreen(
+        pageBuilder: (_, state) => _slidePage(state, SearchScreen(
           type: state.uri.queryParameters['type'] ?? 'all',
-        ),
+        )),
       ),
       GoRoute(
         path: '/ink-chart',
-        builder: (_, __) => const InkBookListScreen(),
+        pageBuilder: (_, state) => _slidePage(state, const InkBookListScreen()),
         routes: [
           GoRoute(
             path: ':bookId',
-            builder: (_, state) => InkBookDetailScreen(
+            pageBuilder: (_, state) => _slidePage(state, InkBookDetailScreen(
               bookId: state.pathParameters['bookId']!,
-            ),
+            )),
             routes: [
               GoRoute(
                 path: 'add',
-                builder: (_, state) => InkChartAddScreen(
+                pageBuilder: (_, state) => _slidePage(state, InkChartAddScreen(
                   bookId: state.pathParameters['bookId']!,
-                ),
+                )),
               ),
             ],
           ),
@@ -218,21 +215,84 @@ final routerProvider = Provider<GoRouter>((ref) {
       ),
       GoRoute(
         path: '/profile/:uid',
-        builder: (_, state) =>
-            UserProfileScreen(uid: state.pathParameters['uid']!),
+        pageBuilder: (_, state) => _slidePage(state, UserProfileScreen(uid: state.pathParameters['uid']!)),
       ),
       GoRoute(
         path: '/notifications',
-        builder: (_, __) => const NotificationScreen(),
+        pageBuilder: (_, state) => _slidePage(state, const NotificationScreen()),
       ),
       GoRoute(
         path: '/profile/:uid/followers',
-        builder: (_, state) => FollowListScreen(
+        pageBuilder: (_, state) => _slidePage(state, FollowListScreen(
           uid: state.pathParameters['uid']!,
-          initialTab:
-              int.tryParse(state.uri.queryParameters['tab'] ?? '0') ?? 0,
-        ),
+          initialTab: int.tryParse(state.uri.queryParameters['tab'] ?? '0') ?? 0,
+        )),
       ),
     ],
   );
 });
+
+// ── 화면 전환 헬퍼 ────────────────────────────────────────────────────
+
+// 오른쪽에서 슬라이드 + 페이드 (일반 내비게이션)
+CustomTransitionPage<void> _slidePage(GoRouterState state, Widget child) {
+  return CustomTransitionPage<void>(
+    key: state.pageKey,
+    child: child,
+    transitionDuration: const Duration(milliseconds: 320),
+    reverseTransitionDuration: const Duration(milliseconds: 260),
+    transitionsBuilder: (context, animation, secondaryAnimation, child) {
+      return SlideTransition(
+        position: Tween<Offset>(
+          begin: const Offset(0.06, 0),
+          end: Offset.zero,
+        ).animate(CurvedAnimation(parent: animation, curve: Curves.easeOutCubic)),
+        child: FadeTransition(
+          opacity: CurvedAnimation(
+            parent: animation,
+            curve: const Interval(0.0, 0.65, curve: Curves.easeOut),
+          ),
+          child: child,
+        ),
+      );
+    },
+  );
+}
+
+// 아래에서 슬라이드 + 페이드 (글쓰기/작성 화면)
+CustomTransitionPage<void> _slideUpPage(GoRouterState state, Widget child) {
+  return CustomTransitionPage<void>(
+    key: state.pageKey,
+    child: child,
+    transitionDuration: const Duration(milliseconds: 350),
+    reverseTransitionDuration: const Duration(milliseconds: 280),
+    transitionsBuilder: (context, animation, secondaryAnimation, child) {
+      return SlideTransition(
+        position: Tween<Offset>(
+          begin: const Offset(0, 0.07),
+          end: Offset.zero,
+        ).animate(CurvedAnimation(parent: animation, curve: Curves.easeOutCubic)),
+        child: FadeTransition(
+          opacity: CurvedAnimation(parent: animation, curve: Curves.easeOut),
+          child: child,
+        ),
+      );
+    },
+  );
+}
+
+// 페이드만 (인증 화면)
+CustomTransitionPage<void> _fadePage(GoRouterState state, Widget child) {
+  return CustomTransitionPage<void>(
+    key: state.pageKey,
+    child: child,
+    transitionDuration: const Duration(milliseconds: 280),
+    reverseTransitionDuration: const Duration(milliseconds: 200),
+    transitionsBuilder: (context, animation, secondaryAnimation, child) {
+      return FadeTransition(
+        opacity: CurvedAnimation(parent: animation, curve: Curves.easeOut),
+        child: child,
+      );
+    },
+  );
+}

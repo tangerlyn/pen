@@ -780,6 +780,29 @@ class _InkBookDetailScreenState extends ConsumerState<InkBookDetailScreen> {
 
     final chartAsync =
         ref.watch(inkChartInBookProvider((uid, widget.bookId)));
+
+    // 새 잉크 추가 감지 → 마지막 페이지로 이동
+    ref.listen<AsyncValue<List<InkChartModel>>>(
+      inkChartInBookProvider((uid, widget.bookId)),
+      (prev, next) {
+        final prevCount = prev?.valueOrNull?.length ?? -1;
+        next.whenData((entries) {
+          if (prevCount >= 0 && entries.length > prevCount) {
+            final lastPage = (entries.length - 1) ~/ _itemsPerPage;
+            WidgetsBinding.instance.addPostFrameCallback((_) {
+              if (mounted && _pageCtrl.hasClients && lastPage != _currentPage) {
+                _pageCtrl.animateToPage(
+                  lastPage,
+                  duration: const Duration(milliseconds: 450),
+                  curve: Curves.easeOutCubic,
+                );
+              }
+            });
+          }
+        });
+      },
+    );
+
     final shape = ref.watch(inkSwatchShapeProvider);
     final inkCount =
         chartAsync.maybeWhen(data: (l) => l.length, orElse: () => 0);

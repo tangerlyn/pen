@@ -145,35 +145,56 @@ class _NavItem extends StatelessWidget {
   Widget build(BuildContext context) {
     final isActive = shell.currentIndex == index;
     return Expanded(
-      child: InkWell(
-        borderRadius: BorderRadius.circular(8),
-        splashColor: AppColors.primary.withValues(alpha: 0.08),
-        highlightColor: AppColors.primary.withValues(alpha: 0.04),
+      child: GestureDetector(
+        behavior: HitTestBehavior.opaque,
         onTap: () {
           if (index == shell.currentIndex) {
             // 같은 탭 재탭: context.go()로 스택 강제 리셋
             // goBranch(initialLocation: true)는 현재 브랜치에서 no-op 처리되는 버그가 있음
             context.go(_rootPaths[index]);
           } else {
-            // 다른 탭 이동: 이전 상태 보존
             shell.goBranch(index);
           }
         },
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(
-              isActive ? activeIcon : icon,
-              color: isActive ? AppColors.primary : AppColors.textTertiary,
-              size: 22,
+            AnimatedScale(
+              scale: isActive ? 1.15 : 1.0,
+              duration: const Duration(milliseconds: 260),
+              curve: Curves.easeOutBack,
+              child: AnimatedSwitcher(
+                duration: const Duration(milliseconds: 180),
+                child: Icon(
+                  isActive ? activeIcon : icon,
+                  key: ValueKey(isActive),
+                  color: isActive ? AppColors.primary : AppColors.textTertiary,
+                  size: 22,
+                ),
+              ),
             ),
             const SizedBox(height: 2),
-            Text(
-              label,
+            AnimatedDefaultTextStyle(
+              duration: const Duration(milliseconds: 200),
               style: TextStyle(
                 fontSize: 9,
                 fontWeight: isActive ? FontWeight.w600 : FontWeight.w400,
                 color: isActive ? AppColors.primary : AppColors.textTertiary,
+              ),
+              child: Text(label),
+            ),
+            SizedBox(
+              height: 5,
+              child: AnimatedContainer(
+                duration: const Duration(milliseconds: 260),
+                curve: Curves.easeOutCubic,
+                margin: const EdgeInsets.only(top: 2),
+                width: isActive ? 4.0 : 0.0,
+                height: isActive ? 4.0 : 0.0,
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  color: isActive ? AppColors.primary : Colors.transparent,
+                ),
               ),
             ),
           ],

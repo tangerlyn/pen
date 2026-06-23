@@ -8,7 +8,9 @@ import '../../../core/theme/app_theme.dart';
 import '../../../data/models/ink_chart_model.dart';
 import '../../../shared/providers/providers.dart';
 import '../../../shared/providers/ink_book_providers.dart';
+import '../../../shared/widgets/tap_scale.dart';
 import '../providers/ink_shape_provider.dart';
+import '../widgets/ink_add_success_overlay.dart';
 import '../widgets/ink_swatch_shape.dart';
 import 'ink_crop_screen.dart';
 
@@ -136,7 +138,16 @@ class _InkChartAddScreenState extends ConsumerState<InkChartAddScreen> {
       );
       await ref.read(inkBookRepoProvider).addEntry(uid, widget.bookId, entry);
 
-      if (mounted) context.pop();
+      if (mounted) {
+        await showInkAddSuccess(
+          context,
+          photo: _photo!,
+          shape: ref.read(inkSwatchShapeProvider),
+          brand: brand,
+          inkName: inkName,
+        );
+        if (mounted) context.pop();
+      }
     } catch (e) {
       setState(() => _isSaving = false);
       _showSnack('저장 실패: $e');
@@ -268,8 +279,9 @@ class _PhotoPicker extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return GestureDetector(
+    return TapScale(
       onTap: onTap,
+      scale: 0.97,
       child: AspectRatio(
         aspectRatio: 1.4,
         child: Container(
