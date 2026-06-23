@@ -808,9 +808,9 @@ class _InkBookDetailScreenState extends ConsumerState<InkBookDetailScreen> {
         chartAsync.maybeWhen(data: (l) => l.length, orElse: () => 0);
 
     return Scaffold(
-      backgroundColor: const Color(0xFFF5F0E6),
+      backgroundColor: Colors.white,
       appBar: AppBar(
-        backgroundColor: const Color(0xFFF5F0E6),
+        backgroundColor: Colors.white,
         scrolledUnderElevation: 0,
         title: RichText(
           text: TextSpan(

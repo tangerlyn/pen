@@ -38,6 +38,11 @@ class SettingsScreen extends ConsumerWidget {
           const Divider(),
           const _SectionHeader('계정'),
           ListTile(
+            title: const Text('프로필 편집'),
+            trailing: const Icon(Icons.chevron_right),
+            onTap: () => context.push('/mypage/edit'),
+          ),
+          ListTile(
             title: const Text('차단 목록'),
             trailing: const Icon(Icons.chevron_right),
             onTap: () => context.push('/mypage/settings/blocked'),

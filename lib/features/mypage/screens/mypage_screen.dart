@@ -123,13 +123,6 @@ class _MypageScreenState extends ConsumerState<MypageScreen>
                   const SizedBox(height: AppSpacing.md),
                   // 잉크 컬렉션 미리보기
                   if (user != null) _InkChartCard(uid: user.uid),
-                  const SizedBox(height: AppSpacing.md),
-                  OutlinedButton(
-                    onPressed: () => context.push('/mypage/edit'),
-                    style: OutlinedButton.styleFrom(
-                        minimumSize: const Size(double.infinity, 44)),
-                    child: const Text('프로필 편집'),
-                  ),
                 ],
               ),
             ),
@@ -401,28 +394,22 @@ class _InkChartCard extends ConsumerWidget {
     final booksAsync = ref.watch(inkBookListProvider(uid));
     final count = booksAsync.maybeWhen(data: (l) => l.length, orElse: () => 0);
 
-    return GestureDetector(
-      onTap: () => context.push('/ink-chart'),
-      child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
-        decoration: BoxDecoration(
-          color: const Color(0xFFF7F2E8),
-          borderRadius: BorderRadius.circular(12),
-          border: Border.all(color: const Color(0xFFD4C5A9)),
-        ),
-        child: Row(
-          children: [
-            const Icon(Icons.photo_album_outlined,
-                size: 18, color: Color(0xFFB8A98A)),
-            const SizedBox(width: AppSpacing.sm),
-            const Text('내 잉크 차트', style: AppTextStyles.titleSmall),
-            const Spacer(),
-            Text('$count권', style: AppTextStyles.labelMedium),
-            const SizedBox(width: 2),
-            const Icon(Icons.chevron_right,
-                size: 16, color: AppColors.textTertiary),
-          ],
-        ),
+    return OutlinedButton(
+      onPressed: () => context.push('/ink-chart'),
+      style: OutlinedButton.styleFrom(
+        minimumSize: const Size(double.infinity, 44),
+        padding: const EdgeInsets.symmetric(horizontal: 14),
+      ),
+      child: Row(
+        children: [
+          const Icon(Icons.photo_album_outlined, size: 18),
+          const SizedBox(width: AppSpacing.sm),
+          const Text('내 잉크 차트', style: AppTextStyles.titleSmall),
+          const Spacer(),
+          Text('$count권', style: AppTextStyles.labelMedium),
+          const SizedBox(width: 2),
+          const Icon(Icons.chevron_right, size: 16),
+        ],
       ),
     );
   }

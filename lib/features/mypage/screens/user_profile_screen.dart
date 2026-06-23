@@ -11,11 +11,10 @@ import '../../../shared/widgets/community/post_card.dart';
 import '../../../shared/widgets/review/review_list_card.dart';
 import '../providers/user_activity_provider.dart';
 
-// 아날로그 감성 색상
-const _kCream = Color(0xFFF5F0E8);
-const _kParchment = Color(0xFFEDE8DF);
-const _kBrown = Color(0xFF8B6834);
-const _kBrownLight = Color(0xFFB8956A);
+// 네이비 기반 색상
+const _kNavyTint  = Color(0xFFEEF2F8);  // 연한 네이비 배경
+const _kNavyLight = Color(0xFFE2EAF4);  // 살짝 진한 연네이비
+const _kNavyMid   = Color(0xFF8BA5C8);  // 중간 네이비 (아이콘·보조)
 
 class UserProfileScreen extends ConsumerStatefulWidget {
   const UserProfileScreen({super.key, required this.uid});
@@ -185,7 +184,7 @@ class _ProfileHeader extends ConsumerWidget {
                         user.levelTitle,
                         style: const TextStyle(
                           fontSize: 12,
-                          color: _kBrown,
+                          color: AppColors.primary,
                           fontWeight: FontWeight.w500,
                         ),
                       ),
@@ -205,7 +204,7 @@ class _ProfileHeader extends ConsumerWidget {
                             child: Container(
                               width: 1,
                               height: 14,
-                              color: const Color(0xFFD4C5A9),
+                              color: AppColors.divider,
                             ),
                           ),
                           _StatChip(
@@ -228,7 +227,7 @@ class _ProfileHeader extends ConsumerWidget {
                 padding:
                     const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
                 decoration: BoxDecoration(
-                  color: _kCream,
+                  color: _kNavyTint,
                   borderRadius: BorderRadius.circular(8),
                 ),
                 child: Text(
@@ -266,7 +265,7 @@ class _ProfileAvatar extends StatelessWidget {
     return Container(
       decoration: BoxDecoration(
         shape: BoxShape.circle,
-        border: Border.all(color: _kParchment, width: 3),
+        border: Border.all(color: _kNavyLight, width: 3),
         boxShadow: const [
           BoxShadow(
             color: Color(0x1A000000),
@@ -277,12 +276,12 @@ class _ProfileAvatar extends StatelessWidget {
       ),
       child: CircleAvatar(
         radius: 32,
-        backgroundColor: _kParchment,
+        backgroundColor: _kNavyLight,
         backgroundImage: imageUrl != null
             ? CachedNetworkImageProvider(imageUrl!)
             : null,
         child: imageUrl == null
-            ? const Icon(Icons.person, size: 32, color: _kBrownLight)
+            ? const Icon(Icons.person, size: 32, color: _kNavyMid)
             : null,
       ),
     );
@@ -305,10 +304,10 @@ class _FollowButton extends StatelessWidget {
         padding:
             const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
         decoration: BoxDecoration(
-          color: isFollowing ? _kParchment : AppColors.primary,
+          color: isFollowing ? _kNavyLight : AppColors.primary,
           borderRadius: BorderRadius.circular(20),
           border: isFollowing
-              ? Border.all(color: const Color(0xFFD4C5A9))
+              ? Border.all(color: const Color(0xFFCCD6E8))
               : null,
         ),
         child: Text(
@@ -383,7 +382,7 @@ class _PillTabDelegate extends SliverPersistentHeaderDelegate {
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
       child: Container(
         decoration: BoxDecoration(
-          color: _kParchment,
+          color: _kNavyLight,
           borderRadius: BorderRadius.circular(24),
         ),
         padding: const EdgeInsets.all(3),

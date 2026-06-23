@@ -20,9 +20,9 @@ class InkBookListScreen extends ConsumerWidget {
     final booksAsync = ref.watch(inkBookListProvider(uid));
 
     return Scaffold(
-      backgroundColor: const Color(0xFFF5F0E6),
+      backgroundColor: Colors.white,
       appBar: AppBar(
-        backgroundColor: const Color(0xFFF5F0E6),
+        backgroundColor: Colors.white,
         scrolledUnderElevation: 0,
         title: const Text('내 잉크 차트'),
       ),
