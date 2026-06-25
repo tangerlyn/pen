@@ -32,6 +32,12 @@ class _UserProfileScreenState extends ConsumerState<UserProfileScreen>
   void initState() {
     super.initState();
     _tabController = TabController(length: 2, vsync: this);
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+      if (ref.read(currentUidProvider) == widget.uid) {
+        context.go('/mypage');
+      }
+    });
   }
 
   @override
@@ -43,12 +49,6 @@ class _UserProfileScreenState extends ConsumerState<UserProfileScreen>
   @override
   Widget build(BuildContext context) {
     final currentUid = ref.watch(currentUidProvider);
-
-    if (currentUid == widget.uid) {
-      WidgetsBinding.instance.addPostFrameCallback((_) {
-        if (mounted) context.go('/mypage');
-      });
-    }
 
     final userAsync = ref.watch(profileUserProvider(widget.uid));
 

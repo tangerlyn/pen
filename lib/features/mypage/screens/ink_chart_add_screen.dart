@@ -119,7 +119,8 @@ class _InkChartAddScreenState extends ConsumerState<InkChartAddScreen> {
     setState(() => _isSaving = true);
 
     try {
-      final uid = ref.read(currentUidProvider)!;
+      final uid = ref.read(currentUidProvider);
+      if (uid == null) return;
       final id = const Uuid().v4();
 
       // 1. 사진 업로드
