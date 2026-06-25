@@ -2,7 +2,7 @@
 
 ## 개요
 
-잉크·만년필에 대한 사진·별점·텍스트 리뷰를 작성하고 탐색하는 피드. 그리드/리스트 전환, 팔로잉/인기 필터 지원.
+잉크·만년필에 대한 사진·별점·텍스트 리뷰를 작성하고 탐색하는 피드. 그리드/리스트 전환, 팔로잉/추천 필터 지원.
 
 ---
 
@@ -10,12 +10,19 @@
 
 ### `review_feed_screen.dart`
 - 경로: `/review` (하단 탭 2번째)
-- **필터 바** — 전체 / 팔로잉 / 인기 탭
+- **추천/팔로잉 탭 바** — 팔로잉한 유저가 있을 때만 상단에 탭 행 표시
+  - 팔로잉 없을 경우 탭 행 숨김, 카테고리 칩만 노출
+  - 팔로잉 있을 경우 추천 / 팔로잉 탭 표시
+  - **팔로잉 탭 빨간 점**: 마지막 방문 이후 팔로잉한 사람이 새 리뷰를 올린 경우 탭 제목 오른쪽 상단에 6px 빨간 원 표시
+  - 팔로잉 탭 클릭 시 `_markFollowingAsSeen()` 호출 → 현재 시각을 SharedPreferences(`following_last_seen`)에 저장, 빨간 점 사라짐
+  - 팔로잉이 0명이 되면 feedType이 '팔로잉'인 경우 자동으로 '추천'으로 리셋
+- **카테고리 칩 필터 바** (`FeedFilterBar`) — 전체 / 잉크 / 만년필
 - **뷰 전환** — 그리드(2열) ↔ 리스트 (SharedPreferences에 설정 저장)
 - 무한 스크롤 (cursor-based pagination, pageSize 20)
-- 스켈레톤 로딩 UI (ReviewGridSkeleton / ReviewListSkeleton)
+- 스켈레톤 로딩 UI (ReviewGridSkeleton / ReviewListTileSkeleton)
 - 스크롤 맨 위로 버튼
 - 상단 검색 아이콘 → `/search?type=review`
+- 하단 우측 FAB → `/write/review`
 - `showAppBar` 파라미터 지원 — `false`일 때 SliverAppBar 숨김 (FeedScreen 임베드용)
 
 ### `review_write_screen.dart`
@@ -65,6 +72,9 @@ isScrapped, isLiked      // 현재 유저 상태 (클라이언트 조합)
 ## 상태 관리
 
 - `feedProvider` — StateNotifier. 필터·커서·정렬 상태 보유. `loadMore()` 메서드로 페이지 추가
+  - `FeedFilter.feedType`: 추천 / 팔로잉
+  - 팔로잉 탭: 팔로잉 UIDs `whereIn` 쿼리 (Firestore 한도 30)
+- `followingHasNewProvider` — `FutureProvider<bool>`. SharedPreferences의 `following_last_seen` 타임스탬프 기준으로 팔로잉 유저의 새 리뷰 유무 확인. 처음 방문(타임스탬프 없음)이면 항상 `false`
 - `reviewDetailProvider` — StateNotifierProvider.family. 리뷰 상세 + 좋아요/스크랩 토글
 - `reviewWriteProvider` — 작성 폼 상태 (제품 태그, 이미지, 별점, 텍스트)
 - `scrappedReviewsProvider` — StreamProvider.family, 실시간 스크랩 목록
@@ -74,8 +84,8 @@ isScrapped, isLiked      // 현재 유저 상태 (클라이언트 조합)
 ## 관련 파일
 
 - `lib/features/review/providers/review_write_provider.dart`
-- `lib/features/home/providers/feed_provider.dart`
+- `lib/features/home/providers/feed_provider.dart` (`feedProvider`, `followingHasNewProvider`)
 - `lib/features/home/providers/review_detail_provider.dart`
-- `lib/data/repositories/review_repository.dart`
+- `lib/data/repositories/review_repository.dart` (`hasNewFollowingReview` 메서드 포함)
 - `lib/shared/widgets/review/review_feed_card.dart`
 - `lib/core/utils/toast_utils.dart`

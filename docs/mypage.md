@@ -12,7 +12,8 @@
 - 경로: `/mypage` (하단 탭 5번째)
 - 프로필 사진, 닉네임, 소개, 레벨 뱃지
 - 팔로워 / 팔로잉 수 → 탭 시 `/profile/:uid/followers`
-- 잉크 차트 바로가기 버튼 → `/ink-chart`
+- **내 잉크 차트 버튼** — `OutlinedButton` 스타일 (아이콘 + "내 잉크 차트" 텍스트 + 보유 차트 권수 + chevron_right), 탭 시 `/ink-chart`로 이동
+- "프로필 편집" 버튼은 이 화면에서 제거됨 → 설정 화면 계정 섹션으로 이동
 - **탭 3개**
   - 내 리뷰 — 작성한 리뷰 그리드
   - 스크랩 — 북마크한 리뷰 + 커뮤니티 게시글 혼합, 최신순 정렬
@@ -30,6 +31,11 @@
 - 다른 유저의 프로필 페이지 (본인 mypage와 동일 레이아웃)
 - 팔로우 / 언팔로우 버튼
 - 차단 메뉴 (신고 포함)
+- **색상 테마** — 베이지 계열에서 네이비 계열로 전환
+  - `_kNavyTint (0xFFEEF2F8)`: 소개 박스 배경
+  - `_kNavyLight (0xFFE2EAF4)`: 프로필 아바타 테두리·배경, 팔로잉 버튼 배경, 탭 배경
+  - `_kNavyMid (0xFF8BA5C8)`: 아바타 기본 아이콘 색
+  - 레벨 칭호: `AppColors.primary`, 팔로워 구분선: `AppColors.divider`
 
 ### `profile_edit_screen.dart`
 - 경로: `/mypage/edit`
@@ -48,6 +54,7 @@
 - 경로: `/ink-chart`
 - 잉크 차트 목록 그리드
 - 새 차트 만들기 셀 (이름 입력 다이얼로그)
+- **배경색** — 흰색 (`Colors.white`)
 
 ### `ink_book_detail_screen.dart`
 - 경로: `/ink-chart/:bookId`
@@ -58,10 +65,18 @@
 - **드래그 정렬** — 길게 누른 후 순서 변경
 - **내보내기** — 화면 캡처 후 갤러리 저장 (gal 패키지)
 - 잉크 추가 FAB → `/ink-chart/:bookId/add`
+- **배경색** — 흰색 (`Colors.white`)
+- **잉크 추가 후 자동 이동** — `ref.listen`으로 잉크 목록 개수 증가를 감지해 추가된 잉크가 속한 페이지로 `PageController.animateToPage` (450ms, easeOutCubic)
 
 ### `ink_chart_add_screen.dart`
 - 경로: `/ink-chart/:bookId/add`
 - 잉크 검색 → 선택 → 스와치 사진 촬영/선택 → 차트에 추가
+- **사진 필수** — 사진 없이 저장 시 SnackBar 안내 표시
+- **사진 피커** — `TapScale(scale: 0.97)` 탭 피드백 적용
+- **추가 완료 오버레이** — 저장 성공 시 `showInkAddSuccess` 호출
+  - 흰 배경 위에 잉크 스와치 사진이 elastic 바운스 + 살짝 기울어지며 등장
+  - 브랜드명 / 잉크명 텍스트 및 3개의 ripple 파동 애니메이션
+  - 약 2.2초 후 자동 닫힘
 
 ### `ink_crop_screen.dart`
 - 스와치 이미지 크롭 화면 (원형·사각형 등 모양 선택)
@@ -73,11 +88,10 @@
 ### `settings_screen.dart`
 - 경로: `/mypage/settings`
 - 알림 설정 — 좋아요·댓글·팔로우 토글 (Firestore에 저장)
-- 차단 목록 → `/mypage/settings/blocked`
-- 문의하기 → `/mypage/settings/inquiries`
-- 이용약관 / 개인정보처리방침
+- **계정 섹션** — 프로필 편집 / 차단 목록 / 문의하기 / 이용약관 / 개인정보처리방침
+  - "프로필 편집"이 계정 섹션 첫 항목으로 추가됨 → `/mypage/edit`
 - 로그아웃 / 회원탈퇴 (확인 다이얼로그)
-- 디버그 모드: 아카이브 DB 초기화 버튼
+- 디버그 모드: 아카이브 DB 초기화 버튼, 검색 인덱스 생성 버튼
 
 ### `blocked_users_screen.dart`
 - 경로: `/mypage/settings/blocked`
@@ -99,6 +113,13 @@
 
 - `scrappedReviewsProvider` — StreamProvider.family, 실시간 스크랩 리뷰 목록
 - `scrappedPostsProvider` — StreamProvider.family, 실시간 스크랩 게시글 목록
+
+---
+
+## 공유 위젯
+
+- `lib/shared/widgets/tap_scale.dart` — `TapScale`: GestureDetector 기반 탭 시 0.95 축소 피드백 위젯 (80ms easeIn down, 220ms elasticOut up)
+- `lib/features/mypage/widgets/ink_add_success_overlay.dart` — `showInkAddSuccess(context, photo, shape, brand, inkName)`: 잉크 추가 성공 시 전체 화면 오버레이
 
 ---
 

@@ -49,10 +49,29 @@
 
 ---
 
+## UI 애니메이션 (전역)
+
+### 하단 탭바 (`lib/core/shell/main_shell.dart`)
+- 탭 아이콘: 활성 시 `AnimatedScale` 1.15배 확대 (260ms, easeOutBack)
+- 아이콘 교체: `AnimatedSwitcher` (180ms) + `ValueKey(isActive)` cross-fade
+- 텍스트: `AnimatedDefaultTextStyle` (굵기·색상 전환)
+- 활성 인디케이터: 하단 4px 점이 `AnimatedContainer` (primary 색)
+- 탭 GestureDetector: `HitTestBehavior.opaque`로 빈 영역도 터치 인식
+
+### 화면 전환 (`lib/core/router/app_router.dart`)
+- 모든 GoRoute `builder` → `pageBuilder` (CustomTransitionPage)로 교체
+- `_slidePage`: 6% 수평 슬라이드 + 페이드 (320/260ms, easeOutCubic) — 일반 화면
+- `_slideUpPage`: 7% 수직 슬라이드 + 페이드 (350/280ms) — 작성/추가 화면
+- `_fadePage`: 페이드 전용 (280/200ms) — 인증 화면
+
+---
+
 ## 관련 파일
 
 - `lib/features/home/providers/home_discovery_provider.dart`
 - `lib/features/home/providers/review_detail_provider.dart`
 - `lib/features/home/providers/notification_provider.dart`
 - `lib/features/home/providers/feed_provider.dart`
+- `lib/core/shell/main_shell.dart`
+- `lib/core/router/app_router.dart`
 - `lib/core/utils/toast_utils.dart`
