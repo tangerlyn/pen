@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:go_router/go_router.dart';
+import 'package:share_plus/share_plus.dart' show Share;
 import 'package:smooth_page_indicator/smooth_page_indicator.dart';
 import 'package:timeago/timeago.dart' as timeago;
 import '../../../core/constants/app_constants.dart';
@@ -219,6 +220,16 @@ class _ReviewDetailScreenState extends ConsumerState<ReviewDetailScreen> {
                   onPressed: () => Navigator.pop(context),
                 ),
                 const Spacer(),
+                IconButton(
+                  icon: const Icon(Icons.share_outlined),
+                  onPressed: () {
+                    final title = review.title.isNotEmpty ? review.title : '리뷰';
+                    final body = review.body.isNotEmpty
+                        ? review.body.substring(0, review.body.length.clamp(0, 80))
+                        : '';
+                    Share.share('$title\n$body\n\nNibpen - 만년필 잉크 커뮤니티');
+                  },
+                ),
                 if (currentUid != null)
                   IconButton(
                     icon: Icon(

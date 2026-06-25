@@ -9,6 +9,7 @@ import '../../../data/models/post_model.dart';
 import '../../../shared/providers/providers.dart';
 import '../../../shared/providers/user_providers.dart';
 import '../../../shared/providers/ink_book_providers.dart';
+import '../../../shared/providers/wishlist_providers.dart';
 import '../../../shared/widgets/common/empty_state.dart';
 import '../../../shared/widgets/community/post_card.dart';
 import '../../../shared/widgets/review/review_list_card.dart';
@@ -123,6 +124,10 @@ class _MypageScreenState extends ConsumerState<MypageScreen>
                   const SizedBox(height: AppSpacing.md),
                   // 잉크 컬렉션 미리보기
                   if (user != null) _InkChartCard(uid: user.uid),
+                  const SizedBox(height: AppSpacing.sm),
+                  _WishlistCard(),
+                  const SizedBox(height: AppSpacing.sm),
+                  _PublicInkBooksCard(),
                 ],
               ),
             ),
@@ -413,6 +418,57 @@ class _InkChartCard extends ConsumerWidget {
           const Text('내 잉크 차트', style: AppTextStyles.titleSmall),
           const Spacer(),
           Text('$count권', style: AppTextStyles.labelMedium),
+          const SizedBox(width: 2),
+          const Icon(Icons.chevron_right, size: 16),
+        ],
+      ),
+    );
+  }
+}
+
+class _PublicInkBooksCard extends StatelessWidget {
+  @override
+  Widget build(BuildContext context) {
+    return OutlinedButton(
+      onPressed: () => context.push('/public-ink-books'),
+      style: OutlinedButton.styleFrom(
+        minimumSize: const Size(double.infinity, 44),
+        padding: const EdgeInsets.symmetric(horizontal: 14),
+      ),
+      child: const Row(
+        children: [
+          Icon(Icons.public, size: 18),
+          SizedBox(width: AppSpacing.sm),
+          Text('공개 잉크 차트 탐색', style: AppTextStyles.titleSmall),
+          Spacer(),
+          Icon(Icons.chevron_right, size: 16),
+        ],
+      ),
+    );
+  }
+}
+
+class _WishlistCard extends ConsumerWidget {
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final uid = ref.watch(currentUidProvider);
+    final count = uid != null
+        ? ref.watch(wishlistProvider(uid)).maybeWhen(data: (l) => l.length, orElse: () => 0)
+        : 0;
+
+    return OutlinedButton(
+      onPressed: () => context.push('/mypage/wishlist'),
+      style: OutlinedButton.styleFrom(
+        minimumSize: const Size(double.infinity, 44),
+        padding: const EdgeInsets.symmetric(horizontal: 14),
+      ),
+      child: Row(
+        children: [
+          const Icon(Icons.favorite_border, size: 18),
+          const SizedBox(width: AppSpacing.sm),
+          const Text('위시리스트', style: AppTextStyles.titleSmall),
+          const Spacer(),
+          Text('$count개', style: AppTextStyles.labelMedium),
           const SizedBox(width: 2),
           const Icon(Icons.chevron_right, size: 16),
         ],

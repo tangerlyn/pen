@@ -32,6 +32,34 @@ class InkBookRepository {
   Future<void> updateBook(String uid, String bookId, {required String name}) =>
       _books(uid).doc(bookId).update({'name': name});
 
+  Future<void> updateBookVisibility(
+    String uid,
+    String bookId, {
+    required bool isPublic,
+    required String ownerNickname,
+  }) =>
+      _books(uid).doc(bookId).update({
+        'isPublic': isPublic,
+        'ownerUid': uid,
+        'ownerNickname': ownerNickname,
+      });
+
+  Future<List<InkBookModel>> getPublicBooks({int limit = 30}) async {
+    final snap = await _db
+        .collectionGroup('inkBooks')
+        .where('isPublic', isEqualTo: true)
+        .orderBy('createdAt', descending: true)
+        .limit(limit)
+        .get();
+    return snap.docs.map((d) => InkBookModel.fromMap(d.data(), d.id)).toList();
+  }
+
+  Future<InkBookModel?> getBook(String uid, String bookId) async {
+    final doc = await _books(uid).doc(bookId).get();
+    if (!doc.exists) return null;
+    return InkBookModel.fromMap(doc.data()!, doc.id);
+  }
+
   /// Deletes the book document. Caller should delete subcollection entries + photos separately.
   Future<List<InkChartModel>> deleteBook(String uid, String bookId) async {
     // Fetch chart entries so caller can delete storage photos

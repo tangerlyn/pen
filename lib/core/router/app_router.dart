@@ -31,6 +31,8 @@ import '../../features/mypage/screens/user_profile_screen.dart';
 import '../../features/mypage/screens/terms_screen.dart';
 import '../../features/mypage/screens/privacy_screen.dart';
 import '../../features/home/screens/notification_screen.dart';
+import '../../features/mypage/screens/wishlist_screen.dart';
+import '../../features/mypage/screens/public_ink_books_screen.dart';
 import '../../shared/providers/providers.dart';
 import '../shell/main_shell.dart';
 
@@ -119,6 +121,7 @@ final routerProvider = Provider<GoRouter>((ref) {
               builder: (_, _) => const MypageScreen(),
               routes: [
                 GoRoute(path: 'edit', pageBuilder: (_, state) => _slidePage(state, const ProfileEditScreen())),
+                GoRoute(path: 'wishlist', pageBuilder: (_, state) => _slidePage(state, const WishlistScreen())),
                 GoRoute(
                   path: 'settings',
                   pageBuilder: (_, state) => _slidePage(state, const SettingsScreen()),
@@ -227,6 +230,10 @@ final routerProvider = Provider<GoRouter>((ref) {
           uid: state.pathParameters['uid']!,
           initialTab: int.tryParse(state.uri.queryParameters['tab'] ?? '0') ?? 0,
         )),
+      ),
+      GoRoute(
+        path: '/public-ink-books',
+        pageBuilder: (_, state) => _slidePage(state, const PublicInkBooksScreen()),
       ),
     ],
   );

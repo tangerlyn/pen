@@ -846,6 +846,33 @@ class _InkBookDetailScreenState extends ConsumerState<InkBookDetailScreen> {
             )
           else ...[
             IconButton(
+              icon: Icon(
+                book?.isPublic == true ? Icons.lock_open_outlined : Icons.lock_outlined,
+                size: 22,
+                color: book?.isPublic == true ? AppColors.primary : null,
+              ),
+              tooltip: book?.isPublic == true ? '공개 중 (탭하여 비공개)' : '비공개 (탭하여 공개)',
+              onPressed: () async {
+                if (book == null) return;
+                final currentUser = ref.read(currentUserProvider).value;
+                final newPublic = !(book.isPublic);
+                await ref.read(inkBookRepoProvider).updateBookVisibility(
+                      uid,
+                      widget.bookId,
+                      isPublic: newPublic,
+                      ownerNickname: currentUser?.nickname ?? '',
+                    );
+                if (mounted) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(
+                      content: Text(newPublic ? '공개 잉크 차트로 설정됐어요' : '비공개로 변경됐어요'),
+                      duration: const Duration(seconds: 2),
+                    ),
+                  );
+                }
+              },
+            ),
+            IconButton(
               icon:
                   Icon(_showSearch ? Icons.search_off : Icons.search, size: 22),
               tooltip: '검색',

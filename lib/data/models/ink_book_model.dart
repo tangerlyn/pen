@@ -7,12 +7,18 @@ class InkBookModel {
     required this.name,
     required this.coverColor,
     required this.createdAt,
+    this.isPublic = false,
+    this.ownerUid = '',
+    this.ownerNickname = '',
   });
 
   final String id;
   final String name;
   final String coverColor; // '#RRGGBB'
   final DateTime createdAt;
+  final bool isPublic;
+  final String ownerUid;
+  final String ownerNickname;
 
   Color get color {
     final hex = coverColor.replaceFirst('#', '');
@@ -26,13 +32,29 @@ class InkBookModel {
         createdAt: data['createdAt'] is Timestamp
             ? (data['createdAt'] as Timestamp).toDate()
             : DateTime.now(),
+        isPublic: data['isPublic'] as bool? ?? false,
+        ownerUid: data['ownerUid'] as String? ?? '',
+        ownerNickname: data['ownerNickname'] as String? ?? '',
       );
 
   Map<String, dynamic> toMap() => {
         'name': name,
         'coverColor': coverColor,
         'createdAt': FieldValue.serverTimestamp(),
+        'isPublic': isPublic,
+        'ownerUid': ownerUid,
+        'ownerNickname': ownerNickname,
       };
+
+  InkBookModel copyWith({bool? isPublic, String? ownerNickname}) => InkBookModel(
+        id: id,
+        name: name,
+        coverColor: coverColor,
+        createdAt: createdAt,
+        isPublic: isPublic ?? this.isPublic,
+        ownerUid: ownerUid,
+        ownerNickname: ownerNickname ?? this.ownerNickname,
+      );
 }
 
 /// 파스텔 팔레트 (공책 표지색 선택용)

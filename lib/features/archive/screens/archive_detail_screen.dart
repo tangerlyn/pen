@@ -4,9 +4,11 @@ import 'package:go_router/go_router.dart';
 import '../../../core/theme/app_theme.dart';
 import '../providers/archive_detail_provider.dart';
 import '../../../shared/providers/providers.dart';
-import '../../../features/archive/providers/archive_provider.dart';
+import '../../../shared/providers/wishlist_providers.dart';
+import '../../../data/models/ink_model.dart';
 import '../../../shared/widgets/review/review_feed_card.dart';
 import '../../../shared/widgets/ink_drop_circle.dart';
+import 'ink_compare_screen.dart';
 
 class ArchiveDetailScreen extends ConsumerWidget {
   const ArchiveDetailScreen({super.key, required this.type, required this.productId});
@@ -29,20 +31,36 @@ class ArchiveDetailScreen extends ConsumerWidget {
   }
 }
 
-class _DetailContent extends StatelessWidget {
+class _DetailContent extends ConsumerWidget {
   const _DetailContent({required this.type, required this.data, required this.productId});
   final String type;
   final dynamic data;
   final String productId;
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
+    final wishlistStatus = ref.watch(wishlistStatusProvider(productId));
+    final isWishlisted = wishlistStatus.valueOrNull ?? false;
+
     return CustomScrollView(
       slivers: [
         SliverAppBar(
           expandedHeight: type == 'ink' ? 200 : 120,
           pinned: true,
           actions: [
+            IconButton(
+              icon: Icon(
+                isWishlisted ? Icons.favorite : Icons.favorite_border,
+                color: isWishlisted ? Colors.redAccent : null,
+              ),
+              onPressed: () => ref.read(wishlistActionsProvider).toggle(
+                    type: type,
+                    productId: productId,
+                    productName: type == 'ink' ? (data as InkModel).name : data.displayName,
+                    brand: data.brand,
+                    hexColor: type == 'ink' ? (data as InkModel).hexColor : '',
+                  ),
+            ),
             _ReportButton(
               type: type,
               productId: productId,
@@ -65,14 +83,38 @@ class _DetailContent extends StatelessWidget {
                 _buildInfo(data),
                 const SizedBox(height: 16),
                 // 액션 버튼
-                SizedBox(
-                  width: double.infinity,
-                  child: ElevatedButton.icon(
-                    onPressed: () => context.push('/write/review?type=$type&productId=$productId'),
-                    icon: const Icon(Icons.edit_outlined, size: 18),
-                    label: const Text('리뷰 작성'),
+                if (type == 'ink')
+                  Row(
+                    children: [
+                      Expanded(
+                        child: ElevatedButton.icon(
+                          onPressed: () => context.push('/write/review?type=$type&productId=$productId'),
+                          icon: const Icon(Icons.edit_outlined, size: 18),
+                          label: const Text('리뷰 작성'),
+                        ),
+                      ),
+                      const SizedBox(width: 8),
+                      OutlinedButton.icon(
+                        onPressed: () => Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (_) => InkCompareScreen(baseInk: data as InkModel),
+                          ),
+                        ),
+                        icon: const Icon(Icons.compare, size: 18),
+                        label: const Text('색상 비교'),
+                      ),
+                    ],
+                  )
+                else
+                  SizedBox(
+                    width: double.infinity,
+                    child: ElevatedButton.icon(
+                      onPressed: () => context.push('/write/review?type=$type&productId=$productId'),
+                      icon: const Icon(Icons.edit_outlined, size: 18),
+                      label: const Text('리뷰 작성'),
+                    ),
                   ),
-                ),
               ],
             ),
           ),

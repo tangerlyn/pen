@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:cached_network_image/cached_network_image.dart';
+import 'package:share_plus/share_plus.dart' show Share;
 import 'package:timeago/timeago.dart' as timeago;
 import '../../../core/constants/app_constants.dart';
 import '../../../core/theme/app_theme.dart';
@@ -314,10 +315,24 @@ class _PostDetailScreenState extends ConsumerState<PostDetailScreen> {
           postAsync.when(
             data: (post) {
               if (post == null) return const SizedBox.shrink();
-              return IconButton(
-                icon: const Icon(Icons.more_vert),
-                onPressed: () =>
-                    _showMoreOptions(context, post, post.authorId == currentUid),
+              return Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  IconButton(
+                    icon: const Icon(Icons.share_outlined),
+                    onPressed: () {
+                      final body = post.body.isNotEmpty
+                          ? post.body.substring(0, post.body.length.clamp(0, 80))
+                          : '';
+                      Share.share('${post.title}\n$body\n\nNibpen - 만년필 잉크 커뮤니티');
+                    },
+                  ),
+                  IconButton(
+                    icon: const Icon(Icons.more_vert),
+                    onPressed: () =>
+                        _showMoreOptions(context, post, post.authorId == currentUid),
+                  ),
+                ],
               );
             },
             loading: () => const SizedBox.shrink(),

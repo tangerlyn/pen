@@ -14,3 +14,14 @@ final inkChartInBookProvider =
   final (uid, bookId) = args;
   return ref.watch(inkBookRepoProvider).watchChart(uid, bookId);
 });
+
+final publicInkBooksProvider = FutureProvider<List<InkBookModel>>((ref) {
+  return ref.read(inkBookRepoProvider).getPublicBooks();
+});
+
+final inkChartReadonlyProvider =
+    FutureProvider.family<List<InkChartModel>, (String, String)>((ref, args) async {
+  final (uid, bookId) = args;
+  final snap = await ref.read(inkBookRepoProvider).watchChart(uid, bookId).first;
+  return snap;
+});
