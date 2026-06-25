@@ -72,6 +72,20 @@ class ReviewRepository {
     return (reviews, nextLastDoc);
   }
 
+  Future<bool> hasNewFollowingReview({
+    required List<String> followingUids,
+    required DateTime since,
+  }) async {
+    if (followingUids.isEmpty) return false;
+    final uids = followingUids.take(30).toList();
+    final snapshot = await _reviews
+        .where('authorId', whereIn: uids)
+        .where('createdAt', isGreaterThan: Timestamp.fromDate(since))
+        .limit(1)
+        .get();
+    return snapshot.docs.isNotEmpty;
+  }
+
   Future<ReviewModel?> getReview(String reviewId) async {
     final doc = await _reviews.doc(reviewId).get();
     if (!doc.exists) return null;

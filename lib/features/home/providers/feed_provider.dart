@@ -1,4 +1,5 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import '../../../data/models/review_model.dart';
 import '../../../shared/providers/providers.dart';
 import '../../../shared/providers/user_providers.dart';
@@ -190,4 +191,22 @@ class FeedNotifier extends StateNotifier<FeedState> {
 
 final feedProvider = StateNotifierProvider<FeedNotifier, FeedState>((ref) {
   return FeedNotifier(ref);
+});
+
+// 팔로잉 탭에 새 리뷰가 있는지 확인
+final followingHasNewProvider = FutureProvider<bool>((ref) async {
+  final uid = ref.watch(currentUidProvider);
+  if (uid == null) return false;
+
+  final prefs = await SharedPreferences.getInstance();
+  final lastSeenMs = prefs.getInt('following_last_seen') ?? 0;
+  if (lastSeenMs == 0) return false;
+
+  final lastSeen = DateTime.fromMillisecondsSinceEpoch(lastSeenMs);
+  final followingUids = await ref.read(userRepoProvider).getFollowingUids(uid);
+
+  return ref.read(reviewRepoProvider).hasNewFollowingReview(
+    followingUids: followingUids,
+    since: lastSeen,
+  );
 });

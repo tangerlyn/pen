@@ -7,6 +7,7 @@ import '../../../core/theme/app_theme.dart';
 import '../../../data/models/review_model.dart';
 import '../../../features/archive/providers/archive_detail_provider.dart';
 import '../../home/providers/feed_provider.dart';
+import '../../../shared/providers/providers.dart';
 import '../../../shared/widgets/review/review_feed_card.dart';
 import '../../home/widgets/feed_filter_bar.dart';
 import '../../../shared/widgets/common/skeletons.dart';
@@ -45,6 +46,13 @@ class _ReviewFeedScreenState extends ConsumerState<ReviewFeedScreen> {
     await prefs.setBool('review_grid_view', _isGridView);
   }
 
+  Future<void> _markFollowingAsSeen() async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setInt(
+        'following_last_seen', DateTime.now().millisecondsSinceEpoch);
+    ref.invalidate(followingHasNewProvider);
+  }
+
   void _scrollToTop() {
     final ns = _scrollKey.currentState;
     if (ns == null) return;
@@ -61,6 +69,20 @@ class _ReviewFeedScreenState extends ConsumerState<ReviewFeedScreen> {
   @override
   Widget build(BuildContext context) {
     final state = ref.watch(feedProvider);
+    final followingCount = ref.watch(currentUserProvider).valueOrNull?.followingCount ?? 0;
+    final hasFollowings = followingCount > 0;
+    final hasNewReviews = hasFollowings
+        ? (ref.watch(followingHasNewProvider).valueOrNull ?? false)
+        : false;
+
+    // 팔로잉 없는데 팔로잉 탭이면 추천으로 리셋
+    if (!hasFollowings && state.filter.feedType == '팔로잉') {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        ref.read(feedProvider.notifier).setFilter(
+              state.filter.copyWith(feedType: '추천'),
+            );
+      });
+    }
 
     return Scaffold(
       backgroundColor: AppColors.background,
@@ -102,42 +124,65 @@ class _ReviewFeedScreenState extends ConsumerState<ReviewFeedScreen> {
                     color: AppColors.surface,
                     child: Column(
                       children: [
-                        Row(
-                          children: ['추천', '팔로잉'].map((type) {
-                            final isActive = state.filter.feedType == type;
-                            return Expanded(
-                              child: InkWell(
-                                onTap: () => ref
-                                    .read(feedProvider.notifier)
-                                    .setFilter(
-                                        state.filter.copyWith(feedType: type)),
-                                child: Column(
-                                  children: [
-                                    Padding(
-                                      padding: const EdgeInsets.symmetric(
-                                          vertical: 12),
-                                      child: Text(
-                                        type,
-                                        style: TextStyle(
-                                          fontWeight: isActive
-                                              ? FontWeight.w700
-                                              : FontWeight.w400,
-                                          color: isActive
-                                              ? AppColors.textPrimary
-                                              : AppColors.textSecondary,
+                        if (hasFollowings)
+                          Row(
+                            children: ['추천', '팔로잉'].map((type) {
+                              final isActive = state.filter.feedType == type;
+                              final showDot =
+                                  type == '팔로잉' && hasNewReviews && !isActive;
+                              return Expanded(
+                                child: InkWell(
+                                  onTap: () {
+                                    ref.read(feedProvider.notifier).setFilter(
+                                          state.filter.copyWith(feedType: type),
+                                        );
+                                    if (type == '팔로잉') _markFollowingAsSeen();
+                                  },
+                                  child: Column(
+                                    children: [
+                                      Padding(
+                                        padding: const EdgeInsets.symmetric(
+                                            vertical: 12),
+                                        child: Stack(
+                                          clipBehavior: Clip.none,
+                                          children: [
+                                            Text(
+                                              type,
+                                              style: TextStyle(
+                                                fontWeight: isActive
+                                                    ? FontWeight.w700
+                                                    : FontWeight.w400,
+                                                color: isActive
+                                                    ? AppColors.textPrimary
+                                                    : AppColors.textSecondary,
+                                              ),
+                                            ),
+                                            if (showDot)
+                                              Positioned(
+                                                right: -8,
+                                                top: 0,
+                                                child: Container(
+                                                  width: 6,
+                                                  height: 6,
+                                                  decoration: const BoxDecoration(
+                                                    color: Colors.red,
+                                                    shape: BoxShape.circle,
+                                                  ),
+                                                ),
+                                              ),
+                                          ],
                                         ),
                                       ),
-                                    ),
-                                    if (isActive)
-                                      Container(height: 2, color: AppColors.primary)
-                                    else
-                                      const SizedBox(height: 2),
-                                  ],
+                                      if (isActive)
+                                        Container(height: 2, color: AppColors.primary)
+                                      else
+                                        const SizedBox(height: 2),
+                                    ],
+                                  ),
                                 ),
-                              ),
-                            );
-                          }).toList(),
-                        ),
+                              );
+                            }).toList(),
+                          ),
                         Row(
                           children: [
                             Expanded(
