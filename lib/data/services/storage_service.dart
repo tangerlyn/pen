@@ -16,14 +16,11 @@ class StorageService {
     final fileName = '${DateTime.now().millisecondsSinceEpoch}_${file.path.split('/').last}';
     final ref = _storage.ref().child('$folder/$fileName');
     
-    debugPrint('[Storage] putFile 시작: ${ref.fullPath}');
     final uploadTask = await ref.putFile(
       file,
       SettableMetadata(contentType: 'image/jpeg'),
     );
-    debugPrint('[Storage] putFile 완료, URL 가져오는 중...');
     final url = await uploadTask.ref.getDownloadURL();
-    debugPrint('[Storage] URL 획득 완료: $url');
     return url;
   }
 

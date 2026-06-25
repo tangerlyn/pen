@@ -426,7 +426,10 @@ class _ReviewGrid extends ConsumerWidget {
     final reviewsAsync = ref.watch(userReviewsProvider(uid));
     return reviewsAsync.when(
       loading: () => const Center(child: CircularProgressIndicator()),
-      error: (_, __) => const SizedBox.shrink(),
+      error: (_, __) => const EmptyStateWidget(
+        icon: Icons.cloud_off_outlined,
+        message: '오류가 발생했어요.\n잠시 후 다시 시도해주세요.',
+      ),
       data: (reviews) {
         if (reviews.isEmpty) {
           return const EmptyStateWidget(
@@ -458,7 +461,10 @@ class _PostList extends ConsumerWidget {
     final postsAsync = ref.watch(userPostsProvider(uid));
     return postsAsync.when(
       loading: () => const Center(child: CircularProgressIndicator()),
-      error: (_, __) => const SizedBox.shrink(),
+      error: (_, __) => const EmptyStateWidget(
+        icon: Icons.cloud_off_outlined,
+        message: '오류가 발생했어요.\n잠시 후 다시 시도해주세요.',
+      ),
       data: (posts) {
         if (posts.isEmpty) {
           return const EmptyStateWidget(

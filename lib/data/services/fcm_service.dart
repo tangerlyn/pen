@@ -1,4 +1,5 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
@@ -29,7 +30,8 @@ class FcmService {
 
     // 토큰 갱신 리스너
     FirebaseMessaging.instance.onTokenRefresh.listen((token) {
-      onTokenRefresh(token, token);
+      final uid = FirebaseAuth.instance.currentUser?.uid;
+      if (uid != null) onTokenRefresh(uid, token);
     });
 
     // 포그라운드 메시지 → 로컬 알림

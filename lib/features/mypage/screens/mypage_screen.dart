@@ -187,7 +187,10 @@ class _MyReviewGrid extends ConsumerWidget {
         );
       },
       loading: () => const Center(child: CircularProgressIndicator()),
-      error: (_, __) => const SizedBox.shrink(),
+      error: (_, __) => const EmptyStateWidget(
+        icon: Icons.cloud_off_outlined,
+        message: '오류가 발생했어요.\n잠시 후 다시 시도해주세요.',
+      ),
     );
   }
 }
@@ -221,7 +224,10 @@ class _MyCommunityList extends ConsumerWidget {
         );
       },
       loading: () => const Center(child: CircularProgressIndicator()),
-      error: (_, __) => const SizedBox.shrink(),
+      error: (_, __) => const EmptyStateWidget(
+        icon: Icons.cloud_off_outlined,
+        message: '오류가 발생했어요.\n잠시 후 다시 시도해주세요.',
+      ),
     );
   }
 }

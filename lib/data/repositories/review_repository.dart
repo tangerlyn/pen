@@ -52,24 +52,41 @@ class ReviewRepository {
   }) async {
     if (followingUids.isEmpty) return (<ReviewModel>[], null);
 
-    // Firestore whereIn 한도 30
-    final uids = followingUids.take(30).toList();
+    final chunks = [
+      for (var i = 0; i < followingUids.length; i += 30)
+        followingUids.sublist(i, (i + 30).clamp(0, followingUids.length))
+    ];
 
-    Query query = _reviews
-        .where('authorId', whereIn: uids)
-        .orderBy('createdAt', descending: true)
-        .limit(limit);
-
-    if (lastDoc != null && lastDoc is DocumentSnapshot) {
-      query = query.startAfterDocument(lastDoc);
+    // 팔로잉 30명 이하: cursor-based 페이지네이션 정상 지원
+    if (chunks.length == 1) {
+      Query query = _reviews
+          .where('authorId', whereIn: chunks.first)
+          .orderBy('createdAt', descending: true)
+          .limit(limit);
+      if (lastDoc is DocumentSnapshot) {
+        query = query.startAfterDocument(lastDoc);
+      }
+      final snap = await query.get();
+      final reviews = snap.docs
+          .map((d) => ReviewModel.fromMap(d.data() as Map<String, dynamic>, d.id))
+          .toList();
+      return (reviews, snap.docs.isNotEmpty ? snap.docs.last : null);
     }
 
-    final snapshot = await query.get();
-    final reviews = snapshot.docs
-        .map((d) => ReviewModel.fromMap(d.data() as Map<String, dynamic>, d.id))
-        .toList();
-    final nextLastDoc = snapshot.docs.isNotEmpty ? snapshot.docs.last : null;
-    return (reviews, nextLastDoc);
+    // 팔로잉 31명 이상: 각 청크 병렬 조회 후 in-memory 병합 (1페이지만 지원)
+    if (lastDoc != null) return (<ReviewModel>[], null);
+    final snapshots = await Future.wait(
+      chunks.map((chunk) => _reviews
+          .where('authorId', whereIn: chunk)
+          .orderBy('createdAt', descending: true)
+          .limit(limit)
+          .get()),
+    );
+    final allReviews = snapshots
+        .expand((s) => s.docs.map((d) => ReviewModel.fromMap(d.data() as Map<String, dynamic>, d.id)))
+        .toList()
+      ..sort((a, b) => b.createdAt.compareTo(a.createdAt));
+    return (allReviews.take(limit).toList(), null);
   }
 
   Future<bool> hasNewFollowingReview({
@@ -77,13 +94,18 @@ class ReviewRepository {
     required DateTime since,
   }) async {
     if (followingUids.isEmpty) return false;
-    final uids = followingUids.take(30).toList();
-    final snapshot = await _reviews
-        .where('authorId', whereIn: uids)
-        .where('createdAt', isGreaterThan: Timestamp.fromDate(since))
-        .limit(1)
-        .get();
-    return snapshot.docs.isNotEmpty;
+    final chunks = [
+      for (var i = 0; i < followingUids.length; i += 30)
+        followingUids.sublist(i, (i + 30).clamp(0, followingUids.length))
+    ];
+    final snapshots = await Future.wait(
+      chunks.map((chunk) => _reviews
+          .where('authorId', whereIn: chunk)
+          .where('createdAt', isGreaterThan: Timestamp.fromDate(since))
+          .limit(1)
+          .get()),
+    );
+    return snapshots.any((s) => s.docs.isNotEmpty);
   }
 
   Future<ReviewModel?> getReview(String reviewId) async {
@@ -166,10 +188,6 @@ class ReviewRepository {
   Future<void> toggleScrap(String reviewId, String uid, bool isScrapped) async {
     final scrapRef = _reviews.doc(reviewId).collection('scraps').doc(uid);
     final reviewRef = _reviews.doc(reviewId);
-
-    debugPrint('[Scrap] scrapRef path: ${scrapRef.path}');
-    debugPrint('[Scrap] reviewRef path: ${reviewRef.path}');
-    debugPrint('[Scrap] isScrapped: $isScrapped');
 
     await _firestore.runTransaction((transaction) async {
       final reviewDoc = await transaction.get(reviewRef);
@@ -358,19 +376,14 @@ class ReviewRepository {
 
   // ── 제품별 실시간 통계 (리뷰 개수, 평균 별점) ────────────────
   Future<(int reviewCount, double avgRating)> getProductStats(String type, String productId) async {
-    final queryField = '${type}Ids'; // inkIds, penIds, paperIds
-    final snapshot = await _reviews.where(queryField, arrayContains: productId).get();
-    
-    if (snapshot.docs.isEmpty) return (0, 0.0);
+    final queryField = '${type}Ids';
+    final query = _reviews.where(queryField, arrayContains: productId);
 
-    double totalRating = 0.0;
-    int count = snapshot.docs.length;
+    final aggregate = await query.aggregate(count(), sum('rating')).get();
+    final reviewCount = aggregate.count ?? 0;
+    final totalRating = (aggregate.getSum('rating') ?? 0).toDouble();
 
-    for (var doc in snapshot.docs) {
-      final data = doc.data() as Map<String, dynamic>;
-      totalRating += (data['rating'] as num?)?.toDouble() ?? 0.0;
-    }
-
-    return (count, totalRating / count);
+    if (reviewCount == 0) return (0, 0.0);
+    return (reviewCount, totalRating / reviewCount);
   }
 }

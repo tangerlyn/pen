@@ -1,4 +1,3 @@
-import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../core/utils/level_system.dart';
@@ -42,8 +41,6 @@ class ReviewDetailNotifier extends FamilyAsyncNotifier<ReviewModel?, String> {
   Future<void> toggleScrap() async {
     final review = state.value;
     final uid = ref.read(currentUidProvider);
-    debugPrint('[Scrap] currentUid: $uid');
-    debugPrint('[Scrap] FirebaseAuth currentUser: ${FirebaseAuth.instance.currentUser?.uid}');
     if (review == null || uid == null) return;
 
     await withRetry(
