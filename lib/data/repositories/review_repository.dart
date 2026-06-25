@@ -1,6 +1,5 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_core/firebase_core.dart';
-import 'package:flutter/foundation.dart';
 import '../models/review_model.dart';
 import '../models/reply_model.dart';
 import '../../core/constants/app_constants.dart';
@@ -377,13 +376,19 @@ class ReviewRepository {
   // ── 제품별 실시간 통계 (리뷰 개수, 평균 별점) ────────────────
   Future<(int reviewCount, double avgRating)> getProductStats(String type, String productId) async {
     final queryField = '${type}Ids';
-    final query = _reviews.where(queryField, arrayContains: productId);
+    final baseQuery = _reviews.where(queryField, arrayContains: productId);
 
-    final aggregate = await query.aggregate(count(), sum('rating')).get();
-    final reviewCount = aggregate.count ?? 0;
-    final totalRating = (aggregate.getSum('rating') ?? 0).toDouble();
-
+    // count()는 단일 필드 인덱스로 동작 (복합 인덱스 불필요)
+    final countSnap = await baseQuery.count().get();
+    final reviewCount = countSnap.count ?? 0;
     if (reviewCount == 0) return (0, 0.0);
-    return (reviewCount, totalRating / reviewCount);
+
+    // sum('rating')은 복합 인덱스 필요 → 최근 100개로 직접 계산
+    final ratingSnap = await baseQuery.limit(100).get();
+    final totalRating = ratingSnap.docs.fold<double>(
+      0,
+      (s, doc) => s + ((doc.data() as Map<String, dynamic>)['rating'] as num? ?? 0).toDouble(),
+    );
+    return (reviewCount, totalRating / ratingSnap.docs.length);
   }
 }
