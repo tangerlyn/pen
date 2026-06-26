@@ -19,6 +19,10 @@ final publicInkBooksProvider = FutureProvider<List<InkBookModel>>((ref) {
   return ref.read(inkBookRepoProvider).getPublicBooks();
 });
 
+final userPublicInkBooksProvider = FutureProvider.family<List<InkBookModel>, String>((ref, uid) {
+  return ref.read(inkBookRepoProvider).getPublicBooksForUser(uid);
+});
+
 final inkChartReadonlyProvider =
     FutureProvider.family<List<InkChartModel>, (String, String)>((ref, args) async {
   final (uid, bookId) = args;

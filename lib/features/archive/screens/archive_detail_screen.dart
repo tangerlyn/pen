@@ -8,131 +8,191 @@ import '../../../shared/providers/wishlist_providers.dart';
 import '../../../data/models/ink_model.dart';
 import '../../../shared/widgets/review/review_feed_card.dart';
 import '../../../shared/widgets/ink_drop_circle.dart';
-import 'ink_compare_screen.dart';
+// import 'ink_compare_screen.dart'; // 색상 비교 — 구현 완료, 적용 보류
 
 class ArchiveDetailScreen extends ConsumerWidget {
   const ArchiveDetailScreen({super.key, required this.type, required this.productId});
-  final String type; // ink / pen / paper
+  final String type;
   final String productId;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final state = ref.watch(archiveDetailProvider((type: type, productId: productId)));
+    final data = state.valueOrNull;
 
     return Scaffold(
+      appBar: AppBar(
+        scrolledUnderElevation: 0,
+        title: data == null
+            ? null
+            : Text(
+                type == 'ink' ? (data as InkModel).name : data.displayName,
+                style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
+              ),
+        actions: data == null
+            ? []
+            : [
+                _WishlistButton(
+                  type: type,
+                  productId: productId,
+                  productName: type == 'ink' ? (data as InkModel).name : data.displayName,
+                  brand: data.brand,
+                  hexColor: type == 'ink' ? (data as InkModel).hexColor : '',
+                ),
+                _ReportButton(
+                  type: type,
+                  productId: productId,
+                  targetName: data.displayName,
+                ),
+              ],
+      ),
       body: state.when(
         loading: () => const Center(child: CircularProgressIndicator()),
-        error: (e, _) => Center(child: Text('오류: $e')),
+        error: (e, st) => Center(child: Text('오류: $e')),
         data: (data) => data == null
             ? const Center(child: Text('제품을 찾을 수 없습니다.'))
-            : _DetailContent(type: type, data: data, productId: productId),
+            : _DetailBody(type: type, data: data, productId: productId),
       ),
     );
   }
 }
 
-class _DetailContent extends ConsumerWidget {
-  const _DetailContent({required this.type, required this.data, required this.productId});
+// ── 본문 (SingleChildScrollView — Viewport 없음, 너비 항상 유한) ──────────────
+class _DetailBody extends ConsumerWidget {
+  const _DetailBody({required this.type, required this.data, required this.productId});
   final String type;
   final dynamic data;
   final String productId;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final wishlistStatus = ref.watch(wishlistStatusProvider(productId));
-    final isWishlisted = wishlistStatus.valueOrNull ?? false;
+    final reviewsAsync =
+        ref.watch(productReviewsProvider((type: type, productId: productId)));
 
-    return CustomScrollView(
-      slivers: [
-        SliverAppBar(
-          expandedHeight: type == 'ink' ? 200 : 120,
-          pinned: true,
-          actions: [
-            IconButton(
-              icon: Icon(
-                isWishlisted ? Icons.favorite : Icons.favorite_border,
-                color: isWishlisted ? Colors.redAccent : null,
-              ),
-              onPressed: () => ref.read(wishlistActionsProvider).toggle(
-                    type: type,
-                    productId: productId,
-                    productName: type == 'ink' ? (data as InkModel).name : data.displayName,
-                    brand: data.brand,
-                    hexColor: type == 'ink' ? (data as InkModel).hexColor : '',
-                  ),
-            ),
-            _ReportButton(
-              type: type,
-              productId: productId,
-              targetName: data.displayName,
-            ),
-          ],
-          flexibleSpace: FlexibleSpaceBar(
-            background: type == 'ink'
-                ? _InkHeroBackground(hexColor: data.hexColor)
-                : Container(color: AppColors.chipBackground),
-            title: Text(type == 'ink' ? data.name : data.displayName),
-          ),
-        ),
-        SliverToBoxAdapter(
-          child: Padding(
+    return SingleChildScrollView(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          if (type == 'ink') _InkHeroHeader(hexColor: data.hexColor),
+          Padding(
             padding: const EdgeInsets.all(16),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                _buildInfo(data),
+                _InfoCard(type: type, data: data),
                 const SizedBox(height: 16),
-                // 액션 버튼
-                if (type == 'ink')
-                  Row(
-                    children: [
-                      Expanded(
-                        child: ElevatedButton.icon(
-                          onPressed: () => context.push('/write/review?type=$type&productId=$productId'),
-                          icon: const Icon(Icons.edit_outlined, size: 18),
-                          label: const Text('리뷰 작성'),
-                        ),
-                      ),
-                      const SizedBox(width: 8),
-                      OutlinedButton.icon(
-                        onPressed: () => Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                            builder: (_) => InkCompareScreen(baseInk: data as InkModel),
-                          ),
-                        ),
-                        icon: const Icon(Icons.compare, size: 18),
-                        label: const Text('색상 비교'),
-                      ),
-                    ],
-                  )
-                else
-                  SizedBox(
-                    width: double.infinity,
-                    child: ElevatedButton.icon(
-                      onPressed: () => context.push('/write/review?type=$type&productId=$productId'),
-                      icon: const Icon(Icons.edit_outlined, size: 18),
-                      label: const Text('리뷰 작성'),
-                    ),
+                // 색상 비교 버튼 — 구현 완료, 적용 보류 (ink_compare_screen.dart)
+                // if (type == 'ink') Row(children: [Expanded(리뷰작성), SizedBox(8), OutlinedButton(색상비교)])
+                SizedBox(
+                  width: double.infinity,
+                  child: ElevatedButton.icon(
+                    onPressed: () => context.push(
+                        '/write/review?type=$type&productId=$productId'),
+                    icon: const Icon(Icons.edit_outlined, size: 18),
+                    label: const Text('리뷰 작성'),
                   ),
+                ),
               ],
             ),
           ),
-        ),
-        // 리뷰 갤러리
-        const SliverToBoxAdapter(
-          child: Padding(
-            padding: EdgeInsets.fromLTRB(16, 16, 16, 8),
-            child: Text('사용자 리뷰', style: TextStyle(fontWeight: FontWeight.w700, fontSize: 16)),
+          const Padding(
+            padding: EdgeInsets.fromLTRB(16, 8, 16, 8),
+            child: Text(
+              '사용자 리뷰',
+              style: TextStyle(fontWeight: FontWeight.w700, fontSize: 16),
+            ),
           ),
-        ),
-        _ReviewGallery(type: type, productId: productId),
-        const SliverToBoxAdapter(child: SizedBox(height: 32)),
-      ],
+          reviewsAsync.when(
+            loading: () => const Padding(
+              padding: EdgeInsets.symmetric(vertical: 32),
+              child: Center(child: CircularProgressIndicator()),
+            ),
+            error: (e, st) => Padding(
+              padding: const EdgeInsets.all(32),
+              child: Center(child: Text('오류: $e')),
+            ),
+            data: (list) {
+              if (list.isEmpty) {
+                return const Padding(
+                  padding: EdgeInsets.symmetric(vertical: 32),
+                  child: Center(
+                    child: Text(
+                      '아직 리뷰가 없습니다.',
+                      style: TextStyle(color: AppColors.textSecondary),
+                    ),
+                  ),
+                );
+              }
+              return LayoutBuilder(
+                builder: (ctx, constraints) {
+                  final w = (constraints.maxWidth - 1) / 2;
+                  return Wrap(
+                    spacing: 1,
+                    runSpacing: 1,
+                    children: list
+                        .map(
+                          (review) => SizedBox(
+                            width: w,
+                            height: w / 0.85,
+                            child: ReviewFeedCard(
+                              review: review,
+                              onTap: () =>
+                                  context.push('/review/${review.id}'),
+                            ),
+                          ),
+                        )
+                        .toList(),
+                  );
+                },
+              );
+            },
+          ),
+          const SizedBox(height: 32),
+        ],
+      ),
     );
   }
+}
 
-  Widget _buildInfo(dynamic data) {
+// ── 잉크 헤더 (AppBar 바로 아래 색상 배경) ──────────────────────────────────
+class _InkHeroHeader extends StatelessWidget {
+  const _InkHeroHeader({required this.hexColor});
+  final String hexColor;
+
+  @override
+  Widget build(BuildContext context) {
+    Color color;
+    try {
+      color = Color(int.parse('FF${hexColor.replaceAll('#', '')}', radix: 16));
+    } catch (e) {
+      color = Colors.grey.shade300;
+    }
+
+    return Container(
+      height: 180,
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: [
+            Color.lerp(color, Colors.white, 0.62)!,
+            Color.lerp(color, Colors.white, 0.40)!,
+          ],
+        ),
+      ),
+      child: Center(child: InkDropCircle(color: color, size: 80)),
+    );
+  }
+}
+
+// ── 정보 카드 ──────────────────────────────────────────────────────────────
+class _InfoCard extends StatelessWidget {
+  const _InfoCard({required this.type, required this.data});
+  final String type;
+  final dynamic data;
+
+  @override
+  Widget build(BuildContext context) {
     final rows = <MapEntry<String, String>>[];
     if (type == 'ink') {
       rows.addAll([
@@ -162,57 +222,73 @@ class _DetailContent extends ConsumerWidget {
       child: Padding(
         padding: const EdgeInsets.all(16),
         child: Column(
-          children: rows.map((e) => Padding(
-            padding: const EdgeInsets.symmetric(vertical: 6),
-            child: Row(
-              children: [
-                SizedBox(
-                  width: 80,
-                  child: Text(e.key, style: const TextStyle(color: AppColors.textSecondary, fontSize: 13)),
+          children: rows
+              .map(
+                (e) => Padding(
+                  padding: const EdgeInsets.symmetric(vertical: 6),
+                  child: Row(
+                    children: [
+                      SizedBox(
+                        width: 80,
+                        child: Text(
+                          e.key,
+                          style: const TextStyle(
+                              color: AppColors.textSecondary, fontSize: 13),
+                        ),
+                      ),
+                      Expanded(
+                        child: Text(
+                          e.value,
+                          style: const TextStyle(fontWeight: FontWeight.w500),
+                        ),
+                      ),
+                    ],
+                  ),
                 ),
-                Expanded(child: Text(e.value, style: const TextStyle(fontWeight: FontWeight.w500))),
-              ],
-            ),
-          )).toList(),
+              )
+              .toList(),
         ),
       ),
     );
   }
 }
 
-// ── 잉크 Hero 배경 ────────────────────────────────────────────────────
-class _InkHeroBackground extends StatelessWidget {
-  const _InkHeroBackground({required this.hexColor});
+// ── 위시리스트 버튼 ────────────────────────────────────────────────────────
+class _WishlistButton extends ConsumerWidget {
+  const _WishlistButton({
+    required this.type,
+    required this.productId,
+    required this.productName,
+    required this.brand,
+    required this.hexColor,
+  });
+  final String type;
+  final String productId;
+  final String productName;
+  final String brand;
   final String hexColor;
 
   @override
-  Widget build(BuildContext context) {
-    Color color;
-    try {
-      color = Color(int.parse('FF${hexColor.replaceAll('#', '')}', radix: 16));
-    } catch (_) {
-      color = Colors.grey.shade300;
-    }
-
-    return Container(
-      decoration: BoxDecoration(
-        gradient: LinearGradient(
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-          colors: [
-            Color.lerp(color, Colors.white, 0.62)!,
-            Color.lerp(color, Colors.white, 0.40)!,
-          ],
-        ),
+  Widget build(BuildContext context, WidgetRef ref) {
+    final isWishlisted =
+        ref.watch(wishlistStatusProvider(productId)).valueOrNull ?? false;
+    return IconButton(
+      icon: Icon(
+        isWishlisted ? Icons.favorite : Icons.favorite_border,
+        color: isWishlisted ? Colors.redAccent : null,
       ),
-      child: Center(
-        child: InkDropCircle(color: color, size: 80),
-      ),
+      onPressed: () => ref.read(wishlistActionsProvider).toggle(
+            type: type,
+            productId: productId,
+            productName: productName,
+            brand: brand,
+            hexColor: hexColor,
+          ),
     );
   }
 }
 
-// ── 신고 버튼 ─────────────────────────────────────────────────────────────
+// ── 신고 버튼 ──────────────────────────────────────────────────────────────
 class _ReportButton extends StatelessWidget {
   const _ReportButton({
     required this.type,
@@ -238,7 +314,7 @@ class _ReportButton extends StatelessWidget {
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
       ),
-      builder: (_) => SafeArea(
+      builder: (sheetCtx) => SafeArea(
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
@@ -257,8 +333,9 @@ class _ReportButton extends StatelessWidget {
                   style: TextStyle(
                       color: Colors.red, fontWeight: FontWeight.w500)),
               onTap: () {
-                Navigator.pop(ctx);
+                Navigator.pop(sheetCtx);
                 WidgetsBinding.instance.addPostFrameCallback((_) {
+                  if (!ctx.mounted) return;
                   showModalBottomSheet(
                     context: ctx,
                     isScrollControlled: true,
@@ -267,7 +344,7 @@ class _ReportButton extends StatelessWidget {
                       borderRadius:
                           BorderRadius.vertical(top: Radius.circular(20)),
                     ),
-                    builder: (_) => _ReportSheet(
+                    builder: (innerCtx) => _ReportSheet(
                       type: type,
                       productId: productId,
                       targetName: targetName,
@@ -284,7 +361,7 @@ class _ReportButton extends StatelessWidget {
   }
 }
 
-// ── 신고 시트 ─────────────────────────────────────────────────────────────
+// ── 신고 시트 ──────────────────────────────────────────────────────────────
 class _ReportSheet extends ConsumerStatefulWidget {
   const _ReportSheet({
     required this.type,
@@ -459,8 +536,7 @@ class _ReportSheetState extends ConsumerState<_ReportSheet> {
                                   strokeWidth: 2, color: Colors.white))
                           : const Text('신고 제출',
                               style: TextStyle(
-                                  fontSize: 15,
-                                  fontWeight: FontWeight.w600)),
+                                  fontSize: 15, fontWeight: FontWeight.w600)),
                     ),
                   ),
                   const SizedBox(height: 8),
@@ -474,43 +550,3 @@ class _ReportSheetState extends ConsumerState<_ReportSheet> {
   }
 }
 
-// ── 리뷰 갤러리 ────────────────────────────────────────────────────────
-class _ReviewGallery extends ConsumerWidget {
-  const _ReviewGallery({required this.type, required this.productId});
-  final String type;
-  final String productId;
-
-  @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final reviews = ref.watch(productReviewsProvider((type: type, productId: productId)));
-    return reviews.when(
-      loading: () => const SliverToBoxAdapter(child: Center(child: CircularProgressIndicator())),
-      error: (e, _) => SliverToBoxAdapter(child: Center(child: Text('오류: $e'))),
-      data: (list) => list.isEmpty
-          ? const SliverToBoxAdapter(
-              child: Padding(
-                padding: EdgeInsets.all(32),
-                child: Center(child: Text('아직 리뷰가 없습니다.')),
-              ),
-            )
-          : SliverGrid(
-              delegate: SliverChildBuilderDelegate(
-                (_, i) {
-                  final review = list[i];
-                  return ReviewFeedCard(
-                    review: review,
-                    onTap: () => context.push('/review/${review.id}'),
-                  );
-                },
-                childCount: list.length,
-              ),
-              gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                crossAxisCount: 2,
-                crossAxisSpacing: 1,
-                mainAxisSpacing: 1,
-                childAspectRatio: 0.85,
-              ),
-            ),
-    );
-  }
-}

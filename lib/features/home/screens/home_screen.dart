@@ -118,7 +118,6 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     ref.invalidate(homeLatestReviewsProvider);
     ref.invalidate(homePopularInksProvider);
     ref.invalidate(homePopularPensProvider);
-    ref.invalidate(homeColorFamilyRankingProvider);
     ref.invalidate(filteredPostsProvider);
   }
 
@@ -155,7 +154,6 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                       const SizedBox(height: AppSpacing.sm),
                       _LatestReviewsSection(),
                       _PopularInksSection(),
-                      _ColorFamilyRankingSection(),
                       _CommunitySection(),
                       _PopularPensSection(),
                       const SizedBox(height: 80),
@@ -444,82 +442,6 @@ class _InkCircleItem extends StatelessWidget {
           ],
         ),
       ),
-    );
-  }
-}
-
-// ── 색상 계열별 인기 잉크 섹션 ─────────────────────────────────────────────
-
-class _ColorFamilyRankingSection extends ConsumerWidget {
-  @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final rankingAsync = ref.watch(homeColorFamilyRankingProvider);
-
-    return rankingAsync.when(
-      loading: () => const SizedBox.shrink(),
-      error: (_, __) => const SizedBox.shrink(),
-      data: (ranking) {
-        if (ranking.isEmpty) return const SizedBox.shrink();
-        return Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            _SectionHeader(
-              title: '색상별 인기 잉크',
-              onMore: () => context.go('/archive'),
-            ),
-            SizedBox(
-              height: 104,
-              child: ListView.builder(
-                scrollDirection: Axis.horizontal,
-                padding: AppSpacing.pagePadding,
-                itemCount: ranking.length,
-                itemBuilder: (_, i) {
-                  final (family, ink) = ranking[i];
-                  return GestureDetector(
-                    onTap: () => context.push('/archive/ink/${ink.id}'),
-                    child: Container(
-                      width: 76,
-                      margin: const EdgeInsets.only(right: AppSpacing.md),
-                      child: Column(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          InkDropCircle(color: ink.inkColor, size: 52),
-                          const SizedBox(height: 5),
-                          Container(
-                            padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-                            decoration: BoxDecoration(
-                              color: ink.inkColor.withValues(alpha: 0.15),
-                              borderRadius: BorderRadius.circular(10),
-                            ),
-                            child: Text(
-                              family,
-                              style: TextStyle(
-                                fontSize: 10,
-                                fontWeight: FontWeight.w600,
-                                color: HSVColor.fromColor(ink.inkColor).value > 0.7
-                                    ? ink.inkColor.withValues(alpha: 1)
-                                    : AppColors.textSecondary,
-                              ),
-                            ),
-                          ),
-                          const SizedBox(height: 3),
-                          Text(
-                            ink.name,
-                            style: AppTextStyles.caption.copyWith(color: AppColors.textTertiary),
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
-                            textAlign: TextAlign.center,
-                          ),
-                        ],
-                      ),
-                    ),
-                  );
-                },
-              ),
-            ),
-          ],
-        );
-      },
     );
   }
 }

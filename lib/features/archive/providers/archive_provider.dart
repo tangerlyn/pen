@@ -106,7 +106,9 @@ class ArchiveState {
 
 class ArchiveNotifier extends StateNotifier<ArchiveState> {
   ArchiveNotifier(this._ref) : super(const ArchiveState()) {
-    _load();
+    // 첫 build() 도중 동기 상태 변경이 Flutter 렌더 파이프라인을 깨지 않도록
+    // microtask로 미뤄서 현재 프레임이 완전히 끝난 뒤에 로드 시작
+    Future.microtask(_load);
   }
 
   final Ref _ref;

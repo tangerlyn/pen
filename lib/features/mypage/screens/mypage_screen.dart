@@ -126,8 +126,6 @@ class _MypageScreenState extends ConsumerState<MypageScreen>
                   if (user != null) _InkChartCard(uid: user.uid),
                   const SizedBox(height: AppSpacing.sm),
                   _WishlistCard(),
-                  const SizedBox(height: AppSpacing.sm),
-                  _PublicInkBooksCard(),
                 ],
               ),
             ),
@@ -420,28 +418,6 @@ class _InkChartCard extends ConsumerWidget {
           Text('$count권', style: AppTextStyles.labelMedium),
           const SizedBox(width: 2),
           const Icon(Icons.chevron_right, size: 16),
-        ],
-      ),
-    );
-  }
-}
-
-class _PublicInkBooksCard extends StatelessWidget {
-  @override
-  Widget build(BuildContext context) {
-    return OutlinedButton(
-      onPressed: () => context.push('/public-ink-books'),
-      style: OutlinedButton.styleFrom(
-        minimumSize: const Size(double.infinity, 44),
-        padding: const EdgeInsets.symmetric(horizontal: 14),
-      ),
-      child: const Row(
-        children: [
-          Icon(Icons.public, size: 18),
-          SizedBox(width: AppSpacing.sm),
-          Text('공개 잉크 차트 탐색', style: AppTextStyles.titleSmall),
-          Spacer(),
-          Icon(Icons.chevron_right, size: 16),
         ],
       ),
     );

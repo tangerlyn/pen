@@ -54,6 +54,15 @@ class InkBookRepository {
     return snap.docs.map((d) => InkBookModel.fromMap(d.data(), d.id)).toList();
   }
 
+  Future<List<InkBookModel>> getPublicBooksForUser(String uid) async {
+    final snap = await _db
+        .collectionGroup('inkBooks')
+        .where('isPublic', isEqualTo: true)
+        .where('ownerUid', isEqualTo: uid)
+        .get();
+    return snap.docs.map((d) => InkBookModel.fromMap(d.data(), d.id)).toList();
+  }
+
   Future<InkBookModel?> getBook(String uid, String bookId) async {
     final doc = await _books(uid).doc(bookId).get();
     if (!doc.exists) return null;

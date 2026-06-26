@@ -3,18 +3,20 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../../../core/theme/app_theme.dart';
+import '../../../data/models/ink_book_model.dart';
 import '../../../data/models/user_model.dart';
 import '../../../shared/providers/providers.dart';
 import '../../../shared/providers/user_providers.dart';
+import '../../../shared/providers/ink_book_providers.dart';
 import '../../../shared/widgets/common/empty_state.dart';
 import '../../../shared/widgets/community/post_card.dart';
 import '../../../shared/widgets/review/review_list_card.dart';
 import '../providers/user_activity_provider.dart';
 
 // 네이비 기반 색상
-const _kNavyTint  = Color(0xFFEEF2F8);  // 연한 네이비 배경
-const _kNavyLight = Color(0xFFE2EAF4);  // 살짝 진한 연네이비
-const _kNavyMid   = Color(0xFF8BA5C8);  // 중간 네이비 (아이콘·보조)
+const _kNavyTint  = Color(0xFFEEF2F8);
+const _kNavyLight = Color(0xFFE2EAF4);
+const _kNavyMid   = Color(0xFF8BA5C8);
 
 class UserProfileScreen extends ConsumerStatefulWidget {
   const UserProfileScreen({super.key, required this.uid});
@@ -25,8 +27,9 @@ class UserProfileScreen extends ConsumerStatefulWidget {
 }
 
 class _UserProfileScreenState extends ConsumerState<UserProfileScreen>
-    with SingleTickerProviderStateMixin {
-  late final TabController _tabController;
+    with TickerProviderStateMixin {
+  late TabController _tabController;
+  bool _hasPublicBooks = false;
 
   @override
   void initState() {
@@ -46,11 +49,34 @@ class _UserProfileScreenState extends ConsumerState<UserProfileScreen>
     super.dispose();
   }
 
+  void _setHasPublicBooks(bool hasBooks) {
+    if (_hasPublicBooks == hasBooks) return;
+    final newLength = hasBooks ? 3 : 2;
+    if (_tabController.length == newLength) return;
+    final old = _tabController;
+    setState(() {
+      _hasPublicBooks = hasBooks;
+      _tabController = TabController(length: newLength, vsync: this);
+    });
+    old.dispose();
+  }
+
   @override
   Widget build(BuildContext context) {
     final currentUid = ref.watch(currentUidProvider);
-
     final userAsync = ref.watch(profileUserProvider(widget.uid));
+
+    // 공개 잉크북 여부 감지 → 탭 개수 동적 조정
+    final publicBooksAsync = ref.watch(userPublicInkBooksProvider(widget.uid));
+    final hasPublicBooks = publicBooksAsync.maybeWhen(
+      data: (books) => books.isNotEmpty,
+      orElse: () => false,
+    );
+    if (hasPublicBooks != _hasPublicBooks) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted) _setHasPublicBooks(hasPublicBooks);
+      });
+    }
 
     return Scaffold(
       appBar: AppBar(
@@ -66,7 +92,7 @@ class _UserProfileScreenState extends ConsumerState<UserProfileScreen>
             ),
           ),
           loading: () => const SizedBox.shrink(),
-          error: (_, __) => const Text('프로필'),
+          error: (e, st) => const Text('프로필'),
         ),
       ),
       body: NestedScrollView(
@@ -77,7 +103,7 @@ class _UserProfileScreenState extends ConsumerState<UserProfileScreen>
                 height: 180,
                 child: Center(child: CircularProgressIndicator()),
               ),
-              error: (_, __) => const SizedBox.shrink(),
+              error: (e, st) => const SizedBox.shrink(),
               data: (user) => user == null
                   ? const SizedBox.shrink()
                   : _ProfileHeader(user: user, currentUid: currentUid),
@@ -85,7 +111,7 @@ class _UserProfileScreenState extends ConsumerState<UserProfileScreen>
           ),
           SliverPersistentHeader(
             pinned: true,
-            delegate: _PillTabDelegate(_tabController),
+            delegate: _PillTabDelegate(_tabController, _hasPublicBooks),
           ),
         ],
         body: TabBarView(
@@ -93,6 +119,7 @@ class _UserProfileScreenState extends ConsumerState<UserProfileScreen>
           children: [
             _ReviewGrid(uid: widget.uid),
             _PostList(uid: widget.uid),
+            if (_hasPublicBooks) _InkChartTab(uid: widget.uid),
           ],
         ),
       ),
@@ -111,10 +138,7 @@ class _ProfileHeader extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final isOwnProfile = user.uid == currentUid;
     final isFollowing = (!isOwnProfile && currentUid != null)
-        ? ref
-                .watch(followStatusProvider((currentUid!, user.uid)))
-                .valueOrNull ??
-            false
+        ? ref.watch(followStatusProvider((currentUid!, user.uid))).valueOrNull ?? false
         : false;
 
     return Padding(
@@ -124,11 +148,7 @@ class _ProfileHeader extends ConsumerWidget {
           color: AppColors.surface,
           borderRadius: BorderRadius.circular(16),
           boxShadow: const [
-            BoxShadow(
-              color: Color(0x14000000),
-              blurRadius: 12,
-              offset: Offset(0, 3),
-            ),
+            BoxShadow(color: Color(0x14000000), blurRadius: 12, offset: Offset(0, 3)),
           ],
         ),
         padding: const EdgeInsets.all(20),
@@ -144,7 +164,6 @@ class _ProfileHeader extends ConsumerWidget {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      // 닉네임 + 팔로우 버튼
                       Row(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
@@ -165,13 +184,9 @@ class _ProfileHeader extends ConsumerWidget {
                               isFollowing: isFollowing,
                               onTap: () {
                                 if (isFollowing) {
-                                  ref
-                                      .read(userRepoProvider)
-                                      .unfollow(currentUid!, user.uid);
+                                  ref.read(userRepoProvider).unfollow(currentUid!, user.uid);
                                 } else {
-                                  ref
-                                      .read(userRepoProvider)
-                                      .follow(currentUid!, user.uid);
+                                  ref.read(userRepoProvider).follow(currentUid!, user.uid);
                                 }
                               },
                             ),
@@ -179,7 +194,6 @@ class _ProfileHeader extends ConsumerWidget {
                         ],
                       ),
                       const SizedBox(height: 5),
-                      // 레벨 + 칭호 (levelTitle이 이미 'Lv.N · 칭호' 형태)
                       Text(
                         user.levelTitle,
                         style: const TextStyle(
@@ -189,29 +203,21 @@ class _ProfileHeader extends ConsumerWidget {
                         ),
                       ),
                       const SizedBox(height: 12),
-                      // 팔로워 / 팔로잉
                       Row(
                         children: [
                           _StatChip(
                             label: '팔로워',
                             value: _formatCount(user.followerCount),
-                            onTap: () => context
-                                .push('/profile/${user.uid}/followers?tab=0'),
+                            onTap: () => context.push('/profile/${user.uid}/followers?tab=0'),
                           ),
                           Padding(
-                            padding:
-                                const EdgeInsets.symmetric(horizontal: 10),
-                            child: Container(
-                              width: 1,
-                              height: 14,
-                              color: AppColors.divider,
-                            ),
+                            padding: const EdgeInsets.symmetric(horizontal: 10),
+                            child: Container(width: 1, height: 14, color: AppColors.divider),
                           ),
                           _StatChip(
                             label: '팔로잉',
                             value: _formatCount(user.followingCount),
-                            onTap: () => context
-                                .push('/profile/${user.uid}/followers?tab=1'),
+                            onTap: () => context.push('/profile/${user.uid}/followers?tab=1'),
                           ),
                         ],
                       ),
@@ -224,8 +230,7 @@ class _ProfileHeader extends ConsumerWidget {
               const SizedBox(height: 14),
               Container(
                 width: double.infinity,
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
                 decoration: BoxDecoration(
                   color: _kNavyTint,
                   borderRadius: BorderRadius.circular(8),
@@ -267,19 +272,13 @@ class _ProfileAvatar extends StatelessWidget {
         shape: BoxShape.circle,
         border: Border.all(color: _kNavyLight, width: 3),
         boxShadow: const [
-          BoxShadow(
-            color: Color(0x1A000000),
-            blurRadius: 8,
-            offset: Offset(0, 2),
-          ),
+          BoxShadow(color: Color(0x1A000000), blurRadius: 8, offset: Offset(0, 2)),
         ],
       ),
       child: CircleAvatar(
         radius: 32,
         backgroundColor: _kNavyLight,
-        backgroundImage: imageUrl != null
-            ? CachedNetworkImageProvider(imageUrl!)
-            : null,
+        backgroundImage: imageUrl != null ? CachedNetworkImageProvider(imageUrl!) : null,
         child: imageUrl == null
             ? const Icon(Icons.person, size: 32, color: _kNavyMid)
             : null,
@@ -301,14 +300,11 @@ class _FollowButton extends StatelessWidget {
       onTap: onTap,
       child: AnimatedContainer(
         duration: const Duration(milliseconds: 200),
-        padding:
-            const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
+        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
         decoration: BoxDecoration(
           color: isFollowing ? _kNavyLight : AppColors.primary,
           borderRadius: BorderRadius.circular(20),
-          border: isFollowing
-              ? Border.all(color: const Color(0xFFCCD6E8))
-              : null,
+          border: isFollowing ? Border.all(color: const Color(0xFFCCD6E8)) : null,
         ),
         child: Text(
           isFollowing ? '팔로잉' : '팔로우',
@@ -326,8 +322,7 @@ class _FollowButton extends StatelessWidget {
 // ── 팔로워/팔로잉 수치 ────────────────────────────────────────────────────────
 
 class _StatChip extends StatelessWidget {
-  const _StatChip(
-      {required this.label, required this.value, required this.onTap});
+  const _StatChip({required this.label, required this.value, required this.onTap});
   final String label;
   final String value;
   final VoidCallback onTap;
@@ -349,10 +344,7 @@ class _StatChip extends StatelessWidget {
             ),
             TextSpan(
               text: ' $label',
-              style: const TextStyle(
-                fontSize: 12,
-                color: AppColors.textSecondary,
-              ),
+              style: const TextStyle(fontSize: 12, color: AppColors.textSecondary),
             ),
           ],
         ),
@@ -364,8 +356,9 @@ class _StatChip extends StatelessWidget {
 // ── Pill 탭바 (sticky) ────────────────────────────────────────────────────────
 
 class _PillTabDelegate extends SliverPersistentHeaderDelegate {
-  const _PillTabDelegate(this.tabController);
+  const _PillTabDelegate(this.tabController, this.hasPublicBooks);
   final TabController tabController;
+  final bool hasPublicBooks;
 
   static const _height = 58.0;
 
@@ -375,8 +368,7 @@ class _PillTabDelegate extends SliverPersistentHeaderDelegate {
   double get maxExtent => _height;
 
   @override
-  Widget build(
-      BuildContext context, double shrinkOffset, bool overlapsContent) {
+  Widget build(BuildContext context, double shrinkOffset, bool overlapsContent) {
     return Container(
       color: AppColors.background,
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
@@ -397,13 +389,12 @@ class _PillTabDelegate extends SliverPersistentHeaderDelegate {
           overlayColor: WidgetStateProperty.all(Colors.transparent),
           labelColor: Colors.white,
           unselectedLabelColor: AppColors.textSecondary,
-          labelStyle: const TextStyle(
-              fontWeight: FontWeight.w600, fontSize: 14),
-          unselectedLabelStyle: const TextStyle(
-              fontWeight: FontWeight.w500, fontSize: 14),
-          tabs: const [
-            Tab(text: '리뷰', height: 36),
-            Tab(text: '커뮤니티', height: 36),
+          labelStyle: const TextStyle(fontWeight: FontWeight.w600, fontSize: 14),
+          unselectedLabelStyle: const TextStyle(fontWeight: FontWeight.w500, fontSize: 14),
+          tabs: [
+            const Tab(text: '리뷰', height: 36),
+            const Tab(text: '커뮤니티', height: 36),
+            if (hasPublicBooks) const Tab(text: '잉크차트', height: 36),
           ],
         ),
       ),
@@ -412,7 +403,7 @@ class _PillTabDelegate extends SliverPersistentHeaderDelegate {
 
   @override
   bool shouldRebuild(covariant _PillTabDelegate old) =>
-      old.tabController != tabController;
+      old.tabController != tabController || old.hasPublicBooks != hasPublicBooks;
 }
 
 // ── 리뷰 목록 ────────────────────────────────────────────────────────────────
@@ -426,7 +417,7 @@ class _ReviewGrid extends ConsumerWidget {
     final reviewsAsync = ref.watch(userReviewsProvider(uid));
     return reviewsAsync.when(
       loading: () => const Center(child: CircularProgressIndicator()),
-      error: (_, __) => const EmptyStateWidget(
+      error: (e, st) => const EmptyStateWidget(
         icon: Icons.cloud_off_outlined,
         message: '오류가 발생했어요.\n잠시 후 다시 시도해주세요.',
       ),
@@ -439,7 +430,7 @@ class _ReviewGrid extends ConsumerWidget {
         }
         return ListView.separated(
           itemCount: reviews.length,
-          separatorBuilder: (_, __) => const Divider(height: 1),
+          separatorBuilder: (context, index) => const Divider(height: 1),
           itemBuilder: (_, i) => ReviewListCard(
             review: reviews[i],
             onTap: () => context.push('/review/${reviews[i].id}'),
@@ -461,7 +452,7 @@ class _PostList extends ConsumerWidget {
     final postsAsync = ref.watch(userPostsProvider(uid));
     return postsAsync.when(
       loading: () => const Center(child: CircularProgressIndicator()),
-      error: (_, __) => const EmptyStateWidget(
+      error: (e, st) => const EmptyStateWidget(
         icon: Icons.cloud_off_outlined,
         message: '오류가 발생했어요.\n잠시 후 다시 시도해주세요.',
       ),
@@ -474,13 +465,102 @@ class _PostList extends ConsumerWidget {
         }
         return ListView.separated(
           itemCount: posts.length,
-          separatorBuilder: (_, __) => const Divider(height: 1),
+          separatorBuilder: (context, index) => const Divider(height: 1),
           itemBuilder: (_, i) => PostCard(
             post: posts[i],
             onTap: () => context.push('/community/${posts[i].id}'),
           ),
         );
       },
+    );
+  }
+}
+
+// ── 잉크차트 탭 (공개 잉크북 그리드) ───────────────────────────────────────
+
+class _InkChartTab extends ConsumerWidget {
+  const _InkChartTab({required this.uid});
+  final String uid;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final booksAsync = ref.watch(userPublicInkBooksProvider(uid));
+    return booksAsync.when(
+      loading: () => const Center(child: CircularProgressIndicator()),
+      error: (e, st) => const EmptyStateWidget(
+        icon: Icons.cloud_off_outlined,
+        message: '오류가 발생했어요.\n잠시 후 다시 시도해주세요.',
+      ),
+      data: (books) {
+        if (books.isEmpty) {
+          return const EmptyStateWidget(
+            icon: Icons.photo_album_outlined,
+            message: '공개된 잉크 차트가 없습니다',
+          );
+        }
+        return GridView.builder(
+          padding: const EdgeInsets.all(16),
+          gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+            crossAxisCount: 2,
+            mainAxisSpacing: 12,
+            crossAxisSpacing: 12,
+            childAspectRatio: 0.9,
+          ),
+          itemCount: books.length,
+          itemBuilder: (_, i) => _InkBookCard(book: books[i]),
+        );
+      },
+    );
+  }
+}
+
+class _InkBookCard extends StatelessWidget {
+  const _InkBookCard({required this.book});
+  final InkBookModel book;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      decoration: BoxDecoration(
+        color: book.color.withValues(alpha: 0.15),
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: book.color.withValues(alpha: 0.35), width: 1.5),
+      ),
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Container(
+            width: 64,
+            height: 64,
+            decoration: BoxDecoration(
+              color: book.color,
+              borderRadius: BorderRadius.circular(14),
+              boxShadow: [
+                BoxShadow(
+                  color: book.color.withValues(alpha: 0.4),
+                  blurRadius: 10,
+                  offset: const Offset(0, 4),
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(height: 12),
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 8),
+            child: Text(
+              book.name,
+              style: const TextStyle(
+                fontWeight: FontWeight.w700,
+                fontSize: 13,
+                color: AppColors.textPrimary,
+              ),
+              textAlign: TextAlign.center,
+              maxLines: 2,
+              overflow: TextOverflow.ellipsis,
+            ),
+          ),
+        ],
+      ),
     );
   }
 }

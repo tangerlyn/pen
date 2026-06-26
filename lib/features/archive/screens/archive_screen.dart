@@ -515,31 +515,34 @@ class _InkList extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    if (state.isLoading) {
-      return GridView.builder(
-        physics: const NeverScrollableScrollPhysics(),
-        padding: const EdgeInsets.all(16),
-        gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-          crossAxisCount: 4,
-          mainAxisSpacing: 20,
-          crossAxisSpacing: 12,
-          childAspectRatio: 0.75,
-        ),
-        itemCount: 12,
-        itemBuilder: (_, _) => const InkCircleSkeleton(),
-      );
-    }
+    // 항상 CustomScrollView를 반환 — 타입 변화로 인한 semantics assertion 방지
     return CustomScrollView(
       controller: scrollController,
       slivers: [
-        if (state.inks.isEmpty)
-          SliverFillRemaining(
+        if (state.isLoading)
+          SliverPadding(
+            padding: const EdgeInsets.all(16),
+            sliver: SliverGrid(
+              delegate: SliverChildBuilderDelegate(
+                (ctx, i) => const InkCircleSkeleton(),
+                childCount: 12,
+              ),
+              gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                crossAxisCount: 4,
+                mainAxisSpacing: 20,
+                crossAxisSpacing: 12,
+                childAspectRatio: 0.75,
+              ),
+            ),
+          )
+        else if (state.inks.isEmpty)
+          const SliverFillRemaining(
             hasScrollBody: false,
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                const Text('잉크가 없습니다.'),
-                const SizedBox(height: 16),
+                Text('잉크가 없습니다.'),
+                SizedBox(height: 16),
                 _ProductRequestFooter(tabLabel: '잉크'),
               ],
             ),
@@ -549,26 +552,27 @@ class _InkList extends ConsumerWidget {
             padding: const EdgeInsets.all(16),
             sliver: SliverGrid(
               delegate: SliverChildBuilderDelegate(
-                (_, i) {
+                (ctx, i) {
                   final ink = state.inks[i];
                   return RepaintBoundary(
                     child: GestureDetector(
-                    onTap: () => context.push('/archive/ink/${ink.id}'),
-                    child: Column(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        InkDropCircle(color: ink.inkColor, size: 56),
-                        const SizedBox(height: 6),
-                        Text(
-                          ink.name,
-                          style: const TextStyle(fontSize: 10, color: AppColors.textSecondary),
-                          maxLines: 2,
-                          overflow: TextOverflow.ellipsis,
-                          textAlign: TextAlign.center,
-                        ),
-                      ],
+                      onTap: () => context.push('/archive/ink/${ink.id}'),
+                      child: Column(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          InkDropCircle(color: ink.inkColor, size: 56),
+                          const SizedBox(height: 6),
+                          Text(
+                            ink.name,
+                            style: const TextStyle(
+                                fontSize: 10, color: AppColors.textSecondary),
+                            maxLines: 2,
+                            overflow: TextOverflow.ellipsis,
+                            textAlign: TextAlign.center,
+                          ),
+                        ],
+                      ),
                     ),
-                  ),
                   );
                 },
                 childCount: state.inks.length,
@@ -597,30 +601,31 @@ class _PenList extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    if (state.isLoading) {
-      return ListView.builder(
-        physics: const NeverScrollableScrollPhysics(),
-        itemCount: 6,
-        itemBuilder: (_, _) => const Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            PenListTileSkeleton(),
-            Divider(height: 1),
-          ],
-        ),
-      );
-    }
+    // 항상 CustomScrollView를 반환 — 타입 변화로 인한 semantics assertion 방지
     return CustomScrollView(
       controller: scrollController,
       slivers: [
-        if (state.pens.isEmpty)
-          SliverFillRemaining(
+        if (state.isLoading)
+          SliverList(
+            delegate: SliverChildBuilderDelegate(
+              (ctx, i) => const Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  PenListTileSkeleton(),
+                  Divider(height: 1),
+                ],
+              ),
+              childCount: 6,
+            ),
+          )
+        else if (state.pens.isEmpty)
+          const SliverFillRemaining(
             hasScrollBody: false,
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                const Text('만년필이 없습니다.'),
-                const SizedBox(height: 16),
+                Text('만년필이 없습니다.'),
+                SizedBox(height: 16),
                 _ProductRequestFooter(tabLabel: '만년필'),
               ],
             ),
@@ -628,7 +633,7 @@ class _PenList extends ConsumerWidget {
         else ...[
           SliverList(
             delegate: SliverChildBuilderDelegate(
-              (_, i) => Column(
+              (ctx, i) => Column(
                 mainAxisSize: MainAxisSize.min,
                 children: [
                   PenListTile(
