@@ -117,6 +117,7 @@ class _PostWriteScreenState extends ConsumerState<PostWriteScreen> {
         final postId = await withRetry(() => ref.read(postWriteProvider.notifier).submit(
               authorId: user.uid,
               authorNickname: user.nickname,
+              authorLevel: user.level,
               title: title,
               body: body,
               imageUrls: imageUrls,

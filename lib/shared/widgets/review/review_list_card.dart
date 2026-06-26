@@ -1,18 +1,30 @@
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:timeago/timeago.dart' as timeago;
 import '../../../core/theme/app_theme.dart';
+import '../../../core/utils/profile_navigation.dart';
 import '../../../data/models/review_model.dart';
+import '../../../data/models/user_model.dart';
+import '../../providers/providers.dart';
+import '../level_badge.dart';
 
-class ReviewListCard extends StatelessWidget {
+final _reviewCardAuthorProvider =
+    FutureProvider.family<UserModel?, String>((ref, uid) {
+  return ref.read(userRepoProvider).getUser(uid);
+});
+
+class ReviewListCard extends ConsumerWidget {
   const ReviewListCard({super.key, required this.review, required this.onTap});
   final ReviewModel review;
   final VoidCallback onTap;
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final hasImage = review.imageUrls.isNotEmpty;
     final stars = review.rating.toStringAsFixed(1);
+    final authorAsync = ref.watch(_reviewCardAuthorProvider(review.authorId));
+    final user = authorAsync.valueOrNull;
 
     return InkWell(
       onTap: onTap,
@@ -54,7 +66,7 @@ class ReviewListCard extends StatelessWidget {
                       const SizedBox(width: 6),
                       Expanded(
                         child: Text(
-                          review.body,
+                          review.title.isNotEmpty ? review.title : review.body,
                           style: AppTextStyles.titleSmall.copyWith(
                               fontSize: 15, color: AppColors.textPrimary),
                           maxLines: 1,
@@ -75,6 +87,34 @@ class ReviewListCard extends StatelessWidget {
                   const SizedBox(height: 10),
                   Row(
                     children: [
+                      GestureDetector(
+                        onTap: () => navigateToProfile(context, ref, review.authorId),
+                        child: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            CircleAvatar(
+                              radius: 11,
+                              backgroundColor: AppColors.chipBackground,
+                              backgroundImage: user?.profileImageUrl != null
+                                  ? CachedNetworkImageProvider(user!.profileImageUrl!)
+                                  : null,
+                              child: user?.profileImageUrl == null
+                                  ? const Icon(Icons.person, size: 13, color: AppColors.textTertiary)
+                                  : null,
+                            ),
+                            const SizedBox(width: 5),
+                            Text(
+                              user?.nickname ?? review.authorNickname,
+                              style: AppTextStyles.bodySmall.copyWith(
+                                  color: AppColors.textTertiary,
+                                  fontWeight: FontWeight.w500),
+                            ),
+                            const SizedBox(width: 5),
+                            LevelBadge(user?.level ?? review.authorLevel),
+                          ],
+                        ),
+                      ),
+                      const SizedBox(width: AppSpacing.sm),
                       Text(
                         timeago.format(review.createdAt, locale: 'ko'),
                         style: AppTextStyles.bodySmall

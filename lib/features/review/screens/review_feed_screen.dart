@@ -4,13 +4,21 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../../../core/theme/app_theme.dart';
+import '../../../core/utils/profile_navigation.dart';
 import '../../../data/models/review_model.dart';
+import '../../../data/models/user_model.dart';
 import '../../../features/archive/providers/archive_detail_provider.dart';
 import '../../home/providers/feed_provider.dart';
 import '../../../shared/providers/providers.dart';
+import '../../../shared/widgets/level_badge.dart';
 import '../../../shared/widgets/review/review_feed_card.dart';
 import '../../home/widgets/feed_filter_bar.dart';
 import '../../../shared/widgets/common/skeletons.dart';
+
+final _reviewTileAuthorProvider =
+    FutureProvider.family<UserModel?, String>((ref, uid) {
+  return ref.read(userRepoProvider).getUser(uid);
+});
 
 class ReviewFeedScreen extends ConsumerStatefulWidget {
   const ReviewFeedScreen({super.key, this.showAppBar = true});
@@ -348,6 +356,8 @@ class _ReviewListTile extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final hasThumbnail = review.thumbnailUrl.isNotEmpty;
+    final authorAsync = ref.watch(_reviewTileAuthorProvider(review.authorId));
+    final user = authorAsync.valueOrNull;
 
     return InkWell(
       onTap: onTap,
@@ -391,14 +401,33 @@ class _ReviewListTile extends ConsumerWidget {
                   const SizedBox(height: 8),
                   Row(
                     children: [
-                      const Icon(Icons.star, color: Colors.amber, size: 14),
-                      const SizedBox(width: 2),
-                      Text(
-                        review.rating.toStringAsFixed(1),
-                        style: const TextStyle(
-                          fontSize: 12,
-                          fontWeight: FontWeight.w600,
-                          color: AppColors.textPrimary,
+                      GestureDetector(
+                        onTap: () => navigateToProfile(context, ref, review.authorId),
+                        child: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            CircleAvatar(
+                              radius: 11,
+                              backgroundColor: AppColors.chipBackground,
+                              backgroundImage: user?.profileImageUrl != null
+                                  ? CachedNetworkImageProvider(user!.profileImageUrl!)
+                                  : null,
+                              child: user?.profileImageUrl == null
+                                  ? const Icon(Icons.person, size: 13, color: AppColors.textTertiary)
+                                  : null,
+                            ),
+                            const SizedBox(width: 5),
+                            Text(
+                              user?.nickname ?? review.authorNickname,
+                              style: const TextStyle(
+                                fontSize: 12,
+                                fontWeight: FontWeight.w600,
+                                color: AppColors.primary,
+                              ),
+                            ),
+                            const SizedBox(width: 5),
+                            LevelBadge(user?.level ?? review.authorLevel),
+                          ],
                         ),
                       ),
                       const Spacer(),

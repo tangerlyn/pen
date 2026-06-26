@@ -7,24 +7,24 @@ class LevelUpInfo {
 class LevelSystem {
   LevelSystem._();
 
-  // 활동별 지급 EXP
   static const int expReview = 10;
   static const int expPost = 5;
   static const int expComment = 2;
   static const int expLike = 1;
 
-  // Lv.1→2: +30, Lv.2→3: +40, ... 매 레벨마다 +10씩 증가
+  // 활발한 유저(월 ~300 EXP) 기준 Lv.7 ≈ 1년
+  // 평균 유저(월 ~60 EXP) 기준 Lv.3~4에 머묾
   static const List<int> _thresholds = [
-    0,   // Lv.1
-    30,  // Lv.2
-    70,  // Lv.3
-    120, // Lv.4
-    180, // Lv.5
-    250, // Lv.6
-    330, // Lv.7
-    420, // Lv.8
-    520, // Lv.9
-    630, // Lv.10
+    0,      // Lv.1
+    100,    // Lv.2
+    300,    // Lv.3
+    700,    // Lv.4
+    1400,   // Lv.5
+    2300,   // Lv.6
+    3500,   // Lv.7  (활발한 유저 ~12개월)
+    5000,   // Lv.8
+    7000,   // Lv.9
+    10000,  // Lv.10
   ];
 
   static const int maxLevel = 10;
@@ -47,7 +47,7 @@ class LevelSystem {
   }
 
   static int levelEndExp(int level) {
-    if (level >= maxLevel) return _thresholds.last + 130;
+    if (level >= maxLevel) return _thresholds.last + 13000;
     return _thresholds[level];
   }
 
@@ -82,4 +82,7 @@ class LevelSystem {
     final idx = (level - 1).clamp(0, titles.length - 1);
     return titles[idx];
   }
+
+  // 카드/댓글 등 공간이 좁은 곳에서 쓰는 짧은 라벨
+  static String shortLabel(int level) => 'Lv.$level';
 }

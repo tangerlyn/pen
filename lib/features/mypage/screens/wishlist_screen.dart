@@ -84,6 +84,7 @@ class _WishlistTile extends ConsumerWidget {
         onPressed: () async {
           if (uid == null) return;
           await ref.read(wishlistRepoProvider).remove(uid, item.productId);
+          if (!context.mounted) return;
           ref.invalidate(wishlistProvider(uid));
           ref.invalidate(wishlistStatusProvider(item.productId));
         },

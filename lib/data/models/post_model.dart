@@ -5,6 +5,7 @@ class PostModel {
     required this.id,
     required this.authorId,
     required this.authorNickname,
+    this.authorLevel = 1,
     required this.title,
     required this.body,
     this.imageUrls = const [],
@@ -19,6 +20,7 @@ class PostModel {
   final String id;
   final String authorId;
   final String authorNickname;
+  final int authorLevel;
   final String title;
   final String body;
   final List<String> imageUrls;
@@ -35,6 +37,7 @@ class PostModel {
       id: id,
       authorId: data['authorId'] as String? ?? '',
       authorNickname: data['authorNickname'] as String? ?? '익명',
+      authorLevel: (data['authorLevel'] as num?)?.toInt() ?? 1,
       title: data['title'] as String? ?? '',
       body: data['body'] as String? ?? '',
       imageUrls: List<String>.from(data['imageUrls'] as List? ?? []),
@@ -53,6 +56,7 @@ class PostModel {
   Map<String, dynamic> toMap() => {
         'authorId': authorId,
         'authorNickname': authorNickname,
+        'authorLevel': authorLevel,
         'title': title,
         'body': body,
         'imageUrls': imageUrls,
@@ -70,6 +74,7 @@ class PostCommentModel {
     required this.postId,
     required this.authorId,
     required this.authorNickname,
+    this.authorLevel = 1,
     this.body,
     required this.createdAt,
     this.updatedAt,
@@ -80,6 +85,7 @@ class PostCommentModel {
   final String postId;
   final String authorId;
   final String authorNickname;
+  final int authorLevel;
   final String? body;
   final DateTime createdAt;
   final DateTime? updatedAt;
@@ -91,6 +97,7 @@ class PostCommentModel {
       postId: data['postId'] as String? ?? '',
       authorId: data['authorId'] as String? ?? '',
       authorNickname: data['authorNickname'] as String? ?? '익명',
+      authorLevel: (data['authorLevel'] as num?)?.toInt() ?? 1,
       body: data['body'] as String?,
       createdAt: data['createdAt'] is Timestamp
           ? (data['createdAt'] as Timestamp).toDate()
@@ -106,6 +113,7 @@ class PostCommentModel {
         'postId': postId,
         'authorId': authorId,
         'authorNickname': authorNickname,
+        'authorLevel': authorLevel,
         if (body != null) 'body': body,
         'createdAt': FieldValue.serverTimestamp(),
         'isDeleted': isDeleted,

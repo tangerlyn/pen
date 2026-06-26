@@ -8,6 +8,7 @@ import '../../../core/theme/app_theme.dart';
 import '../../../core/utils/profile_navigation.dart';
 import '../../providers/providers.dart';
 import '../../../features/community/providers/community_provider.dart';
+import '../level_badge.dart';
 
 final _postCardAuthorProvider =
     FutureProvider.family<UserModel?, String>((ref, uid) {
@@ -79,6 +80,7 @@ class PostCard extends ConsumerWidget {
                         child: _AuthorRow(
                           authorId: post.authorId,
                           fallbackNickname: post.authorNickname,
+                          authorLevel: post.authorLevel,
                         ),
                       ),
                       const SizedBox(width: AppSpacing.sm),
@@ -191,9 +193,11 @@ class _AuthorRow extends ConsumerWidget {
   const _AuthorRow({
     required this.authorId,
     required this.fallbackNickname,
+    required this.authorLevel,
   });
   final String authorId;
   final String fallbackNickname;
+  final int authorLevel;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -217,8 +221,10 @@ class _AuthorRow extends ConsumerWidget {
         Text(
           user?.nickname ?? fallbackNickname,
           style: AppTextStyles.bodySmall.copyWith(
-              color: AppColors.textTertiary, fontWeight: FontWeight.w500),
+              color: AppColors.primary, fontWeight: FontWeight.w600),
         ),
+        const SizedBox(width: 5),
+        LevelBadge(user?.level ?? authorLevel),
       ],
     );
   }

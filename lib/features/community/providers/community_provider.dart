@@ -160,6 +160,7 @@ class PostWriteNotifier extends StateNotifier<PostWriteState> {
   Future<String?> submit({
     required String authorId,
     required String authorNickname,
+    required int authorLevel,
     required String title,
     required String body,
     List<String> imageUrls = const [],
@@ -171,13 +172,13 @@ class PostWriteNotifier extends StateNotifier<PostWriteState> {
       final id = await _repo.createPost(
         authorId: authorId,
         authorNickname: authorNickname,
+        authorLevel: authorLevel,
         title: title,
         body: body,
         imageUrls: imageUrls,
         category: category,
         contentBlocks: contentBlocks,
       );
-      // 커뮤니티 글 작성 EXP 지급 + 레벨업 체크
       final levelUp = await _ref.read(userRepoProvider).addExpAndCheck(authorId, LevelSystem.expPost);
       if (levelUp != null) {
         _ref.read(levelUpProvider.notifier).state = levelUp;

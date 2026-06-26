@@ -8,6 +8,13 @@ import '../../../core/utils/profile_navigation.dart';
 import '../../providers/providers.dart';
 import '../../../features/home/providers/review_detail_provider.dart';
 import '../content_moderation.dart';
+import '../level_badge.dart';
+import '../../../data/models/user_model.dart';
+
+final _commentAuthorProvider =
+    FutureProvider.family<UserModel?, String>((ref, uid) {
+  return ref.read(userRepoProvider).getUser(uid);
+});
 
 class CommentTile extends ConsumerStatefulWidget {
   const CommentTile({
@@ -140,6 +147,11 @@ class _CommentTileState extends ConsumerState<CommentTile> {
   Widget build(BuildContext context) {
     final replies = ref.watch(reviewRepliesProvider(
         (reviewId: widget.reviewId, commentId: widget.comment.id)));
+    final authorLevel = ref
+        .watch(_commentAuthorProvider(widget.comment.authorId))
+        .valueOrNull
+        ?.level ??
+        widget.comment.authorLevel;
 
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: AppSpacing.lg, vertical: 8),
@@ -149,7 +161,7 @@ class _CommentTileState extends ConsumerState<CommentTile> {
           if (widget.comment.isDeleted)
             _buildDeletedRow()
           else
-            _buildActiveRow(context),
+            _buildActiveRow(context, authorLevel),
           replies.when(
             data: (list) => list.isEmpty
                 ? const SizedBox.shrink()
@@ -199,7 +211,7 @@ class _CommentTileState extends ConsumerState<CommentTile> {
     );
   }
 
-  Widget _buildActiveRow(BuildContext context) {
+  Widget _buildActiveRow(BuildContext context, int currentLevel) {
     return Row(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -225,7 +237,9 @@ class _CommentTileState extends ConsumerState<CommentTile> {
                         style: const TextStyle(
                             fontWeight: FontWeight.w600, fontSize: 13)),
                   ),
-                  const SizedBox(width: 8),
+                  const SizedBox(width: 6),
+                  LevelBadge(currentLevel),
+                  const SizedBox(width: 6),
                   Text(
                     timeago.format(widget.comment.createdAt, locale: 'ko'),
                     style: const TextStyle(
@@ -429,6 +443,12 @@ class _ReplyTileState extends ConsumerState<_ReplyTile> {
 
   @override
   Widget build(BuildContext context) {
+    final currentLevel = ref
+        .watch(_commentAuthorProvider(widget.reply.authorId))
+        .valueOrNull
+        ?.level ??
+        widget.reply.authorLevel;
+
     return Padding(
       padding: const EdgeInsets.only(bottom: 8),
       child: Row(
@@ -457,7 +477,9 @@ class _ReplyTileState extends ConsumerState<_ReplyTile> {
                           style: const TextStyle(
                               fontWeight: FontWeight.w600, fontSize: 13)),
                     ),
-                    const SizedBox(width: 8),
+                    const SizedBox(width: 6),
+                    LevelBadge(currentLevel),
+                    const SizedBox(width: 6),
                     Text(
                       timeago.format(widget.reply.createdAt, locale: 'ko'),
                       style: const TextStyle(

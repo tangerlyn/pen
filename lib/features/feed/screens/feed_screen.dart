@@ -305,8 +305,8 @@ class _PostListItem extends StatelessWidget {
                       Text(
                         post.authorNickname,
                         style: AppTextStyles.bodySmall.copyWith(
-                            color: AppColors.textTertiary,
-                            fontWeight: FontWeight.w500),
+                            color: AppColors.primary,
+                            fontWeight: FontWeight.w600),
                       ),
                       const SizedBox(width: AppSpacing.sm),
                       Text(

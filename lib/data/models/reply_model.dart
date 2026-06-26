@@ -5,6 +5,7 @@ class ReplyModel {
     required this.id,
     required this.authorId,
     required this.authorNickname,
+    this.authorLevel = 1,
     this.body,
     required this.createdAt,
     this.updatedAt,
@@ -14,6 +15,7 @@ class ReplyModel {
   final String id;
   final String authorId;
   final String authorNickname;
+  final int authorLevel;
   final String? body;
   final DateTime createdAt;
   final DateTime? updatedAt;
@@ -24,6 +26,7 @@ class ReplyModel {
       id: id,
       authorId: data['authorId'] as String? ?? '',
       authorNickname: data['authorNickname'] as String? ?? '',
+      authorLevel: (data['authorLevel'] as num?)?.toInt() ?? 1,
       body: data['body'] as String?,
       createdAt: data['createdAt'] is Timestamp
           ? (data['createdAt'] as Timestamp).toDate()
@@ -38,6 +41,7 @@ class ReplyModel {
   Map<String, dynamic> toMap() => {
         'authorId': authorId,
         'authorNickname': authorNickname,
+        'authorLevel': authorLevel,
         'body': body,
         'createdAt': FieldValue.serverTimestamp(),
         'isDeleted': false,

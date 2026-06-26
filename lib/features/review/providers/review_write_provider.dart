@@ -174,9 +174,12 @@ class ReviewWriteNotifier extends StateNotifier<ReviewWriteState> {
 
       // 작성 모드
       final reviewId = _uuid.v4();
+      final currentUser = _ref.read(currentUserProvider).value;
       final review = ReviewModel(
         id: reviewId,
         authorId: uid,
+        authorNickname: currentUser?.nickname ?? '',
+        authorLevel: currentUser?.level ?? 1,
         imageUrls: imageUrls,
         contentBlocks: contentBlocks,
         title: state.title,

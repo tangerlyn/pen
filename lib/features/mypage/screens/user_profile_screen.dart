@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../../../core/theme/app_theme.dart';
+import '../../../shared/widgets/level_badge.dart';
 import '../../../data/models/ink_book_model.dart';
 import '../../../data/models/user_model.dart';
 import '../../../shared/providers/providers.dart';
@@ -168,14 +169,23 @@ class _ProfileHeader extends ConsumerWidget {
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Expanded(
-                            child: Text(
-                              user.nickname,
-                              style: const TextStyle(
-                                fontSize: 20,
-                                fontWeight: FontWeight.w700,
-                                color: AppColors.textPrimary,
-                                letterSpacing: -0.3,
-                              ),
+                            child: Row(
+                              crossAxisAlignment: CrossAxisAlignment.center,
+                              children: [
+                                Flexible(
+                                  child: Text(
+                                    user.nickname,
+                                    style: const TextStyle(
+                                      fontSize: 20,
+                                      fontWeight: FontWeight.w700,
+                                      color: AppColors.textPrimary,
+                                      letterSpacing: -0.3,
+                                    ),
+                                  ),
+                                ),
+                                const SizedBox(width: 8),
+                                LevelBadge(user.level),
+                              ],
                             ),
                           ),
                           if (!isOwnProfile && currentUid != null) ...[
@@ -193,7 +203,7 @@ class _ProfileHeader extends ConsumerWidget {
                           ],
                         ],
                       ),
-                      const SizedBox(height: 5),
+                      const SizedBox(height: 4),
                       Text(
                         user.levelTitle,
                         style: const TextStyle(

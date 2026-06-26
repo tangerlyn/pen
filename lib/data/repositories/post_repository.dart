@@ -98,6 +98,7 @@ class PostRepository {
   Future<String> createPost({
     required String authorId,
     required String authorNickname,
+    required int authorLevel,
     required String title,
     required String body,
     List<String> imageUrls = const [],
@@ -108,6 +109,7 @@ class PostRepository {
       id: '',
       authorId: authorId,
       authorNickname: authorNickname,
+      authorLevel: authorLevel,
       title: title,
       body: body,
       imageUrls: imageUrls,
@@ -134,6 +136,7 @@ class PostRepository {
     required String postId,
     required String authorId,
     required String authorNickname,
+    required int authorLevel,
     required String body,
   }) async {
     final batch = _db.batch();
@@ -143,6 +146,7 @@ class PostRepository {
       postId: postId,
       authorId: authorId,
       authorNickname: authorNickname,
+      authorLevel: authorLevel,
       body: body,
       createdAt: DateTime.now(),
     ).toMap());

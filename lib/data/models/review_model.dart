@@ -4,6 +4,8 @@ class ReviewModel {
   const ReviewModel({
     required this.id,
     required this.authorId,
+    this.authorNickname = '',
+    this.authorLevel = 1,
     required this.imageUrls,
     this.contentBlocks,
     this.title = '',
@@ -23,6 +25,8 @@ class ReviewModel {
 
   final String id;
   final String authorId;
+  final String authorNickname;
+  final int authorLevel;
   final List<String> imageUrls;
   // 블로그 형식 본문 (null이면 기존 body+imageUrls 사용)
   final List<Map<String, dynamic>>? contentBlocks;
@@ -46,6 +50,8 @@ class ReviewModel {
     return ReviewModel(
       id: id,
       authorId: data['authorId'] as String? ?? '',
+      authorNickname: data['authorNickname'] as String? ?? '',
+      authorLevel: (data['authorLevel'] as num?)?.toInt() ?? 1,
       imageUrls: List<String>.from(data['imageUrls'] as List? ?? []),
       contentBlocks: (data['contentBlocks'] as List?)
           ?.map((e) => Map<String, dynamic>.from(e as Map))
@@ -70,6 +76,8 @@ class ReviewModel {
 
   Map<String, dynamic> toMap() => {
         'authorId': authorId,
+        'authorNickname': authorNickname,
+        'authorLevel': authorLevel,
         'imageUrls': imageUrls,
         if (contentBlocks != null) 'contentBlocks': contentBlocks,
         'title': title,
@@ -86,7 +94,7 @@ class ReviewModel {
       };
 
   ReviewModel copyWith({
-    String? id, String? authorId, List<String>? imageUrls,
+    String? id, String? authorId, String? authorNickname, int? authorLevel, List<String>? imageUrls,
     List<Map<String, dynamic>>? contentBlocks,
     String? title, String? body, double? rating,
     List<String>? inkIds, List<String>? penIds,
@@ -95,6 +103,8 @@ class ReviewModel {
   }) {
     return ReviewModel(
       id: id ?? this.id, authorId: authorId ?? this.authorId,
+      authorNickname: authorNickname ?? this.authorNickname,
+      authorLevel: authorLevel ?? this.authorLevel,
       imageUrls: imageUrls ?? this.imageUrls,
       contentBlocks: contentBlocks ?? this.contentBlocks,
       title: title ?? this.title, body: body ?? this.body,
@@ -116,6 +126,7 @@ class CommentModel {
     required this.reviewId,
     required this.authorId,
     this.authorNickname = '',
+    this.authorLevel = 1,
     this.body,
     required this.createdAt,
     this.updatedAt,
@@ -126,6 +137,7 @@ class CommentModel {
   final String reviewId;
   final String authorId;
   final String authorNickname;
+  final int authorLevel;
   final String? body;
   final DateTime createdAt;
   final DateTime? updatedAt;
@@ -137,6 +149,7 @@ class CommentModel {
       reviewId: data['reviewId'] as String? ?? '',
       authorId: data['authorId'] as String? ?? '',
       authorNickname: data['authorNickname'] as String? ?? '',
+      authorLevel: (data['authorLevel'] as num?)?.toInt() ?? 1,
       body: data['body'] as String?,
       createdAt: data['createdAt'] is Timestamp
           ? (data['createdAt'] as Timestamp).toDate()
@@ -152,6 +165,7 @@ class CommentModel {
         'reviewId': reviewId,
         'authorId': authorId,
         'authorNickname': authorNickname,
+        'authorLevel': authorLevel,
         if (body != null) 'body': body,
         'createdAt': createdAt,
         'isDeleted': isDeleted,

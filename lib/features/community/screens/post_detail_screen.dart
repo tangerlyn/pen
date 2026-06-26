@@ -13,6 +13,7 @@ import '../../../shared/providers/user_providers.dart';
 import '../providers/community_provider.dart';
 import '../../../data/models/post_model.dart';
 import '../../../data/models/reply_model.dart';
+import '../../../shared/widgets/level_badge.dart';
 import '../../../data/models/user_model.dart';
 import '../../../core/utils/toast_utils.dart';
 import '../../../shared/widgets/content_moderation.dart';
@@ -73,6 +74,7 @@ class _PostDetailScreenState extends ConsumerState<PostDetailScreen> {
                 id: '',
                 authorId: user.uid,
                 authorNickname: user.nickname,
+                authorLevel: user.level,
                 body: text,
                 createdAt: DateTime.now(),
               ),
@@ -86,6 +88,7 @@ class _PostDetailScreenState extends ConsumerState<PostDetailScreen> {
               postId: widget.postId,
               authorId: user.uid,
               authorNickname: user.nickname,
+              authorLevel: user.level,
               body: text,
             ));
         final levelUp = await ref
@@ -772,13 +775,19 @@ class _EditorialByline extends ConsumerWidget {
           Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text(
-                user?.nickname ?? post.authorNickname,
-                style: const TextStyle(
-                  fontSize: 13,
-                  fontWeight: FontWeight.w600,
-                  color: AppColors.textPrimary,
-                ),
+              Row(
+                children: [
+                  Text(
+                    user?.nickname ?? post.authorNickname,
+                    style: const TextStyle(
+                      fontSize: 13,
+                      fontWeight: FontWeight.w600,
+                      color: AppColors.textPrimary,
+                    ),
+                  ),
+                  const SizedBox(width: 6),
+                  LevelBadge(user?.level ?? post.authorLevel),
+                ],
               ),
               Text(
                 timeStr,
@@ -847,12 +856,18 @@ class _PostProfileRow extends ConsumerWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 authorAsync.when(
-                  data: (user) => Text(
-                    user == null
-                        ? '${post.authorNickname} (탈퇴)'
-                        : user.nickname,
-                    style: const TextStyle(
-                        fontWeight: FontWeight.w600, fontSize: 14),
+                  data: (user) => Row(
+                    children: [
+                      Text(
+                        user == null
+                            ? '${post.authorNickname} (탈퇴)'
+                            : user.nickname,
+                        style: const TextStyle(
+                            fontWeight: FontWeight.w600, fontSize: 14),
+                      ),
+                      const SizedBox(width: 6),
+                      LevelBadge(user?.level ?? post.authorLevel),
+                    ],
                   ),
                   loading: () => Container(
                     height: 14,
@@ -862,10 +877,16 @@ class _PostProfileRow extends ConsumerWidget {
                       borderRadius: BorderRadius.circular(4),
                     ),
                   ),
-                  error: (_, __) => Text(
-                    post.authorNickname,
-                    style: const TextStyle(
-                        fontWeight: FontWeight.w600, fontSize: 14),
+                  error: (_, __) => Row(
+                    children: [
+                      Text(
+                        post.authorNickname,
+                        style: const TextStyle(
+                            fontWeight: FontWeight.w600, fontSize: 14),
+                      ),
+                      const SizedBox(width: 6),
+                      LevelBadge(post.authorLevel),
+                    ],
                   ),
                 ),
                 const SizedBox(height: 2),
@@ -1088,7 +1109,9 @@ class _CommentTileState extends ConsumerState<_CommentTile> {
                                     fontSize: 13,
                                     fontWeight: FontWeight.w600)),
                           ),
-                          const SizedBox(width: 8),
+                          const SizedBox(width: 4),
+                          LevelBadge(widget.comment.authorLevel),
+                          const SizedBox(width: 6),
                           Text(
                               timeago.format(widget.comment.createdAt,
                                   locale: 'ko'),
@@ -1351,7 +1374,9 @@ class _PostReplyTileState extends ConsumerState<_PostReplyTile> {
                           style: const TextStyle(
                               fontWeight: FontWeight.w600, fontSize: 13)),
                     ),
-                    const SizedBox(width: 8),
+                    const SizedBox(width: 4),
+                    LevelBadge(widget.reply.authorLevel),
+                    const SizedBox(width: 6),
                     Text(
                         timeago.format(widget.reply.createdAt,
                             locale: 'ko'),

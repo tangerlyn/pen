@@ -24,6 +24,7 @@ import '../providers/feed_provider.dart';
 import '../../../data/models/user_model.dart';
 import '../../../shared/widgets/content_moderation.dart';
 import '../../../shared/widgets/common/skeletons.dart';
+import '../../../shared/widgets/level_badge.dart';
 
 final _reviewAuthorProvider = FutureProvider.family<UserModel?, String>((ref, uid) {
   return ref.read(userRepoProvider).getUser(uid);
@@ -87,6 +88,7 @@ class _ReviewDetailScreenState extends ConsumerState<ReviewDetailScreen> {
                 id: '',
                 authorId: user.uid,
                 authorNickname: user.nickname,
+                authorLevel: user.level,
                 body: text,
                 createdAt: DateTime.now(),
               ),
@@ -664,9 +666,18 @@ class _ProfileRow extends ConsumerWidget {
             child: GestureDetector(
               onTap: () => navigateToProfile(context, ref, review.authorId),
               child: authorAsync.when(
-                data: (user) => Text(
-                  user == null ? '(알 수 없음) (탈퇴)' : user.nickname,
-                  style: const TextStyle(fontWeight: FontWeight.w600),
+                data: (user) => Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Text(
+                      user == null ? '(알 수 없음) (탈퇴)' : user.nickname,
+                      style: const TextStyle(fontWeight: FontWeight.w600),
+                    ),
+                    if (user != null) ...[
+                      const SizedBox(width: 6),
+                      LevelBadge(user.level),
+                    ],
+                  ],
                 ),
                 loading: () => Container(
                   height: 14,

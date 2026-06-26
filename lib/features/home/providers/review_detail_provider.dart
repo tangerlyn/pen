@@ -58,12 +58,13 @@ class ReviewDetailNotifier extends FamilyAsyncNotifier<ReviewModel?, String> {
     final uid = ref.read(currentUidProvider);
     if (review == null || uid == null) return;
 
-    final nickname = ref.read(currentUserProvider).value?.nickname ?? '';
+    final currentUser = ref.read(currentUserProvider).value;
     final comment = CommentModel(
       id: '',
       reviewId: review.id,
       authorId: uid,
-      authorNickname: nickname,
+      authorNickname: currentUser?.nickname ?? '',
+      authorLevel: currentUser?.level ?? 1,
       body: body,
       createdAt: DateTime.now(),
     );

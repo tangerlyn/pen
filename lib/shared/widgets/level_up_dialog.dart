@@ -32,7 +32,6 @@ class _LevelUpDialogState extends State<LevelUpDialog> {
     return Stack(
       alignment: Alignment.topCenter,
       children: [
-        // 색종이 이펙트
         ConfettiWidget(
           confettiController: _confetti,
           blastDirectionality: BlastDirectionality.explosive,
@@ -49,7 +48,6 @@ class _LevelUpDialogState extends State<LevelUpDialog> {
             Color(0xFFFF8C42),
           ],
         ),
-        // 다이얼로그
         Dialog(
           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
           child: Padding(
@@ -97,7 +95,8 @@ class _LevelUpDialogState extends State<LevelUpDialog> {
                       ),
                       elevation: 0,
                     ),
-                    child: const Text('확인', style: TextStyle(fontSize: 15, fontWeight: FontWeight.w600)),
+                    child: const Text('확인',
+                        style: TextStyle(fontSize: 15, fontWeight: FontWeight.w600)),
                   ),
                 ),
               ],
