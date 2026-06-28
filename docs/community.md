@@ -2,81 +2,148 @@
 
 ## 개요
 
-만년필 덕후들의 질문·정보 공유 게시판. 카테고리 필터와 인기글 섹션으로 콘텐츠 탐색 제공.
+만년필 덕후들의 질문·정보 공유 게시판. 카테고리 필터, 인기글 섹션, 무한 스크롤 지원.
 
 ---
 
 ## 화면 목록
 
 ### `community_screen.dart`
-- 경로: `/community` (하단 탭 3번째)
-- **카테고리 필터 바** — 전체 / 질문 / 정보공유 칩 (가로 스크롤)
-  - 선택한 카테고리로 Firestore `where` 필터 적용
+**경로:** `/community` (하단 탭 3번째 — 커뮤니티)
+
+**화면 구성**
+- **AppBar** (showAppBar: true일 때)
+  - 제목 "커뮤니티"
+  - 우측 검색 아이콘 → `/search?type=community`
+- **카테고리 필터 칩 바** (가로 스크롤)
+  - 전체 / 질문 / 정보공유
+  - 선택 시 해당 카테고리 게시글만 표시
   - 카테고리 선택 시 인기글 섹션 숨김
-- **인기글 섹션** — 좋아요+댓글 수 상위 게시글 PageView 카드
-  - 각 카드에 작성자 CircleAvatar(radius 10) + 닉네임 표시
-  - 작성자 프로필은 `_popularCardAuthorProvider` (FutureProvider.family)로 lazy 로드
-- **전체 게시글 리스트** — 최신순, 무한 스크롤 (pageSize 20)
-  - 게시글 사이 Divider 구분선 (카드 테두리 없음)
-- `showAppBar` 파라미터 지원 — `false`일 때 AppBar 숨김 (FeedScreen 임베드용)
-- 우측 상단 검색 아이콘 → `/search?type=community`
-- 우측 하단 글쓰기 FAB → `/community/write`
-
-### `post_detail_screen.dart`
-- 경로: `/community/:postId`
-- **헤더** — 카테고리 뱃지, 제목, 작성자 프로필 행 (`_EditorialByline`)
-  - `_EditorialByline`: CircleAvatar(radius 16) + 닉네임 + 작성 시간 (2줄)
-  - 작성자 프로필 탭 → `/profile/:uid`
-- 본문, 첨부 이미지
-- **AppBar 우측** — 스크랩 북마크 버튼 (로그인 시), more_vert 메뉴
-  - 스크랩 시 화면 중앙 토스트("스크랩되었습니다") 표시
-  - 스크랩 취소 시 토스트 미표시
-- 좋아요 토글, 댓글 수
-- 댓글·대댓글 목록 (트리 구조)
-- 하단 댓글 입력창
-- 작성자 본인이면 수정·삭제 메뉴 표시
-- 신고 기능 (다른 유저 게시글)
-
-### `post_write_screen.dart`
-- 경로: `/community/write`
-- 카테고리 선택 칩 — 질문 / 정보공유
-- 제목 + 본문 입력
-- 사진 첨부 (최대 5장)
-- 이미지 업로드 실패 시 스낵바 에러 메시지 표시
+- **인기글 섹션** (전체 탭일 때만 표시)
+  - 좋아요+댓글 수 상위 게시글 PageView 카드
+  - 각 카드: 제목 + 카테고리 뱃지 + 작성자 CircleAvatar(radius 10) + 닉네임(네이비) + 레벨 뱃지
+  - 탭 → `/community/:postId`
+- **전체 게시글 리스트 (`PostCard`)**
+  - 카테고리 뱃지(질문=파랑, 정보공유=초록) + 제목 + 본문 미리보기 + 썸네일
+  - 하단: 프사(CircleAvatar radius 11) + 닉네임(네이비, w600) + 레벨 뱃지 + 작성 시간 + 댓글 수 + 좋아요 수
+  - 좋아요 아이콘 탭 → 좋아요 즉시 토글 (카드 내에서 처리)
+  - 카드 탭 → `/community/:postId`
+  - 닉네임/프사 탭 → `/profile/:uid`
+- 무한 스크롤 (pageSize 20)
+- 게시글 사이 Divider 구분선
+- **하단 우측 FAB** (연필 아이콘) → `/community/write`
 
 ---
 
-## 데이터 구조 (PostModel)
+### `post_detail_screen.dart`
+**경로:** `/community/:postId`
 
-```
-postId, authorId, authorNickname
-category ('질문' | '정보공유')
-title, body
-imageUrls[]
-contentBlocks[]          // 블로그 형식 본문 (선택)
-likeCount, commentCount, scrapCount
-createdAt
-```
+**화면 구성**
+- **AppBar**
+  - 좌측: 뒤로가기
+  - 우측: 북마크(스크랩) 아이콘 / ⋮(더보기) 메뉴
+    - 북마크: 스크랩 상태 반영. 탭 시 스크랩 토글
+    - 스크랩 완료 시 "스크랩되었습니다" 토스트 표시
+    - ⋮ 본인 글: 수정 → `PostWriteScreen(postToEdit:)` / 삭제
+    - ⋮ 타인 글: 차단 / 신고
+- **헤더 (`_EditorialByline`)**
+  - 카테고리 뱃지 (질문=파랑, 정보공유=초록)
+  - 제목
+  - 작성자: CircleAvatar(radius 16) + 닉네임(네이비) + 레벨 뱃지(현재 레벨) + 작성 시간
+  - 탭 → `/profile/:uid`
+- **본문** — 텍스트 + 첨부 이미지 (탭 시 전체화면 ImageViewer)
+- **액션 바**
+  - 좋아요(하트) + 좋아요 수 — 탭 시 토글
+  - 댓글 아이콘 + 댓글 수
+- **댓글 목록** (트리 구조)
+  - 댓글: CircleAvatar + 닉네임 + 레벨 뱃지(현재 레벨) + 작성 시간 + 본문
+  - 댓글 ⋮ 메뉴: 본인 → 수정/삭제 / 타인 → 차단/신고
+  - "답글" 텍스트 탭 → 하단 입력창 답글 모드 전환
+  - 답글 (들여쓰기): 닉네임 + 레벨 뱃지 + 작성 시간 + 본문 + ⋮ 메뉴
+  - 닉네임 탭 → `/profile/:uid`
+- **하단 댓글 입력창**
+  - 답글 모드: "@닉네임 에게 답글" 배너 + X(취소)
+  - 전송 탭 → 댓글/답글 등록 (+EXP 2 획득)
 
-스크랩 서브컬렉션: `posts/{postId}/scraps/{uid}` — `{ uid, createdAt }`
+---
+
+### `post_write_screen.dart`
+**경로:** `/community/write`
+
+**화면 구성**
+- **AppBar**: "게시글 작성" 또는 "게시글 수정"
+- 카테고리 선택 칩 — 질문 / 정보공유
+- 제목 입력
+- 본문 입력
+- 사진 첨부 (최대 5장, 갤러리 선택)
+- **등록 버튼** → 저장 후 `/community/:postId`로 이동 (+EXP 5 획득)
+  - 이미지 업로드 실패 시 스낵바 에러 표시
+
+---
+
+## 데이터 구조
+
+### PostModel
+
+| 필드 | 타입 | 설명 |
+|---|---|---|
+| id | String | 게시글 ID |
+| authorId | String | 작성자 UID |
+| authorNickname | String | 작성 시점 닉네임 스냅샷 |
+| authorLevel | int | 작성 시점 레벨 스냅샷 (표시는 현재 레벨 우선) |
+| category | String | 질문 / 정보공유 |
+| title | String | 제목 |
+| body | String | 본문 |
+| imageUrls | List\<String\> | 첨부 이미지 URL 목록 |
+| likeCount | int | 좋아요 수 |
+| commentCount | int | 댓글 수 |
+| createdAt | DateTime | 작성 시각 |
+
+### PostCommentModel
+
+| 필드 | 타입 | 설명 |
+|---|---|---|
+| id | String | 댓글 ID |
+| authorId | String | 작성자 UID |
+| authorNickname | String | 닉네임 스냅샷 |
+| authorLevel | int | 레벨 스냅샷 (표시는 현재 레벨 우선) |
+| body | String | 댓글 본문 |
+| createdAt | DateTime | 작성 시각 |
+
+### ReplyModel (게시글 댓글의 답글)
+
+| 필드 | 타입 | 설명 |
+|---|---|---|
+| id | String | 답글 ID |
+| authorId | String | 작성자 UID |
+| authorNickname | String | 닉네임 스냅샷 |
+| authorLevel | int | 레벨 스냅샷 (표시는 현재 레벨 우선) |
+| body | String | 답글 본문 |
+| createdAt | DateTime | 작성 시각 |
+
+스크랩 서브컬렉션: `posts/{postId}/scraps/{uid}`
 
 ---
 
 ## 상태 관리
 
-- `communityFeedProvider` — StateNotifier
-  - `selectedCategory` 상태 보유 (null = 전체)
-  - `setCategory(String?)` — 카테고리 변경 시 목록 초기화 후 재조회
-  - 카테고리 필터 시 `where('category')` + 클라이언트 정렬 (Firestore 복합 인덱스 불필요)
-  - 카테고리 없는 경우 cursor-based pagination
-- `popularPostsProvider` — 인기글 Provider (filteredPosts 기반 클라이언트 정렬)
-- `postLikeStatusProvider` — StreamProvider.family, 좋아요 실시간 상태
-- `postScrapStatusProvider` — StreamProvider.family, 스크랩 실시간 상태
+| Provider | 종류 | 역할 |
+|---|---|---|
+| `communityFeedProvider` | StateNotifierProvider | 카테고리 필터·커서·게시글 목록 |
+| `popularPostsProvider` | Provider | 인기글 (클라이언트 정렬) |
+| `postLikeStatusProvider` | StreamProvider.family | 좋아요 실시간 상태 |
+| `postScrapStatusProvider` | StreamProvider.family | 스크랩 실시간 상태 |
 
 ---
 
 ## 관련 파일
 
+- `lib/features/community/screens/community_screen.dart`
+- `lib/features/community/screens/post_detail_screen.dart`
+- `lib/features/community/screens/post_write_screen.dart`
 - `lib/features/community/providers/community_provider.dart`
 - `lib/data/repositories/post_repository.dart`
+- `lib/data/models/post_model.dart`
+- `lib/data/models/reply_model.dart`
 - `lib/shared/widgets/community/post_card.dart`
+- `lib/shared/widgets/level_badge.dart`
