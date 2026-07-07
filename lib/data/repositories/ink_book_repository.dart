@@ -35,29 +35,42 @@ class InkBookRepository {
   Future<void> updateBookVisibility(
     String uid,
     String bookId, {
-    required bool isPublic,
+    required String visibility, // 'public' | 'followers' | 'private'
     required String ownerNickname,
   }) =>
       _books(uid).doc(bookId).update({
-        'isPublic': isPublic,
+        'visibility': visibility,
+        'isPublic': visibility == 'public', // 구버전 쿼리 하위 호환
         'ownerUid': uid,
         'ownerNickname': ownerNickname,
       });
 
+  /// 전체 공개 잉크북 목록 (공개 범위 = 'public')
   Future<List<InkBookModel>> getPublicBooks({int limit = 30}) async {
     final snap = await _db
         .collectionGroup('inkBooks')
-        .where('isPublic', isEqualTo: true)
+        .where('isPublic', isEqualTo: true) // 구버전 데이터 포함
         .orderBy('createdAt', descending: true)
         .limit(limit)
         .get();
     return snap.docs.map((d) => InkBookModel.fromMap(d.data(), d.id)).toList();
   }
 
+  /// 특정 유저의 전체 공개 잉크북 (공개 범위 = 'public')
   Future<List<InkBookModel>> getPublicBooksForUser(String uid) async {
     final snap = await _db
         .collectionGroup('inkBooks')
         .where('isPublic', isEqualTo: true)
+        .where('ownerUid', isEqualTo: uid)
+        .get();
+    return snap.docs.map((d) => InkBookModel.fromMap(d.data(), d.id)).toList();
+  }
+
+  /// 특정 유저의 팔로워 공개 잉크북 (공개 범위 = 'followers')
+  Future<List<InkBookModel>> getFollowersOnlyBooksForUser(String uid) async {
+    final snap = await _db
+        .collectionGroup('inkBooks')
+        .where('visibility', isEqualTo: 'followers')
         .where('ownerUid', isEqualTo: uid)
         .get();
     return snap.docs.map((d) => InkBookModel.fromMap(d.data(), d.id)).toList();

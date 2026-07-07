@@ -1,13 +1,16 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 
+/// 'public' | 'followers' | 'private'
+typedef BookVisibility = String;
+
 class InkBookModel {
   const InkBookModel({
     required this.id,
     required this.name,
     required this.coverColor,
     required this.createdAt,
-    this.isPublic = false,
+    this.visibility = 'public',
     this.ownerUid = '',
     this.ownerNickname = '',
   });
@@ -16,9 +19,11 @@ class InkBookModel {
   final String name;
   final String coverColor; // '#RRGGBB'
   final DateTime createdAt;
-  final bool isPublic;
+  final BookVisibility visibility; // 'public' | 'followers' | 'private'
   final String ownerUid;
   final String ownerNickname;
+
+  bool get isPublic => visibility == 'public';
 
   Color get color {
     final hex = coverColor.replaceFirst('#', '');
@@ -32,7 +37,9 @@ class InkBookModel {
         createdAt: data['createdAt'] is Timestamp
             ? (data['createdAt'] as Timestamp).toDate()
             : DateTime.now(),
-        isPublic: data['isPublic'] as bool? ?? false,
+        // 구버전 isPublic bool 필드 하위 호환
+        visibility: data['visibility'] as String? ??
+            ((data['isPublic'] as bool? ?? false) ? 'public' : 'private'),
         ownerUid: data['ownerUid'] as String? ?? '',
         ownerNickname: data['ownerNickname'] as String? ?? '',
       );
@@ -41,17 +48,18 @@ class InkBookModel {
         'name': name,
         'coverColor': coverColor,
         'createdAt': FieldValue.serverTimestamp(),
-        'isPublic': isPublic,
+        'visibility': visibility,
+        'isPublic': visibility == 'public', // 구버전 쿼리 하위 호환
         'ownerUid': ownerUid,
         'ownerNickname': ownerNickname,
       };
 
-  InkBookModel copyWith({bool? isPublic, String? ownerNickname}) => InkBookModel(
+  InkBookModel copyWith({String? visibility, String? ownerNickname}) => InkBookModel(
         id: id,
         name: name,
         coverColor: coverColor,
         createdAt: createdAt,
-        isPublic: isPublic ?? this.isPublic,
+        visibility: visibility ?? this.visibility,
         ownerUid: ownerUid,
         ownerNickname: ownerNickname ?? this.ownerNickname,
       );

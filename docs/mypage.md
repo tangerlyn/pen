@@ -51,7 +51,7 @@
 - 팔로워/팔로잉 수 — 탭 → `/profile/:uid/followers`
 - **팔로우 버튼** / **팔로잉 버튼** (토글)
 - **⋮ 메뉴** — 차단 / 신고
-- **잉크 차트 공개 설정이 켜진 경우**: 잉크 차트 보기 버튼 → `/public-ink-books?uid=xxx`
+- **공개 또는 팔로워 공개 잉크 차트가 있는 경우** (뷰어가 팔로우 중이면 팔로워 공개 차트도 포함): 잉크 차트 탭 노출 → `/public-ink-books?uid=xxx`
 - **탭 3개**: 리뷰 / 커뮤니티 / 스크랩북
 
 ---
@@ -102,6 +102,11 @@
 - **내보내기** — 화면 캡처 후 갤러리 저장 (gal 패키지)
 - **잉크 추가 FAB** → `/ink-chart/:bookId/add`
 - 잉크 추가 후 자동 이동: 추가된 잉크가 속한 페이지로 `PageController.animateToPage` (450ms, easeOutCubic)
+- **공개 범위 설정 버튼** (AppBar) — 바텀 시트로 3단계 선택
+  - 모든 사람에게 공개 (`public`, 새 차트 생성 시 기본값) — `Icons.public`
+  - 팔로워에게만 공개 (`followers`) — `Icons.group_outlined`
+  - 비공개 (`private`) — `Icons.lock_outlined`
+  - 변경 즉시 Firestore에 `visibility` 필드 저장 (레거시 `isPublic` bool도 함께 하위 호환 저장)
 
 ---
 
@@ -202,6 +207,7 @@ EXP 기반 Lv.1~10 시스템.
 | `scrappedReviewsProvider` | StreamProvider.family | 스크랩 리뷰 목록 |
 | `scrappedPostsProvider` | StreamProvider.family | 스크랩 게시글 목록 |
 | `levelUpProvider` | StateProvider\<LevelUpInfo?\> | 레벨업 다이얼로그 트리거 |
+| `userVisibleBooksProvider` | FutureProvider.family\<(ownerUid, viewerUid)\> | 뷰어의 팔로우 여부를 반영한 가시적 잉크 차트 목록 (공개 + 팔로우 중이면 팔로워 공개 포함) |
 
 ---
 

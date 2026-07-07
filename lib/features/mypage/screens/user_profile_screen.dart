@@ -8,7 +8,7 @@ import '../../../data/models/ink_book_model.dart';
 import '../../../data/models/user_model.dart';
 import '../../../shared/providers/providers.dart';
 import '../../../shared/providers/user_providers.dart';
-import '../../../shared/providers/ink_book_providers.dart';
+import '../../../shared/providers/ink_book_providers.dart' show userVisibleBooksProvider;
 import '../../../shared/widgets/common/empty_state.dart';
 import '../../../shared/widgets/community/post_card.dart';
 import '../../../shared/widgets/review/review_list_card.dart';
@@ -67,8 +67,9 @@ class _UserProfileScreenState extends ConsumerState<UserProfileScreen>
     final currentUid = ref.watch(currentUidProvider);
     final userAsync = ref.watch(profileUserProvider(widget.uid));
 
-    // 공개 잉크북 여부 감지 → 탭 개수 동적 조정
-    final publicBooksAsync = ref.watch(userPublicInkBooksProvider(widget.uid));
+    // 공개 잉크북 여부 감지 → 탭 개수 동적 조정 (팔로우 여부 반영)
+    final publicBooksAsync =
+        ref.watch(userVisibleBooksProvider((widget.uid, currentUid)));
     final hasPublicBooks = publicBooksAsync.maybeWhen(
       data: (books) => books.isNotEmpty,
       orElse: () => false,
@@ -120,7 +121,7 @@ class _UserProfileScreenState extends ConsumerState<UserProfileScreen>
           children: [
             _ReviewGrid(uid: widget.uid),
             _PostList(uid: widget.uid),
-            if (_hasPublicBooks) _InkChartTab(uid: widget.uid),
+            if (_hasPublicBooks) _InkChartTab(uid: widget.uid, viewerUid: currentUid),
           ],
         ),
       ),
@@ -489,12 +490,13 @@ class _PostList extends ConsumerWidget {
 // ── 잉크차트 탭 (공개 잉크북 그리드) ───────────────────────────────────────
 
 class _InkChartTab extends ConsumerWidget {
-  const _InkChartTab({required this.uid});
+  const _InkChartTab({required this.uid, this.viewerUid});
   final String uid;
+  final String? viewerUid;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final booksAsync = ref.watch(userPublicInkBooksProvider(uid));
+    final booksAsync = ref.watch(userVisibleBooksProvider((uid, viewerUid)));
     return booksAsync.when(
       loading: () => const Center(child: CircularProgressIndicator()),
       error: (e, st) => const EmptyStateWidget(

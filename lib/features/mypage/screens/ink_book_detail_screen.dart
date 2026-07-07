@@ -324,6 +324,53 @@ class _InkBookDetailScreenState extends ConsumerState<InkBookDetailScreen> {
     );
   }
 
+  // ── Visibility ───────────────────────────────────────────────────────────
+
+  IconData _visibilityIcon(String? visibility) => switch (visibility) {
+        'public' => Icons.public,
+        'followers' => Icons.group_outlined,
+        _ => Icons.lock_outlined,
+      };
+
+  String _visibilityLabel(String? visibility) => switch (visibility) {
+        'public' => '모든 사람에게 공개',
+        'followers' => '팔로워에게만 공개',
+        _ => '비공개',
+      };
+
+  void _showVisibilitySheet(
+      BuildContext context, WidgetRef ref, String uid, InkBookModel book) {
+    showModalBottomSheet<void>(
+      context: context,
+      shape: const RoundedRectangleBorder(
+          borderRadius: BorderRadius.vertical(top: Radius.circular(20))),
+      builder: (ctx) => _VisibilitySheet(
+        current: book.visibility,
+        onSelect: (newVisibility) async {
+          Navigator.pop(ctx);
+          if (newVisibility == book.visibility) return;
+          final currentUser = ref.read(currentUserProvider).value;
+          await ref.read(inkBookRepoProvider).updateBookVisibility(
+                uid,
+                widget.bookId,
+                visibility: newVisibility,
+                ownerNickname: currentUser?.nickname ?? '',
+              );
+          if (mounted) {
+            final msg = switch (newVisibility) {
+              'public' => '모든 사람에게 공개됐어요',
+              'followers' => '팔로워에게만 공개됐어요',
+              _ => '비공개로 변경됐어요',
+            };
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(content: Text(msg), duration: const Duration(seconds: 2)),
+            );
+          }
+        },
+      ),
+    );
+  }
+
   // ── Menu ─────────────────────────────────────────────────────────────────
 
   void _showMenuSheet(
@@ -847,29 +894,16 @@ class _InkBookDetailScreenState extends ConsumerState<InkBookDetailScreen> {
           else ...[
             IconButton(
               icon: Icon(
-                book?.isPublic == true ? Icons.lock_open_outlined : Icons.lock_outlined,
+                _visibilityIcon(book?.visibility),
                 size: 22,
-                color: book?.isPublic == true ? AppColors.primary : null,
+                color: (book?.visibility ?? 'private') != 'private'
+                    ? AppColors.primary
+                    : null,
               ),
-              tooltip: book?.isPublic == true ? '공개 중 (탭하여 비공개)' : '비공개 (탭하여 공개)',
-              onPressed: () async {
+              tooltip: _visibilityLabel(book?.visibility),
+              onPressed: () {
                 if (book == null) return;
-                final currentUser = ref.read(currentUserProvider).value;
-                final newPublic = !(book.isPublic);
-                await ref.read(inkBookRepoProvider).updateBookVisibility(
-                      uid,
-                      widget.bookId,
-                      isPublic: newPublic,
-                      ownerNickname: currentUser?.nickname ?? '',
-                    );
-                if (mounted) {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(
-                      content: Text(newPublic ? '공개 잉크 차트로 설정됐어요' : '비공개로 변경됐어요'),
-                      duration: const Duration(seconds: 2),
-                    ),
-                  );
-                }
+                _showVisibilitySheet(context, ref, uid, book);
               },
             ),
             IconButton(
@@ -2117,6 +2151,114 @@ class _ShapePickerSheet extends StatelessWidget {
                 );
               }).toList(),
             ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+// ── 공개 범위 선택 바텀 시트 ──────────────────────────────────────────────────
+
+class _VisibilitySheet extends StatelessWidget {
+  const _VisibilitySheet({required this.current, required this.onSelect});
+  final String current;
+  final void Function(String) onSelect;
+
+  @override
+  Widget build(BuildContext context) {
+    return SafeArea(
+      child: Padding(
+        padding: const EdgeInsets.fromLTRB(16, 20, 16, 16),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const Padding(
+              padding: EdgeInsets.only(left: 4, bottom: 12),
+              child: Text(
+                '공개 범위 설정',
+                style: TextStyle(fontSize: 16, fontWeight: FontWeight.w700),
+              ),
+            ),
+            _VisibilityOption(
+              icon: Icons.public,
+              label: '모든 사람에게 공개',
+              description: '누구든지 이 잉크 차트를 볼 수 있어요',
+              isSelected: current == 'public',
+              onTap: () => onSelect('public'),
+            ),
+            _VisibilityOption(
+              icon: Icons.group_outlined,
+              label: '팔로워에게만 공개',
+              description: '나를 팔로우한 사람만 볼 수 있어요',
+              isSelected: current == 'followers',
+              onTap: () => onSelect('followers'),
+            ),
+            _VisibilityOption(
+              icon: Icons.lock_outlined,
+              label: '비공개',
+              description: '나만 볼 수 있어요',
+              isSelected: current == 'private',
+              onTap: () => onSelect('private'),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _VisibilityOption extends StatelessWidget {
+  const _VisibilityOption({
+    required this.icon,
+    required this.label,
+    required this.description,
+    required this.isSelected,
+    required this.onTap,
+  });
+  final IconData icon;
+  final String label;
+  final String description;
+  final bool isSelected;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    return InkWell(
+      onTap: onTap,
+      borderRadius: BorderRadius.circular(12),
+      child: Padding(
+        padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 4),
+        child: Row(
+          children: [
+            Icon(icon,
+                size: 22,
+                color: isSelected ? AppColors.primary : AppColors.textSecondary),
+            const SizedBox(width: 14),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    label,
+                    style: TextStyle(
+                      fontSize: 14,
+                      fontWeight: FontWeight.w600,
+                      color: isSelected ? AppColors.primary : AppColors.textPrimary,
+                    ),
+                  ),
+                  const SizedBox(height: 2),
+                  Text(
+                    description,
+                    style: const TextStyle(
+                        fontSize: 12, color: AppColors.textSecondary),
+                  ),
+                ],
+              ),
+            ),
+            if (isSelected)
+              const Icon(Icons.check_circle, size: 20, color: AppColors.primary),
           ],
         ),
       ),
