@@ -11,8 +11,8 @@ import '../../../shared/widgets/community/post_card.dart';
 import '../../../shared/widgets/common/skeletons.dart';
 
 final _popularCardAuthorProvider =
-    FutureProvider.family<UserModel?, String>((ref, uid) {
-  return ref.read(userRepoProvider).getUser(uid);
+    StreamProvider.family<UserModel?, String>((ref, uid) {
+  return ref.watch(userRepoProvider).watchUser(uid);
 });
 
 class CommunityScreen extends ConsumerStatefulWidget {

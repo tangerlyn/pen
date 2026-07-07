@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:cached_network_image/cached_network_image.dart';
-import 'package:share_plus/share_plus.dart' show Share;
+// import 'package:share_plus/share_plus.dart' show Share; // 외부 공유 버튼 주석 처리로 미사용
 import 'package:timeago/timeago.dart' as timeago;
 import '../../../core/constants/app_constants.dart';
 import '../../../core/theme/app_theme.dart';
@@ -21,8 +21,8 @@ import '../../../shared/widgets/image_viewer_screen.dart';
 import '../../../shared/widgets/common/skeletons.dart';
 import 'post_write_screen.dart';
 
-final _postAuthorProvider = FutureProvider.family<UserModel?, String>((ref, uid) {
-  return ref.read(userRepoProvider).getUser(uid);
+final _postAuthorProvider = StreamProvider.family<UserModel?, String>((ref, uid) {
+  return ref.watch(userRepoProvider).watchUser(uid);
 });
 
 class PostDetailScreen extends ConsumerStatefulWidget {
@@ -321,15 +321,23 @@ class _PostDetailScreenState extends ConsumerState<PostDetailScreen> {
               return Row(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  IconButton(
-                    icon: const Icon(Icons.share_outlined),
-                    onPressed: () {
-                      final body = post.body.isNotEmpty
-                          ? post.body.substring(0, post.body.length.clamp(0, 80))
-                          : '';
-                      Share.share('${post.title}\n$body\n\n문어다방 - 만년필 잉크 커뮤니티');
-                    },
-                  ),
+                  // 외부 공유 버튼 — 당장 불필요해 보여 주석 처리 (재활성화 시 복구)
+                  // Builder(
+                  //   builder: (btnContext) => IconButton(
+                  //     icon: const Icon(Icons.share_outlined),
+                  //     onPressed: () {
+                  //       final body = post.body.isNotEmpty
+                  //           ? post.body.substring(0, post.body.length.clamp(0, 80))
+                  //           : '';
+                  //       final box = btnContext.findRenderObject() as RenderBox?;
+                  //       Share.share(
+                  //         '${post.title}\n$body\n\n문어다방 - 만년필 잉크 커뮤니티',
+                  //         sharePositionOrigin:
+                  //             box != null ? box.localToGlobal(Offset.zero) & box.size : null,
+                  //       );
+                  //     },
+                  //   ),
+                  // ),
                   IconButton(
                     icon: const Icon(Icons.more_vert),
                     onPressed: () =>
@@ -1057,6 +1065,10 @@ class _CommentTileState extends ConsumerState<_CommentTile> {
   Widget build(BuildContext context) {
     final replies = ref.watch(postRepliesProvider(
         (postId: widget.postId, commentId: widget.comment.id)));
+    final author =
+        ref.watch(_postAuthorProvider(widget.comment.authorId)).valueOrNull;
+    final authorLevel = author?.level ?? widget.comment.authorLevel;
+    final profileImageUrl = author?.profileImageUrl;
 
     return Padding(
       padding: const EdgeInsets.only(bottom: 12),
@@ -1087,11 +1099,15 @@ class _CommentTileState extends ConsumerState<_CommentTile> {
                 GestureDetector(
                   onTap: () => navigateToProfile(
                       context, ref, widget.comment.authorId),
-                  child: const CircleAvatar(
+                  child: CircleAvatar(
                     radius: 16,
                     backgroundColor: AppColors.chipBackground,
-                    child: Icon(Icons.person,
-                        size: 16, color: AppColors.textTertiary),
+                    backgroundImage: (profileImageUrl != null && profileImageUrl.isNotEmpty)
+                        ? CachedNetworkImageProvider(profileImageUrl)
+                        : null,
+                    child: (profileImageUrl == null || profileImageUrl.isEmpty)
+                        ? const Icon(Icons.person, size: 16, color: AppColors.textTertiary)
+                        : null,
                   ),
                 ),
                 const SizedBox(width: 10),
@@ -1110,7 +1126,7 @@ class _CommentTileState extends ConsumerState<_CommentTile> {
                                     fontWeight: FontWeight.w600)),
                           ),
                           const SizedBox(width: 4),
-                          LevelBadge(widget.comment.authorLevel),
+                          LevelBadge(authorLevel),
                           const SizedBox(width: 6),
                           Text(
                               timeago.format(widget.comment.createdAt,
@@ -1345,6 +1361,11 @@ class _PostReplyTileState extends ConsumerState<_PostReplyTile> {
 
   @override
   Widget build(BuildContext context) {
+    final author =
+        ref.watch(_postAuthorProvider(widget.reply.authorId)).valueOrNull;
+    final authorLevel = author?.level ?? widget.reply.authorLevel;
+    final profileImageUrl = author?.profileImageUrl;
+
     return Padding(
       padding: const EdgeInsets.only(bottom: 8),
       child: Row(
@@ -1353,11 +1374,15 @@ class _PostReplyTileState extends ConsumerState<_PostReplyTile> {
           GestureDetector(
             onTap: () =>
                 navigateToProfile(context, ref, widget.reply.authorId),
-            child: const CircleAvatar(
+            child: CircleAvatar(
               radius: 14,
               backgroundColor: AppColors.chipBackground,
-              child: Icon(Icons.person,
-                  size: 14, color: AppColors.textTertiary),
+              backgroundImage: (profileImageUrl != null && profileImageUrl.isNotEmpty)
+                  ? CachedNetworkImageProvider(profileImageUrl)
+                  : null,
+              child: (profileImageUrl == null || profileImageUrl.isEmpty)
+                  ? const Icon(Icons.person, size: 14, color: AppColors.textTertiary)
+                  : null,
             ),
           ),
           const SizedBox(width: 8),
@@ -1375,7 +1400,7 @@ class _PostReplyTileState extends ConsumerState<_PostReplyTile> {
                               fontWeight: FontWeight.w600, fontSize: 13)),
                     ),
                     const SizedBox(width: 4),
-                    LevelBadge(widget.reply.authorLevel),
+                    LevelBadge(authorLevel),
                     const SizedBox(width: 6),
                     Text(
                         timeago.format(widget.reply.createdAt,

@@ -10,8 +10,8 @@ import '../../providers/providers.dart';
 import '../level_badge.dart';
 
 final _reviewCardAuthorProvider =
-    FutureProvider.family<UserModel?, String>((ref, uid) {
-  return ref.read(userRepoProvider).getUser(uid);
+    StreamProvider.family<UserModel?, String>((ref, uid) {
+  return ref.watch(userRepoProvider).watchUser(uid);
 });
 
 class ReviewListCard extends ConsumerWidget {

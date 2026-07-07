@@ -29,8 +29,8 @@ final userPostsProvider = StreamProvider.family<List<PostModel>, String>((ref, u
   return ref.watch(postRepositoryProvider).watchUserPosts(uid);
 });
 
-final profileUserProvider = FutureProvider.family<UserModel?, String>((ref, uid) {
-  return ref.read(userRepoProvider).getUser(uid);
+final profileUserProvider = StreamProvider.family<UserModel?, String>((ref, uid) {
+  return ref.watch(userRepoProvider).watchUser(uid);
 });
 
 final blockedUsersDetailProvider = StreamProvider<List<UserModel?>>((ref) {

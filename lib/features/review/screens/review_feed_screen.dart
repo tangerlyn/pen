@@ -17,8 +17,8 @@ import '../../home/widgets/feed_filter_bar.dart';
 import '../../../shared/widgets/common/skeletons.dart';
 
 final _reviewTileAuthorProvider =
-    FutureProvider.family<UserModel?, String>((ref, uid) {
-  return ref.read(userRepoProvider).getUser(uid);
+    StreamProvider.family<UserModel?, String>((ref, uid) {
+  return ref.watch(userRepoProvider).watchUser(uid);
 });
 
 class ReviewFeedScreen extends ConsumerStatefulWidget {

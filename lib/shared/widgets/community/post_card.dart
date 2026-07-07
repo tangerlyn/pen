@@ -11,8 +11,8 @@ import '../../../features/community/providers/community_provider.dart';
 import '../level_badge.dart';
 
 final _postCardAuthorProvider =
-    FutureProvider.family<UserModel?, String>((ref, uid) {
-  return ref.read(userRepoProvider).getUser(uid);
+    StreamProvider.family<UserModel?, String>((ref, uid) {
+  return ref.watch(userRepoProvider).watchUser(uid);
 });
 
 class PostCard extends ConsumerWidget {

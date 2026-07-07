@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:go_router/go_router.dart';
-import 'package:share_plus/share_plus.dart' show Share;
+// import 'package:share_plus/share_plus.dart' show Share; // 외부 공유 버튼 주석 처리로 미사용
 import 'package:smooth_page_indicator/smooth_page_indicator.dart';
 import 'package:timeago/timeago.dart' as timeago;
 import '../../../core/constants/app_constants.dart';
@@ -26,8 +26,8 @@ import '../../../shared/widgets/content_moderation.dart';
 import '../../../shared/widgets/common/skeletons.dart';
 import '../../../shared/widgets/level_badge.dart';
 
-final _reviewAuthorProvider = FutureProvider.family<UserModel?, String>((ref, uid) {
-  return ref.read(userRepoProvider).getUser(uid);
+final _reviewAuthorProvider = StreamProvider.family<UserModel?, String>((ref, uid) {
+  return ref.watch(userRepoProvider).watchUser(uid);
 });
 
 class ReviewDetailScreen extends ConsumerStatefulWidget {
@@ -222,16 +222,24 @@ class _ReviewDetailScreenState extends ConsumerState<ReviewDetailScreen> {
                   onPressed: () => Navigator.pop(context),
                 ),
                 const Spacer(),
-                IconButton(
-                  icon: const Icon(Icons.share_outlined),
-                  onPressed: () {
-                    final title = review.title.isNotEmpty ? review.title : '리뷰';
-                    final body = review.body.isNotEmpty
-                        ? review.body.substring(0, review.body.length.clamp(0, 80))
-                        : '';
-                    Share.share('$title\n$body\n\n문어다방 - 만년필 잉크 커뮤니티');
-                  },
-                ),
+                // 외부 공유 버튼 — 당장 불필요해 보여 주석 처리 (재활성화 시 복구)
+                // Builder(
+                //   builder: (btnContext) => IconButton(
+                //     icon: const Icon(Icons.share_outlined),
+                //     onPressed: () {
+                //       final title = review.title.isNotEmpty ? review.title : '리뷰';
+                //       final body = review.body.isNotEmpty
+                //           ? review.body.substring(0, review.body.length.clamp(0, 80))
+                //           : '';
+                //       final box = btnContext.findRenderObject() as RenderBox?;
+                //       Share.share(
+                //         '$title\n$body\n\n문어다방 - 만년필 잉크 커뮤니티',
+                //         sharePositionOrigin:
+                //             box != null ? box.localToGlobal(Offset.zero) & box.size : null,
+                //       );
+                //     },
+                //   ),
+                // ),
                 if (currentUid != null)
                   IconButton(
                     icon: Icon(

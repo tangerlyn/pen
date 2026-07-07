@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:timeago/timeago.dart' as timeago;
 import '../../../data/models/review_model.dart';
 import '../../../data/models/reply_model.dart';
@@ -12,8 +13,8 @@ import '../level_badge.dart';
 import '../../../data/models/user_model.dart';
 
 final _commentAuthorProvider =
-    FutureProvider.family<UserModel?, String>((ref, uid) {
-  return ref.read(userRepoProvider).getUser(uid);
+    StreamProvider.family<UserModel?, String>((ref, uid) {
+  return ref.watch(userRepoProvider).watchUser(uid);
 });
 
 class CommentTile extends ConsumerStatefulWidget {
@@ -147,11 +148,9 @@ class _CommentTileState extends ConsumerState<CommentTile> {
   Widget build(BuildContext context) {
     final replies = ref.watch(reviewRepliesProvider(
         (reviewId: widget.reviewId, commentId: widget.comment.id)));
-    final authorLevel = ref
-        .watch(_commentAuthorProvider(widget.comment.authorId))
-        .valueOrNull
-        ?.level ??
-        widget.comment.authorLevel;
+    final author =
+        ref.watch(_commentAuthorProvider(widget.comment.authorId)).valueOrNull;
+    final authorLevel = author?.level ?? widget.comment.authorLevel;
 
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: AppSpacing.lg, vertical: 8),
@@ -161,7 +160,7 @@ class _CommentTileState extends ConsumerState<CommentTile> {
           if (widget.comment.isDeleted)
             _buildDeletedRow()
           else
-            _buildActiveRow(context, authorLevel),
+            _buildActiveRow(context, authorLevel, author?.profileImageUrl),
           replies.when(
             data: (list) => list.isEmpty
                 ? const SizedBox.shrink()
@@ -211,16 +210,21 @@ class _CommentTileState extends ConsumerState<CommentTile> {
     );
   }
 
-  Widget _buildActiveRow(BuildContext context, int currentLevel) {
+  Widget _buildActiveRow(BuildContext context, int currentLevel, String? profileImageUrl) {
     return Row(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         GestureDetector(
           onTap: () => navigateToProfile(context, ref, widget.comment.authorId),
-          child: const CircleAvatar(
+          child: CircleAvatar(
             radius: 16,
             backgroundColor: AppColors.chipBackground,
-            child: Icon(Icons.person, size: 16, color: AppColors.textTertiary),
+            backgroundImage: (profileImageUrl != null && profileImageUrl.isNotEmpty)
+                ? CachedNetworkImageProvider(profileImageUrl)
+                : null,
+            child: (profileImageUrl == null || profileImageUrl.isEmpty)
+                ? const Icon(Icons.person, size: 16, color: AppColors.textTertiary)
+                : null,
           ),
         ),
         const SizedBox(width: 10),
@@ -443,11 +447,10 @@ class _ReplyTileState extends ConsumerState<_ReplyTile> {
 
   @override
   Widget build(BuildContext context) {
-    final currentLevel = ref
-        .watch(_commentAuthorProvider(widget.reply.authorId))
-        .valueOrNull
-        ?.level ??
-        widget.reply.authorLevel;
+    final author =
+        ref.watch(_commentAuthorProvider(widget.reply.authorId)).valueOrNull;
+    final currentLevel = author?.level ?? widget.reply.authorLevel;
+    final profileImageUrl = author?.profileImageUrl;
 
     return Padding(
       padding: const EdgeInsets.only(bottom: 8),
@@ -456,11 +459,15 @@ class _ReplyTileState extends ConsumerState<_ReplyTile> {
         children: [
           GestureDetector(
             onTap: () => navigateToProfile(context, ref, widget.reply.authorId),
-            child: const CircleAvatar(
+            child: CircleAvatar(
               radius: 14,
               backgroundColor: AppColors.chipBackground,
-              child:
-                  Icon(Icons.person, size: 14, color: AppColors.textTertiary),
+              backgroundImage: (profileImageUrl != null && profileImageUrl.isNotEmpty)
+                  ? CachedNetworkImageProvider(profileImageUrl)
+                  : null,
+              child: (profileImageUrl == null || profileImageUrl.isEmpty)
+                  ? const Icon(Icons.person, size: 14, color: AppColors.textTertiary)
+                  : null,
             ),
           ),
           const SizedBox(width: 8),
