@@ -327,7 +327,7 @@ class _PostDetailScreenState extends ConsumerState<PostDetailScreen> {
                       final body = post.body.isNotEmpty
                           ? post.body.substring(0, post.body.length.clamp(0, 80))
                           : '';
-                      Share.share('${post.title}\n$body\n\nNibpen - 만년필 잉크 커뮤니티');
+                      Share.share('${post.title}\n$body\n\n문어다방 - 만년필 잉크 커뮤니티');
                     },
                   ),
                   IconButton(

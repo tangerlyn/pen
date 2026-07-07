@@ -40,7 +40,7 @@ class LoginScreen extends ConsumerWidget {
                   ),
                   const SizedBox(height: 16),
                   const Text(
-                    'Nibpen',
+                    '문어다방',
                     style: TextStyle(fontSize: 32, fontWeight: FontWeight.w700, letterSpacing: -0.5),
                   ),
                   const SizedBox(height: 8),

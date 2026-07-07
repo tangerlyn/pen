@@ -136,7 +136,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                   floating: true,
                   snap: true,
                   centerTitle: true,
-                  title: const Text('Nibpen',
+                  title: const Text('문어다방',
                       style: TextStyle(
                           fontWeight: FontWeight.w700, letterSpacing: -0.5)),
                   actions: [

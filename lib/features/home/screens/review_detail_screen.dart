@@ -229,7 +229,7 @@ class _ReviewDetailScreenState extends ConsumerState<ReviewDetailScreen> {
                     final body = review.body.isNotEmpty
                         ? review.body.substring(0, review.body.length.clamp(0, 80))
                         : '';
-                    Share.share('$title\n$body\n\nNibpen - 만년필 잉크 커뮤니티');
+                    Share.share('$title\n$body\n\n문어다방 - 만년필 잉크 커뮤니티');
                   },
                 ),
                 if (currentUid != null)

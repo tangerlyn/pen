@@ -15,7 +15,7 @@ class FcmService {
 
   final _localNotifications = FlutterLocalNotificationsPlugin();
   static const _channelId = 'nibpen_notifications';
-  static const _channelName = '닙펜 알림';
+  static const _channelName = '문어다방 알림';
 
   Future<void> initialize() async {
     await _requestPermission();

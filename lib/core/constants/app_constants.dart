@@ -1,5 +1,5 @@
 abstract class AppConstants {
-  static const String appName = 'Nibpen';
+  static const String appName = '문어다방';
 
   // Firestore collections
   static const String usersCol = 'users';
@@ -37,7 +37,7 @@ abstract class AppConstants {
   // 네이버
   static const String naverClientId = 'YOUR_NAVER_CLIENT_ID';
   static const String naverClientSecret = 'YOUR_NAVER_CLIENT_SECRET';
-  static const String naverClientName = 'Nibpen';
+  static const String naverClientName = '문어다방';
 
 
   // 채팅 위험 패턴 (전화번호·계좌번호)

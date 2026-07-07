@@ -1,6 +1,6 @@
 <div align="center">
 
-# 닙펜 (nibpen)
+# 문어다방 (nibpen)
 
 **만년필 · 잉크 · 종이 덕후를 위한 커뮤니티 앱**
 

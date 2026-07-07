@@ -7,7 +7,7 @@
 		<key>CFBundleDevelopmentRegion</key>
 		<string>$(DEVELOPMENT_LANGUAGE)</string>
 		<key>CFBundleDisplayName</key>
-		<string>Nibpen</string>
+		<string>문어다방</string>
 		<key>CFBundleExecutable</key>
 		<string>$(EXECUTABLE_NAME)</string>
 		<key>CFBundleIdentifier</key>
@@ -51,7 +51,7 @@
 		<key>NSPhotoLibraryUsageDescription</key>
 		<string>리뷰 사진 업로드를 위해 사진 접근 권한이 필요합니다.</string>
 		<key>NidAppName</key>
-		<string>Nibpen</string>
+		<string>문어다방</string>
 		<key>NidClientID</key>
 		<string>Y5EtV_fPw02vQtHSFd_C</string>
 		<key>NidClientSecret</key>
