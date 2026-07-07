@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../core/theme/app_theme.dart';
+import '../../../shared/widgets/center_toast.dart';
 import '../providers/auth_provider.dart';
 
 class LoginScreen extends ConsumerWidget {
@@ -12,9 +13,8 @@ class LoginScreen extends ConsumerWidget {
 
     ref.listen(authProvider, (_, next) {
       if (next.error != null) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(next.error!), backgroundColor: AppColors.error),
-        );
+        showCenterToast(context,
+            message: next.error!, icon: Icons.error_outline, iconColor: AppColors.error);
       }
     });
 

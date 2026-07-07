@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 import '../../../core/theme/app_theme.dart';
 import '../../../shared/providers/providers.dart';
+import '../../../shared/widgets/center_toast.dart';
 import '../../../data/models/inquiry_model.dart';
 
 // ── provider ─────────────────────────────────────────────────────────────────
@@ -338,15 +339,13 @@ class _InquiryWriteScreenState extends ConsumerState<InquiryWriteScreen> {
             content: _contentCtrl.text.trim(),
           );
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('문의가 접수됐습니다.')),
-        );
+        showCenterToast(context, message: '문의가 접수됐습니다.', icon: Icons.check_circle);
         context.pop();
       }
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context)
-            .showSnackBar(SnackBar(content: Text('오류: $e')));
+        showCenterToast(context,
+            message: '오류: $e', icon: Icons.error_outline, iconColor: AppColors.error);
         setState(() => _isSubmitting = false);
       }
     }

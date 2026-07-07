@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:cached_network_image/cached_network_image.dart';
+import 'package:timeago/timeago.dart' as timeago;
 import '../../../features/archive/providers/archive_detail_provider.dart';
 import '../../../data/models/review_model.dart';
 import '../../../core/theme/app_theme.dart';
@@ -107,6 +108,11 @@ class ReviewFeedCard extends ConsumerWidget {
                       Text('${review.commentCount}',
                           style: const TextStyle(fontSize: 12, color: AppColors.textTertiary)),
                     ],
+                  ),
+                  const SizedBox(height: 4),
+                  Text(
+                    timeago.format(review.createdAt, locale: 'ko'),
+                    style: const TextStyle(fontSize: 11, color: AppColors.textTertiary),
                   ),
                 ],
               ),

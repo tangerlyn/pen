@@ -2,6 +2,7 @@ import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:timeago/timeago.dart' as timeago;
 import '../../../core/theme/app_theme.dart';
 import '../providers/community_provider.dart';
 import '../../../data/models/user_model.dart';
@@ -403,38 +404,61 @@ class _PopularCard extends ConsumerWidget {
                     ],
                   ),
                   Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      CircleAvatar(
-                        radius: 10,
-                        backgroundColor: AppColors.chipBackground,
-                        backgroundImage: user?.profileImageUrl != null
-                            ? CachedNetworkImageProvider(user!.profileImageUrl!)
-                            : null,
-                        child: user?.profileImageUrl == null
-                            ? const Icon(Icons.person,
-                                size: 11, color: AppColors.textTertiary)
-                            : null,
+                      Flexible(
+                        child: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            CircleAvatar(
+                              radius: 10,
+                              backgroundColor: AppColors.chipBackground,
+                              backgroundImage: user?.profileImageUrl != null
+                                  ? CachedNetworkImageProvider(user!.profileImageUrl!)
+                                  : null,
+                              child: user?.profileImageUrl == null
+                                  ? const Icon(Icons.person,
+                                      size: 11, color: AppColors.textTertiary)
+                                  : null,
+                            ),
+                            const SizedBox(width: 5),
+                            Flexible(
+                              child: Text(
+                                user?.nickname ?? post.authorNickname as String,
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                                style: const TextStyle(
+                                    fontSize: 11, color: AppColors.textTertiary),
+                              ),
+                            ),
+                            const SizedBox(width: 5),
+                            Text(
+                              timeago.format(post.createdAt as DateTime, locale: 'ko'),
+                              style: const TextStyle(
+                                  fontSize: 11, color: AppColors.textTertiary),
+                            ),
+                            const SizedBox(width: 8),
+                          ],
+                        ),
                       ),
-                      const SizedBox(width: 5),
-                      Text(
-                        user?.nickname ?? post.authorNickname as String,
-                        style: const TextStyle(
-                            fontSize: 11, color: AppColors.textTertiary),
+                      Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          const Icon(Icons.favorite_border,
+                              size: 11, color: AppColors.textTertiary),
+                          const SizedBox(width: 2),
+                          Text('${post.likeCount}',
+                              style: const TextStyle(
+                                  fontSize: 11, color: AppColors.textTertiary)),
+                          const SizedBox(width: 8),
+                          const Icon(Icons.chat_bubble_outline,
+                              size: 11, color: AppColors.textTertiary),
+                          const SizedBox(width: 2),
+                          Text('${post.commentCount}',
+                              style: const TextStyle(
+                                  fontSize: 11, color: AppColors.textTertiary)),
+                        ],
                       ),
-                      const Spacer(),
-                      const Icon(Icons.favorite_border,
-                          size: 11, color: AppColors.textTertiary),
-                      const SizedBox(width: 2),
-                      Text('${post.likeCount}',
-                          style: const TextStyle(
-                              fontSize: 11, color: AppColors.textTertiary)),
-                      const SizedBox(width: 8),
-                      const Icon(Icons.chat_bubble_outline,
-                          size: 11, color: AppColors.textTertiary),
-                      const SizedBox(width: 2),
-                      Text('${post.commentCount}',
-                          style: const TextStyle(
-                              fontSize: 11, color: AppColors.textTertiary)),
                     ],
                   ),
                 ],

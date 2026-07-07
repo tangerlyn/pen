@@ -6,6 +6,7 @@ import '../../../core/theme/app_theme.dart';
 import '../../../data/models/ink_book_model.dart';
 import '../../../shared/providers/providers.dart';
 import '../../../shared/providers/ink_book_providers.dart';
+import '../../../shared/widgets/center_toast.dart';
 
 class InkBookListScreen extends ConsumerWidget {
   const InkBookListScreen({super.key});
@@ -260,8 +261,7 @@ class _CreateBookSheetState extends ConsumerState<_CreateBookSheet> {
   Future<void> _create() async {
     final name = _nameCtrl.text.trim();
     if (name.isEmpty) {
-      ScaffoldMessenger.of(context)
-          .showSnackBar(const SnackBar(content: Text('공책 이름을 입력해주세요')));
+      showCenterToast(context, message: '공책 이름을 입력해주세요');
       return;
     }
     setState(() => _saving = true);
@@ -273,8 +273,8 @@ class _CreateBookSheetState extends ConsumerState<_CreateBookSheet> {
     } catch (e) {
       setState(() => _saving = false);
       if (mounted) {
-        ScaffoldMessenger.of(context)
-            .showSnackBar(SnackBar(content: Text('저장 실패: $e')));
+        showCenterToast(context,
+            message: '저장 실패: $e', icon: Icons.error_outline, iconColor: AppColors.error);
       }
     }
   }

@@ -6,6 +6,7 @@ import '../../../core/theme/app_theme.dart';
 import '../../../core/utils/network_utils.dart';
 import '../../../shared/providers/providers.dart';
 import '../../../shared/widgets/editor/blog_body_editor.dart';
+import '../../../shared/widgets/center_toast.dart';
 import '../providers/community_provider.dart';
 import '../../../data/models/post_model.dart';
 import '../../../data/repositories/post_repository.dart';
@@ -55,9 +56,7 @@ class _PostWriteScreenState extends ConsumerState<PostWriteScreen> {
   Future<void> _submit() async {
     final title = _titleController.text.trim();
     if (title.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('제목을 입력해주세요.')),
-      );
+      showCenterToast(context, message: '제목을 입력해주세요.');
       return;
     }
 
@@ -81,13 +80,10 @@ class _PostWriteScreenState extends ConsumerState<PostWriteScreen> {
         );
       } catch (_) {
         if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
-              content: Text('이미지 업로드에 실패했어요. 다시 시도해주세요.'),
-              backgroundColor: Color(0xFFE53935),
-              duration: Duration(seconds: 3),
-            ),
-          );
+          showCenterToast(context,
+              message: '이미지 업로드에 실패했어요. 다시 시도해주세요.',
+              icon: Icons.error_outline,
+              iconColor: const Color(0xFFE53935));
           setState(() => _isSubmitting = false);
         }
         return;

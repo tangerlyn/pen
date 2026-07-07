@@ -4,6 +4,7 @@ import '../../../core/theme/app_theme.dart';
 import '../../../data/models/ink_model.dart';
 import '../../../shared/providers/providers.dart';
 import '../../../shared/widgets/ink_drop_circle.dart';
+import '../../../shared/widgets/center_toast.dart';
 
 class InkCompareScreen extends ConsumerStatefulWidget {
   const InkCompareScreen({super.key, required this.baseInk});
@@ -54,9 +55,7 @@ class _InkCompareScreenState extends ConsumerState<InkCompareScreen> {
 
   void _addInk(InkModel ink) {
     if (_selected.length >= 3) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('최대 3개까지 비교할 수 있어요')),
-      );
+      showCenterToast(context, message: '최대 3개까지 비교할 수 있어요');
       return;
     }
     setState(() {

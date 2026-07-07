@@ -13,6 +13,7 @@ import 'package:reorderable_grid_view/reorderable_grid_view.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:url_launcher/url_launcher.dart';
 import '../../../core/theme/app_theme.dart';
+import '../../../shared/widgets/center_toast.dart';
 import '../../../data/models/ink_book_model.dart';
 import '../../../data/models/ink_chart_model.dart';
 import '../../../shared/providers/providers.dart';
@@ -149,9 +150,7 @@ class _InkBookDetailScreenState extends ConsumerState<InkBookDetailScreen> {
       final granted = await Gal.requestAccess(toAlbum: true);
       if (!granted) {
         if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('사진 접근 권한이 필요합니다.')),
-          );
+          showCenterToast(context, message: '사진 접근 권한이 필요합니다.');
         }
         return;
       }
@@ -362,9 +361,7 @@ class _InkBookDetailScreenState extends ConsumerState<InkBookDetailScreen> {
               'followers' => '팔로워에게만 공개됐어요',
               _ => '비공개로 변경됐어요',
             };
-            ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(content: Text(msg), duration: const Duration(seconds: 2)),
-            );
+            showCenterToast(context, message: msg, icon: Icons.check_circle);
           }
         },
       ),

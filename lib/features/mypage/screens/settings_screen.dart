@@ -6,6 +6,7 @@ import 'package:go_router/go_router.dart';
 import '../../../core/theme/app_theme.dart';
 import '../../../core/utils/search_utils.dart';
 import '../../../shared/providers/providers.dart';
+import '../../../shared/widgets/center_toast.dart';
 import '../providers/notification_settings_provider.dart';
 
 class SettingsScreen extends ConsumerWidget {
@@ -80,20 +81,15 @@ class SettingsScreen extends ConsumerWidget {
               trailing: const Icon(Icons.cloud_upload),
               onTap: () async {
                 try {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(content: Text('DB 초기화 시작...')),
-                  );
+                  showCenterToast(context, message: 'DB 초기화 시작...');
                   await ref.read(archiveRepoProvider).initializeDatabase();
                   if (context.mounted) {
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(content: Text('DB 초기화 완료!')),
-                    );
+                    showCenterToast(context, message: 'DB 초기화 완료!', icon: Icons.check_circle);
                   }
                 } catch (e) {
                   if (context.mounted) {
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(content: Text('초기화 실패: $e')),
-                    );
+                    showCenterToast(context,
+                        message: '초기화 실패: $e', icon: Icons.error_outline, iconColor: AppColors.error);
                   }
                 }
               },
@@ -115,9 +111,7 @@ class SettingsScreen extends ConsumerWidget {
     int updated = 0;
     int failed = 0;
 
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('검색 인덱스 생성 중...')),
-    );
+    showCenterToast(context, message: '검색 인덱스 생성 중...');
 
     try {
       // reviews
@@ -153,15 +147,13 @@ class SettingsScreen extends ConsumerWidget {
       }
 
       if (context.mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('완료: $updated건 업데이트, $failed건 실패')),
-        );
+        showCenterToast(context,
+            message: '완료: $updated건 업데이트, $failed건 실패', icon: Icons.check_circle);
       }
     } catch (e) {
       if (context.mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('오류: $e')),
-        );
+        showCenterToast(context,
+            message: '오류: $e', icon: Icons.error_outline, iconColor: AppColors.error);
       }
     }
   }

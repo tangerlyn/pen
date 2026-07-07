@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../../../core/theme/app_theme.dart';
 import '../../../shared/widgets/archive/add_product_bottom_sheet.dart';
+import '../../../shared/widgets/center_toast.dart';
 import '../providers/archive_provider.dart';
 // import '../widgets/pen_list_tile.dart'; // 만년필 탭 제거로 미사용 — 재활성화 시 복구
 import '../../../shared/widgets/common/skeletons.dart';
@@ -676,8 +677,10 @@ class _ProductRequestFooter extends StatelessWidget {
           context,
           initialType: _type,
           onAdded: (id, name) {
-            ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(content: Text('$name 이(가) 등록됐어요!')),
+            showCenterToast(
+              context,
+              message: '$name 이(가) 등록됐어요!',
+              icon: Icons.check_circle,
             );
           },
         ),

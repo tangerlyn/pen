@@ -5,6 +5,8 @@ import '../../../core/theme/app_theme.dart';
 import '../providers/archive_detail_provider.dart';
 import '../../../shared/providers/providers.dart';
 import '../../../shared/providers/wishlist_providers.dart';
+import '../../../shared/widgets/wishlist_toast.dart';
+import '../../../shared/widgets/center_toast.dart';
 import '../../../data/models/ink_model.dart';
 import '../../../shared/widgets/review/review_feed_card.dart';
 import '../../../shared/widgets/ink_drop_circle.dart';
@@ -277,13 +279,18 @@ class _WishlistButton extends ConsumerWidget {
         isWishlisted ? Icons.favorite : Icons.favorite_border,
         color: isWishlisted ? Colors.redAccent : null,
       ),
-      onPressed: () => ref.read(wishlistActionsProvider).toggle(
-            type: type,
-            productId: productId,
-            productName: productName,
-            brand: brand,
-            hexColor: hexColor,
-          ),
+      onPressed: () async {
+        final added = await ref.read(wishlistActionsProvider).toggle(
+              type: type,
+              productId: productId,
+              productName: productName,
+              brand: brand,
+              hexColor: hexColor,
+            );
+        if (added != null && context.mounted) {
+          showWishlistToast(context, added: added);
+        }
+      },
     );
   }
 }
@@ -405,16 +412,15 @@ class _ReportSheetState extends ConsumerState<_ReportSheet> {
           );
       if (mounted) {
         Navigator.pop(context);
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('신고가 접수됐어요. 검토 후 처리될 예정이에요.'),
-          ),
+        showCenterToast(
+          context,
+          message: '신고가 접수됐어요. 검토 후 처리될 예정이에요.',
+          icon: Icons.check_circle,
         );
       }
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context)
-            .showSnackBar(SnackBar(content: Text('신고 실패: $e')));
+        showCenterToast(context, message: '신고 실패: $e', icon: Icons.error_outline, iconColor: AppColors.error);
       }
     } finally {
       if (mounted) setState(() => _isSubmitting = false);

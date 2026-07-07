@@ -86,57 +86,76 @@ class ReviewListCard extends ConsumerWidget {
                   ],
                   const SizedBox(height: 10),
                   Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      GestureDetector(
-                        onTap: () => navigateToProfile(context, ref, review.authorId),
+                      Flexible(
                         child: Row(
                           mainAxisSize: MainAxisSize.min,
                           children: [
-                            CircleAvatar(
-                              radius: 11,
-                              backgroundColor: AppColors.chipBackground,
-                              backgroundImage: user?.profileImageUrl != null
-                                  ? CachedNetworkImageProvider(user!.profileImageUrl!)
-                                  : null,
-                              child: user?.profileImageUrl == null
-                                  ? const Icon(Icons.person, size: 13, color: AppColors.textTertiary)
-                                  : null,
+                            Flexible(
+                              child: GestureDetector(
+                                onTap: () => navigateToProfile(context, ref, review.authorId),
+                                child: Row(
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: [
+                                    CircleAvatar(
+                                      radius: 11,
+                                      backgroundColor: AppColors.chipBackground,
+                                      backgroundImage: user?.profileImageUrl != null
+                                          ? CachedNetworkImageProvider(user!.profileImageUrl!)
+                                          : null,
+                                      child: user?.profileImageUrl == null
+                                          ? const Icon(Icons.person, size: 13, color: AppColors.textTertiary)
+                                          : null,
+                                    ),
+                                    const SizedBox(width: 5),
+                                    Flexible(
+                                      child: Text(
+                                        user?.nickname ?? review.authorNickname,
+                                        maxLines: 1,
+                                        overflow: TextOverflow.ellipsis,
+                                        style: AppTextStyles.bodySmall.copyWith(
+                                            color: AppColors.textTertiary,
+                                            fontWeight: FontWeight.w500),
+                                      ),
+                                    ),
+                                    const SizedBox(width: 5),
+                                    LevelBadge(user?.level ?? review.authorLevel),
+                                  ],
+                                ),
+                              ),
                             ),
-                            const SizedBox(width: 5),
+                            const SizedBox(width: AppSpacing.sm),
                             Text(
-                              user?.nickname ?? review.authorNickname,
-                              style: AppTextStyles.bodySmall.copyWith(
-                                  color: AppColors.textTertiary,
-                                  fontWeight: FontWeight.w500),
+                              timeago.format(review.createdAt, locale: 'ko'),
+                              style: AppTextStyles.bodySmall
+                                  .copyWith(color: AppColors.textTertiary),
                             ),
-                            const SizedBox(width: 5),
-                            LevelBadge(user?.level ?? review.authorLevel),
+                            const SizedBox(width: 8),
                           ],
                         ),
                       ),
-                      const SizedBox(width: AppSpacing.sm),
-                      Text(
-                        timeago.format(review.createdAt, locale: 'ko'),
-                        style: AppTextStyles.bodySmall
-                            .copyWith(color: AppColors.textTertiary),
-                      ),
-                      const Spacer(),
-                      const Icon(Icons.chat_bubble_outline,
-                          size: 14, color: AppColors.textTertiary),
-                      const SizedBox(width: 3),
-                      Text(
-                        '${review.commentCount}',
-                        style: AppTextStyles.bodySmall
-                            .copyWith(color: AppColors.textTertiary),
-                      ),
-                      const SizedBox(width: 10),
-                      const Icon(Icons.favorite_border,
-                          size: 14, color: AppColors.textTertiary),
-                      const SizedBox(width: 3),
-                      Text(
-                        '${review.likeCount}',
-                        style: AppTextStyles.bodySmall
-                            .copyWith(color: AppColors.textTertiary),
+                      Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          const Icon(Icons.chat_bubble_outline,
+                              size: 14, color: AppColors.textTertiary),
+                          const SizedBox(width: 3),
+                          Text(
+                            '${review.commentCount}',
+                            style: AppTextStyles.bodySmall
+                                .copyWith(color: AppColors.textTertiary),
+                          ),
+                          const SizedBox(width: 10),
+                          const Icon(Icons.favorite_border,
+                              size: 14, color: AppColors.textTertiary),
+                          const SizedBox(width: 3),
+                          Text(
+                            '${review.likeCount}',
+                            style: AppTextStyles.bodySmall
+                                .copyWith(color: AppColors.textTertiary),
+                          ),
+                        ],
                       ),
                     ],
                   ),

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:cached_network_image/cached_network_image.dart';
+import 'package:timeago/timeago.dart' as timeago;
 import '../../../core/theme/app_theme.dart';
 import '../providers/home_discovery_provider.dart';
 import '../providers/notification_provider.dart';
@@ -363,6 +364,11 @@ class _ReviewCard extends StatelessWidget {
                         Text('${review.likeCount}',
                             style: AppTextStyles.labelSmall),
                       ],
+                    ),
+                    const SizedBox(height: AppSpacing.xs),
+                    Text(
+                      timeago.format(review.createdAt, locale: 'ko'),
+                      style: AppTextStyles.labelSmall,
                     ),
                   ],
                 ),

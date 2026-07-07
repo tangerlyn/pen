@@ -3,7 +3,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../../../core/theme/app_theme.dart';
-import '../../../shared/widgets/level_badge.dart';
 import '../../../data/models/user_model.dart';
 import '../../../data/models/review_model.dart';
 import '../../../data/models/post_model.dart';
@@ -85,10 +84,6 @@ class _MypageScreenState extends ConsumerState<MypageScreen>
                                   user?.nickname ?? '',
                                   style: const TextStyle(fontSize: 20, fontWeight: FontWeight.w700),
                                 ),
-                                if (user != null) ...[
-                                  const SizedBox(width: 8),
-                                  LevelBadge(user.level),
-                                ],
                               ],
                             ),
                             if (user != null) ...[

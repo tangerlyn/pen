@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:timeago/timeago.dart' as timeago;
 import '../../../core/theme/app_theme.dart';
 import '../../../core/utils/profile_navigation.dart';
 import '../../../data/models/review_model.dart';
@@ -400,50 +401,75 @@ class _ReviewListTile extends ConsumerWidget {
                   ],
                   const SizedBox(height: 8),
                   Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      GestureDetector(
-                        onTap: () => navigateToProfile(context, ref, review.authorId),
+                      Flexible(
                         child: Row(
                           mainAxisSize: MainAxisSize.min,
                           children: [
-                            CircleAvatar(
-                              radius: 11,
-                              backgroundColor: AppColors.chipBackground,
-                              backgroundImage: user?.profileImageUrl != null
-                                  ? CachedNetworkImageProvider(user!.profileImageUrl!)
-                                  : null,
-                              child: user?.profileImageUrl == null
-                                  ? const Icon(Icons.person, size: 13, color: AppColors.textTertiary)
-                                  : null,
-                            ),
-                            const SizedBox(width: 5),
-                            Text(
-                              user?.nickname ?? review.authorNickname,
-                              style: const TextStyle(
-                                fontSize: 12,
-                                fontWeight: FontWeight.w600,
-                                color: AppColors.primary,
+                            Flexible(
+                              child: GestureDetector(
+                                onTap: () => navigateToProfile(context, ref, review.authorId),
+                                child: Row(
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: [
+                                    CircleAvatar(
+                                      radius: 11,
+                                      backgroundColor: AppColors.chipBackground,
+                                      backgroundImage: user?.profileImageUrl != null
+                                          ? CachedNetworkImageProvider(user!.profileImageUrl!)
+                                          : null,
+                                      child: user?.profileImageUrl == null
+                                          ? const Icon(Icons.person, size: 13, color: AppColors.textTertiary)
+                                          : null,
+                                    ),
+                                    const SizedBox(width: 5),
+                                    Flexible(
+                                      child: Text(
+                                        user?.nickname ?? review.authorNickname,
+                                        maxLines: 1,
+                                        overflow: TextOverflow.ellipsis,
+                                        style: const TextStyle(
+                                          fontSize: 12,
+                                          fontWeight: FontWeight.w600,
+                                          color: AppColors.primary,
+                                        ),
+                                      ),
+                                    ),
+                                    const SizedBox(width: 5),
+                                    LevelBadge(user?.level ?? review.authorLevel),
+                                  ],
+                                ),
                               ),
                             ),
-                            const SizedBox(width: 5),
-                            LevelBadge(user?.level ?? review.authorLevel),
+                            const SizedBox(width: 6),
+                            Text(
+                              timeago.format(review.createdAt, locale: 'ko'),
+                              style: const TextStyle(
+                                  fontSize: 12, color: AppColors.textTertiary),
+                            ),
+                            const SizedBox(width: 8),
                           ],
                         ),
                       ),
-                      const Spacer(),
-                      const Icon(Icons.favorite_border,
-                          size: 14, color: AppColors.textTertiary),
-                      const SizedBox(width: 2),
-                      Text('${review.likeCount}',
-                          style: const TextStyle(
-                              fontSize: 12, color: AppColors.textTertiary)),
-                      const SizedBox(width: 8),
-                      const Icon(Icons.chat_bubble_outline,
-                          size: 14, color: AppColors.textTertiary),
-                      const SizedBox(width: 2),
-                      Text('${review.commentCount}',
-                          style: const TextStyle(
-                              fontSize: 12, color: AppColors.textTertiary)),
+                      Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          const Icon(Icons.favorite_border,
+                              size: 14, color: AppColors.textTertiary),
+                          const SizedBox(width: 2),
+                          Text('${review.likeCount}',
+                              style: const TextStyle(
+                                  fontSize: 12, color: AppColors.textTertiary)),
+                          const SizedBox(width: 8),
+                          const Icon(Icons.chat_bubble_outline,
+                              size: 14, color: AppColors.textTertiary),
+                          const SizedBox(width: 2),
+                          Text('${review.commentCount}',
+                              style: const TextStyle(
+                                  fontSize: 12, color: AppColors.textTertiary)),
+                        ],
+                      ),
                     ],
                   ),
                 ],

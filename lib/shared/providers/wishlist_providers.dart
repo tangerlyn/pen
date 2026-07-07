@@ -22,7 +22,8 @@ class _WishlistActions {
   const _WishlistActions(this._ref);
   final Ref _ref;
 
-  Future<void> toggle({
+  /// 반환값: true=추가됨, false=제거됨, null=비로그인(동작 안 함)
+  Future<bool?> toggle({
     required String type,
     required String productId,
     required String productName,
@@ -30,7 +31,7 @@ class _WishlistActions {
     String hexColor = '',
   }) async {
     final uid = _ref.read(currentUidProvider);
-    if (uid == null) return;
+    if (uid == null) return null;
     final repo = _ref.read(wishlistRepoProvider);
     final isAdded = await repo.isWishlisted(uid, productId);
     if (isAdded) {
@@ -51,5 +52,6 @@ class _WishlistActions {
     }
     _ref.invalidate(wishlistStatusProvider(productId));
     _ref.invalidate(wishlistProvider(uid));
+    return !isAdded;
   }
 }

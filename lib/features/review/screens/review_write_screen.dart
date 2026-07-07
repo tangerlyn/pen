@@ -9,6 +9,7 @@ import '../../archive/providers/archive_detail_provider.dart';
 import '../providers/review_write_provider.dart';
 import '../../../shared/widgets/archive/add_product_bottom_sheet.dart';
 import '../../../shared/widgets/common/star_rating.dart';
+import '../../../shared/widgets/center_toast.dart';
 import '../../../data/models/review_model.dart';
 
 class ReviewWriteScreen extends ConsumerStatefulWidget {
@@ -181,9 +182,7 @@ class _ReviewWriteScreenState extends ConsumerState<ReviewWriteScreen> {
   Future<void> _submit(BuildContext context) async {
     final state = ref.read(reviewWriteProvider);
     if (state.rating == 0.0) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('별점을 선택해주세요.')),
-      );
+      showCenterToast(context, message: '별점을 선택해주세요.');
       return;
     }
 
@@ -219,13 +218,10 @@ class _ReviewWriteScreenState extends ConsumerState<ReviewWriteScreen> {
       );
     } catch (_) {
       if (context.mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('이미지 업로드에 실패했어요. 다시 시도해주세요.'),
-            backgroundColor: AppColors.error,
-            duration: Duration(seconds: 3),
-          ),
-        );
+        showCenterToast(context,
+            message: '이미지 업로드에 실패했어요. 다시 시도해주세요.',
+            icon: Icons.error_outline,
+            iconColor: AppColors.error);
       }
       return;
     }
@@ -251,9 +247,7 @@ class _ReviewWriteScreenState extends ConsumerState<ReviewWriteScreen> {
     } catch (e) {
       if (context.mounted) {
         final msg = e.toString().replaceAll('Exception: ', '');
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(msg), backgroundColor: AppColors.error),
-        );
+        showCenterToast(context, message: msg, icon: Icons.error_outline, iconColor: AppColors.error);
       }
     }
   }
@@ -339,9 +333,7 @@ class _GearSection extends ConsumerWidget {
 
   void _showSearch(BuildContext context, WidgetRef ref, String type) {
     if (!ref.read(reviewWriteProvider.notifier).canAddTag) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('태그는 최대 5개까지 추가할 수 있어요')),
-      );
+      showCenterToast(context, message: '태그는 최대 5개까지 추가할 수 있어요');
       return;
     }
     showModalBottomSheet(

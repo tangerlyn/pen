@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../core/theme/app_theme.dart';
 import '../providers/providers.dart';
+import 'center_toast.dart';
 
 const _reportReasons = [
   '스팸/광고',
@@ -20,8 +21,7 @@ Future<void> showReportSheet(
 }) async {
   final currentUid = ref.read(currentUidProvider);
   if (currentUid == null) {
-    ScaffoldMessenger.of(context)
-        .showSnackBar(const SnackBar(content: Text('로그인 후 이용 가능합니다.')));
+    showCenterToast(context, message: '로그인 후 이용 가능합니다.');
     return;
   }
 
@@ -47,8 +47,7 @@ Future<void> showBlockDialog(
 }) async {
   final currentUid = ref.read(currentUidProvider);
   if (currentUid == null) {
-    ScaffoldMessenger.of(context)
-        .showSnackBar(const SnackBar(content: Text('로그인 후 이용 가능합니다.')));
+    showCenterToast(context, message: '로그인 후 이용 가능합니다.');
     return;
   }
 
@@ -73,8 +72,7 @@ Future<void> showBlockDialog(
   if (confirmed == true && context.mounted) {
     await ref.read(userRepoProvider).block(currentUid, targetUid);
     if (context.mounted) {
-      ScaffoldMessenger.of(context)
-          .showSnackBar(const SnackBar(content: Text('차단되었습니다.')));
+      showCenterToast(context, message: '차단되었습니다.', icon: Icons.check_circle);
     }
   }
 }
@@ -109,14 +107,13 @@ class _ReportSheetState extends ConsumerState<_ReportSheet> {
           );
       if (mounted) {
         Navigator.pop(context);
-        ScaffoldMessenger.of(context)
-            .showSnackBar(const SnackBar(content: Text('신고가 접수되었습니다.')));
+        showCenterToast(context, message: '신고가 접수되었습니다.', icon: Icons.check_circle);
       }
     } catch (e) {
       if (mounted) {
         setState(() => _isSubmitting = false);
-        ScaffoldMessenger.of(context)
-            .showSnackBar(SnackBar(content: Text('신고 실패: $e')));
+        showCenterToast(context,
+            message: '신고 실패: $e', icon: Icons.error_outline, iconColor: AppColors.error);
       }
     }
   }

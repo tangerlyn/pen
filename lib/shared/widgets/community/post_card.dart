@@ -74,58 +74,73 @@ class PostCard extends ConsumerWidget {
                   ),
                   const SizedBox(height: 10),
                   Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      GestureDetector(
-                        onTap: () => navigateToProfile(context, ref, post.authorId),
-                        child: _AuthorRow(
-                          authorId: post.authorId,
-                          fallbackNickname: post.authorNickname,
-                          authorLevel: post.authorLevel,
-                        ),
-                      ),
-                      const SizedBox(width: AppSpacing.sm),
-                      Text(
-                        timeago.format(post.createdAt, locale: 'ko'),
-                        style: AppTextStyles.bodySmall
-                            .copyWith(color: AppColors.textTertiary),
-                      ),
-                      const Spacer(),
-                      const Icon(Icons.chat_bubble_outline,
-                          size: 14, color: AppColors.textTertiary),
-                      const SizedBox(width: 3),
-                      Text(
-                        '${post.commentCount}',
-                        style: AppTextStyles.bodySmall
-                            .copyWith(color: AppColors.textTertiary),
-                      ),
-                      const SizedBox(width: 10),
-                      GestureDetector(
-                        behavior: HitTestBehavior.opaque,
-                        onTap: uid != null
-                            ? () => ref
-                                .read(postRepositoryProvider)
-                                .toggleLike(post.id, uid, post.authorId)
-                            : null,
+                      Flexible(
                         child: Row(
                           mainAxisSize: MainAxisSize.min,
                           children: [
-                            Icon(
-                              isLiked
-                                  ? Icons.favorite
-                                  : Icons.favorite_border,
-                              size: 14,
-                              color: isLiked
-                                  ? AppColors.error
-                                  : AppColors.textTertiary,
+                            Flexible(
+                              child: GestureDetector(
+                                onTap: () => navigateToProfile(context, ref, post.authorId),
+                                child: _AuthorRow(
+                                  authorId: post.authorId,
+                                  fallbackNickname: post.authorNickname,
+                                  authorLevel: post.authorLevel,
+                                ),
+                              ),
                             ),
-                            const SizedBox(width: 3),
+                            const SizedBox(width: AppSpacing.sm),
                             Text(
-                              '${post.likeCount}',
+                              timeago.format(post.createdAt, locale: 'ko'),
                               style: AppTextStyles.bodySmall
                                   .copyWith(color: AppColors.textTertiary),
                             ),
+                            const SizedBox(width: 8),
                           ],
                         ),
+                      ),
+                      Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          GestureDetector(
+                            behavior: HitTestBehavior.opaque,
+                            onTap: uid != null
+                                ? () => ref
+                                    .read(postRepositoryProvider)
+                                    .toggleLike(post.id, uid, post.authorId)
+                                : null,
+                            child: Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                Icon(
+                                  isLiked
+                                      ? Icons.favorite
+                                      : Icons.favorite_border,
+                                  size: 14,
+                                  color: isLiked
+                                      ? AppColors.error
+                                      : AppColors.textTertiary,
+                                ),
+                                const SizedBox(width: 3),
+                                Text(
+                                  '${post.likeCount}',
+                                  style: AppTextStyles.bodySmall
+                                      .copyWith(color: AppColors.textTertiary),
+                                ),
+                              ],
+                            ),
+                          ),
+                          const SizedBox(width: 10),
+                          const Icon(Icons.chat_bubble_outline,
+                              size: 14, color: AppColors.textTertiary),
+                          const SizedBox(width: 3),
+                          Text(
+                            '${post.commentCount}',
+                            style: AppTextStyles.bodySmall
+                                .copyWith(color: AppColors.textTertiary),
+                          ),
+                        ],
                       ),
                     ],
                   ),
@@ -218,10 +233,14 @@ class _AuthorRow extends ConsumerWidget {
               : null,
         ),
         const SizedBox(width: 5),
-        Text(
-          user?.nickname ?? fallbackNickname,
-          style: AppTextStyles.bodySmall.copyWith(
-              color: AppColors.primary, fontWeight: FontWeight.w600),
+        Flexible(
+          child: Text(
+            user?.nickname ?? fallbackNickname,
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+            style: AppTextStyles.bodySmall.copyWith(
+                color: AppColors.primary, fontWeight: FontWeight.w600),
+          ),
         ),
         const SizedBox(width: 5),
         LevelBadge(user?.level ?? authorLevel),

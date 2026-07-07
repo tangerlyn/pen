@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import '../../../core/theme/app_theme.dart';
 import '../../../shared/providers/providers.dart';
+import '../../../shared/widgets/center_toast.dart';
 import '../../../data/models/user_model.dart';
 import '../providers/user_activity_provider.dart';
 
@@ -70,9 +71,7 @@ class BlockedUsersScreen extends ConsumerWidget {
               Navigator.pop(context);
               await ref.read(userRepoProvider).unblock(myUid, target.uid);
               if (context.mounted) {
-                ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(content: Text('차단이 해제되었습니다.')),
-                );
+                showCenterToast(context, message: '차단이 해제되었습니다.', icon: Icons.check_circle);
               }
             },
             child: const Text('해제'),

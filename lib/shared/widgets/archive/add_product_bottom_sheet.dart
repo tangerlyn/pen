@@ -6,6 +6,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../core/theme/app_theme.dart';
 import '../../../shared/providers/providers.dart';
 import '../../../features/archive/providers/archive_provider.dart';
+import '../center_toast.dart';
 
 // ── 상수 ─────────────────────────────────────────────────────────────────────
 
@@ -202,9 +203,7 @@ class _AddProductBottomSheetState extends ConsumerState<AddProductBottomSheet> {
           final exists = await repo.inkExists(brand, name);
           if (exists) {
             if (mounted) {
-              ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(content: Text('이미 등록된 잉크입니다.')),
-              );
+              showCenterToast(context, message: '이미 등록된 잉크입니다.');
             }
             return;
           }
@@ -242,9 +241,8 @@ class _AddProductBottomSheetState extends ConsumerState<AddProductBottomSheet> {
       }
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('등록 실패: $e')),
-        );
+        showCenterToast(context,
+            message: '등록 실패: $e', icon: Icons.error_outline, iconColor: AppColors.error);
       }
     } finally {
       if (mounted) setState(() => _isSaving = false);

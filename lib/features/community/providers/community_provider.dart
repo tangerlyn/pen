@@ -23,9 +23,10 @@ final filteredPostsProvider = StreamProvider<List<PostModel>>((ref) {
 
 final popularPostsProvider = Provider<List<PostModel>>((ref) {
   final posts = ref.watch(filteredPostsProvider).valueOrNull ?? [];
-  final sorted = List<PostModel>.from(posts)
+  final cutoff = DateTime.now().subtract(const Duration(days: 3));
+  final recent = posts.where((p) => p.createdAt.isAfter(cutoff)).toList()
     ..sort((a, b) => (b.likeCount + b.commentCount).compareTo(a.likeCount + a.commentCount));
-  return sorted.take(3).toList();
+  return recent.take(3).toList();
 });
 
 final postLikeStatusProvider =

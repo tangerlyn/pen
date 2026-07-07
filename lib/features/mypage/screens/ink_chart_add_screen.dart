@@ -9,6 +9,7 @@ import '../../../data/models/ink_chart_model.dart';
 import '../../../shared/providers/providers.dart';
 import '../../../shared/providers/ink_book_providers.dart';
 import '../../../shared/widgets/tap_scale.dart';
+import '../../../shared/widgets/center_toast.dart';
 import '../providers/ink_shape_provider.dart';
 import '../widgets/ink_add_success_overlay.dart';
 import '../widgets/ink_swatch_shape.dart';
@@ -156,7 +157,7 @@ class _InkChartAddScreenState extends ConsumerState<InkChartAddScreen> {
   }
 
   void _showSnack(String msg) {
-    ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(msg)));
+    showCenterToast(context, message: msg);
   }
 
   // ── UI ──────────────────────────────────────────────────────────
