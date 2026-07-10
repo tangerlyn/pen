@@ -12,7 +12,8 @@ import '../../../shared/providers/ink_book_providers.dart';
 import '../../../shared/providers/wishlist_providers.dart';
 import '../../../shared/widgets/common/empty_state.dart';
 import '../../../shared/widgets/community/post_card.dart';
-import '../../../shared/widgets/review/review_list_card.dart';
+import '../../../shared/widgets/review/review_list_tile.dart';
+import '../../../shared/widgets/tap_scale.dart';
 import '../providers/user_activity_provider.dart';
 
 // ── 메인 화면 ─────────────────────────────────────────────────────────
@@ -197,7 +198,7 @@ class _MyReviewGrid extends ConsumerWidget {
         return ListView.separated(
           itemCount: reviews.length,
           separatorBuilder: (_, __) => const Divider(height: 1),
-          itemBuilder: (_, i) => ReviewListCard(
+          itemBuilder: (_, i) => ReviewListTile(
             review: reviews[i],
             onTap: () => context.push('/review/${reviews[i].id}'),
           ),
@@ -320,7 +321,7 @@ class _ScrapbookGrid extends ConsumerWidget {
         itemBuilder: (_, i) {
           final item = items[i];
           return switch (item) {
-            _ReviewScrap(:final review) => ReviewListCard(
+            _ReviewScrap(:final review) => ReviewListTile(
                 review: review,
                 onTap: () => context.push('/review/${review.id}'),
               ),
@@ -343,7 +344,7 @@ class _StatItem extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return GestureDetector(
+    return TapScale(
       onTap: onTap,
       child: Column(
         children: [

@@ -4,9 +4,10 @@ import 'package:go_router/go_router.dart';
 import '../../../core/theme/app_theme.dart';
 import '../../../data/models/post_model.dart';
 import '../../../data/models/review_model.dart';
-import '../../../shared/widgets/common/skeletons.dart';
 import '../../../shared/widgets/community/post_card.dart';
 import '../../../shared/widgets/review/review_feed_card.dart';
+import '../../../shared/widgets/review/review_list_tile.dart';
+import '../../../shared/widgets/tap_scale.dart';
 import '../providers/search_provider.dart';
 import '../providers/suggestion_provider.dart';
 
@@ -441,7 +442,7 @@ class _SortChipRow extends StatelessWidget {
       alignment: Alignment.centerRight,
       child: Padding(
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-        child: GestureDetector(
+        child: TapScale(
           onTap: onTap,
           child: Container(
             padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
@@ -551,7 +552,7 @@ class _SectionHeader extends StatelessWidget {
   }
 }
 
-// ── 리뷰 그리드 (type=review) ─────────────────────────────────────────
+// ── 리뷰 목록 (type=review) ─────────────────────────────────────────
 class _ReviewGrid extends StatelessWidget {
   const _ReviewGrid({required this.reviews, this.isLoadingMore = false});
   final List<ReviewModel> reviews;
@@ -559,19 +560,18 @@ class _ReviewGrid extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final itemCount = reviews.length + (isLoadingMore ? 2 : 0);
-    return GridView.builder(
+    return ListView.separated(
       padding: EdgeInsets.zero,
-      gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-        crossAxisCount: 2,
-        crossAxisSpacing: 1,
-        mainAxisSpacing: 1,
-        childAspectRatio: 0.85,
-      ),
-      itemCount: itemCount,
+      itemCount: reviews.length + (isLoadingMore ? 1 : 0),
+      separatorBuilder: (_, _) => const Divider(height: 1),
       itemBuilder: (_, i) {
-        if (i >= reviews.length) return const ReviewGridSkeleton();
-        return ReviewFeedCard(
+        if (i >= reviews.length) {
+          return const SizedBox(
+            height: 60,
+            child: Center(child: CircularProgressIndicator()),
+          );
+        }
+        return ReviewListTile(
           review: reviews[i],
           onTap: () => context.push('/review/${reviews[i].id}'),
         );

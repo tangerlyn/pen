@@ -7,6 +7,7 @@ import 'package:timeago/timeago.dart' as timeago;
 import '../../../core/theme/app_theme.dart';
 import '../../../core/utils/profile_navigation.dart';
 import '../../../shared/providers/providers.dart';
+import '../../../shared/widgets/tap_scale.dart';
 import '../providers/notification_provider.dart';
 
 class NotificationScreen extends ConsumerWidget {
@@ -133,7 +134,7 @@ class _NotificationTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return InkWell(
+    return TapScale(
       onTap: onTap,
       child: Container(
         color: item.isRead ? AppColors.surface : const Color(0xFFFFF8F0),

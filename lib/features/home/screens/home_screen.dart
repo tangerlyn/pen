@@ -13,6 +13,7 @@ import '../../../data/models/ink_model.dart';
 import '../../../data/models/pen_model.dart';
 import '../../../shared/widgets/common/skeletons.dart';
 import '../../../shared/widgets/ink_drop_circle.dart';
+import '../../../shared/widgets/tap_scale.dart';
 
 class HomeScreen extends ConsumerStatefulWidget {
   const HomeScreen({super.key});
@@ -295,7 +296,7 @@ class _ReviewCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return GestureDetector(
+    return TapScale(
       onTap: onTap,
       child: Container(
         width: 150,
@@ -427,7 +428,7 @@ class _InkCircleItem extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return GestureDetector(
+    return TapScale(
       onTap: onTap,
       child: Container(
         width: 72,
@@ -568,7 +569,7 @@ class _PenCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return GestureDetector(
+    return TapScale(
       onTap: onTap,
       child: Container(
         width: 140,

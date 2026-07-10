@@ -6,6 +6,7 @@ import '../utils/level_system.dart';
 import '../../data/services/force_update_service.dart';
 import '../../shared/providers/providers.dart';
 import '../../shared/widgets/level_up_dialog.dart';
+import '../../shared/widgets/tap_scale.dart';
 
 class MainShell extends ConsumerStatefulWidget {
   const MainShell({super.key, required this.shell});
@@ -145,8 +146,7 @@ class _NavItem extends StatelessWidget {
   Widget build(BuildContext context) {
     final isActive = shell.currentIndex == index;
     return Expanded(
-      child: GestureDetector(
-        behavior: HitTestBehavior.opaque,
+      child: TapScale(
         onTap: () {
           if (index == shell.currentIndex) {
             // 같은 탭 재탭: context.go()로 스택 강제 리셋
@@ -156,48 +156,55 @@ class _NavItem extends StatelessWidget {
             shell.goBranch(index);
           }
         },
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            AnimatedScale(
-              scale: isActive ? 1.15 : 1.0,
-              duration: const Duration(milliseconds: 260),
-              curve: Curves.easeOutBack,
-              child: AnimatedSwitcher(
-                duration: const Duration(milliseconds: 180),
-                child: Icon(
-                  isActive ? activeIcon : icon,
-                  key: ValueKey(isActive),
-                  color: isActive ? AppColors.primary : AppColors.textTertiary,
-                  size: 22,
-                ),
-              ),
-            ),
-            const SizedBox(height: 2),
-            AnimatedDefaultTextStyle(
-              duration: const Duration(milliseconds: 200),
-              style: TextStyle(
-                fontSize: 9,
-                fontWeight: isActive ? FontWeight.w600 : FontWeight.w400,
-                color: isActive ? AppColors.primary : AppColors.textTertiary,
-              ),
-              child: Text(label),
-            ),
-            SizedBox(
-              height: 5,
-              child: AnimatedContainer(
+        // TapScale 내부 GestureDetector는 deferToChild라 Container에 투명 color를
+        // 지정해 기존 opaque 히트테스트(전체 영역 탭 가능)를 유지한다.
+        child: Container(
+          width: double.infinity,
+          height: double.infinity,
+          color: Colors.transparent,
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              AnimatedScale(
+                scale: isActive ? 1.15 : 1.0,
                 duration: const Duration(milliseconds: 260),
-                curve: Curves.easeOutCubic,
-                margin: const EdgeInsets.only(top: 2),
-                width: isActive ? 4.0 : 0.0,
-                height: isActive ? 4.0 : 0.0,
-                decoration: BoxDecoration(
-                  shape: BoxShape.circle,
-                  color: isActive ? AppColors.primary : Colors.transparent,
+                curve: Curves.easeOutBack,
+                child: AnimatedSwitcher(
+                  duration: const Duration(milliseconds: 180),
+                  child: Icon(
+                    isActive ? activeIcon : icon,
+                    key: ValueKey(isActive),
+                    color: isActive ? AppColors.primary : AppColors.textTertiary,
+                    size: 22,
+                  ),
                 ),
               ),
-            ),
-          ],
+              const SizedBox(height: 2),
+              AnimatedDefaultTextStyle(
+                duration: const Duration(milliseconds: 200),
+                style: TextStyle(
+                  fontSize: 9,
+                  fontWeight: isActive ? FontWeight.w600 : FontWeight.w400,
+                  color: isActive ? AppColors.primary : AppColors.textTertiary,
+                ),
+                child: Text(label),
+              ),
+              SizedBox(
+                height: 5,
+                child: AnimatedContainer(
+                  duration: const Duration(milliseconds: 260),
+                  curve: Curves.easeOutCubic,
+                  margin: const EdgeInsets.only(top: 2),
+                  width: isActive ? 4.0 : 0.0,
+                  height: isActive ? 4.0 : 0.0,
+                  decoration: BoxDecoration(
+                    shape: BoxShape.circle,
+                    color: isActive ? AppColors.primary : Colors.transparent,
+                  ),
+                ),
+              ),
+            ],
+          ),
         ),
       ),
     );

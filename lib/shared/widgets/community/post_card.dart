@@ -9,18 +9,22 @@ import '../../../core/utils/profile_navigation.dart';
 import '../../providers/providers.dart';
 import '../../../features/community/providers/community_provider.dart';
 import '../level_badge.dart';
+import '../tap_scale.dart';
 
-final _postCardAuthorProvider =
-    StreamProvider.family<UserModel?, String>((ref, uid) {
+final _postCardAuthorProvider = StreamProvider.family<UserModel?, String>((
+  ref,
+  uid,
+) {
   return ref.watch(userRepoProvider).watchUser(uid);
 });
 
 class PostCard extends ConsumerWidget {
-  const PostCard(
-      {super.key,
-      required this.post,
-      required this.onTap,
-      this.topPadding = 8.0});
+  const PostCard({
+    super.key,
+    required this.post,
+    required this.onTap,
+    this.topPadding = 8.0,
+  });
 
   final PostModel post;
   final VoidCallback onTap;
@@ -36,11 +40,16 @@ class PostCard extends ConsumerWidget {
     final hasImage = post.imageUrls.isNotEmpty;
     final showBadge = post.category == '질문' || post.category == '정보공유';
 
-    return InkWell(
+    return TapScale(
       onTap: onTap,
       child: Padding(
-        padding: EdgeInsets.fromLTRB(AppSpacing.lg, topPadding, AppSpacing.lg, AppSpacing.sm),
-          child: Row(
+        padding: EdgeInsets.fromLTRB(
+          AppSpacing.lg,
+          topPadding,
+          AppSpacing.lg,
+          AppSpacing.sm,
+        ),
+        child: Row(
           crossAxisAlignment: CrossAxisAlignment.end,
           children: [
             Expanded(
@@ -58,7 +67,9 @@ class PostCard extends ConsumerWidget {
                         child: Text(
                           post.title,
                           style: AppTextStyles.titleSmall.copyWith(
-                              fontSize: 15, color: AppColors.textPrimary),
+                            fontSize: 15,
+                            color: AppColors.textPrimary,
+                          ),
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
                         ),
@@ -81,8 +92,12 @@ class PostCard extends ConsumerWidget {
                           mainAxisSize: MainAxisSize.min,
                           children: [
                             Flexible(
-                              child: GestureDetector(
-                                onTap: () => navigateToProfile(context, ref, post.authorId),
+                              child: TapScale(
+                                onTap: () => navigateToProfile(
+                                  context,
+                                  ref,
+                                  post.authorId,
+                                ),
                                 child: _AuthorRow(
                                   authorId: post.authorId,
                                   fallbackNickname: post.authorNickname,
@@ -93,8 +108,9 @@ class PostCard extends ConsumerWidget {
                             const SizedBox(width: AppSpacing.sm),
                             Text(
                               timeago.format(post.createdAt, locale: 'ko'),
-                              style: AppTextStyles.bodySmall
-                                  .copyWith(color: AppColors.textTertiary),
+                              style: AppTextStyles.bodySmall.copyWith(
+                                color: AppColors.textTertiary,
+                              ),
                             ),
                             const SizedBox(width: 8),
                           ],
@@ -107,8 +123,8 @@ class PostCard extends ConsumerWidget {
                             behavior: HitTestBehavior.opaque,
                             onTap: uid != null
                                 ? () => ref
-                                    .read(postRepositoryProvider)
-                                    .toggleLike(post.id, uid, post.authorId)
+                                      .read(postRepositoryProvider)
+                                      .toggleLike(post.id, uid, post.authorId)
                                 : null,
                             child: Row(
                               mainAxisSize: MainAxisSize.min,
@@ -125,20 +141,25 @@ class PostCard extends ConsumerWidget {
                                 const SizedBox(width: 3),
                                 Text(
                                   '${post.likeCount}',
-                                  style: AppTextStyles.bodySmall
-                                      .copyWith(color: AppColors.textTertiary),
+                                  style: AppTextStyles.bodySmall.copyWith(
+                                    color: AppColors.textTertiary,
+                                  ),
                                 ),
                               ],
                             ),
                           ),
                           const SizedBox(width: 10),
-                          const Icon(Icons.chat_bubble_outline,
-                              size: 14, color: AppColors.textTertiary),
+                          const Icon(
+                            Icons.chat_bubble_outline,
+                            size: 14,
+                            color: AppColors.textTertiary,
+                          ),
                           const SizedBox(width: 3),
                           Text(
                             '${post.commentCount}',
-                            style: AppTextStyles.bodySmall
-                                .copyWith(color: AppColors.textTertiary),
+                            style: AppTextStyles.bodySmall.copyWith(
+                              color: AppColors.textTertiary,
+                            ),
                           ),
                         ],
                       ),
@@ -186,7 +207,10 @@ class _CategoryBadge extends StatelessWidget {
       _ => (AppColors.textSecondary, AppColors.chipBackground),
     };
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: AppSpacing.sm, vertical: 3),
+      padding: const EdgeInsets.symmetric(
+        horizontal: AppSpacing.sm,
+        vertical: 3,
+      ),
       decoration: BoxDecoration(
         color: bg,
         borderRadius: BorderRadius.circular(4),
@@ -229,7 +253,11 @@ class _AuthorRow extends ConsumerWidget {
               ? CachedNetworkImageProvider(user!.profileImageUrl!)
               : null,
           child: user?.profileImageUrl == null
-              ? const Icon(Icons.person, size: 13, color: AppColors.textTertiary)
+              ? const Icon(
+                  Icons.person,
+                  size: 13,
+                  color: AppColors.textTertiary,
+                )
               : null,
         ),
         const SizedBox(width: 5),
@@ -239,7 +267,9 @@ class _AuthorRow extends ConsumerWidget {
             maxLines: 1,
             overflow: TextOverflow.ellipsis,
             style: AppTextStyles.bodySmall.copyWith(
-                color: AppColors.primary, fontWeight: FontWeight.w600),
+              color: AppColors.primary,
+              fontWeight: FontWeight.w600,
+            ),
           ),
         ),
         const SizedBox(width: 5),

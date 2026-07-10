@@ -7,6 +7,7 @@ import '../../../core/theme/app_theme.dart';
 import '../../../shared/providers/providers.dart';
 import '../../../features/archive/providers/archive_provider.dart';
 import '../center_toast.dart';
+import '../tap_scale.dart';
 
 // ── 상수 ─────────────────────────────────────────────────────────────────────
 
@@ -115,8 +116,9 @@ class _AddProductBottomSheetState extends ConsumerState<AddProductBottomSheet> {
     if (_suggestionsLoaded) return;
     _suggestionsLoaded = true;
     try {
-      final result =
-          await ref.read(archiveRepoProvider).getInkFieldSuggestions();
+      final result = await ref
+          .read(archiveRepoProvider)
+          .getInkFieldSuggestions();
       if (mounted) {
         setState(() {
           _allBrands = result.brands;
@@ -241,8 +243,12 @@ class _AddProductBottomSheetState extends ConsumerState<AddProductBottomSheet> {
       }
     } catch (e) {
       if (mounted) {
-        showCenterToast(context,
-            message: '등록 실패: $e', icon: Icons.error_outline, iconColor: AppColors.error);
+        showCenterToast(
+          context,
+          message: '등록 실패: $e',
+          icon: Icons.error_outline,
+          iconColor: AppColors.error,
+        );
       }
     } finally {
       if (mounted) setState(() => _isSaving = false);
@@ -253,8 +259,9 @@ class _AddProductBottomSheetState extends ConsumerState<AddProductBottomSheet> {
 
   static String _colorToHex(Color c) =>
       '#${c.red.toRadixString(16).padLeft(2, '0')}'
-      '${c.green.toRadixString(16).padLeft(2, '0')}'
-      '${c.blue.toRadixString(16).padLeft(2, '0')}'.toUpperCase();
+              '${c.green.toRadixString(16).padLeft(2, '0')}'
+              '${c.blue.toRadixString(16).padLeft(2, '0')}'
+          .toUpperCase();
 
   static String _colorFamilyFromColor(Color color) {
     final hsv = HSVColor.fromColor(color);
@@ -315,32 +322,32 @@ class _AddProductBottomSheetState extends ConsumerState<AddProductBottomSheet> {
   // ── 공통 UI ──────────────────────────────────────────────────────────────
 
   Widget _handle() => Container(
-        margin: const EdgeInsets.only(top: 10, bottom: 6),
-        width: 36,
-        height: 4,
-        decoration: BoxDecoration(
-          color: AppColors.divider,
-          borderRadius: BorderRadius.circular(2),
-        ),
-      );
+    margin: const EdgeInsets.only(top: 10, bottom: 6),
+    width: 36,
+    height: 4,
+    decoration: BoxDecoration(
+      color: AppColors.divider,
+      borderRadius: BorderRadius.circular(2),
+    ),
+  );
 
   Widget _header() => Padding(
-        padding: const EdgeInsets.fromLTRB(4, 0, 8, 0),
-        child: Row(
-          children: [
-            IconButton(
-              icon: const Icon(Icons.arrow_back),
-              onPressed: () => Navigator.pop(context),
-            ),
-            const Expanded(
-              child: Text(
-                '제품 등록',
-                style: TextStyle(fontSize: 17, fontWeight: FontWeight.w700),
-              ),
-            ),
-          ],
+    padding: const EdgeInsets.fromLTRB(4, 0, 8, 0),
+    child: Row(
+      children: [
+        IconButton(
+          icon: const Icon(Icons.arrow_back),
+          onPressed: () => Navigator.pop(context),
         ),
-      );
+        const Expanded(
+          child: Text(
+            '제품 등록',
+            style: TextStyle(fontSize: 17, fontWeight: FontWeight.w700),
+          ),
+        ),
+      ],
+    ),
+  );
 
   Widget _typeSelector() {
     const types = [('ink', '잉크'), ('pen', '만년필')];
@@ -352,7 +359,7 @@ class _AddProductBottomSheetState extends ConsumerState<AddProductBottomSheet> {
           return Expanded(
             child: Padding(
               padding: const EdgeInsets.symmetric(horizontal: 4),
-              child: GestureDetector(
+              child: TapScale(
                 onTap: () {
                   setState(() {
                     _type = t.$1;
@@ -366,7 +373,9 @@ class _AddProductBottomSheetState extends ConsumerState<AddProductBottomSheet> {
                   duration: const Duration(milliseconds: 150),
                   padding: const EdgeInsets.symmetric(vertical: 9),
                   decoration: BoxDecoration(
-                    color: selected ? AppColors.primary : AppColors.chipBackground,
+                    color: selected
+                        ? AppColors.primary
+                        : AppColors.chipBackground,
                     borderRadius: BorderRadius.circular(10),
                   ),
                   alignment: Alignment.center,
@@ -388,121 +397,138 @@ class _AddProductBottomSheetState extends ConsumerState<AddProductBottomSheet> {
   }
 
   Widget _submitBar() => Padding(
-        padding: const EdgeInsets.fromLTRB(20, 8, 20, 20),
-        child: SizedBox(
-          width: double.infinity,
-          child: ElevatedButton(
-            onPressed: _isValid && !_isSaving ? _submit : null,
-            style: ElevatedButton.styleFrom(
-              backgroundColor: AppColors.primary,
-              foregroundColor: Colors.white,
-              disabledBackgroundColor: AppColors.chipBackground,
-              padding: const EdgeInsets.symmetric(vertical: 14),
-              shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(12)),
-            ),
-            child: _isSaving
-                ? const SizedBox(
-                    width: 20,
-                    height: 20,
-                    child: CircularProgressIndicator(
-                        strokeWidth: 2, color: Colors.white))
-                : const Text('아카이브에 등록하기',
-                    style:
-                        TextStyle(fontSize: 15, fontWeight: FontWeight.w600)),
+    padding: const EdgeInsets.fromLTRB(20, 8, 20, 20),
+    child: SizedBox(
+      width: double.infinity,
+      child: ElevatedButton(
+        onPressed: _isValid && !_isSaving ? _submit : null,
+        style: ElevatedButton.styleFrom(
+          backgroundColor: AppColors.primary,
+          foregroundColor: Colors.white,
+          disabledBackgroundColor: AppColors.chipBackground,
+          padding: const EdgeInsets.symmetric(vertical: 14),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(12),
           ),
         ),
-      );
+        child: _isSaving
+            ? const SizedBox(
+                width: 20,
+                height: 20,
+                child: CircularProgressIndicator(
+                  strokeWidth: 2,
+                  color: Colors.white,
+                ),
+              )
+            : const Text(
+                '아카이브에 등록하기',
+                style: TextStyle(fontSize: 15, fontWeight: FontWeight.w600),
+              ),
+      ),
+    ),
+  );
 
   // ── 잉크 폼 ──────────────────────────────────────────────────────────────
 
   Widget _inkForm() => Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          _field('브랜드명', _brandCtrl, '예: PILOT, Sailor, Diamine',
-              onChanged: _onBrandChanged),
-          _suggestionRow(_brandSuggestions, _selectBrand),
-          const SizedBox(height: 14),
-          _field('잉크 이름', _inkNameCtrl, '예: Iroshizuku 쓰유쿠사',
-              onChanged: _onNameChanged),
-          _suggestionRow(_nameSuggestions, _selectName),
-          const SizedBox(height: 16),
-          _sectionLabel('잉크 타입 *'),
-          _chipGroup(
-            items: _kInkTypeLabels,
-            selected: _inkTypeValue != null
-                ? _kInkTypeLabels[_kInkTypeValues.indexOf(_inkTypeValue!)]
-                : null,
-            onTap: (label) {
-              final idx = _kInkTypeLabels.indexOf(label);
-              setState(() =>
-                  _inkTypeValue = idx >= 0 ? _kInkTypeValues[idx] : label);
-            },
-          ),
-          const SizedBox(height: 16),
-          _sectionLabel('대표 색상 *'),
-          const Text(
-            '실제 잉크 색상과 최대한 비슷하게 선택해주세요',
-            style: TextStyle(fontSize: 12, color: AppColors.textTertiary),
-          ),
-          const SizedBox(height: 12),
-          _InkColorPicker(
-            color: _inkColor,
-            onChanged: (c) => setState(() => _inkColor = c),
-          ),
-          const SizedBox(height: 8),
-        ],
-      );
+    crossAxisAlignment: CrossAxisAlignment.start,
+    children: [
+      _field(
+        '브랜드명',
+        _brandCtrl,
+        '예: PILOT, Sailor, Diamine',
+        onChanged: _onBrandChanged,
+      ),
+      _suggestionRow(_brandSuggestions, _selectBrand),
+      const SizedBox(height: 14),
+      _field(
+        '잉크 이름',
+        _inkNameCtrl,
+        '예: Iroshizuku 쓰유쿠사',
+        onChanged: _onNameChanged,
+      ),
+      _suggestionRow(_nameSuggestions, _selectName),
+      const SizedBox(height: 16),
+      _sectionLabel('잉크 타입 *'),
+      _chipGroup(
+        items: _kInkTypeLabels,
+        selected: _inkTypeValue != null
+            ? _kInkTypeLabels[_kInkTypeValues.indexOf(_inkTypeValue!)]
+            : null,
+        onTap: (label) {
+          final idx = _kInkTypeLabels.indexOf(label);
+          setState(
+            () => _inkTypeValue = idx >= 0 ? _kInkTypeValues[idx] : label,
+          );
+        },
+      ),
+      const SizedBox(height: 16),
+      _sectionLabel('대표 색상 *'),
+      const Text(
+        '실제 잉크 색상과 최대한 비슷하게 선택해주세요',
+        style: TextStyle(fontSize: 12, color: AppColors.textTertiary),
+      ),
+      const SizedBox(height: 12),
+      _InkColorPicker(
+        color: _inkColor,
+        onChanged: (c) => setState(() => _inkColor = c),
+      ),
+      const SizedBox(height: 8),
+    ],
+  );
 
   // ── 만년필 폼 ─────────────────────────────────────────────────────────────
 
   Widget _penForm() => Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          _field('브랜드명', _brandCtrl, '예: PILOT, LAMY, Pelikan'),
-          const SizedBox(height: 14),
-          _field('모델명', _penModelCtrl, '예: Custom 74, Safari'),
-          const SizedBox(height: 16),
-          _sectionLabel('닙 소재 *'),
-          _chipGroup(
-            items: _kNibMaterials,
-            selected: _nibMaterial,
-            onTap: (v) => setState(() => _nibMaterial = v),
-          ),
-          const SizedBox(height: 16),
-          _sectionLabel('닙 사이즈 * (복수 선택 가능)'),
-          _multiChipGroup(
-            items: _kNibSizes,
-            selected: _nibSizes,
-            onTap: (v) => setState(() {
-              if (_nibSizes.contains(v)) {
-                _nibSizes.remove(v);
-              } else {
-                _nibSizes.add(v);
-              }
-            }),
-          ),
-          const SizedBox(height: 16),
-          _sectionLabel('충전 방식 *'),
-          _chipGroup(
-            items: _kFillTypes,
-            selected: _fillType,
-            onTap: (v) => setState(() => _fillType = v),
-          ),
-          const SizedBox(height: 8),
-        ],
-      );
+    crossAxisAlignment: CrossAxisAlignment.start,
+    children: [
+      _field('브랜드명', _brandCtrl, '예: PILOT, LAMY, Pelikan'),
+      const SizedBox(height: 14),
+      _field('모델명', _penModelCtrl, '예: Custom 74, Safari'),
+      const SizedBox(height: 16),
+      _sectionLabel('닙 소재 *'),
+      _chipGroup(
+        items: _kNibMaterials,
+        selected: _nibMaterial,
+        onTap: (v) => setState(() => _nibMaterial = v),
+      ),
+      const SizedBox(height: 16),
+      _sectionLabel('닙 사이즈 * (복수 선택 가능)'),
+      _multiChipGroup(
+        items: _kNibSizes,
+        selected: _nibSizes,
+        onTap: (v) => setState(() {
+          if (_nibSizes.contains(v)) {
+            _nibSizes.remove(v);
+          } else {
+            _nibSizes.add(v);
+          }
+        }),
+      ),
+      const SizedBox(height: 16),
+      _sectionLabel('충전 방식 *'),
+      _chipGroup(
+        items: _kFillTypes,
+        selected: _fillType,
+        onTap: (v) => setState(() => _fillType = v),
+      ),
+      const SizedBox(height: 8),
+    ],
+  );
 
   // ── 공통 빌더 ─────────────────────────────────────────────────────────────
 
   Widget _sectionLabel(String text) => Padding(
-        padding: const EdgeInsets.only(bottom: 8),
-        child: Text(text,
-            style: const TextStyle(
-                fontSize: 13,
-                fontWeight: FontWeight.w600,
-                color: AppColors.textSecondary)),
-      );
+    padding: const EdgeInsets.only(bottom: 8),
+    child: Text(
+      text,
+      style: const TextStyle(
+        fontSize: 13,
+        fontWeight: FontWeight.w600,
+        color: AppColors.textSecondary,
+      ),
+    ),
+  );
 
   Widget _field(
     String label,
@@ -511,41 +537,47 @@ class _AddProductBottomSheetState extends ConsumerState<AddProductBottomSheet> {
     TextInputType keyboard = TextInputType.text,
     List<TextInputFormatter>? inputFormatters,
     ValueChanged<String>? onChanged,
-  }) =>
-      Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(label,
-              style: const TextStyle(
-                  fontSize: 13,
-                  fontWeight: FontWeight.w600,
-                  color: AppColors.textSecondary)),
-          const SizedBox(height: 6),
-          TextField(
-            controller: ctrl,
-            keyboardType: keyboard,
-            inputFormatters: inputFormatters,
-            style: const TextStyle(fontSize: 14),
-            onChanged: (v) {
-              setState(() {});
-              onChanged?.call(v);
-            },
-            decoration: InputDecoration(
-              hintText: hint,
-              hintStyle:
-                  const TextStyle(fontSize: 13, color: AppColors.textTertiary),
-              filled: true,
-              fillColor: AppColors.chipBackground,
-              border: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(10),
-                borderSide: BorderSide.none,
-              ),
-              contentPadding:
-                  const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
-            ),
+  }) => Column(
+    crossAxisAlignment: CrossAxisAlignment.start,
+    children: [
+      Text(
+        label,
+        style: const TextStyle(
+          fontSize: 13,
+          fontWeight: FontWeight.w600,
+          color: AppColors.textSecondary,
+        ),
+      ),
+      const SizedBox(height: 6),
+      TextField(
+        controller: ctrl,
+        keyboardType: keyboard,
+        inputFormatters: inputFormatters,
+        style: const TextStyle(fontSize: 14),
+        onChanged: (v) {
+          setState(() {});
+          onChanged?.call(v);
+        },
+        decoration: InputDecoration(
+          hintText: hint,
+          hintStyle: const TextStyle(
+            fontSize: 13,
+            color: AppColors.textTertiary,
           ),
-        ],
-      );
+          filled: true,
+          fillColor: AppColors.chipBackground,
+          border: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(10),
+            borderSide: BorderSide.none,
+          ),
+          contentPadding: const EdgeInsets.symmetric(
+            horizontal: 14,
+            vertical: 12,
+          ),
+        ),
+      ),
+    ],
+  );
 
   Widget _suggestionRow(List<String> items, ValueChanged<String> onSelect) {
     if (items.isEmpty) return const SizedBox.shrink();
@@ -556,7 +588,11 @@ class _AddProductBottomSheetState extends ConsumerState<AddProductBottomSheet> {
         borderRadius: BorderRadius.circular(10),
         border: Border.all(color: AppColors.divider),
         boxShadow: const [
-          BoxShadow(color: Color(0x10000000), blurRadius: 6, offset: Offset(0, 2)),
+          BoxShadow(
+            color: Color(0x10000000),
+            blurRadius: 6,
+            offset: Offset(0, 2),
+          ),
         ],
       ),
       child: Column(
@@ -575,15 +611,22 @@ class _AddProductBottomSheetState extends ConsumerState<AddProductBottomSheet> {
                 ),
                 child: Padding(
                   padding: const EdgeInsets.symmetric(
-                      horizontal: 14, vertical: 12),
+                    horizontal: 14,
+                    vertical: 12,
+                  ),
                   child: Row(
                     children: [
                       Expanded(
-                        child: Text(items[i],
-                            style: const TextStyle(fontSize: 14)),
+                        child: Text(
+                          items[i],
+                          style: const TextStyle(fontSize: 14),
+                        ),
                       ),
-                      const Icon(Icons.north_west,
-                          size: 14, color: AppColors.textTertiary),
+                      const Icon(
+                        Icons.north_west,
+                        size: 14,
+                        color: AppColors.textTertiary,
+                      ),
                     ],
                   ),
                 ),
@@ -601,65 +644,63 @@ class _AddProductBottomSheetState extends ConsumerState<AddProductBottomSheet> {
     required List<String> items,
     required String? selected,
     required void Function(String) onTap,
-  }) =>
-      Wrap(
-        spacing: 8,
-        runSpacing: 8,
-        children: items.map((item) {
-          final isSelected = item == selected;
-          return GestureDetector(
-            onTap: () => onTap(item),
-            child: AnimatedContainer(
-              duration: const Duration(milliseconds: 120),
-              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 7),
-              decoration: BoxDecoration(
-                color: isSelected ? AppColors.primary : AppColors.chipBackground,
-                borderRadius: BorderRadius.circular(20),
-              ),
-              child: Text(
-                item,
-                style: TextStyle(
-                  fontSize: 13,
-                  fontWeight: FontWeight.w500,
-                  color: isSelected ? Colors.white : AppColors.textSecondary,
-                ),
-              ),
+  }) => Wrap(
+    spacing: 8,
+    runSpacing: 8,
+    children: items.map((item) {
+      final isSelected = item == selected;
+      return TapScale(
+        onTap: () => onTap(item),
+        child: AnimatedContainer(
+          duration: const Duration(milliseconds: 120),
+          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 7),
+          decoration: BoxDecoration(
+            color: isSelected ? AppColors.primary : AppColors.chipBackground,
+            borderRadius: BorderRadius.circular(20),
+          ),
+          child: Text(
+            item,
+            style: TextStyle(
+              fontSize: 13,
+              fontWeight: FontWeight.w500,
+              color: isSelected ? Colors.white : AppColors.textSecondary,
             ),
-          );
-        }).toList(),
+          ),
+        ),
       );
+    }).toList(),
+  );
 
   Widget _multiChipGroup({
     required List<String> items,
     required Set<String> selected,
     required void Function(String) onTap,
-  }) =>
-      Wrap(
-        spacing: 8,
-        runSpacing: 8,
-        children: items.map((item) {
-          final isSelected = selected.contains(item);
-          return GestureDetector(
-            onTap: () => onTap(item),
-            child: AnimatedContainer(
-              duration: const Duration(milliseconds: 120),
-              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 7),
-              decoration: BoxDecoration(
-                color: isSelected ? AppColors.primary : AppColors.chipBackground,
-                borderRadius: BorderRadius.circular(20),
-              ),
-              child: Text(
-                item,
-                style: TextStyle(
-                  fontSize: 13,
-                  fontWeight: FontWeight.w500,
-                  color: isSelected ? Colors.white : AppColors.textSecondary,
-                ),
-              ),
+  }) => Wrap(
+    spacing: 8,
+    runSpacing: 8,
+    children: items.map((item) {
+      final isSelected = selected.contains(item);
+      return TapScale(
+        onTap: () => onTap(item),
+        child: AnimatedContainer(
+          duration: const Duration(milliseconds: 120),
+          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 7),
+          decoration: BoxDecoration(
+            color: isSelected ? AppColors.primary : AppColors.chipBackground,
+            borderRadius: BorderRadius.circular(20),
+          ),
+          child: Text(
+            item,
+            style: TextStyle(
+              fontSize: 13,
+              fontWeight: FontWeight.w500,
+              color: isSelected ? Colors.white : AppColors.textSecondary,
             ),
-          );
-        }).toList(),
+          ),
+        ),
       );
+    }).toList(),
+  );
 }
 
 // ── 잉크 색상 피커 ────────────────────────────────────────────────────────────
@@ -705,40 +746,44 @@ class _InkColorPickerState extends State<_InkColorPicker> {
     return Column(
       children: [
         // SV 영역 — 가로 전체, 높이는 가로의 60%
-        LayoutBuilder(builder: (_, c) {
-          final w = c.maxWidth;
-          final h = w * 0.60;
-          return GestureDetector(
-            onPanStart: (d) => _updateSV(d.localPosition, w, h),
-            onPanUpdate: (d) => _updateSV(d.localPosition, w, h),
-            onTapDown: (d) => _updateSV(d.localPosition, w, h),
-            child: ClipRRect(
-              borderRadius: BorderRadius.circular(12),
-              child: CustomPaint(
-                size: Size(w, h),
-                painter: _SvPainter(
-                  hue: _hsv.hue,
-                  s: _hsv.saturation,
-                  v: _hsv.value,
+        LayoutBuilder(
+          builder: (_, c) {
+            final w = c.maxWidth;
+            final h = w * 0.60;
+            return GestureDetector(
+              onPanStart: (d) => _updateSV(d.localPosition, w, h),
+              onPanUpdate: (d) => _updateSV(d.localPosition, w, h),
+              onTapDown: (d) => _updateSV(d.localPosition, w, h),
+              child: ClipRRect(
+                borderRadius: BorderRadius.circular(12),
+                child: CustomPaint(
+                  size: Size(w, h),
+                  painter: _SvPainter(
+                    hue: _hsv.hue,
+                    s: _hsv.saturation,
+                    v: _hsv.value,
+                  ),
                 ),
               ),
-            ),
-          );
-        }),
+            );
+          },
+        ),
         const SizedBox(height: 14),
         // 색조(H) 슬라이더
-        LayoutBuilder(builder: (_, c) {
-          final width = c.maxWidth;
-          return GestureDetector(
-            onPanStart: (d) => _updateHue(d.localPosition.dx, width),
-            onPanUpdate: (d) => _updateHue(d.localPosition.dx, width),
-            onTapDown: (d) => _updateHue(d.localPosition.dx, width),
-            child: CustomPaint(
-              size: Size(width, 28),
-              painter: _HuePainter(hue: _hsv.hue),
-            ),
-          );
-        }),
+        LayoutBuilder(
+          builder: (_, c) {
+            final width = c.maxWidth;
+            return GestureDetector(
+              onPanStart: (d) => _updateHue(d.localPosition.dx, width),
+              onPanUpdate: (d) => _updateHue(d.localPosition.dx, width),
+              onTapDown: (d) => _updateHue(d.localPosition.dx, width),
+              child: CustomPaint(
+                size: Size(width, 28),
+                painter: _HuePainter(hue: _hsv.hue),
+              ),
+            );
+          },
+        ),
         const SizedBox(height: 14),
         // 선택된 색상 미리보기 — 풀 너비 박스
         Container(
@@ -753,18 +798,22 @@ class _InkColorPickerState extends State<_InkColorPicker> {
             children: [
               Text(
                 '#${previewColor.red.toRadixString(16).padLeft(2, '0')}'
-                '${previewColor.green.toRadixString(16).padLeft(2, '0')}'
-                '${previewColor.blue.toRadixString(16).padLeft(2, '0')}'
+                        '${previewColor.green.toRadixString(16).padLeft(2, '0')}'
+                        '${previewColor.blue.toRadixString(16).padLeft(2, '0')}'
                     .toUpperCase(),
                 style: TextStyle(
-                    fontSize: 16,
-                    fontWeight: FontWeight.w700,
-                    color: onPreview),
+                  fontSize: 16,
+                  fontWeight: FontWeight.w700,
+                  color: onPreview,
+                ),
               ),
               const SizedBox(height: 2),
               Text(
                 '선택된 색상',
-                style: TextStyle(fontSize: 11, color: onPreview.withValues(alpha: 0.7)),
+                style: TextStyle(
+                  fontSize: 11,
+                  color: onPreview.withValues(alpha: 0.7),
+                ),
               ),
             ],
           ),
@@ -809,16 +858,22 @@ class _SvPainter extends CustomPainter {
     final cx = s * size.width;
     final cy = (1 - v) * size.height;
     canvas
-      ..drawCircle(Offset(cx, cy), 10,
-          Paint()
-            ..color = Colors.white
-            ..style = PaintingStyle.stroke
-            ..strokeWidth = 2.5)
-      ..drawCircle(Offset(cx, cy), 10,
-          Paint()
-            ..color = Colors.black.withValues(alpha: 0.25)
-            ..style = PaintingStyle.stroke
-            ..strokeWidth = 1);
+      ..drawCircle(
+        Offset(cx, cy),
+        10,
+        Paint()
+          ..color = Colors.white
+          ..style = PaintingStyle.stroke
+          ..strokeWidth = 2.5,
+      )
+      ..drawCircle(
+        Offset(cx, cy),
+        10,
+        Paint()
+          ..color = Colors.black.withValues(alpha: 0.25)
+          ..style = PaintingStyle.stroke
+          ..strokeWidth = 1,
+      );
   }
 
   @override
@@ -858,13 +913,15 @@ class _HuePainter extends CustomPainter {
     final cx = (hue / 360 * size.width).clamp(10.0, size.width - 10.0);
     final cy = size.height / 2;
     canvas
-      ..drawCircle(Offset(cx, cy), 12,
-          Paint()..color = Colors.white)
-      ..drawCircle(Offset(cx, cy), 12,
-          Paint()
-            ..color = Colors.black.withValues(alpha: 0.2)
-            ..style = PaintingStyle.stroke
-            ..strokeWidth = 1);
+      ..drawCircle(Offset(cx, cy), 12, Paint()..color = Colors.white)
+      ..drawCircle(
+        Offset(cx, cy),
+        12,
+        Paint()
+          ..color = Colors.black.withValues(alpha: 0.2)
+          ..style = PaintingStyle.stroke
+          ..strokeWidth = 1,
+      );
   }
 
   @override

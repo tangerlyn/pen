@@ -11,7 +11,8 @@ import '../../../shared/providers/user_providers.dart';
 import '../../../shared/providers/ink_book_providers.dart' show userVisibleBooksProvider;
 import '../../../shared/widgets/common/empty_state.dart';
 import '../../../shared/widgets/community/post_card.dart';
-import '../../../shared/widgets/review/review_list_card.dart';
+import '../../../shared/widgets/review/review_list_tile.dart';
+import '../../../shared/widgets/tap_scale.dart';
 import '../providers/user_activity_provider.dart';
 
 // 네이비 기반 색상
@@ -307,7 +308,7 @@ class _FollowButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return GestureDetector(
+    return TapScale(
       onTap: onTap,
       child: AnimatedContainer(
         duration: const Duration(milliseconds: 200),
@@ -340,7 +341,7 @@ class _StatChip extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return GestureDetector(
+    return TapScale(
       onTap: onTap,
       child: RichText(
         text: TextSpan(
@@ -442,7 +443,7 @@ class _ReviewGrid extends ConsumerWidget {
         return ListView.separated(
           itemCount: reviews.length,
           separatorBuilder: (context, index) => const Divider(height: 1),
-          itemBuilder: (_, i) => ReviewListCard(
+          itemBuilder: (_, i) => ReviewListTile(
             review: reviews[i],
             onTap: () => context.push('/review/${reviews[i].id}'),
           ),

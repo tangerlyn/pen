@@ -5,9 +5,10 @@ import '../../../core/theme/app_theme.dart';
 import '../../../shared/widgets/archive/add_product_bottom_sheet.dart';
 import '../../../shared/widgets/center_toast.dart';
 import '../providers/archive_provider.dart';
-// import '../widgets/pen_list_tile.dart'; // 만년필 탭 제거로 미사용 — 재활성화 시 복구
+import '../widgets/pen_list_tile.dart';
 import '../../../shared/widgets/common/skeletons.dart';
 import '../../../shared/widgets/ink_drop_circle.dart';
+import '../../../shared/widgets/tap_scale.dart';
 
 // 색상 계열 목록
 const _colorFamilies = [
@@ -37,32 +38,36 @@ class ArchiveScreen extends ConsumerStatefulWidget {
 
 class _ArchiveScreenState extends ConsumerState<ArchiveScreen>
     with SingleTickerProviderStateMixin {
-  // 만년필 탭 제거로 TabController는 더 이상 사용하지 않음 (재활성화 시 복구)
-  // late final TabController _tabController;
+  late final TabController _tabController;
   final _scrollKey = GlobalKey<NestedScrollViewState>();
   bool _showScrollTop = false;
 
   final _inkScrollCtrl = ScrollController();
-  // final _penScrollCtrl = ScrollController();
+  final _penScrollCtrl = ScrollController();
 
-  ScrollController get _activeScrollCtrl => _inkScrollCtrl;
+  ScrollController get _activeScrollCtrl {
+    switch (_tabController.index) {
+      case 1: return _penScrollCtrl;
+      default: return _inkScrollCtrl;
+    }
+  }
 
   @override
   void initState() {
     super.initState();
-    // _tabController = TabController(length: 2, vsync: this);
-    // _tabController.addListener(() {
-    //   if (!_tabController.indexIsChanging) {
-    //     ref.read(archiveProvider.notifier).setTab(_tabController.index);
-    //   }
-    // });
+    _tabController = TabController(length: 2, vsync: this);
+    _tabController.addListener(() {
+      if (!_tabController.indexIsChanging) {
+        ref.read(archiveProvider.notifier).setTab(_tabController.index);
+      }
+    });
   }
 
   @override
   void dispose() {
-    // _tabController.dispose();
+    _tabController.dispose();
     _inkScrollCtrl.dispose();
-    // _penScrollCtrl.dispose();
+    _penScrollCtrl.dispose();
     super.dispose();
   }
 
@@ -109,37 +114,35 @@ class _ArchiveScreenState extends ConsumerState<ArchiveScreen>
                     ),
                   ],
                 ),
-                // 잉크/만년필 탭 — 만년필 제거로 잉크만 남아 탭 UI 자체를 주석 처리 (재활성화 시 복구)
-                // SliverToBoxAdapter(
-                //   child: ColoredBox(
-                //     color: Theme.of(context).scaffoldBackgroundColor,
-                //     child: TabBar(
-                //       controller: _tabController,
-                //       tabs: const [
-                //         Tab(text: '잉크'),
-                //         Tab(text: '만년필'),
-                //       ],
-                //       labelStyle: const TextStyle(fontWeight: FontWeight.w600),
-                //       indicatorColor: AppColors.primary,
-                //       labelColor: AppColors.primary,
-                //       unselectedLabelColor: AppColors.textSecondary,
-                //     ),
-                //   ),
-                // ),
+                // 잉크/만년필 탭 — 스크롤 시 같이 올라감
+                SliverToBoxAdapter(
+                  child: ColoredBox(
+                    color: Theme.of(context).scaffoldBackgroundColor,
+                    child: TabBar(
+                      controller: _tabController,
+                      tabs: const [
+                        Tab(text: '잉크'),
+                        Tab(text: '만년필'),
+                      ],
+                      labelStyle: const TextStyle(fontWeight: FontWeight.w600),
+                      indicatorColor: AppColors.primary,
+                      labelColor: AppColors.primary,
+                      unselectedLabelColor: AppColors.textSecondary,
+                    ),
+                  ),
+                ),
                 // 필터 버튼 — 스크롤 시 같이 올라감
                 SliverToBoxAdapter(
                   child: _FilterRow(tabIndex: state.tabIndex),
                 ),
               ],
-              body: _InkList(state: state, scrollController: _inkScrollCtrl),
-              // 만년필 탭 제거 — 재활성화 시 TabBarView로 복구
-              // body: TabBarView(
-              //   controller: _tabController,
-              //   children: [
-              //     _InkList(state: state, scrollController: _inkScrollCtrl),
-              //     _PenList(state: state, scrollController: _penScrollCtrl),
-              //   ],
-              // ),
+              body: TabBarView(
+                controller: _tabController,
+                children: [
+                  _InkList(state: state, scrollController: _inkScrollCtrl),
+                  _PenList(state: state, scrollController: _penScrollCtrl),
+                ],
+              ),
             ),
           ),
           // 맨 위로 버튼
@@ -402,7 +405,7 @@ class _MultiSelectBottomSheetState extends State<_MultiSelectBottomSheet> {
                 ),
                 const Spacer(),
                 if (_selected.isNotEmpty)
-                  GestureDetector(
+                  TapScale(
                     onTap: () => setState(() => _selected.clear()),
                     child: const Text(
                       '초기화',
@@ -478,7 +481,7 @@ class _FilterChipItem extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final trailingIcon = icon ?? Icons.keyboard_arrow_down;
-    return GestureDetector(
+    return TapScale(
       onTap: onTap,
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
@@ -553,7 +556,7 @@ class _InkList extends ConsumerWidget {
                 (ctx, i) {
                   final ink = state.inks[i];
                   return RepaintBoundary(
-                    child: GestureDetector(
+                    child: TapScale(
                       onTap: () => context.push('/archive/ink/${ink.id}'),
                       child: Column(
                         mainAxisSize: MainAxisSize.min,
@@ -592,67 +595,66 @@ class _InkList extends ConsumerWidget {
   }
 }
 
-// 만년필 탭 제거로 미사용 — 재활성화 시 복구
-// class _PenList extends ConsumerWidget {
-//   const _PenList({required this.state, required this.scrollController});
-//   final ArchiveState state;
-//   final ScrollController scrollController;
-//
-//   @override
-//   Widget build(BuildContext context, WidgetRef ref) {
-//     // 항상 CustomScrollView를 반환 — 타입 변화로 인한 semantics assertion 방지
-//     return CustomScrollView(
-//       controller: scrollController,
-//       slivers: [
-//         if (state.isLoading)
-//           SliverList(
-//             delegate: SliverChildBuilderDelegate(
-//               (ctx, i) => const Column(
-//                 mainAxisSize: MainAxisSize.min,
-//                 children: [
-//                   PenListTileSkeleton(),
-//                   Divider(height: 1),
-//                 ],
-//               ),
-//               childCount: 6,
-//             ),
-//           )
-//         else if (state.pens.isEmpty)
-//           const SliverFillRemaining(
-//             hasScrollBody: false,
-//             child: Column(
-//               mainAxisAlignment: MainAxisAlignment.center,
-//               children: [
-//                 Text('만년필이 없습니다.'),
-//                 SizedBox(height: 16),
-//                 _ProductRequestFooter(tabLabel: '만년필'),
-//               ],
-//             ),
-//           )
-//         else ...[
-//           SliverList(
-//             delegate: SliverChildBuilderDelegate(
-//               (ctx, i) => Column(
-//                 mainAxisSize: MainAxisSize.min,
-//                 children: [
-//                   PenListTile(
-//                     pen: state.pens[i],
-//                     onTap: () => context.push('/archive/pen/${state.pens[i].id}'),
-//                   ),
-//                   const Divider(height: 1),
-//                 ],
-//               ),
-//               childCount: state.pens.length,
-//             ),
-//           ),
-//           const SliverToBoxAdapter(
-//             child: _ProductRequestFooter(tabLabel: '만년필'),
-//           ),
-//         ],
-//       ],
-//     );
-//   }
-// }
+class _PenList extends ConsumerWidget {
+  const _PenList({required this.state, required this.scrollController});
+  final ArchiveState state;
+  final ScrollController scrollController;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    // 항상 CustomScrollView를 반환 — 타입 변화로 인한 semantics assertion 방지
+    return CustomScrollView(
+      controller: scrollController,
+      slivers: [
+        if (state.isLoading)
+          SliverList(
+            delegate: SliverChildBuilderDelegate(
+              (ctx, i) => const Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  PenListTileSkeleton(),
+                  Divider(height: 1),
+                ],
+              ),
+              childCount: 6,
+            ),
+          )
+        else if (state.pens.isEmpty)
+          const SliverFillRemaining(
+            hasScrollBody: false,
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Text('만년필이 없습니다.'),
+                SizedBox(height: 16),
+                _ProductRequestFooter(tabLabel: '만년필'),
+              ],
+            ),
+          )
+        else ...[
+          SliverList(
+            delegate: SliverChildBuilderDelegate(
+              (ctx, i) => Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  PenListTile(
+                    pen: state.pens[i],
+                    onTap: () => context.push('/archive/pen/${state.pens[i].id}'),
+                  ),
+                  const Divider(height: 1),
+                ],
+              ),
+              childCount: state.pens.length,
+            ),
+          ),
+          const SliverToBoxAdapter(
+            child: _ProductRequestFooter(tabLabel: '만년필'),
+          ),
+        ],
+      ],
+    );
+  }
+}
 
 // ── 직접 등록 버튼 ────────────────────────────────────────────────────
 class _ProductRequestFooter extends StatelessWidget {

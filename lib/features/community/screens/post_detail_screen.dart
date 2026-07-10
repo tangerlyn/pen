@@ -19,6 +19,7 @@ import '../../../core/utils/toast_utils.dart';
 import '../../../shared/widgets/content_moderation.dart';
 import '../../../shared/widgets/image_viewer_screen.dart';
 import '../../../shared/widgets/common/skeletons.dart';
+import '../../../shared/widgets/tap_scale.dart';
 import 'post_write_screen.dart';
 
 final _postAuthorProvider = StreamProvider.family<UserModel?, String>((ref, uid) {
@@ -478,8 +479,7 @@ class _PostDetailScreenState extends ConsumerState<PostDetailScreen> {
                             // 좋아요 · 댓글 수
                             Row(
                               children: [
-                                GestureDetector(
-                                  behavior: HitTestBehavior.opaque,
+                                TapScale(
                                   onTap: currentUid != null
                                       ? () async {
                                           try {
@@ -689,7 +689,7 @@ class _PostDetailScreenState extends ConsumerState<PostDetailScreen> {
                                   fontSize: 12,
                                   color: AppColors.textSecondary)),
                           const Spacer(),
-                          GestureDetector(
+                          TapScale(
                             onTap: () => setState(() {
                               _replyTargetCommentId = null;
                               _replyTargetNickname = null;
@@ -765,7 +765,7 @@ class _EditorialByline extends ConsumerWidget {
     final user = authorAsync.valueOrNull;
     final timeStr = timeago.format(post.createdAt, locale: 'ko');
 
-    return GestureDetector(
+    return TapScale(
       onTap: () => navigateToProfile(context, ref, post.authorId),
       child: Row(
         children: [
@@ -832,7 +832,7 @@ class _PostProfileRow extends ConsumerWidget {
 
     return Row(
       children: [
-        GestureDetector(
+        TapScale(
           onTap: () => navigateToProfile(context, ref, post.authorId),
           child: authorAsync.when(
             data: (user) => CircleAvatar(
@@ -858,7 +858,7 @@ class _PostProfileRow extends ConsumerWidget {
         ),
         const SizedBox(width: 12),
         Expanded(
-          child: GestureDetector(
+          child: TapScale(
             onTap: () => navigateToProfile(context, ref, post.authorId),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -1096,7 +1096,7 @@ class _CommentTileState extends ConsumerState<_CommentTile> {
             Row(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                GestureDetector(
+                TapScale(
                   onTap: () => navigateToProfile(
                       context, ref, widget.comment.authorId),
                   child: CircleAvatar(
@@ -1117,7 +1117,7 @@ class _CommentTileState extends ConsumerState<_CommentTile> {
                     children: [
                       Row(
                         children: [
-                          GestureDetector(
+                          TapScale(
                             onTap: () => navigateToProfile(
                                 context, ref, widget.comment.authorId),
                             child: Text(widget.comment.authorNickname,
@@ -1142,7 +1142,7 @@ class _CommentTileState extends ConsumerState<_CommentTile> {
                                     color: AppColors.textTertiary)),
                           ],
                           const Spacer(),
-                          GestureDetector(
+                          TapScale(
                             onTap: () => widget.onReplyTap(
                                 widget.comment.id,
                                 widget.comment.authorNickname),
@@ -1154,7 +1154,7 @@ class _CommentTileState extends ConsumerState<_CommentTile> {
                                       color: AppColors.textSecondary)),
                             ),
                           ),
-                          GestureDetector(
+                          TapScale(
                             onTap: _showMenu,
                             child: const Padding(
                               padding: EdgeInsets.all(4),
@@ -1371,7 +1371,7 @@ class _PostReplyTileState extends ConsumerState<_PostReplyTile> {
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          GestureDetector(
+          TapScale(
             onTap: () =>
                 navigateToProfile(context, ref, widget.reply.authorId),
             child: CircleAvatar(
@@ -1392,7 +1392,7 @@ class _PostReplyTileState extends ConsumerState<_PostReplyTile> {
               children: [
                 Row(
                   children: [
-                    GestureDetector(
+                    TapScale(
                       onTap: () => navigateToProfile(
                           context, ref, widget.reply.authorId),
                       child: Text(widget.reply.authorNickname,
@@ -1416,7 +1416,7 @@ class _PostReplyTileState extends ConsumerState<_PostReplyTile> {
                               color: AppColors.textTertiary)),
                     ],
                     const Spacer(),
-                    GestureDetector(
+                    TapScale(
                       onTap: _showMenu,
                       child: const Padding(
                         padding: EdgeInsets.all(4),

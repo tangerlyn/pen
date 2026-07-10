@@ -5,6 +5,7 @@ import 'package:timeago/timeago.dart' as timeago;
 import '../../../features/archive/providers/archive_detail_provider.dart';
 import '../../../data/models/review_model.dart';
 import '../../../core/theme/app_theme.dart';
+import '../tap_scale.dart';
 
 class ReviewFeedCard extends ConsumerWidget {
   const ReviewFeedCard({super.key, required this.review, required this.onTap});
@@ -14,7 +15,7 @@ class ReviewFeedCard extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    return GestureDetector(
+    return TapScale(
       onTap: onTap,
       child: Container(
         decoration: BoxDecoration(
@@ -38,10 +39,15 @@ class ReviewFeedCard extends ConsumerWidget {
                   CachedNetworkImage(
                     imageUrl: review.thumbnailUrl,
                     fit: BoxFit.cover,
-                    placeholder: (_, _) => Container(color: AppColors.chipBackground),
+                    placeholder: (_, _) =>
+                        Container(color: AppColors.chipBackground),
                     errorWidget: (_, _, _) => Container(
                       color: AppColors.chipBackground,
-                      child: const Icon(Icons.image_not_supported, color: AppColors.textTertiary, size: 32),
+                      child: const Icon(
+                        Icons.image_not_supported,
+                        color: AppColors.textTertiary,
+                        size: 32,
+                      ),
                     ),
                   ),
                   if (review.imageUrls.length > 1)
@@ -49,7 +55,10 @@ class ReviewFeedCard extends ConsumerWidget {
                       top: 8,
                       right: 8,
                       child: Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 3),
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 6,
+                          vertical: 3,
+                        ),
                         decoration: BoxDecoration(
                           color: Colors.black.withValues(alpha: 0.55),
                           borderRadius: BorderRadius.circular(10),
@@ -57,10 +66,19 @@ class ReviewFeedCard extends ConsumerWidget {
                         child: Row(
                           mainAxisSize: MainAxisSize.min,
                           children: [
-                            const Icon(Icons.collections, color: Colors.white, size: 11),
+                            const Icon(
+                              Icons.collections,
+                              color: Colors.white,
+                              size: 11,
+                            ),
                             const SizedBox(width: 2),
-                            Text('${review.imageUrls.length}',
-                                style: const TextStyle(color: Colors.white, fontSize: 11)),
+                            Text(
+                              '${review.imageUrls.length}',
+                              style: const TextStyle(
+                                color: Colors.white,
+                                fontSize: 11,
+                              ),
+                            ),
                           ],
                         ),
                       ),
@@ -82,10 +100,11 @@ class ReviewFeedCard extends ConsumerWidget {
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
                       style: const TextStyle(
-                          fontSize: 12,
-                          color: AppColors.textPrimary,
-                          fontWeight: FontWeight.w600,
-                          height: 1.4),
+                        fontSize: 12,
+                        color: AppColors.textPrimary,
+                        fontWeight: FontWeight.w600,
+                        height: 1.4,
+                      ),
                     ),
                   ],
                   const SizedBox(height: 6),
@@ -95,24 +114,48 @@ class ReviewFeedCard extends ConsumerWidget {
                       const SizedBox(width: 2),
                       Text(
                         review.rating.toStringAsFixed(1),
-                        style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w600),
+                        style: const TextStyle(
+                          fontSize: 12,
+                          fontWeight: FontWeight.w600,
+                        ),
                       ),
                       const Spacer(),
-                      const Icon(Icons.favorite_border, size: 14, color: AppColors.textTertiary),
+                      const Icon(
+                        Icons.favorite_border,
+                        size: 14,
+                        color: AppColors.textTertiary,
+                      ),
                       const SizedBox(width: 2),
-                      Text('${review.likeCount}',
-                          style: const TextStyle(fontSize: 12, color: AppColors.textTertiary)),
+                      Text(
+                        '${review.likeCount}',
+                        style: const TextStyle(
+                          fontSize: 12,
+                          color: AppColors.textTertiary,
+                        ),
+                      ),
                       const SizedBox(width: AppSpacing.sm),
-                      const Icon(Icons.chat_bubble_outline, size: 14, color: AppColors.textTertiary),
+                      const Icon(
+                        Icons.chat_bubble_outline,
+                        size: 14,
+                        color: AppColors.textTertiary,
+                      ),
                       const SizedBox(width: 2),
-                      Text('${review.commentCount}',
-                          style: const TextStyle(fontSize: 12, color: AppColors.textTertiary)),
+                      Text(
+                        '${review.commentCount}',
+                        style: const TextStyle(
+                          fontSize: 12,
+                          color: AppColors.textTertiary,
+                        ),
+                      ),
                     ],
                   ),
                   const SizedBox(height: 4),
                   Text(
                     timeago.format(review.createdAt, locale: 'ko'),
-                    style: const TextStyle(fontSize: 11, color: AppColors.textTertiary),
+                    style: const TextStyle(
+                      fontSize: 11,
+                      color: AppColors.textTertiary,
+                    ),
                   ),
                 ],
               ),
@@ -143,11 +186,16 @@ class _GearTags extends ConsumerWidget {
     return Row(
       mainAxisSize: MainAxisSize.min,
       children: [
-        Flexible(child: _TagChip(type: first.type, id: first.id)),
+        Flexible(
+          child: _TagChip(type: first.type, id: first.id),
+        ),
         if (remaining > 0) ...[
           const SizedBox(width: 4),
           Container(
-            padding: const EdgeInsets.symmetric(horizontal: AppSpacing.sm, vertical: 3),
+            padding: const EdgeInsets.symmetric(
+              horizontal: AppSpacing.sm,
+              vertical: 3,
+            ),
             decoration: BoxDecoration(
               color: AppColors.chipBackground,
               borderRadius: BorderRadius.circular(20),
@@ -191,7 +239,10 @@ class _TagChip extends ConsumerWidget {
     return ConstrainedBox(
       constraints: const BoxConstraints(maxWidth: 160),
       child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: AppSpacing.sm, vertical: 3),
+        padding: const EdgeInsets.symmetric(
+          horizontal: AppSpacing.sm,
+          vertical: 3,
+        ),
         decoration: BoxDecoration(
           color: AppColors.chipBackground,
           borderRadius: BorderRadius.circular(20),
@@ -201,7 +252,10 @@ class _TagChip extends ConsumerWidget {
           maxLines: 1,
           overflow: TextOverflow.ellipsis,
           style: const TextStyle(
-              fontSize: 11, color: AppColors.textSecondary, fontWeight: FontWeight.w500),
+            fontSize: 11,
+            color: AppColors.textSecondary,
+            fontWeight: FontWeight.w500,
+          ),
         ),
       ),
     );

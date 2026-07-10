@@ -4,6 +4,7 @@ import 'package:cached_network_image/cached_network_image.dart';
 import '../../../features/archive/providers/archive_detail_provider.dart';
 import '../../../data/models/review_model.dart';
 import '../../../core/theme/app_theme.dart';
+import '../tap_scale.dart';
 
 class ReviewGridItem extends ConsumerWidget {
   const ReviewGridItem({super.key, required this.review, required this.onTap});
@@ -23,7 +24,7 @@ class ReviewGridItem extends ConsumerWidget {
       firstId = review.penIds.first;
     }
 
-    return GestureDetector(
+    return TapScale(
       onTap: onTap,
       child: Container(
         color: AppColors.surface,
@@ -37,10 +38,14 @@ class ReviewGridItem extends ConsumerWidget {
                   CachedNetworkImage(
                     imageUrl: review.thumbnailUrl,
                     fit: BoxFit.cover,
-                    placeholder: (_, __) => Container(color: AppColors.chipBackground),
+                    placeholder: (_, __) =>
+                        Container(color: AppColors.chipBackground),
                     errorWidget: (_, __, ___) => Container(
                       color: AppColors.chipBackground,
-                      child: const Icon(Icons.image_not_supported, color: AppColors.textTertiary),
+                      child: const Icon(
+                        Icons.image_not_supported,
+                        color: AppColors.textTertiary,
+                      ),
                     ),
                   ),
                   if (review.imageUrls.length > 1)
@@ -48,7 +53,10 @@ class ReviewGridItem extends ConsumerWidget {
                       top: 8,
                       right: 8,
                       child: Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 6,
+                          vertical: 2,
+                        ),
                         decoration: BoxDecoration(
                           color: Colors.black.withOpacity(0.6),
                           borderRadius: BorderRadius.circular(4),
@@ -56,11 +64,18 @@ class ReviewGridItem extends ConsumerWidget {
                         child: Row(
                           mainAxisSize: MainAxisSize.min,
                           children: [
-                            const Icon(Icons.collections, color: Colors.white, size: 12),
+                            const Icon(
+                              Icons.collections,
+                              color: Colors.white,
+                              size: 12,
+                            ),
                             const SizedBox(width: 2),
                             Text(
                               '${review.imageUrls.length}',
-                              style: const TextStyle(color: Colors.white, fontSize: 11),
+                              style: const TextStyle(
+                                color: Colors.white,
+                                fontSize: 11,
+                              ),
                             ),
                           ],
                         ),
@@ -72,12 +87,19 @@ class ReviewGridItem extends ConsumerWidget {
                     right: 0,
                     child: Container(
                       padding: const EdgeInsets.fromLTRB(
-                          AppSpacing.sm, AppSpacing.xxl, AppSpacing.sm, AppSpacing.sm),
+                        AppSpacing.sm,
+                        AppSpacing.xxl,
+                        AppSpacing.sm,
+                        AppSpacing.sm,
+                      ),
                       decoration: BoxDecoration(
                         gradient: LinearGradient(
                           begin: Alignment.topCenter,
                           end: Alignment.bottomCenter,
-                          colors: [Colors.transparent, Colors.black.withOpacity(0.5)],
+                          colors: [
+                            Colors.transparent,
+                            Colors.black.withOpacity(0.5),
+                          ],
                         ),
                       ),
                       child: Row(
@@ -87,14 +109,24 @@ class ReviewGridItem extends ConsumerWidget {
                           Text(
                             review.rating.toStringAsFixed(1),
                             style: const TextStyle(
-                                color: Colors.white, fontSize: 12, fontWeight: FontWeight.w600),
+                              color: Colors.white,
+                              fontSize: 12,
+                              fontWeight: FontWeight.w600,
+                            ),
                           ),
                           const Spacer(),
-                          const Icon(Icons.favorite, color: Colors.white, size: 14),
+                          const Icon(
+                            Icons.favorite,
+                            color: Colors.white,
+                            size: 14,
+                          ),
                           const SizedBox(width: 2),
                           Text(
                             '${review.likeCount}',
-                            style: const TextStyle(color: Colors.white, fontSize: 12),
+                            style: const TextStyle(
+                              color: Colors.white,
+                              fontSize: 12,
+                            ),
                           ),
                         ],
                       ),
@@ -106,7 +138,11 @@ class ReviewGridItem extends ConsumerWidget {
             if (firstType != null && firstId != null)
               Padding(
                 padding: const EdgeInsets.fromLTRB(
-                    AppSpacing.sm, AppSpacing.sm, AppSpacing.sm, AppSpacing.md),
+                  AppSpacing.sm,
+                  AppSpacing.sm,
+                  AppSpacing.sm,
+                  AppSpacing.md,
+                ),
                 child: _GearLabel(type: firstType, id: firstId),
               ),
           ],
@@ -138,11 +174,16 @@ class _GearLabel extends ConsumerWidget {
           maxLines: 1,
           overflow: TextOverflow.ellipsis,
           style: const TextStyle(
-              fontSize: 11, color: AppColors.textSecondary, fontWeight: FontWeight.w500),
+            fontSize: 11,
+            color: AppColors.textSecondary,
+            fontWeight: FontWeight.w500,
+          ),
         );
       },
-      loading: () =>
-          const Text('로딩중...', style: TextStyle(fontSize: 11, color: AppColors.textTertiary)),
+      loading: () => const Text(
+        '로딩중...',
+        style: TextStyle(fontSize: 11, color: AppColors.textTertiary),
+      ),
       error: (_, __) => const SizedBox.shrink(),
     );
   }

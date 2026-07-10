@@ -7,6 +7,7 @@ import 'package:cached_network_image/cached_network_image.dart';
 import '../../../core/theme/app_theme.dart';
 import '../../../core/constants/app_constants.dart';
 import '../../../shared/providers/providers.dart';
+import '../../../shared/widgets/tap_scale.dart';
 
 class ProfileEditScreen extends ConsumerStatefulWidget {
   const ProfileEditScreen({super.key});
@@ -133,7 +134,7 @@ class _ProfileEditScreenState extends ConsumerState<ProfileEditScreen> {
         padding: const EdgeInsets.all(24),
         child: Column(
           children: [
-            GestureDetector(
+            TapScale(
               onTap: _pickImage,
               child: Stack(
                 children: [

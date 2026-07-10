@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 import '../../../core/theme/app_theme.dart';
 import '../../../shared/providers/ink_book_providers.dart';
 import '../../../shared/widgets/common/empty_state.dart';
+import '../../../shared/widgets/tap_scale.dart';
 
 class PublicInkBooksScreen extends ConsumerWidget {
   const PublicInkBooksScreen({super.key});
@@ -47,7 +48,7 @@ class PublicInkBooksScreen extends ConsumerWidget {
             itemCount: books.length,
             itemBuilder: (_, i) {
               final book = books[i];
-              return GestureDetector(
+              return TapScale(
                 onTap: () => context.push(
                   '/public-ink-books/${book.ownerUid}/${book.id}',
                 ),

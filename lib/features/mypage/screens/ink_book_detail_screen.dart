@@ -18,6 +18,7 @@ import '../../../data/models/ink_book_model.dart';
 import '../../../data/models/ink_chart_model.dart';
 import '../../../shared/providers/providers.dart';
 import '../../../shared/providers/ink_book_providers.dart';
+import '../../../shared/widgets/tap_scale.dart';
 import '../providers/ink_shape_provider.dart';
 import '../widgets/ink_swatch_shape.dart';
 
@@ -1896,7 +1897,7 @@ class _NavBtn extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return GestureDetector(
+    return TapScale(
       onTap: onPressed,
       child: Container(
         width: 40,
@@ -2087,7 +2088,7 @@ class _ShapePickerSheet extends StatelessWidget {
               runSpacing: 12,
               children: InkSwatchShape.values.map((shape) {
                 final selected = shape == current;
-                return GestureDetector(
+                return TapScale(
                   onTap: () {
                     ref
                         .read(inkSwatchShapeProvider.notifier)

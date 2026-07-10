@@ -7,6 +7,7 @@ import '../../../data/models/ink_book_model.dart';
 import '../../../shared/providers/providers.dart';
 import '../../../shared/providers/ink_book_providers.dart';
 import '../../../shared/widgets/center_toast.dart';
+import '../../../shared/widgets/tap_scale.dart';
 
 class InkBookListScreen extends ConsumerWidget {
   const InkBookListScreen({super.key});
@@ -195,7 +196,7 @@ class _NewBookCell extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return GestureDetector(
+    return TapScale(
       onTap: () => _showCreateSheet(context),
       child: Container(
         decoration: BoxDecoration(
@@ -336,7 +337,7 @@ class _CreateBookSheetState extends ConsumerState<_CreateBookSheet> {
               final selected = hex == _selectedColor;
               final hex6 = hex.replaceFirst('#', '');
               final color = Color(int.parse('FF$hex6', radix: 16));
-              return GestureDetector(
+              return TapScale(
                 onTap: () => setState(() => _selectedColor = hex),
                 child: AnimatedContainer(
                   duration: const Duration(milliseconds: 150),

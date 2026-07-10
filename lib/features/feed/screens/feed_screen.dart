@@ -10,6 +10,7 @@ import '../../../features/review/screens/review_feed_screen.dart';
 import '../../../features/community/screens/community_screen.dart';
 import '../../../features/home/providers/home_discovery_provider.dart';
 import '../../../features/community/providers/community_provider.dart';
+import '../../../shared/widgets/tap_scale.dart';
 
 // ── 피드 아이템 sealed type ────────────────────────────────────────────────
 sealed class _FeedEntry {
@@ -149,7 +150,7 @@ class _ReviewListItem extends StatelessWidget {
   Widget build(BuildContext context) {
     final hasThumbnail = review.thumbnailUrl.isNotEmpty;
 
-    return InkWell(
+    return TapScale(
       onTap: () => context.push('/review/${review.id}'),
       child: Padding(
         padding: const EdgeInsets.fromLTRB(
@@ -263,7 +264,7 @@ class _PostListItem extends StatelessWidget {
   Widget build(BuildContext context) {
     final hasImage = post.imageUrls.isNotEmpty;
 
-    return InkWell(
+    return TapScale(
       onTap: () => context.push('/community/${post.id}'),
       child: Padding(
         padding: const EdgeInsets.fromLTRB(

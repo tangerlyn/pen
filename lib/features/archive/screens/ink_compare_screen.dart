@@ -5,6 +5,7 @@ import '../../../data/models/ink_model.dart';
 import '../../../shared/providers/providers.dart';
 import '../../../shared/widgets/ink_drop_circle.dart';
 import '../../../shared/widgets/center_toast.dart';
+import '../../../shared/widgets/tap_scale.dart';
 
 class InkCompareScreen extends ConsumerStatefulWidget {
   const InkCompareScreen({super.key, required this.baseInk});
@@ -244,7 +245,7 @@ class _InkCompareCard extends StatelessWidget {
           Positioned(
             top: -8,
             right: -8,
-            child: GestureDetector(
+            child: TapScale(
               onTap: onRemove,
               child: Container(
                 width: 22,

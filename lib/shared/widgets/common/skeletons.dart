@@ -67,7 +67,14 @@ class ReviewListTileSkeleton extends StatelessWidget {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    _sBox(h: 13, w: 120, m: const EdgeInsets.only(bottom: 8)),
+                    Row(
+                      children: [
+                        _sBox(h: 18, w: 34, r: 4),
+                        const SizedBox(width: 6),
+                        _sBox(h: 13, w: 100),
+                      ],
+                    ),
+                    const SizedBox(height: 8),
                     _sBox(h: 12, w: 160, m: const EdgeInsets.only(bottom: 8)),
                     _sBox(h: 12, w: 100),
                   ],

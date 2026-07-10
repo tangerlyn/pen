@@ -11,9 +11,12 @@ import '../../../features/home/providers/review_detail_provider.dart';
 import '../content_moderation.dart';
 import '../level_badge.dart';
 import '../../../data/models/user_model.dart';
+import '../tap_scale.dart';
 
-final _commentAuthorProvider =
-    StreamProvider.family<UserModel?, String>((ref, uid) {
+final _commentAuthorProvider = StreamProvider.family<UserModel?, String>((
+  ref,
+  uid,
+) {
   return ref.watch(userRepoProvider).watchUser(uid);
 });
 
@@ -69,16 +72,20 @@ class _CommentTileState extends ConsumerState<CommentTile> {
     showModalBottomSheet(
       context: context,
       shape: const RoundedRectangleBorder(
-          borderRadius: BorderRadius.vertical(top: Radius.circular(16))),
+        borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
+      ),
       builder: (_) => SafeArea(
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
             Container(
-              width: 40, height: 4,
+              width: 40,
+              height: 4,
               margin: const EdgeInsets.symmetric(vertical: 12),
               decoration: BoxDecoration(
-                  color: AppColors.divider, borderRadius: BorderRadius.circular(2)),
+                color: AppColors.divider,
+                borderRadius: BorderRadius.circular(2),
+              ),
             ),
             if (_isOwn) ...[
               ListTile(
@@ -91,14 +98,21 @@ class _CommentTileState extends ConsumerState<CommentTile> {
                 },
               ),
               ListTile(
-                leading: const Icon(Icons.delete_outline, color: AppColors.error),
-                title: const Text('삭제', style: TextStyle(color: AppColors.error)),
+                leading: const Icon(
+                  Icons.delete_outline,
+                  color: AppColors.error,
+                ),
+                title: const Text(
+                  '삭제',
+                  style: TextStyle(color: AppColors.error),
+                ),
                 onTap: () async {
                   Navigator.pop(context);
                   await Future.delayed(const Duration(milliseconds: 100));
                   FocusScope.of(context).unfocus();
-                  await ref.read(reviewRepoProvider).deleteComment(
-                      widget.reviewId, widget.comment.id);
+                  await ref
+                      .read(reviewRepoProvider)
+                      .deleteComment(widget.reviewId, widget.comment.id);
                   widget.onDeleted?.call();
                 },
               ),
@@ -108,19 +122,31 @@ class _CommentTileState extends ConsumerState<CommentTile> {
                 title: const Text('차단'),
                 onTap: () async {
                   Navigator.pop(context);
-                  await showBlockDialog(context, ref,
-                      targetUid: widget.comment.authorId,
-                      targetNickname: _nickname);
+                  await showBlockDialog(
+                    context,
+                    ref,
+                    targetUid: widget.comment.authorId,
+                    targetNickname: _nickname,
+                  );
                 },
               ),
               ListTile(
-                leading: const Icon(Icons.flag_outlined, color: AppColors.error),
-                title: const Text('신고하기',
-                    style: TextStyle(color: AppColors.error)),
+                leading: const Icon(
+                  Icons.flag_outlined,
+                  color: AppColors.error,
+                ),
+                title: const Text(
+                  '신고하기',
+                  style: TextStyle(color: AppColors.error),
+                ),
                 onTap: () {
                   Navigator.pop(context);
-                  showReportSheet(context, ref,
-                      targetType: 'comment', targetId: widget.comment.id);
+                  showReportSheet(
+                    context,
+                    ref,
+                    targetType: 'comment',
+                    targetId: widget.comment.id,
+                  );
                 },
               ),
             ],
@@ -138,7 +164,8 @@ class _CommentTileState extends ConsumerState<CommentTile> {
       widget.onEditEnd?.call();
       return;
     }
-    await ref.read(reviewRepoProvider)
+    await ref
+        .read(reviewRepoProvider)
         .updateComment(widget.reviewId, widget.comment.id, newBody);
     setState(() => _isEditing = false);
     widget.onEditEnd?.call();
@@ -146,14 +173,22 @@ class _CommentTileState extends ConsumerState<CommentTile> {
 
   @override
   Widget build(BuildContext context) {
-    final replies = ref.watch(reviewRepliesProvider(
-        (reviewId: widget.reviewId, commentId: widget.comment.id)));
-    final author =
-        ref.watch(_commentAuthorProvider(widget.comment.authorId)).valueOrNull;
+    final replies = ref.watch(
+      reviewRepliesProvider((
+        reviewId: widget.reviewId,
+        commentId: widget.comment.id,
+      )),
+    );
+    final author = ref
+        .watch(_commentAuthorProvider(widget.comment.authorId))
+        .valueOrNull;
     final authorLevel = author?.level ?? widget.comment.authorLevel;
 
     return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: AppSpacing.lg, vertical: 8),
+      padding: const EdgeInsets.symmetric(
+        horizontal: AppSpacing.lg,
+        vertical: 8,
+      ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -168,17 +203,21 @@ class _CommentTileState extends ConsumerState<CommentTile> {
                     padding: const EdgeInsets.only(left: 36, top: 6),
                     child: Column(
                       children: list
-                          .map((r) => _ReplyTile(
-                                reply: r,
-                                reviewId: widget.reviewId,
-                                commentId: widget.comment.id,
-                                currentUid: widget.currentUid,
-                                onReplyTap: () => widget.onReplyTap(
-                                    widget.comment.id, r.authorNickname),
-                                onDeleted: widget.onReplyDeleted,
-                                onEditStart: widget.onEditStart,
-                                onEditEnd: widget.onEditEnd,
-                              ))
+                          .map(
+                            (r) => _ReplyTile(
+                              reply: r,
+                              reviewId: widget.reviewId,
+                              commentId: widget.comment.id,
+                              currentUid: widget.currentUid,
+                              onReplyTap: () => widget.onReplyTap(
+                                widget.comment.id,
+                                r.authorNickname,
+                              ),
+                              onDeleted: widget.onReplyDeleted,
+                              onEditStart: widget.onEditStart,
+                              onEditEnd: widget.onEditEnd,
+                            ),
+                          )
                           .toList(),
                     ),
                   ),
@@ -202,28 +241,38 @@ class _CommentTileState extends ConsumerState<CommentTile> {
         const Text(
           '삭제된 댓글입니다.',
           style: TextStyle(
-              color: AppColors.textTertiary,
-              fontSize: 14,
-              fontStyle: FontStyle.italic),
+            color: AppColors.textTertiary,
+            fontSize: 14,
+            fontStyle: FontStyle.italic,
+          ),
         ),
       ],
     );
   }
 
-  Widget _buildActiveRow(BuildContext context, int currentLevel, String? profileImageUrl) {
+  Widget _buildActiveRow(
+    BuildContext context,
+    int currentLevel,
+    String? profileImageUrl,
+  ) {
     return Row(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        GestureDetector(
+        TapScale(
           onTap: () => navigateToProfile(context, ref, widget.comment.authorId),
           child: CircleAvatar(
             radius: 16,
             backgroundColor: AppColors.chipBackground,
-            backgroundImage: (profileImageUrl != null && profileImageUrl.isNotEmpty)
+            backgroundImage:
+                (profileImageUrl != null && profileImageUrl.isNotEmpty)
                 ? CachedNetworkImageProvider(profileImageUrl)
                 : null,
             child: (profileImageUrl == null || profileImageUrl.isEmpty)
-                ? const Icon(Icons.person, size: 16, color: AppColors.textTertiary)
+                ? const Icon(
+                    Icons.person,
+                    size: 16,
+                    color: AppColors.textTertiary,
+                  )
                 : null,
           ),
         ),
@@ -234,12 +283,19 @@ class _CommentTileState extends ConsumerState<CommentTile> {
             children: [
               Row(
                 children: [
-                  GestureDetector(
-                    onTap: () =>
-                        navigateToProfile(context, ref, widget.comment.authorId),
-                    child: Text(_nickname,
-                        style: const TextStyle(
-                            fontWeight: FontWeight.w600, fontSize: 13)),
+                  TapScale(
+                    onTap: () => navigateToProfile(
+                      context,
+                      ref,
+                      widget.comment.authorId,
+                    ),
+                    child: Text(
+                      _nickname,
+                      style: const TextStyle(
+                        fontWeight: FontWeight.w600,
+                        fontSize: 13,
+                      ),
+                    ),
                   ),
                   const SizedBox(width: 6),
                   LevelBadge(currentLevel),
@@ -247,30 +303,44 @@ class _CommentTileState extends ConsumerState<CommentTile> {
                   Text(
                     timeago.format(widget.comment.createdAt, locale: 'ko'),
                     style: const TextStyle(
-                        color: AppColors.textTertiary, fontSize: 11),
+                      color: AppColors.textTertiary,
+                      fontSize: 11,
+                    ),
                   ),
                   if (widget.comment.updatedAt != null) ...[
                     const SizedBox(width: 4),
-                    const Text('(수정됨)',
-                        style: TextStyle(
-                            color: AppColors.textTertiary, fontSize: 11)),
+                    const Text(
+                      '(수정됨)',
+                      style: TextStyle(
+                        color: AppColors.textTertiary,
+                        fontSize: 11,
+                      ),
+                    ),
                   ],
                   const Spacer(),
-                  GestureDetector(
-                    onTap: () => widget.onReplyTap(widget.comment.id, _nickname),
+                  TapScale(
+                    onTap: () =>
+                        widget.onReplyTap(widget.comment.id, _nickname),
                     child: const Padding(
                       padding: EdgeInsets.all(4),
-                      child: Text('답글',
-                          style: TextStyle(
-                              fontSize: 12, color: AppColors.textSecondary)),
+                      child: Text(
+                        '답글',
+                        style: TextStyle(
+                          fontSize: 12,
+                          color: AppColors.textSecondary,
+                        ),
+                      ),
                     ),
                   ),
-                  GestureDetector(
+                  TapScale(
                     onTap: _showMenu,
                     child: const Padding(
                       padding: EdgeInsets.all(4),
-                      child: Icon(Icons.more_vert,
-                          size: 16, color: AppColors.textTertiary),
+                      child: Icon(
+                        Icons.more_vert,
+                        size: 16,
+                        color: AppColors.textTertiary,
+                      ),
                     ),
                   ),
                 ],
@@ -283,8 +353,10 @@ class _CommentTileState extends ConsumerState<CommentTile> {
                   style: const TextStyle(fontSize: 14),
                   decoration: const InputDecoration(
                     isDense: true,
-                    contentPadding:
-                        EdgeInsets.symmetric(horizontal: 8, vertical: 6),
+                    contentPadding: EdgeInsets.symmetric(
+                      horizontal: 8,
+                      vertical: 6,
+                    ),
                   ),
                   maxLines: null,
                 ),
@@ -301,13 +373,14 @@ class _CommentTileState extends ConsumerState<CommentTile> {
                       },
                       child: const Text('취소'),
                     ),
-                    TextButton(
-                        onPressed: _saveEdit, child: const Text('저장')),
+                    TextButton(onPressed: _saveEdit, child: const Text('저장')),
                   ],
                 ),
               ] else ...[
-                Text(widget.comment.body ?? '',
-                    style: const TextStyle(fontSize: 14, height: 1.4)),
+                Text(
+                  widget.comment.body ?? '',
+                  style: const TextStyle(fontSize: 14, height: 1.4),
+                ),
               ],
             ],
           ),
@@ -366,17 +439,20 @@ class _ReplyTileState extends ConsumerState<_ReplyTile> {
     showModalBottomSheet(
       context: context,
       shape: const RoundedRectangleBorder(
-          borderRadius: BorderRadius.vertical(top: Radius.circular(16))),
+        borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
+      ),
       builder: (_) => SafeArea(
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
             Container(
-              width: 40, height: 4,
+              width: 40,
+              height: 4,
               margin: const EdgeInsets.symmetric(vertical: 12),
               decoration: BoxDecoration(
-                  color: AppColors.divider,
-                  borderRadius: BorderRadius.circular(2)),
+                color: AppColors.divider,
+                borderRadius: BorderRadius.circular(2),
+              ),
             ),
             if (_isOwn) ...[
               ListTile(
@@ -389,16 +465,25 @@ class _ReplyTileState extends ConsumerState<_ReplyTile> {
                 },
               ),
               ListTile(
-                leading:
-                    const Icon(Icons.delete_outline, color: AppColors.error),
-                title: const Text('삭제',
-                    style: TextStyle(color: AppColors.error)),
+                leading: const Icon(
+                  Icons.delete_outline,
+                  color: AppColors.error,
+                ),
+                title: const Text(
+                  '삭제',
+                  style: TextStyle(color: AppColors.error),
+                ),
                 onTap: () async {
                   Navigator.pop(context);
                   await Future.delayed(const Duration(milliseconds: 100));
                   FocusScope.of(context).unfocus();
-                  await ref.read(reviewRepoProvider).deleteReply(
-                      widget.reviewId, widget.commentId, widget.reply.id);
+                  await ref
+                      .read(reviewRepoProvider)
+                      .deleteReply(
+                        widget.reviewId,
+                        widget.commentId,
+                        widget.reply.id,
+                      );
                   widget.onDeleted?.call();
                 },
               ),
@@ -408,20 +493,31 @@ class _ReplyTileState extends ConsumerState<_ReplyTile> {
                 title: const Text('차단'),
                 onTap: () async {
                   Navigator.pop(context);
-                  await showBlockDialog(context, ref,
-                      targetUid: widget.reply.authorId,
-                      targetNickname: widget.reply.authorNickname);
+                  await showBlockDialog(
+                    context,
+                    ref,
+                    targetUid: widget.reply.authorId,
+                    targetNickname: widget.reply.authorNickname,
+                  );
                 },
               ),
               ListTile(
-                leading:
-                    const Icon(Icons.flag_outlined, color: AppColors.error),
-                title: const Text('신고하기',
-                    style: TextStyle(color: AppColors.error)),
+                leading: const Icon(
+                  Icons.flag_outlined,
+                  color: AppColors.error,
+                ),
+                title: const Text(
+                  '신고하기',
+                  style: TextStyle(color: AppColors.error),
+                ),
                 onTap: () {
                   Navigator.pop(context);
-                  showReportSheet(context, ref,
-                      targetType: 'reply', targetId: widget.reply.id);
+                  showReportSheet(
+                    context,
+                    ref,
+                    targetType: 'reply',
+                    targetId: widget.reply.id,
+                  );
                 },
               ),
             ],
@@ -439,16 +535,23 @@ class _ReplyTileState extends ConsumerState<_ReplyTile> {
       widget.onEditEnd?.call();
       return;
     }
-    await ref.read(reviewRepoProvider).updateReply(
-        widget.reviewId, widget.commentId, widget.reply.id, newBody);
+    await ref
+        .read(reviewRepoProvider)
+        .updateReply(
+          widget.reviewId,
+          widget.commentId,
+          widget.reply.id,
+          newBody,
+        );
     setState(() => _isEditing = false);
     widget.onEditEnd?.call();
   }
 
   @override
   Widget build(BuildContext context) {
-    final author =
-        ref.watch(_commentAuthorProvider(widget.reply.authorId)).valueOrNull;
+    final author = ref
+        .watch(_commentAuthorProvider(widget.reply.authorId))
+        .valueOrNull;
     final currentLevel = author?.level ?? widget.reply.authorLevel;
     final profileImageUrl = author?.profileImageUrl;
 
@@ -457,16 +560,21 @@ class _ReplyTileState extends ConsumerState<_ReplyTile> {
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          GestureDetector(
+          TapScale(
             onTap: () => navigateToProfile(context, ref, widget.reply.authorId),
             child: CircleAvatar(
               radius: 14,
               backgroundColor: AppColors.chipBackground,
-              backgroundImage: (profileImageUrl != null && profileImageUrl.isNotEmpty)
+              backgroundImage:
+                  (profileImageUrl != null && profileImageUrl.isNotEmpty)
                   ? CachedNetworkImageProvider(profileImageUrl)
                   : null,
               child: (profileImageUrl == null || profileImageUrl.isEmpty)
-                  ? const Icon(Icons.person, size: 14, color: AppColors.textTertiary)
+                  ? const Icon(
+                      Icons.person,
+                      size: 14,
+                      color: AppColors.textTertiary,
+                    )
                   : null,
             ),
           ),
@@ -477,12 +585,19 @@ class _ReplyTileState extends ConsumerState<_ReplyTile> {
               children: [
                 Row(
                   children: [
-                    GestureDetector(
-                      onTap: () =>
-                          navigateToProfile(context, ref, widget.reply.authorId),
-                      child: Text(widget.reply.authorNickname,
-                          style: const TextStyle(
-                              fontWeight: FontWeight.w600, fontSize: 13)),
+                    TapScale(
+                      onTap: () => navigateToProfile(
+                        context,
+                        ref,
+                        widget.reply.authorId,
+                      ),
+                      child: Text(
+                        widget.reply.authorNickname,
+                        style: const TextStyle(
+                          fontWeight: FontWeight.w600,
+                          fontSize: 13,
+                        ),
+                      ),
                     ),
                     const SizedBox(width: 6),
                     LevelBadge(currentLevel),
@@ -490,21 +605,30 @@ class _ReplyTileState extends ConsumerState<_ReplyTile> {
                     Text(
                       timeago.format(widget.reply.createdAt, locale: 'ko'),
                       style: const TextStyle(
-                          color: AppColors.textTertiary, fontSize: 11),
+                        color: AppColors.textTertiary,
+                        fontSize: 11,
+                      ),
                     ),
                     if (widget.reply.updatedAt != null) ...[
                       const SizedBox(width: 4),
-                      const Text('(수정됨)',
-                          style: TextStyle(
-                              color: AppColors.textTertiary, fontSize: 11)),
+                      const Text(
+                        '(수정됨)',
+                        style: TextStyle(
+                          color: AppColors.textTertiary,
+                          fontSize: 11,
+                        ),
+                      ),
                     ],
                     const Spacer(),
-                    GestureDetector(
+                    TapScale(
                       onTap: _showMenu,
                       child: const Padding(
                         padding: EdgeInsets.all(4),
-                        child: Icon(Icons.more_vert,
-                            size: 16, color: AppColors.textTertiary),
+                        child: Icon(
+                          Icons.more_vert,
+                          size: 16,
+                          color: AppColors.textTertiary,
+                        ),
                       ),
                     ),
                   ],
@@ -517,8 +641,10 @@ class _ReplyTileState extends ConsumerState<_ReplyTile> {
                     style: const TextStyle(fontSize: 14),
                     decoration: const InputDecoration(
                       isDense: true,
-                      contentPadding:
-                          EdgeInsets.symmetric(horizontal: 8, vertical: 6),
+                      contentPadding: EdgeInsets.symmetric(
+                        horizontal: 8,
+                        vertical: 6,
+                      ),
                     ),
                     maxLines: null,
                   ),
@@ -535,13 +661,14 @@ class _ReplyTileState extends ConsumerState<_ReplyTile> {
                         },
                         child: const Text('취소'),
                       ),
-                      TextButton(
-                          onPressed: _saveEdit, child: const Text('저장')),
+                      TextButton(onPressed: _saveEdit, child: const Text('저장')),
                     ],
                   ),
                 ] else ...[
-                  Text(widget.reply.body ?? '',
-                      style: const TextStyle(fontSize: 14, height: 1.4)),
+                  Text(
+                    widget.reply.body ?? '',
+                    style: const TextStyle(fontSize: 14, height: 1.4),
+                  ),
                 ],
               ],
             ),

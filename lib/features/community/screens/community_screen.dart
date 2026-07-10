@@ -9,6 +9,7 @@ import '../../../data/models/user_model.dart';
 import '../../../shared/providers/providers.dart';
 import '../../../shared/widgets/community/post_card.dart';
 import '../../../shared/widgets/common/skeletons.dart';
+import '../../../shared/widgets/tap_scale.dart';
 
 final _popularCardAuthorProvider =
     StreamProvider.family<UserModel?, String>((ref, uid) {
@@ -221,7 +222,7 @@ class _CategoryFilterBar extends StatelessWidget {
 
   Widget _chip(String? value, String label) {
     final isSelected = selected == value;
-    return GestureDetector(
+    return TapScale(
       onTap: () => onSelected(isSelected ? null : value),
       child: AnimatedContainer(
         duration: const Duration(milliseconds: 150),
@@ -356,7 +357,7 @@ class _PopularCard extends ConsumerWidget {
     final user = authorAsync.valueOrNull;
     final hasThumbnail = (post.imageUrls as List).isNotEmpty == true;
 
-    return GestureDetector(
+    return TapScale(
       onTap: onTap,
       child: Container(
         margin: const EdgeInsets.symmetric(horizontal: 6),
