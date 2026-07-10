@@ -13,6 +13,8 @@ class InkBookModel {
     this.visibility = 'public',
     this.ownerUid = '',
     this.ownerNickname = '',
+    this.pageStyle = 'lines',
+    this.viewMode = 'pageView',
   });
 
   final String id;
@@ -22,6 +24,8 @@ class InkBookModel {
   final BookVisibility visibility; // 'public' | 'followers' | 'private'
   final String ownerUid;
   final String ownerNickname;
+  final String pageStyle; // 'lines' | 'grid' | 'plain'
+  final String viewMode; // 'pageView' | 'scroll'
 
   bool get isPublic => visibility == 'public';
 
@@ -42,6 +46,8 @@ class InkBookModel {
             ((data['isPublic'] as bool? ?? false) ? 'public' : 'private'),
         ownerUid: data['ownerUid'] as String? ?? '',
         ownerNickname: data['ownerNickname'] as String? ?? '',
+        pageStyle: data['pageStyle'] as String? ?? 'lines',
+        viewMode: data['viewMode'] as String? ?? 'pageView',
       );
 
   Map<String, dynamic> toMap() => {
@@ -52,9 +58,17 @@ class InkBookModel {
         'isPublic': visibility == 'public', // 구버전 쿼리 하위 호환
         'ownerUid': ownerUid,
         'ownerNickname': ownerNickname,
+        'pageStyle': pageStyle,
+        'viewMode': viewMode,
       };
 
-  InkBookModel copyWith({String? visibility, String? ownerNickname}) => InkBookModel(
+  InkBookModel copyWith({
+    String? visibility,
+    String? ownerNickname,
+    String? pageStyle,
+    String? viewMode,
+  }) =>
+      InkBookModel(
         id: id,
         name: name,
         coverColor: coverColor,
@@ -62,6 +76,8 @@ class InkBookModel {
         visibility: visibility ?? this.visibility,
         ownerUid: ownerUid,
         ownerNickname: ownerNickname ?? this.ownerNickname,
+        pageStyle: pageStyle ?? this.pageStyle,
+        viewMode: viewMode ?? this.viewMode,
       );
 }
 

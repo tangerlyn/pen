@@ -20,7 +20,9 @@ import '../../../shared/providers/providers.dart';
 import '../../../shared/providers/ink_book_providers.dart';
 import '../../../shared/widgets/tap_scale.dart';
 import '../providers/ink_shape_provider.dart';
+import '../widgets/ink_detail_carousel.dart';
 import '../widgets/ink_swatch_shape.dart';
+import '../widgets/notebook_page.dart';
 
 // ── Enums ──────────────────────────────────────────────────────────────────
 
@@ -141,6 +143,20 @@ class _InkBookDetailScreenState extends ConsumerState<InkBookDetailScreen> {
       prefs.setString('inkBook_style_$id', _pageStyle.name),
       prefs.setString('inkBook_view_$id', _viewMode.name),
     ]);
+    // 다른 유저가 읽기 전용으로 볼 때도 동일하게 보이도록 book 문서에도 저장
+    final uid = ref.read(currentUidProvider);
+    if (uid != null) {
+      ref
+          .read(inkBookRepoProvider)
+          .updateBookDisplaySettings(
+            uid,
+            id,
+            pageStyle: _pageStyle.name,
+            viewMode: _viewMode.name,
+          )
+          .then((_) => debugPrint('[InkBook] displaySettings 저장 완료: $id'))
+          .catchError((e) => debugPrint('[InkBook] displaySettings 저장 실패: $e'));
+    }
   }
 
   // ── 앨범 저장 ─────────────────────────────────────────────────────────────
@@ -462,7 +478,7 @@ class _InkBookDetailScreenState extends ConsumerState<InkBookDetailScreen> {
               onTap: () {
                 Navigator.pop(context);
                 final pageCount =
-                    (entries.length / _NotebookPage._itemsPerPage).ceil();
+                    (entries.length / NotebookPage.itemsPerPage).ceil();
                 _saveToAlbum(pageCount.clamp(1, pageCount));
               },
             ),
@@ -1073,17 +1089,21 @@ class _InkBookDetailScreenState extends ConsumerState<InkBookDetailScreen> {
                                         }
                                         return RepaintBoundary(
                                           key: _pageKeys[pageIdx],
-                                          child: _NotebookPage(
+                                          child: NotebookPage(
                                             pageEntries: pageEntries,
-                                            allEntries: entries,
-                                            baseIndex: start,
-                                            uid: uid,
-                                            bookId: widget.bookId,
-                                            shape: shape,
-                                            pageStyle: _pageStyle,
-                                            onItemLongPress: (entry) =>
-                                                _showInkContextMenu(
-                                                    context, entry, uid),
+                                            pageStyle: notebookPageStyleFromString(
+                                                _pageStyle.name),
+                                            itemBuilder: (ctx, entry, i) => _SwatchCard(
+                                              entry: entry,
+                                              uid: uid,
+                                              bookId: widget.bookId,
+                                              shape: shape,
+                                              allEntries: entries,
+                                              absoluteIndex: start + i,
+                                              onLongPress: () =>
+                                                  _showInkContextMenu(
+                                                      context, entry, uid),
+                                            ),
                                           ),
                                         );
                                       },
@@ -1171,211 +1191,8 @@ Widget _sheetHandle({double topPadding = 6}) {
   );
 }
 
-// ── 공책 노트 페이지 ────────────────────────────────────────────────────────
-
-class _NotebookPage extends StatelessWidget {
-  const _NotebookPage({
-    required this.pageEntries,
-    required this.allEntries,
-    required this.baseIndex,
-    required this.uid,
-    required this.bookId,
-    required this.shape,
-    required this.pageStyle,
-    required this.onItemLongPress,
-  });
-  final List<InkChartModel> pageEntries;
-  final List<InkChartModel> allEntries;
-  final int baseIndex;
-  final String uid;
-  final String bookId;
-  final InkSwatchShape shape;
-  final _PageStyle pageStyle;
-  final void Function(InkChartModel) onItemLongPress;
-
-  @override
-  Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.fromLTRB(16, 8, 16, 0),
-      child: Container(
-        decoration: BoxDecoration(
-          color: const Color(0xFFFFFCF5),
-          borderRadius: BorderRadius.circular(4),
-          boxShadow: const [
-            BoxShadow(
-              color: Color(0x30000000),
-              blurRadius: 10,
-              offset: Offset(3, 4),
-            ),
-          ],
-        ),
-        child: CustomPaint(
-          painter: _NotebookLinePainter(pageStyle),
-          child: Row(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              if (pageStyle == _PageStyle.lines) const _LeftMargin(),
-              Expanded(
-                child: GridView.builder(
-                  padding: EdgeInsets.fromLTRB(
-                    8,
-                    pageStyle == _PageStyle.lines ? 56 : 16,
-                    8,
-                    8,
-                  ),
-                  physics: const NeverScrollableScrollPhysics(),
-                  gridDelegate:
-                      const SliverGridDelegateWithFixedCrossAxisCount(
-                    crossAxisCount: 3,
-                    crossAxisSpacing: 6,
-                    mainAxisSpacing: 10,
-                    childAspectRatio: 0.65,
-                  ),
-                  itemCount: _itemsPerPage,
-                  itemBuilder: (_, i) {
-                    if (i < pageEntries.length) {
-                      final entry = pageEntries[i];
-                      return _SwatchCard(
-                        entry: entry,
-                        uid: uid,
-                        bookId: bookId,
-                        shape: shape,
-                        allEntries: allEntries,
-                        absoluteIndex: baseIndex + i,
-                        onLongPress: () => onItemLongPress(entry),
-                      );
-                    }
-                    return const _EmptySlot();
-                  },
-                ),
-              ),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-
-  static const _itemsPerPage = 9;
-}
-
-// ── 노트 왼쪽 여백 ──────────────────────────────────────────────────────────
-
-class _LeftMargin extends StatelessWidget {
-  const _LeftMargin();
-
-  @override
-  Widget build(BuildContext context) {
-    return SizedBox(
-      width: 30,
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-        children: List.generate(
-          3,
-          (_) => Container(
-            width: 16,
-            height: 16,
-            decoration: BoxDecoration(
-              color: const Color(0xFFEAEAEA),
-              shape: BoxShape.circle,
-              border: Border.all(color: const Color(0xFFCCCCCC)),
-            ),
-          ),
-        ),
-      ),
-    );
-  }
-}
-
-// ── 노트 줄 배경 CustomPainter ────────────────────────────────────────────
-
-class _NotebookLinePainter extends CustomPainter {
-  const _NotebookLinePainter(this.style);
-  final _PageStyle style;
-
-  @override
-  void paint(Canvas canvas, Size size) {
-    if (style == _PageStyle.plain) return;
-
-    final linePaint = Paint()
-      ..color = const Color(0xFFD0DCF0).withValues(alpha: 0.7)
-      ..strokeWidth = 0.6;
-
-    if (style == _PageStyle.lines) {
-      final redPaint = Paint()
-        ..color = const Color(0xFFE8A0A0)
-        ..strokeWidth = 1.8;
-      canvas.drawLine(const Offset(30, 48), Offset(size.width, 48), redPaint);
-      canvas.drawLine(const Offset(30, 0), Offset(30, size.height), redPaint);
-      for (double y = 76; y < size.height - 8; y += 26) {
-        canvas.drawLine(Offset(38, y), Offset(size.width - 6, y), linePaint);
-      }
-    } else {
-      // grid: 빨간 줄 없음, 격자만
-      for (double y = 26; y < size.height - 8; y += 26) {
-        canvas.drawLine(Offset(6, y), Offset(size.width - 6, y), linePaint);
-      }
-      for (double x = 32; x < size.width - 6; x += 26) {
-        canvas.drawLine(Offset(x, 6), Offset(x, size.height - 8), linePaint);
-      }
-    }
-  }
-
-  @override
-  bool shouldRepaint(covariant _NotebookLinePainter old) =>
-      old.style != style;
-}
-
-// ── 빈 슬롯 (점선 원) ──────────────────────────────────────────────────────
-
-class _EmptySlot extends StatelessWidget {
-  const _EmptySlot();
-
-  @override
-  Widget build(BuildContext context) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.center,
-      children: [
-        AspectRatio(
-          aspectRatio: 1.0,
-          child: Padding(
-            padding: const EdgeInsets.all(6),
-            child: CustomPaint(painter: const _DashedCirclePainter()),
-          ),
-        ),
-        const SizedBox(height: 28),
-      ],
-    );
-  }
-}
-
-class _DashedCirclePainter extends CustomPainter {
-  const _DashedCirclePainter();
-
-  @override
-  void paint(Canvas canvas, Size size) {
-    final paint = Paint()
-      ..color = const Color(0xFFD4C5A9)
-      ..style = PaintingStyle.stroke
-      ..strokeWidth = 1.2;
-    final center = Offset(size.width / 2, size.height / 2);
-    final radius = math.min(size.width, size.height) / 2;
-    const dashCount = 24;
-    const dashAngle = 2 * math.pi / dashCount;
-    for (int i = 0; i < dashCount; i += 2) {
-      canvas.drawArc(
-        Rect.fromCircle(center: center, radius: radius),
-        i * dashAngle,
-        dashAngle * 0.65,
-        false,
-        paint,
-      );
-    }
-  }
-
-  @override
-  bool shouldRepaint(covariant CustomPainter old) => false;
-}
+// ── 공책 노트 페이지 렌더링은 widgets/notebook_page.dart로 이동
+// (읽기 전용 화면과 동일한 코드를 공유해 소유자가 설정한 모양 그대로 보이도록 함) ──
 
 // ── 스와치 카드 ──────────────────────────────────────────────────────────
 
@@ -1610,7 +1427,7 @@ class _ReorderCard extends StatelessWidget {
 
 // ── 잉크 상세 바텀시트 ────────────────────────────────────────────────────
 
-class _DetailSheet extends StatefulWidget {
+class _DetailSheet extends StatelessWidget {
   const _DetailSheet({
     required this.charts,
     required this.initialIndex,
@@ -1625,113 +1442,16 @@ class _DetailSheet extends StatefulWidget {
   final InkSwatchShape shape;
 
   @override
-  State<_DetailSheet> createState() => _DetailSheetState();
-}
-
-class _DetailSheetState extends State<_DetailSheet> {
-  late final PageController _pageCtrl;
-  late int _currentIndex;
-
-  @override
-  void initState() {
-    super.initState();
-    _currentIndex = widget.initialIndex;
-    _pageCtrl = PageController(initialPage: widget.initialIndex);
-  }
-
-  @override
-  void dispose() {
-    _pageCtrl.dispose();
-    super.dispose();
-  }
-
-  @override
   Widget build(BuildContext context) {
-    return Container(
-      decoration: const BoxDecoration(
-        color: Color(0xFFFFFDF7),
-        borderRadius: BorderRadius.vertical(top: Radius.circular(22)),
-      ),
-      child: Column(
-        children: [
-          Padding(
-            padding: const EdgeInsets.fromLTRB(20, 10, 20, 6),
-            child: Stack(
-              alignment: Alignment.center,
-              children: [
-                Container(
-                  width: 36,
-                  height: 4,
-                  decoration: BoxDecoration(
-                    color: const Color(0xFFECE4D4),
-                    borderRadius: BorderRadius.circular(2),
-                  ),
-                ),
-                Align(
-                  alignment: Alignment.centerRight,
-                  child: Text(
-                    '${_currentIndex + 1} / ${widget.charts.length}',
-                    style: const TextStyle(
-                        fontSize: 13, color: AppColors.textTertiary),
-                  ),
-                ),
-              ],
-            ),
-          ),
-          Expanded(
-            child: Builder(builder: (ctx) {
-              final imgH = MediaQuery.of(ctx).size.width * 0.68;
-              const imgTop = 20.0;
-              return Stack(
-                children: [
-                  PageView.builder(
-                    controller: _pageCtrl,
-                    itemCount: widget.charts.length,
-                    onPageChanged: (i) =>
-                        setState(() => _currentIndex = i),
-                    itemBuilder: (_, i) => _DetailPage(
-                      entry: widget.charts[i],
-                      uid: widget.uid,
-                      bookId: widget.bookId,
-                      shape: widget.shape,
-                      onDeleted: () => Navigator.pop(context),
-                    ),
-                  ),
-                  if (_currentIndex > 0)
-                    Positioned(
-                      left: 8,
-                      top: imgTop,
-                      height: imgH,
-                      child: Center(
-                        child: _NavBtn(
-                          icon: Icons.chevron_left,
-                          onPressed: () => _pageCtrl.previousPage(
-                            duration: const Duration(milliseconds: 300),
-                            curve: Curves.easeInOut,
-                          ),
-                        ),
-                      ),
-                    ),
-                  if (_currentIndex < widget.charts.length - 1)
-                    Positioned(
-                      right: 8,
-                      top: imgTop,
-                      height: imgH,
-                      child: Center(
-                        child: _NavBtn(
-                          icon: Icons.chevron_right,
-                          onPressed: () => _pageCtrl.nextPage(
-                            duration: const Duration(milliseconds: 300),
-                            curve: Curves.easeInOut,
-                          ),
-                        ),
-                      ),
-                    ),
-                ],
-              );
-            }),
-          ),
-        ],
+    return InkDetailCarousel(
+      itemCount: charts.length,
+      initialIndex: initialIndex,
+      pageBuilder: (ctx, i) => _DetailPage(
+        entry: charts[i],
+        uid: uid,
+        bookId: bookId,
+        shape: shape,
+        onDeleted: () => Navigator.pop(context),
       ),
     );
   }
@@ -1888,30 +1608,6 @@ class _DetailPage extends ConsumerWidget {
   }
 }
 
-// ── 화살표 버튼 ───────────────────────────────────────────────────────────
-
-class _NavBtn extends StatelessWidget {
-  const _NavBtn({required this.icon, required this.onPressed});
-  final IconData icon;
-  final VoidCallback onPressed;
-
-  @override
-  Widget build(BuildContext context) {
-    return TapScale(
-      onTap: onPressed,
-      child: Container(
-        width: 40,
-        height: 40,
-        decoration: BoxDecoration(
-          color: Colors.black.withValues(alpha: 0.28),
-          shape: BoxShape.circle,
-        ),
-        child: Icon(icon, size: 26, color: Colors.white),
-      ),
-    );
-  }
-}
-
 // ── 빈 상태 ───────────────────────────────────────────────────────────────
 
 class _EmptyState extends StatelessWidget {
@@ -1947,6 +1643,11 @@ class _EmptyState extends StatelessWidget {
           const SizedBox(height: 28),
           ElevatedButton.icon(
             onPressed: () => context.push('/ink-chart/$bookId/add'),
+            style: ElevatedButton.styleFrom(
+              minimumSize: Size.zero,
+              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 14),
+              tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+            ),
             icon: const Icon(Icons.add, size: 18),
             label: const Text('잉크 추가'),
           ),
@@ -2093,6 +1794,19 @@ class _ShapePickerSheet extends StatelessWidget {
                     ref
                         .read(inkSwatchShapeProvider.notifier)
                         .setShape(shape);
+                    // 다른 유저가 읽기 전용으로 볼 때도 동일한 모양이 보이도록
+                    // 계정(users/{uid}) 문서에도 저장 — 스와치 모양은 책별이 아니라
+                    // 계정 전체에 적용되는 설정이라 여기 저장한다.
+                    final uid = ref.read(currentUidProvider);
+                    if (uid != null) {
+                      ref
+                          .read(userRepoProvider)
+                          .updateUser(uid, {'inkSwatchShape': shape.name})
+                          .then((_) =>
+                              debugPrint('[InkBook] inkSwatchShape 저장 완료: ${shape.name}'))
+                          .catchError((e) =>
+                              debugPrint('[InkBook] inkSwatchShape 저장 실패: $e'));
+                    }
                     Navigator.pop(context);
                   },
                   child: Column(

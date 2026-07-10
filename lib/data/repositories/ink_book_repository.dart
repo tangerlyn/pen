@@ -1,4 +1,5 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:flutter/foundation.dart';
 import 'package:uuid/uuid.dart';
 import '../models/ink_book_model.dart';
 import '../models/ink_chart_model.dart';
@@ -23,8 +24,13 @@ class InkBookRepository {
   Future<String> createBook(String uid, String name, String coverColor) async {
     final id = const Uuid().v4();
     await _books(uid).doc(id).set(
-      InkBookModel(id: id, name: name, coverColor: coverColor, createdAt: DateTime.now())
-          .toMap(),
+      InkBookModel(
+        id: id,
+        name: name,
+        coverColor: coverColor,
+        createdAt: DateTime.now(),
+        ownerUid: uid,
+      ).toMap(),
     );
     return id;
   }
@@ -45,6 +51,19 @@ class InkBookRepository {
         'ownerNickname': ownerNickname,
       });
 
+  /// 페이지 스타일/보기 방식 저장 — 다른 유저가 읽기 전용으로 볼 때도
+  /// 소유자가 설정한 그대로 보이도록 book 문서에 함께 저장한다.
+  Future<void> updateBookDisplaySettings(
+    String uid,
+    String bookId, {
+    required String pageStyle, // 'lines' | 'grid' | 'plain'
+    required String viewMode, // 'pageView' | 'scroll'
+  }) =>
+      _books(uid).doc(bookId).update({
+        'pageStyle': pageStyle,
+        'viewMode': viewMode,
+      });
+
   /// 전체 공개 잉크북 목록 (공개 범위 = 'public')
   Future<List<InkBookModel>> getPublicBooks({int limit = 30}) async {
     final snap = await _db
@@ -57,23 +76,32 @@ class InkBookRepository {
   }
 
   /// 특정 유저의 전체 공개 잉크북 (공개 범위 = 'public')
+  ///
+  /// uid를 이미 알고 있으므로 collectionGroup 대신 해당 유저의 서브컬렉션을 직접 조회한다
+  /// (ownerUid가 비어있는 예전 문서도 걸리도록). 단, Firestore 보안 규칙이
+  /// resource.data(visibility)를 검사하는 per-document 규칙이라 쿼리 자체에
+  /// 그 필드를 where로 명시해야 한다 — where 없이 통째로 읽으면 결과셋에
+  /// 규칙을 통과 못하는 문서(예: private)가 섞여 있을 수 있어 쿼리 전체가
+  /// PERMISSION_DENIED로 거부된다. 클라이언트 필터링만으로는 안 됨.
   Future<List<InkBookModel>> getPublicBooksForUser(String uid) async {
-    final snap = await _db
-        .collectionGroup('inkBooks')
-        .where('isPublic', isEqualTo: true)
-        .where('ownerUid', isEqualTo: uid)
-        .get();
-    return snap.docs.map((d) => InkBookModel.fromMap(d.data(), d.id)).toList();
+    try {
+      final snap = await _books(uid).where('visibility', isEqualTo: 'public').get();
+      return snap.docs.map((d) => InkBookModel.fromMap(d.data(), d.id)).toList();
+    } catch (e) {
+      debugPrint('[InkBook] getPublicBooksForUser($uid) 실패: $e');
+      rethrow;
+    }
   }
 
   /// 특정 유저의 팔로워 공개 잉크북 (공개 범위 = 'followers')
   Future<List<InkBookModel>> getFollowersOnlyBooksForUser(String uid) async {
-    final snap = await _db
-        .collectionGroup('inkBooks')
-        .where('visibility', isEqualTo: 'followers')
-        .where('ownerUid', isEqualTo: uid)
-        .get();
-    return snap.docs.map((d) => InkBookModel.fromMap(d.data(), d.id)).toList();
+    try {
+      final snap = await _books(uid).where('visibility', isEqualTo: 'followers').get();
+      return snap.docs.map((d) => InkBookModel.fromMap(d.data(), d.id)).toList();
+    } catch (e) {
+      debugPrint('[InkBook] getFollowersOnlyBooksForUser($uid) 실패: $e');
+      rethrow;
+    }
   }
 
   Future<InkBookModel?> getBook(String uid, String bookId) async {

@@ -3,8 +3,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../../../core/theme/app_theme.dart';
-import '../../../shared/widgets/level_badge.dart';
-import '../../../data/models/ink_book_model.dart';
 import '../../../data/models/user_model.dart';
 import '../../../shared/providers/providers.dart';
 import '../../../shared/providers/user_providers.dart';
@@ -14,6 +12,7 @@ import '../../../shared/widgets/community/post_card.dart';
 import '../../../shared/widgets/review/review_list_tile.dart';
 import '../../../shared/widgets/tap_scale.dart';
 import '../providers/user_activity_provider.dart';
+import '../widgets/notebook_card.dart';
 
 // 네이비 기반 색상
 const _kNavyTint  = Color(0xFFEEF2F8);
@@ -85,18 +84,6 @@ class _UserProfileScreenState extends ConsumerState<UserProfileScreen>
       appBar: AppBar(
         scrolledUnderElevation: 0,
         elevation: 0,
-        title: userAsync.when(
-          data: (u) => Text(
-            u?.nickname ?? '',
-            style: const TextStyle(
-              fontSize: 16,
-              fontWeight: FontWeight.w600,
-              color: AppColors.textPrimary,
-            ),
-          ),
-          loading: () => const SizedBox.shrink(),
-          error: (e, st) => const Text('프로필'),
-        ),
       ),
       body: NestedScrollView(
         headerSliverBuilder: (context, _) => [
@@ -171,23 +158,14 @@ class _ProfileHeader extends ConsumerWidget {
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Expanded(
-                            child: Row(
-                              crossAxisAlignment: CrossAxisAlignment.center,
-                              children: [
-                                Flexible(
-                                  child: Text(
-                                    user.nickname,
-                                    style: const TextStyle(
-                                      fontSize: 20,
-                                      fontWeight: FontWeight.w700,
-                                      color: AppColors.textPrimary,
-                                      letterSpacing: -0.3,
-                                    ),
-                                  ),
-                                ),
-                                const SizedBox(width: 8),
-                                LevelBadge(user.level),
-                              ],
+                            child: Text(
+                              user.nickname,
+                              style: const TextStyle(
+                                fontSize: 20,
+                                fontWeight: FontWeight.w700,
+                                color: AppColors.textPrimary,
+                                letterSpacing: -0.3,
+                              ),
                             ),
                           ),
                           if (!isOwnProfile && currentUid != null) ...[
@@ -515,65 +493,23 @@ class _InkChartTab extends ConsumerWidget {
           padding: const EdgeInsets.all(16),
           gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
             crossAxisCount: 2,
-            mainAxisSpacing: 12,
-            crossAxisSpacing: 12,
-            childAspectRatio: 0.9,
+            crossAxisSpacing: 14,
+            mainAxisSpacing: 16,
+            childAspectRatio: 0.72,
           ),
           itemCount: books.length,
-          itemBuilder: (_, i) => _InkBookCard(book: books[i]),
+          itemBuilder: (_, i) {
+            final book = books[i];
+            return NotebookCard(
+              book: book,
+              uid: uid,
+              onTap: () => context.push(
+                '/public-ink-books/$uid/${book.id}?name=${Uri.encodeComponent(book.name)}',
+              ),
+            );
+          },
         );
       },
-    );
-  }
-}
-
-class _InkBookCard extends StatelessWidget {
-  const _InkBookCard({required this.book});
-  final InkBookModel book;
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      decoration: BoxDecoration(
-        color: book.color.withValues(alpha: 0.15),
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: book.color.withValues(alpha: 0.35), width: 1.5),
-      ),
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          Container(
-            width: 64,
-            height: 64,
-            decoration: BoxDecoration(
-              color: book.color,
-              borderRadius: BorderRadius.circular(14),
-              boxShadow: [
-                BoxShadow(
-                  color: book.color.withValues(alpha: 0.4),
-                  blurRadius: 10,
-                  offset: const Offset(0, 4),
-                ),
-              ],
-            ),
-          ),
-          const SizedBox(height: 12),
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 8),
-            child: Text(
-              book.name,
-              style: const TextStyle(
-                fontWeight: FontWeight.w700,
-                fontSize: 13,
-                color: AppColors.textPrimary,
-              ),
-              textAlign: TextAlign.center,
-              maxLines: 2,
-              overflow: TextOverflow.ellipsis,
-            ),
-          ),
-        ],
-      ),
     );
   }
 }

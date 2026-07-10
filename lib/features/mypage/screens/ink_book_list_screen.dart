@@ -8,6 +8,7 @@ import '../../../shared/providers/providers.dart';
 import '../../../shared/providers/ink_book_providers.dart';
 import '../../../shared/widgets/center_toast.dart';
 import '../../../shared/widgets/tap_scale.dart';
+import '../widgets/notebook_card.dart';
 
 class InkBookListScreen extends ConsumerWidget {
   const InkBookListScreen({super.key});
@@ -74,107 +75,14 @@ class _NotebookCard extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final countAsync = ref.watch(inkChartInBookProvider((uid, book.id)));
-    final count = countAsync.maybeWhen(data: (l) => l.length, orElse: () => 0);
-    final coverColor = book.color;
-    final isDark = ThemeData.estimateBrightnessForColor(coverColor) == Brightness.dark;
-    final textColor = isDark ? Colors.white : const Color(0xFF2D2D2D);
-    final spineColor = Color.alphaBlend(Colors.black.withValues(alpha: 0.12), coverColor);
-
-    return GestureDetector(
+    return NotebookCard(
+      book: book,
+      uid: uid,
       onTap: () => context.push('/ink-chart/${book.id}'),
       onLongPress: () {
         HapticFeedback.mediumImpact();
         _showBookOptions(context, ref);
       },
-      child: Container(
-        decoration: BoxDecoration(
-          borderRadius: BorderRadius.circular(10),
-          boxShadow: const [
-            BoxShadow(
-              color: Color(0x28000000),
-              blurRadius: 8,
-              offset: Offset(2, 4),
-            ),
-          ],
-        ),
-        child: ClipRRect(
-          borderRadius: BorderRadius.circular(10),
-          child: Row(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              // 스프링 바인딩 척추
-              Container(
-                width: 22,
-                color: spineColor,
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                  children: List.generate(
-                    5,
-                    (_) => Container(
-                      width: 14,
-                      height: 14,
-                      decoration: BoxDecoration(
-                        color: Colors.white.withValues(alpha: 0.55),
-                        shape: BoxShape.circle,
-                        border: Border.all(
-                          color: Colors.white.withValues(alpha: 0.3),
-                          width: 1,
-                        ),
-                      ),
-                    ),
-                  ),
-                ),
-              ),
-              // 표지 본체
-              Expanded(
-                child: Container(
-                  color: coverColor,
-                  padding: const EdgeInsets.fromLTRB(12, 16, 10, 14),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      // 줄 장식
-                      Container(
-                        height: 1.5,
-                        color: Colors.white.withValues(alpha: 0.35),
-                        margin: const EdgeInsets.only(bottom: 12),
-                      ),
-                      // 책 아이콘
-                      Icon(
-                        Icons.water_drop_outlined,
-                        size: 22,
-                        color: textColor.withValues(alpha: 0.55),
-                      ),
-                      const Spacer(),
-                      // 공책 이름
-                      Text(
-                        book.name,
-                        style: TextStyle(
-                          fontSize: 14,
-                          fontWeight: FontWeight.w700,
-                          color: textColor,
-                          height: 1.3,
-                        ),
-                        maxLines: 2,
-                        overflow: TextOverflow.ellipsis,
-                      ),
-                      const SizedBox(height: 4),
-                      Text(
-                        '$count개',
-                        style: TextStyle(
-                          fontSize: 11,
-                          color: textColor.withValues(alpha: 0.65),
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              ),
-            ],
-          ),
-        ),
-      ),
     );
   }
 
@@ -574,6 +482,11 @@ class _EmptyState extends StatelessWidget {
                 borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
               ),
               builder: (_) => _CreateBookSheet(uid: uid),
+            ),
+            style: ElevatedButton.styleFrom(
+              minimumSize: Size.zero,
+              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 14),
+              tapTargetSize: MaterialTapTargetSize.shrinkWrap,
             ),
             icon: const Icon(Icons.add, size: 18),
             label: const Text('첫 번째 공책 만들기'),

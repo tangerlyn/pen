@@ -26,6 +26,7 @@ import '../../features/mypage/screens/inquiry_screen.dart';
 import '../../features/mypage/screens/ink_book_list_screen.dart';
 import '../../features/archive/screens/archive_search_screen.dart';
 import '../../features/mypage/screens/ink_book_detail_screen.dart';
+import '../../features/mypage/screens/ink_book_readonly_screen.dart';
 import '../../features/mypage/screens/ink_chart_add_screen.dart';
 import '../../features/mypage/screens/user_profile_screen.dart';
 import '../../features/mypage/screens/terms_screen.dart';
@@ -234,6 +235,16 @@ final routerProvider = Provider<GoRouter>((ref) {
       GoRoute(
         path: '/public-ink-books',
         pageBuilder: (_, state) => _slidePage(state, const PublicInkBooksScreen()),
+        routes: [
+          GoRoute(
+            path: ':uid/:bookId',
+            pageBuilder: (_, state) => _slidePage(state, InkBookReadonlyScreen(
+              uid: state.pathParameters['uid']!,
+              bookId: state.pathParameters['bookId']!,
+              bookName: state.uri.queryParameters['name'],
+            )),
+          ),
+        ],
       ),
     ],
   );

@@ -57,3 +57,10 @@ final inkChartReadonlyProvider =
   final snap = await ref.read(inkBookRepoProvider).watchChart(uid, bookId).first;
   return snap;
 });
+
+/// 단일 잉크북 조회 — 읽기 전용 화면에서 소유자가 설정한 pageStyle/viewMode를 읽어올 때 사용
+final singleInkBookProvider =
+    FutureProvider.family<InkBookModel?, (String uid, String bookId)>((ref, args) {
+  final (uid, bookId) = args;
+  return ref.read(inkBookRepoProvider).getBook(uid, bookId);
+});

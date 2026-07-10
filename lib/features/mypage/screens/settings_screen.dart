@@ -1,12 +1,8 @@
-import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../../../core/theme/app_theme.dart';
-import '../../../core/utils/search_utils.dart';
 import '../../../shared/providers/providers.dart';
-import '../../../shared/widgets/center_toast.dart';
 import '../providers/notification_settings_provider.dart';
 
 class SettingsScreen extends ConsumerWidget {
@@ -72,90 +68,9 @@ class SettingsScreen extends ConsumerWidget {
             title: const Text('회원탈퇴', style: TextStyle(color: AppColors.error)),
             onTap: () => _showDeleteAccountDialog(context, ref),
           ),
-          if (kDebugMode) ...[
-            const Divider(),
-            const _SectionHeader('개발자 설정'),
-            ListTile(
-              title: const Text('아카이브 DB 초기화 (CSV)'),
-              subtitle: const Text('assets/info_csv 내 CSV 파일을 Firestore에 업로드'),
-              trailing: const Icon(Icons.cloud_upload),
-              onTap: () async {
-                try {
-                  showCenterToast(context, message: 'DB 초기화 시작...');
-                  await ref.read(archiveRepoProvider).initializeDatabase();
-                  if (context.mounted) {
-                    showCenterToast(context, message: 'DB 초기화 완료!', icon: Icons.check_circle);
-                  }
-                } catch (e) {
-                  if (context.mounted) {
-                    showCenterToast(context,
-                        message: '초기화 실패: $e', icon: Icons.error_outline, iconColor: AppColors.error);
-                  }
-                }
-              },
-            ),
-            ListTile(
-              title: const Text('검색 인덱스 생성 (1회용)'),
-              subtitle: const Text('기존 리뷰·게시글에 searchIndex 필드 추가'),
-              trailing: const Icon(Icons.manage_search),
-              onTap: () => _runSearchIndexMigration(context),
-            ),
-          ],
         ],
       ),
     );
-  }
-
-  Future<void> _runSearchIndexMigration(BuildContext context) async {
-    final db = FirebaseFirestore.instance;
-    int updated = 0;
-    int failed = 0;
-
-    showCenterToast(context, message: '검색 인덱스 생성 중...');
-
-    try {
-      // reviews
-      final reviewSnap = await db.collection('reviews').get();
-      for (final doc in reviewSnap.docs) {
-        try {
-          final data = doc.data();
-          final title = data['title'] as String? ?? '';
-          final body = data['body'] as String? ?? '';
-          await doc.reference.update({
-            'searchIndex': SearchUtils.buildIndex(title, body),
-          });
-          updated++;
-        } catch (_) {
-          failed++;
-        }
-      }
-
-      // posts
-      final postSnap = await db.collection('posts').get();
-      for (final doc in postSnap.docs) {
-        try {
-          final data = doc.data();
-          final title = data['title'] as String? ?? '';
-          final body = data['body'] as String? ?? '';
-          await doc.reference.update({
-            'searchIndex': SearchUtils.buildIndex(title, body),
-          });
-          updated++;
-        } catch (_) {
-          failed++;
-        }
-      }
-
-      if (context.mounted) {
-        showCenterToast(context,
-            message: '완료: $updated건 업데이트, $failed건 실패', icon: Icons.check_circle);
-      }
-    } catch (e) {
-      if (context.mounted) {
-        showCenterToast(context,
-            message: '오류: $e', icon: Icons.error_outline, iconColor: AppColors.error);
-      }
-    }
   }
 
   void _showLogoutDialog(BuildContext context, WidgetRef ref) {

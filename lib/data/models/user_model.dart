@@ -13,6 +13,7 @@ class UserModel {
     this.exp = 0,
     required this.loginProvider,
     required this.createdAt,
+    this.inkSwatchShape = 'circle',
   });
 
   final String uid;
@@ -28,6 +29,9 @@ class UserModel {
 
   final String loginProvider;
   final DateTime createdAt;
+
+  /// 잉크 스와치 모양 (circle | bottle | brushStroke) — 잉크 차트 전체에 적용되는 설정
+  final String inkSwatchShape;
 
   /// 파생 속성 — Firestore에는 저장하지 않음
   int get level => LevelSystem.levelFromExp(exp);
@@ -49,6 +53,7 @@ class UserModel {
       createdAt: data['createdAt'] is Timestamp
           ? (data['createdAt'] as Timestamp).toDate()
           : (data['createdAt'] as DateTime? ?? DateTime.now()),
+      inkSwatchShape: data['inkSwatchShape'] as String? ?? 'circle',
     );
   }
 
@@ -62,6 +67,7 @@ class UserModel {
         'exp': exp,
         'loginProvider': loginProvider,
         'createdAt': createdAt,
+        'inkSwatchShape': inkSwatchShape,
       };
 
   UserModel copyWith({
@@ -75,6 +81,7 @@ class UserModel {
     int? exp,
     String? loginProvider,
     DateTime? createdAt,
+    String? inkSwatchShape,
   }) {
     return UserModel(
       uid: uid ?? this.uid,
@@ -87,6 +94,7 @@ class UserModel {
       exp: exp ?? this.exp,
       loginProvider: loginProvider ?? this.loginProvider,
       createdAt: createdAt ?? this.createdAt,
+      inkSwatchShape: inkSwatchShape ?? this.inkSwatchShape,
     );
   }
 }

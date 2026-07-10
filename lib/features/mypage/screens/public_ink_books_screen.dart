@@ -50,7 +50,8 @@ class PublicInkBooksScreen extends ConsumerWidget {
               final book = books[i];
               return TapScale(
                 onTap: () => context.push(
-                  '/public-ink-books/${book.ownerUid}/${book.id}',
+                  '/public-ink-books/${book.ownerUid}/${book.id}'
+                  '?name=${Uri.encodeComponent(book.name)}',
                 ),
                 child: Container(
                   decoration: BoxDecoration(
