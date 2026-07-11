@@ -26,11 +26,13 @@
   - 선택 시 해당 카테고리 리뷰만 표시
 - **뷰 전환 버튼** — 그리드(2열) ↔ 리스트 토글 (설정 SharedPreferences에 저장)
 - **그리드 뷰 (`ReviewFeedCard`)** — 2열, 별점 + 좋아요/댓글 수 + 작성 시간 표시, 카드 탭 → `/review/:reviewId`
-- **리스트 뷰 (`_ReviewListTile`)** — 한 줄씩 표시
-  - 제목 + 잉크/만년필 태그 칩 + 본문 미리보기 + 별점
+- **리스트 뷰 (`ReviewListTile`, `lib/shared/widgets/review/review_list_tile.dart`)** — 한 줄씩 표시
+  - 별점 뱃지(노란 별 + 점수) + 제목
+  - 잉크/만년필 태그 칩 + 본문 미리보기
   - 하단: 프사(CircleAvatar radius 11) + 닉네임(네이비, w600) + 레벨 뱃지 + 작성 시간 + 좋아요/댓글 수
   - 닉네임이 길어도 오버플로우 없이 말줄임 처리 (좋아요/댓글 수 침범 시에만 잘림)
   - 탭 → `/review/:reviewId`
+  - 리뷰 탭 리스트 뷰뿐 아니라 **리뷰 검색 결과**(`type=review`)와 **마이페이지/유저 프로필의 리뷰 탭·스크랩북**에서도 동일하게 재사용됨 (예전에 별도로 있던 `ReviewListCard`는 이 위젯에 통합되어 삭제됨)
 - 무한 스크롤: 스크롤 하단 200px 이내 진입 시 다음 페이지 자동 로드
 - 스켈레톤 로딩 UI (`ReviewGridSkeleton` / `ReviewListTileSkeleton`)
 - 스크롤 맨 위로 버튼 (우측 하단, 100px 이상 스크롤 시 표시)
@@ -58,19 +60,6 @@
   - 업로드 중 로딩 상태로 버튼 비활성화
   - EXP +10 획득 (레벨업 시 다이얼로그 표시)
 - 수정 모드: `reviewToEdit` 파라미터로 기존 데이터 초기화
-
----
-
-### 리뷰 목록 카드 (`ReviewListCard`)
-`mypage_screen.dart`, `user_profile_screen.dart`의 "리뷰" 탭에서 사용.
-
-**표시 내용**
-- 상단: 별점 뱃지(노란 별 + 점수) + 제목
-- 중간: 본문 미리보기
-- 하단: 프사(CircleAvatar radius 11) + 닉네임 + 레벨 뱃지 + 작성 시간 + 댓글/좋아요 수 (닉네임 길면 말줄임 처리, 오버플로우 방지)
-- 우측: 썸네일 이미지(72×72)
-- 탭 → `/review/:reviewId`
-- 프사/닉네임 탭 → `/profile/:uid`
 
 ---
 
@@ -124,7 +113,7 @@
 - `lib/data/repositories/review_repository.dart`
 - `lib/data/models/review_model.dart`
 - `lib/shared/widgets/review/review_feed_card.dart`
-- `lib/shared/widgets/review/review_list_card.dart`
+- `lib/shared/widgets/review/review_list_tile.dart`
 - `lib/shared/widgets/review/comment_tile.dart`
 - `lib/shared/widgets/level_badge.dart`
 - `lib/core/utils/toast_utils.dart`

@@ -45,8 +45,8 @@
 **`type=review` 결과**
 - 상단 우측 정렬 칩 — 탭 시 바텀 시트로 정렬 옵션 선택
   - 최신순 / 인기순(좋아요 수) / 평점순
-- 리뷰 그리드 (2열) — `ReviewFeedCard`
-- 각 카드 탭 → `/review/:reviewId`
+- 리뷰 리스트 (1열, `ReviewListTile`) — 마이페이지·프로필 리뷰 탭과 동일한 카드
+- 각 항목 탭 → `/review/:reviewId`
 
 **`type=community` 결과**
 - 상단 우측 정렬 칩 — 최신순 / 인기순(좋아요+댓글 수)

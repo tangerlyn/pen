@@ -25,7 +25,7 @@
 - **위시리스트 버튼** — 위시리스트 개수 표시. 탭 → `/mypage/wishlist`
 
 **화면 구성 — 탭 3개**
-- **리뷰 탭** — 내가 작성한 리뷰 목록 (`ReviewListCard`)
+- **리뷰 탭** — 내가 작성한 리뷰 목록 (`ReviewListTile`)
   - 탭 → `/review/:reviewId`
 - **커뮤니티 탭** — 내가 작성한 게시글 목록 (`PostCard`)
   - 탭 → `/community/:postId`
@@ -43,16 +43,18 @@
 ### `user_profile_screen.dart`
 **경로:** `/profile/:uid`
 
-다른 유저의 프로필 페이지 (본인 마이페이지와 동일 레이아웃).
+다른 유저의 프로필 페이지.
 
 **화면 구성**
-- 프로필 사진 + 닉네임 + 레벨 뱃지 + 레벨 칭호
+- AppBar: 뒤로가기만 표시, 별도 타이틀 없음 (닉네임은 아래 카드에 이미 표시되므로 중복 제거)
+- 프로필 사진 + 닉네임 + 레벨 칭호 (레벨 뱃지는 칭호와 중복되어 표시하지 않음)
 - 한 줄 소개
 - 팔로워/팔로잉 수 — 탭 → `/profile/:uid/followers`
-- **팔로우 버튼** / **팔로잉 버튼** (토글)
-- **⋮ 메뉴** — 차단 / 신고
-- **공개 또는 팔로워 공개 잉크 차트가 있는 경우** (뷰어가 팔로우 중이면 팔로워 공개 차트도 포함): 잉크 차트 탭 노출 → `/public-ink-books?uid=xxx`
-- **탭 3개**: 리뷰 / 커뮤니티 / 스크랩북
+- **팔로우 버튼** / **팔로잉 버튼** (토글, 닉네임 옆에 위치)
+- **공개 또는 팔로워 공개 잉크북이 있는 경우** (뷰어가 팔로우 중이면 팔로워 공개 잉크북도 포함): "잉크차트" 탭이 추가로 노출됨
+  - 탭 안에서 `NotebookCard`(공책 모양 카드) 그리드로 표시 — 내 잉크 차트 목록과 동일한 UI
+  - 카드 탭 → `/public-ink-books/:uid/:bookId` (읽기 전용 상세)
+- **탭 2~3개**: 리뷰 / 커뮤니티 / (조건부) 잉크차트 — 스크랩북 탭은 본인 마이페이지에만 있음
 
 ---
 
@@ -72,7 +74,7 @@
 
 - `tab=0`: 팔로워 목록
 - `tab=1`: 팔로잉 목록
-- 각 항목: 프사 + 닉네임 + 레벨 뱃지 + 팔로우/팔로잉 버튼
+- 각 항목: 프사 + 닉네임 + 팔로우/팔로잉 버튼
 - 항목 탭 → `/profile/:uid`
 
 ---
@@ -83,10 +85,10 @@
 **경로:** `/ink-chart`
 
 **화면 구성**
-- 잉크 차트 목록 그리드 (흰 배경)
-- 각 차트 카드: 이름 + 잉크 수 + 썸네일
-- 카드 탭 → `/ink-chart/:bookId`
-- **새 차트 만들기 셀** — 탭 시 이름 입력 다이얼로그 → 새 차트 생성
+- 공책(잉크북) 목록 그리드 (2열)
+- 각 카드: `NotebookCard`(`lib/features/mypage/widgets/notebook_card.dart`) — 스프링 바인딩 척추 + 표지 색상 + 공책 이름 + 잉크 수, 카드 탭 → `/ink-chart/:bookId`
+  - 길게 누르면 옵션 시트(이름 변경/삭제)
+- **새 공책 만들기 셀** — 탭 시 이름·표지색 입력 바텀 시트 → 새 공책 생성 (기본 공개범위: `public`)
 
 ---
 
@@ -94,19 +96,36 @@
 **경로:** `/ink-chart/:bookId`
 
 **화면 구성**
-- **스와치 페이지** — 3×3 격자로 잉크 스와치 나열 (흰 배경)
+- **스와치 페이지** — 3×3 격자로 잉크 스와치 나열 (공책 노트 페이지 배경, `NotebookPage` 위젯)
 - **페이지 스타일 전환** — 실선 / 격자 / 민무늬 배경
+- **스와치 모양 전환** — 원형 / 잉크병 / 붓터치 (`InkSwatchShape`, 계정 전체에 적용되는 설정)
 - **정렬 옵션** — 기본순 / 브랜드순 / 색상순 (palette_generator 기반 주요 색상 추출)
 - **드래그 정렬** — 스와치를 길게 누른 후 순서 변경
 - **뷰 방향** — 좌우 스와이프 / 위아래 스와이프 전환
 - **내보내기** — 화면 캡처 후 갤러리 저장 (gal 패키지)
 - **잉크 추가 FAB** → `/ink-chart/:bookId/add`
 - 잉크 추가 후 자동 이동: 추가된 잉크가 속한 페이지로 `PageController.animateToPage` (450ms, easeOutCubic)
+- **잉크 상세 캐러셀** — 스와치 탭 시 좌우로 넘겨볼 수 있는 상세 시트 (`InkDetailCarousel` 공용 위젯), 사진·브랜드·이름·날짜·메모 + 삭제 버튼
 - **공개 범위 설정 버튼** (AppBar) — 바텀 시트로 3단계 선택
   - 모든 사람에게 공개 (`public`, 새 차트 생성 시 기본값) — `Icons.public`
   - 팔로워에게만 공개 (`followers`) — `Icons.group_outlined`
   - 비공개 (`private`) — `Icons.lock_outlined`
   - 변경 즉시 Firestore에 `visibility` 필드 저장 (레거시 `isPublic` bool도 함께 하위 호환 저장)
+- **페이지 스타일 / 보기 방식 / 스와치 모양 설정은 Firestore에도 저장됨** — 다른 유저가 읽기 전용 화면(`ink_book_readonly_screen.dart`)에서 볼 때도 소유자가 설정한 모양 그대로 보이도록 하기 위함
+  - 페이지 스타일·보기 방식: `InkBookModel.pageStyle` / `viewMode` 필드
+  - 스와치 모양: `UserModel.inkSwatchShape` 필드 (책 단위가 아니라 계정 전체 설정)
+  - 이 동기화 기능이 생기기 전에 로컬(SharedPreferences)로만 저장돼 있던 값은 소급 반영되지 않음 — 설정을 한 번 더 선택해야 서버에 반영됨
+
+---
+
+### `ink_book_readonly_screen.dart`
+**경로:** `/public-ink-books/:uid/:bookId`
+
+다른 유저의 공개/팔로워공개 잉크북을 읽기 전용으로 보여주는 화면. 편집·삭제·정렬 등 소유자 전용 기능은 없음.
+
+**화면 구성**
+- 소유자가 설정한 `pageStyle`(실선/격자/민무늬) · `viewMode`(좌우/위아래) · `inkSwatchShape`(원형/잉크병/붓터치)를 그대로 읽어와 `NotebookPage`로 렌더링 — 소유자 화면과 동일한 공용 위젯을 사용하므로 모양이 100% 동일
+- 스와치 탭 → `InkDetailCarousel` (소유자 화면과 동일한 상세 캐러셀, 삭제 버튼만 없음)
 
 ---
 
@@ -127,7 +146,8 @@
 ### `public_ink_books_screen.dart`
 **경로:** `/public-ink-books`
 
-다른 유저가 공개 설정한 잉크 차트를 탐색하는 화면.
+전체 유저가 공개(`public`) 설정한 잉크북을 모아 탐색하는 화면 (그리드, 소유자 닉네임 표시).
+카드 탭 → `/public-ink-books/:uid/:bookId` (`ink_book_readonly_screen.dart`, 읽기 전용 상세)
 
 ---
 
@@ -146,7 +166,6 @@
   - 개인정보처리방침 → `/mypage/settings/privacy`
 - **로그아웃** — 확인 다이얼로그 후 `/login`으로 이동
 - **회원탈퇴** — 확인 다이얼로그 후 계정 삭제 + `/login`으로 이동
-- **디버그 모드** (개발용): 아카이브 DB 초기화, 검색 인덱스 생성 버튼
 
 ### `blocked_users_screen.dart`
 **경로:** `/mypage/settings/blocked`
@@ -193,7 +212,8 @@ EXP 기반 Lv.1~10 시스템.
 - "Lv.N" 형태의 네이비 배경 라운드 뱃지
 - 닉네임 우측에 표시
 - **표시 레벨은 항상 현재 레벨** (작성 시점 스냅샷 아님)
-- 표시 위치: 마이페이지, 유저 프로필, 리뷰 상세 작성자, 리뷰 피드 리스트, 게시글 상세 작성자, 게시글 카드, 댓글, 답글
+- 표시 위치: 리뷰 상세 작성자, 게시글 상세 작성자, 리뷰 리스트 항목(`ReviewListTile`), 게시글 카드, 댓글, 답글
+- **마이페이지·유저 프로필 헤더에는 표시하지 않음** — 바로 아래(마이페이지: 레벨 칭호, 유저 프로필: 레벨 칭호)에 레벨 정보가 중복 표시되어 제거됨. 팔로워/팔로잉 목록(`follow_list_screen.dart`)에도 없음
 
 ---
 
@@ -208,6 +228,7 @@ EXP 기반 Lv.1~10 시스템.
 | `scrappedPostsProvider` | StreamProvider.family | 스크랩 게시글 목록 |
 | `levelUpProvider` | StateProvider\<LevelUpInfo?\> | 레벨업 다이얼로그 트리거 |
 | `userVisibleBooksProvider` | FutureProvider.family\<(ownerUid, viewerUid)\> | 뷰어의 팔로우 여부를 반영한 가시적 잉크 차트 목록 (공개 + 팔로우 중이면 팔로워 공개 포함) |
+| `singleInkBookProvider` | FutureProvider.family\<(uid, bookId)\> | 단일 잉크북 조회 — 읽기 전용 화면에서 소유자의 pageStyle/viewMode 로드용 |
 
 ---
 
@@ -216,6 +237,9 @@ EXP 기반 Lv.1~10 시스템.
 - `lib/shared/widgets/level_badge.dart` — `LevelBadge(level)`: Lv.N 뱃지
 - `lib/shared/widgets/level_up_dialog.dart` — 레벨업 시 오버레이 다이얼로그
 - `lib/shared/widgets/tap_scale.dart` — 탭 시 0.95 축소 피드백 (80ms in / 220ms elastic out)
+- `lib/features/mypage/widgets/notebook_card.dart` — `NotebookCard`: 공책 모양 카드(스프링 바인딩 + 표지), 내 잉크 차트 목록과 다른 유저 잉크 차트 목록에서 공용
+- `lib/features/mypage/widgets/notebook_page.dart` — `NotebookPage`: 노트 페이지 배경(실선/격자/민무늬) + 3×3 스와치 그리드, 소유자 화면과 읽기 전용 화면 공용
+- `lib/features/mypage/widgets/ink_detail_carousel.dart` — `InkDetailCarousel`: 잉크 상세 좌우 스와이프 캐러셀 셸(핸들/카운터/화살표), 소유자 화면과 읽기 전용 화면 공용
 
 ---
 
@@ -229,12 +253,20 @@ EXP 기반 Lv.1~10 시스템.
 - `lib/features/mypage/screens/wishlist_screen.dart`
 - `lib/features/mypage/screens/ink_book_list_screen.dart`
 - `lib/features/mypage/screens/ink_book_detail_screen.dart`
+- `lib/features/mypage/screens/ink_book_readonly_screen.dart`
 - `lib/features/mypage/screens/ink_chart_add_screen.dart`
 - `lib/features/mypage/screens/public_ink_books_screen.dart`
 - `lib/features/mypage/screens/blocked_users_screen.dart`
 - `lib/features/mypage/screens/inquiry_screen.dart`
+- `lib/features/mypage/widgets/notebook_card.dart`
+- `lib/features/mypage/widgets/notebook_page.dart`
+- `lib/features/mypage/widgets/ink_detail_carousel.dart`
+- `lib/features/mypage/widgets/ink_swatch_shape.dart`
+- `lib/features/mypage/providers/ink_shape_provider.dart`
 - `lib/core/utils/level_system.dart`
 - `lib/data/repositories/user_repository.dart`
+- `lib/data/repositories/ink_book_repository.dart`
+- `lib/data/models/ink_book_model.dart`
 - `lib/shared/providers/user_providers.dart`
 - `lib/shared/providers/ink_book_providers.dart`
 - `lib/shared/providers/wishlist_providers.dart`
