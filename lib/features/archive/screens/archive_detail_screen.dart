@@ -75,33 +75,37 @@ class _DetailBody extends ConsumerWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          if (type == 'ink') _InkHeroHeader(hexColor: data.hexColor),
           Padding(
             padding: const EdgeInsets.all(16),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
+            // 색상 비교 버튼 — 구현 완료, 적용 보류 (ink_compare_screen.dart)
+            child: type == 'ink'
+                ? _InkProfileHeader(data: data as InkModel)
+                : _InfoCard(data: data),
+          ),
+          Padding(
+            padding: const EdgeInsets.fromLTRB(16, 8, 16, 8),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                _InfoCard(type: type, data: data),
-                const SizedBox(height: 16),
-                // 색상 비교 버튼 — 구현 완료, 적용 보류 (ink_compare_screen.dart)
-                // if (type == 'ink') Row(children: [Expanded(리뷰작성), SizedBox(8), OutlinedButton(색상비교)])
-                SizedBox(
-                  width: double.infinity,
-                  child: ElevatedButton.icon(
-                    onPressed: () => context.push(
-                        '/write/review?type=$type&productId=$productId'),
-                    icon: const Icon(Icons.edit_outlined, size: 18),
-                    label: const Text('리뷰 작성'),
+                const Text(
+                  '사용자 리뷰',
+                  style: TextStyle(fontWeight: FontWeight.w700, fontSize: 16),
+                ),
+                OutlinedButton(
+                  onPressed: () => context.push(
+                      '/write/review?type=$type&productId=$productId'),
+                  style: OutlinedButton.styleFrom(
+                    foregroundColor: AppColors.primary,
+                    side: const BorderSide(color: AppColors.primary),
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+                    padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
+                    minimumSize: Size.zero,
+                    tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                    textStyle: const TextStyle(fontSize: 13, fontWeight: FontWeight.w600),
                   ),
+                  child: const Text('새 리뷰 작성'),
                 ),
               ],
-            ),
-          ),
-          const Padding(
-            padding: EdgeInsets.fromLTRB(16, 8, 16, 8),
-            child: Text(
-              '사용자 리뷰',
-              style: TextStyle(fontWeight: FontWeight.w700, fontSize: 16),
             ),
           ),
           reviewsAsync.when(
@@ -156,60 +160,93 @@ class _DetailBody extends ConsumerWidget {
   }
 }
 
-// ── 잉크 헤더 (AppBar 바로 아래 색상 배경) ──────────────────────────────────
-class _InkHeroHeader extends StatelessWidget {
-  const _InkHeroHeader({required this.hexColor});
-  final String hexColor;
+// ── 잉크 프로필 헤더 (인스타 프로필 스타일: 좌측 원 + 우측 정보) ──────────────
+class _InkProfileHeader extends StatelessWidget {
+  const _InkProfileHeader({required this.data});
+  final InkModel data;
 
   @override
   Widget build(BuildContext context) {
     Color color;
     try {
-      color = Color(int.parse('FF${hexColor.replaceAll('#', '')}', radix: 16));
+      color = Color(int.parse('FF${data.hexColor.replaceAll('#', '')}', radix: 16));
     } catch (e) {
       color = Colors.grey.shade300;
     }
 
-    return Container(
-      height: 180,
-      decoration: BoxDecoration(
-        gradient: LinearGradient(
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-          colors: [
-            Color.lerp(color, Colors.white, 0.62)!,
-            Color.lerp(color, Colors.white, 0.40)!,
-          ],
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.center,
+      children: [
+        InkDropCircle(color: color, size: 72),
+        const SizedBox(width: 16),
+        Expanded(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                data.brand,
+                style: const TextStyle(
+                  fontSize: 13,
+                  color: AppColors.textSecondary,
+                  fontWeight: FontWeight.w500,
+                ),
+              ),
+              const SizedBox(height: 2),
+              Row(
+                crossAxisAlignment: CrossAxisAlignment.center,
+                children: [
+                  Flexible(
+                    child: Text(
+                      data.name,
+                      style: const TextStyle(
+                        fontSize: 20,
+                        fontWeight: FontWeight.w700,
+                        color: AppColors.textPrimary,
+                      ),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                  ),
+                  const SizedBox(width: 8),
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                    decoration: BoxDecoration(
+                      color: AppColors.chipBackground,
+                      borderRadius: BorderRadius.circular(20),
+                    ),
+                    child: Text(
+                      data.inkTypeLabel,
+                      style: const TextStyle(
+                        fontSize: 12,
+                        fontWeight: FontWeight.w600,
+                        color: AppColors.textSecondary,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ],
+          ),
         ),
-      ),
-      child: Center(child: InkDropCircle(color: color, size: 80)),
+      ],
     );
   }
 }
 
 // ── 정보 카드 ──────────────────────────────────────────────────────────────
 class _InfoCard extends StatelessWidget {
-  const _InfoCard({required this.type, required this.data});
-  final String type;
+  const _InfoCard({required this.data});
   final dynamic data;
 
   @override
   Widget build(BuildContext context) {
-    final rows = <MapEntry<String, String>>[];
-    if (type == 'ink') {
-      rows.addAll([
-        MapEntry('브랜드', data.brand),
-        MapEntry('타입', data.inkTypeLabel),
-      ]);
-    } else if (type == 'pen') {
-      rows.addAll([
-        MapEntry('브랜드', data.brand),
-        MapEntry('라인업', data.lineup),
-        MapEntry('닙 소재', data.nibMaterial),
-        MapEntry('충전 방식', data.fillType),
-        MapEntry('닙 사이즈', data.nibSizes.join(', ')),
-      ]);
-    }
+    final rows = <MapEntry<String, String>>[
+      MapEntry('브랜드', data.brand),
+      MapEntry('라인업', data.lineup),
+      MapEntry('닙 소재', data.nibMaterial),
+      MapEntry('충전 방식', data.fillType),
+      MapEntry('닙 사이즈', data.nibSizes.join(', ')),
+    ];
 
     return Container(
       decoration: BoxDecoration(

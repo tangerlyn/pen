@@ -88,25 +88,6 @@ class ReviewRepository {
     return (allReviews.take(limit).toList(), null);
   }
 
-  Future<bool> hasNewFollowingReview({
-    required List<String> followingUids,
-    required DateTime since,
-  }) async {
-    if (followingUids.isEmpty) return false;
-    final chunks = [
-      for (var i = 0; i < followingUids.length; i += 30)
-        followingUids.sublist(i, (i + 30).clamp(0, followingUids.length))
-    ];
-    final snapshots = await Future.wait(
-      chunks.map((chunk) => _reviews
-          .where('authorId', whereIn: chunk)
-          .where('createdAt', isGreaterThan: Timestamp.fromDate(since))
-          .limit(1)
-          .get()),
-    );
-    return snapshots.any((s) => s.docs.isNotEmpty);
-  }
-
   Future<ReviewModel?> getReview(String reviewId) async {
     final doc = await _reviews.doc(reviewId).get();
     if (!doc.exists) return null;

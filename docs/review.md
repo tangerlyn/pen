@@ -2,7 +2,7 @@
 
 ## 개요
 
-잉크·만년필에 대한 사진·별점·텍스트 리뷰를 작성하고 탐색하는 피드. 그리드/리스트 전환, 팔로잉/추천 필터, 무한 스크롤 지원.
+잉크·만년필에 대한 사진·별점·텍스트 리뷰를 작성하고 탐색하는 피드. 그리드/리스트 전환, 팔로잉 최근 게시글 우선 노출, 무한 스크롤 지원.
 
 ---
 
@@ -15,12 +15,9 @@
 - **AppBar** (showAppBar: true일 때)
   - 제목 "리뷰"
   - 우측 검색 아이콘 → `/search?type=review`
-- **추천/팔로잉 탭 바** — 팔로잉한 유저가 1명 이상일 때만 표시
-  - "추천" 탭: Firestore 최신 리뷰 추천 피드
-  - "팔로잉" 탭: 팔로잉한 유저들의 리뷰만 필터
-  - 팔로잉 탭 제목 오른쪽에 빨간 점: 마지막 방문 이후 팔로잉 유저가 새 리뷰를 올린 경우 표시
-  - 팔로잉 탭 탭 시 빨간 점 사라짐 (SharedPreferences `following_last_seen` 갱신)
-  - 팔로잉이 없으면 탭 바 숨김, 자동으로 추천으로 리셋
+- **단일 피드** (탭·섹션 구분 없이 인스타그램처럼 하나로 이어짐) — 팔로잉한 유저가 최근 24시간 내 작성한 리뷰가 맨 앞에 자연스럽게 붙고, 바로 이어서 Firestore 최신순 전체 피드가 무한 스크롤로 이어짐
+  - 팔로잉 최근 리뷰는 한 번만 조회(페이지네이션 없음), 전체 피드에 이미 포함된 리뷰는 중복 제거
+  - 팔로잉한 유저가 없거나 24시간 내 새 글이 없으면 그냥 전체 피드부터 시작
 - **카테고리 칩 필터 바 (`FeedFilterBar`)**
   - 전체 / 잉크 / 만년필
   - 선택 시 해당 카테고리 리뷰만 표시
@@ -92,8 +89,7 @@
 
 | Provider | 종류 | 역할 |
 |---|---|---|
-| `feedProvider` | StateNotifierProvider | 필터·커서·정렬·리뷰 목록 상태 |
-| `followingHasNewProvider` | FutureProvider\<bool\> | 팔로잉 탭 빨간 점 여부 |
+| `feedProvider` | StateNotifierProvider | 필터·커서·팔로잉 최근/전체 리뷰 목록 상태 |
 | `reviewDetailProvider` | StateNotifierProvider.family | 리뷰 상세 + 좋아요/스크랩 토글 |
 | `reviewWriteProvider` | StateNotifierProvider | 작성 폼 상태 |
 | `commentsProvider` | StreamProvider.family | 댓글 목록 실시간 |

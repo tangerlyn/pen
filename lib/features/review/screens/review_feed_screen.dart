@@ -4,12 +4,10 @@ import 'package:go_router/go_router.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../../../core/theme/app_theme.dart';
 import '../../home/providers/feed_provider.dart';
-import '../../../shared/providers/providers.dart';
 import '../../../shared/widgets/review/review_feed_card.dart';
 import '../../../shared/widgets/review/review_list_tile.dart';
 import '../../home/widgets/feed_filter_bar.dart';
 import '../../../shared/widgets/common/skeletons.dart';
-import '../../../shared/widgets/tap_scale.dart';
 
 class ReviewFeedScreen extends ConsumerStatefulWidget {
   const ReviewFeedScreen({super.key, this.showAppBar = true});
@@ -45,13 +43,6 @@ class _ReviewFeedScreenState extends ConsumerState<ReviewFeedScreen> {
     await prefs.setBool('review_grid_view', _isGridView);
   }
 
-  Future<void> _markFollowingAsSeen() async {
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.setInt(
-        'following_last_seen', DateTime.now().millisecondsSinceEpoch);
-    ref.invalidate(followingHasNewProvider);
-  }
-
   void _scrollToTop() {
     final ns = _scrollKey.currentState;
     if (ns == null) return;
@@ -68,20 +59,6 @@ class _ReviewFeedScreenState extends ConsumerState<ReviewFeedScreen> {
   @override
   Widget build(BuildContext context) {
     final state = ref.watch(feedProvider);
-    final followingCount = ref.watch(currentUserProvider).valueOrNull?.followingCount ?? 0;
-    final hasFollowings = followingCount > 0;
-    final hasNewReviews = hasFollowings
-        ? (ref.watch(followingHasNewProvider).valueOrNull ?? false)
-        : false;
-
-    // 팔로잉 없는데 팔로잉 탭이면 추천으로 리셋
-    if (!hasFollowings && state.filter.feedType == '팔로잉') {
-      WidgetsBinding.instance.addPostFrameCallback((_) {
-        ref.read(feedProvider.notifier).setFilter(
-              state.filter.copyWith(feedType: '추천'),
-            );
-      });
-    }
 
     return Scaffold(
       backgroundColor: AppColors.background,
@@ -121,92 +98,26 @@ class _ReviewFeedScreenState extends ConsumerState<ReviewFeedScreen> {
                 SliverToBoxAdapter(
                   child: ColoredBox(
                     color: AppColors.surface,
-                    child: Column(
+                    child: Row(
                       children: [
-                        if (hasFollowings)
-                          Row(
-                            children: ['추천', '팔로잉'].map((type) {
-                              final isActive = state.filter.feedType == type;
-                              final showDot =
-                                  type == '팔로잉' && hasNewReviews && !isActive;
-                              return Expanded(
-                                child: TapScale(
-                                  onTap: () {
-                                    ref.read(feedProvider.notifier).setFilter(
-                                          state.filter.copyWith(feedType: type),
-                                        );
-                                    if (type == '팔로잉') _markFollowingAsSeen();
-                                  },
-                                  child: Column(
-                                    children: [
-                                      Padding(
-                                        padding: const EdgeInsets.symmetric(
-                                            vertical: 12),
-                                        child: Stack(
-                                          clipBehavior: Clip.none,
-                                          children: [
-                                            Text(
-                                              type,
-                                              style: TextStyle(
-                                                fontWeight: isActive
-                                                    ? FontWeight.w700
-                                                    : FontWeight.w400,
-                                                color: isActive
-                                                    ? AppColors.textPrimary
-                                                    : AppColors.textSecondary,
-                                              ),
-                                            ),
-                                            if (showDot)
-                                              Positioned(
-                                                right: -8,
-                                                top: 0,
-                                                child: Container(
-                                                  width: 6,
-                                                  height: 6,
-                                                  decoration: const BoxDecoration(
-                                                    color: Colors.red,
-                                                    shape: BoxShape.circle,
-                                                  ),
-                                                ),
-                                              ),
-                                          ],
-                                        ),
-                                      ),
-                                      if (isActive)
-                                        Container(height: 2, color: AppColors.primary)
-                                      else
-                                        const SizedBox(height: 2),
-                                    ],
-                                  ),
-                                ),
-                              );
-                            }).toList(),
+                        Expanded(
+                          child: FeedFilterBar(
+                            filter: state.filter,
+                            onFilterChanged: (f) =>
+                                ref.read(feedProvider.notifier).setFilter(f),
                           ),
-                        Row(
-                          children: [
-                            Expanded(
-                              child: FeedFilterBar(
-                                filter: state.filter,
-                                onFilterChanged: (f) => ref
-                                    .read(feedProvider.notifier)
-                                    .setFilter(f),
-                              ),
+                        ),
+                        Padding(
+                          padding: const EdgeInsets.only(right: 8),
+                          child: IconButton(
+                            icon: Icon(
+                              _isGridView ? Icons.view_list : Icons.grid_view,
+                              size: 22,
                             ),
-                            Padding(
-                              padding: const EdgeInsets.only(right: 8),
-                              child: IconButton(
-                                icon: Icon(
-                                  _isGridView
-                                      ? Icons.view_list
-                                      : Icons.grid_view,
-                                  size: 22,
-                                ),
-                                onPressed: _toggleViewMode,
-                                padding: EdgeInsets.zero,
-                                constraints: const BoxConstraints(),
-                              ),
-                            ),
-                          ],
+                            onPressed: _toggleViewMode,
+                            padding: EdgeInsets.zero,
+                            constraints: const BoxConstraints(),
+                          ),
                         ),
                       ],
                     ),
@@ -251,52 +162,71 @@ class _ReviewFeedScreenState extends ConsumerState<ReviewFeedScreen> {
                         onRefresh: () => ref
                             .read(feedProvider.notifier)
                             .loadFeed(refresh: true),
-                        child: _isGridView
-                            ? GridView.builder(
-                                padding: const EdgeInsets.all(10),
-                                gridDelegate:
-                                    const SliverGridDelegateWithFixedCrossAxisCount(
-                                  crossAxisCount: 2,
-                                  crossAxisSpacing: 10,
-                                  mainAxisSpacing: 10,
-                                  childAspectRatio: 0.85,
-                                ),
-                                itemCount: state.reviews.length +
-                                    (state.isLoadingMore ? 2 : 0),
-                                itemBuilder: (context, index) {
-                                  if (index >= state.reviews.length) {
-                                    return const ReviewGridSkeleton();
-                                  }
-                                  final review = state.reviews[index];
-                                  return ReviewFeedCard(
-                                    review: review,
-                                    onTap: () =>
-                                        context.push('/review/${review.id}'),
-                                  );
-                                },
-                              )
-                            : ListView.separated(
-                                padding: EdgeInsets.zero,
-                                itemCount: state.reviews.length +
-                                    (state.isLoadingMore ? 1 : 0),
-                                separatorBuilder: (_, _) =>
-                                    const Divider(height: 1),
-                                itemBuilder: (context, index) {
-                                  if (index >= state.reviews.length) {
-                                    return const SizedBox(
-                                      height: 60,
-                                      child: Center(
-                                          child: CircularProgressIndicator()),
-                                    );
-                                  }
-                                  final review = state.reviews[index];
-                                  return ReviewListTile(
-                                    review: review,
-                                    onTap: () =>
-                                        context.push('/review/${review.id}'),
-                                  );
-                                },
-                              ),
+                        child: Builder(builder: (context) {
+                          // 팔로잉 최근 게시글 + 전체 피드를 하나로 이어붙여
+                          // 섹션 구분 없이 자연스럽게 이어지는 하나의 피드로 렌더링
+                          final combined = [...state.followingRecent, ...state.reviews];
+                          return CustomScrollView(
+                            slivers: [
+                              _isGridView
+                                  ? SliverPadding(
+                                      padding: const EdgeInsets.all(10),
+                                      sliver: SliverGrid(
+                                        gridDelegate:
+                                            const SliverGridDelegateWithFixedCrossAxisCount(
+                                          crossAxisCount: 2,
+                                          crossAxisSpacing: 10,
+                                          mainAxisSpacing: 10,
+                                          childAspectRatio: 0.85,
+                                        ),
+                                        delegate: SliverChildBuilderDelegate(
+                                          (context, index) {
+                                            if (index >= combined.length) {
+                                              return const ReviewGridSkeleton();
+                                            }
+                                            final review = combined[index];
+                                            return ReviewFeedCard(
+                                              review: review,
+                                              onTap: () =>
+                                                  context.push('/review/${review.id}'),
+                                            );
+                                          },
+                                          childCount: combined.length +
+                                              (state.isLoadingMore ? 2 : 0),
+                                        ),
+                                      ),
+                                    )
+                                  : SliverList(
+                                      delegate: SliverChildBuilderDelegate(
+                                        (context, index) {
+                                          if (index >= combined.length) {
+                                            return const SizedBox(
+                                              height: 60,
+                                              child: Center(
+                                                  child: CircularProgressIndicator()),
+                                            );
+                                          }
+                                          final review = combined[index];
+                                          return Column(
+                                            mainAxisSize: MainAxisSize.min,
+                                            children: [
+                                              ReviewListTile(
+                                                review: review,
+                                                onTap: () =>
+                                                    context.push('/review/${review.id}'),
+                                              ),
+                                              const Divider(height: 1),
+                                            ],
+                                          );
+                                        },
+                                        childCount: combined.length +
+                                            (state.isLoadingMore ? 1 : 0),
+                                      ),
+                                    ),
+                              const SliverToBoxAdapter(child: SizedBox(height: 16)),
+                            ],
+                          );
+                        }),
                       ),
                     ),
             ),

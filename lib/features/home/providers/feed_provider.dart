@@ -1,5 +1,4 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 import '../../../data/models/review_model.dart';
 import '../../../shared/providers/providers.dart';
 import '../../../shared/providers/user_providers.dart';
@@ -7,7 +6,6 @@ import '../../../shared/providers/user_providers.dart';
 class FeedFilter {
   const FeedFilter({
     this.category = '전체',
-    this.feedType = '추천',
     this.colorFamily,
     this.inkType,
     this.brand,
@@ -15,7 +13,6 @@ class FeedFilter {
   });
 
   final String category;
-  final String feedType; // 추천 / 팔로잉
   final String? colorFamily;
   final String? inkType;
   final String? brand;
@@ -23,7 +20,6 @@ class FeedFilter {
 
   FeedFilter copyWith({
     String? category,
-    String? feedType,
     String? colorFamily,
     String? inkType,
     String? brand,
@@ -32,7 +28,6 @@ class FeedFilter {
   }) {
     return FeedFilter(
       category: category ?? this.category,
-      feedType: feedType ?? this.feedType,
       colorFamily: clearSub ? null : (colorFamily ?? this.colorFamily),
       inkType: clearSub ? null : (inkType ?? this.inkType),
       brand: clearSub ? null : (brand ?? this.brand),
@@ -43,6 +38,7 @@ class FeedFilter {
 
 class FeedState {
   const FeedState({
+    this.followingRecent = const [],
     this.reviews = const [],
     this.isLoading = false,
     this.isLoadingMore = false,
@@ -50,6 +46,8 @@ class FeedState {
     this.filter = const FeedFilter(),
   });
 
+  /// 팔로잉한 유저가 최근 24시간 내에 올린 리뷰 — 피드 상단에 고정 노출, 페이지네이션 없음
+  final List<ReviewModel> followingRecent;
   final List<ReviewModel> reviews;
   final bool isLoading;
   final bool isLoadingMore;
@@ -57,6 +55,7 @@ class FeedState {
   final FeedFilter filter;
 
   FeedState copyWith({
+    List<ReviewModel>? followingRecent,
     List<ReviewModel>? reviews,
     bool? isLoading,
     bool? isLoadingMore,
@@ -64,6 +63,7 @@ class FeedState {
     FeedFilter? filter,
   }) {
     return FeedState(
+      followingRecent: followingRecent ?? this.followingRecent,
       reviews: reviews ?? this.reviews,
       isLoading: isLoading ?? this.isLoading,
       isLoadingMore: isLoadingMore ?? this.isLoadingMore,
@@ -75,11 +75,24 @@ class FeedState {
 
 class FeedNotifier extends StateNotifier<FeedState> {
   FeedNotifier(this._ref) : super(const FeedState()) {
-    loadFeed();
+    loadFeed(refresh: true);
   }
 
   final Ref _ref;
   Object? _lastDoc;
+
+  Future<List<ReviewModel>> _loadFollowingRecent(String? uid) async {
+    if (uid == null) return [];
+    final followingUids = await _ref.read(userRepoProvider).getFollowingUids(uid);
+    if (followingUids.isEmpty) return [];
+
+    final (reviews, _) = await _ref
+        .read(reviewRepoProvider)
+        .getFollowingFeed(followingUids: followingUids, limit: 30);
+
+    final cutoff = DateTime.now().subtract(const Duration(hours: 24));
+    return reviews.where((r) => r.createdAt.isAfter(cutoff)).toList();
+  }
 
   Future<void> loadFeed({bool refresh = false}) async {
     if (refresh) {
@@ -91,51 +104,30 @@ class FeedNotifier extends StateNotifier<FeedState> {
     final uid = _ref.read(currentUidProvider);
 
     try {
-      List<ReviewModel> reviews;
-      Object? lastDoc;
+      final followingRecent =
+          refresh ? await _loadFollowingRecent(uid) : state.followingRecent;
 
-      if (state.filter.feedType == '팔로잉') {
-        if (uid == null) {
-          state = state.copyWith(reviews: [], isLoading: false, isLoadingMore: false, hasMore: false);
-          return;
-        }
-        final followingUids = await _ref.read(userRepoProvider).getFollowingUids(uid);
-        if (followingUids.isEmpty) {
-          state = state.copyWith(reviews: [], isLoading: false, isLoadingMore: false, hasMore: false);
-          return;
-        }
-        (reviews, lastDoc) = await repo.getFollowingFeed(
-          followingUids: followingUids,
-          lastDoc: _lastDoc,
-        );
-
-        final category = state.filter.category;
-        if (category != '전체') {
-          reviews = reviews.where((r) {
-            if (category == '잉크') return r.inkIds.isNotEmpty;
-            if (category == '만년필') return r.penIds.isNotEmpty;
-            return true;
-          }).toList();
-        }
-      } else {
-        final category = state.filter.category;
-        (reviews, lastDoc) = await repo.getFeed(
-          filterCategory: category == '전체' ? null : category,
-          lastDoc: _lastDoc,
-        );
-      }
-
+      final category = state.filter.category;
+      final (fetched, lastDoc) = await repo.getFeed(
+        filterCategory: category == '전체' ? null : category,
+        lastDoc: _lastDoc,
+      );
       _lastDoc = lastDoc;
+
+      // 상단 "팔로잉 최근" 섹션에 이미 나온 리뷰는 일반 피드에서 중복 제거
+      final recentIds = followingRecent.map((r) => r.id).toSet();
+      final deduped = fetched.where((r) => !recentIds.contains(r.id)).toList();
 
       final filtered = await _ref
           .read(userRepoProvider)
-          .filterByBlocked(uid, reviews, (r) => r.authorId);
+          .filterByBlocked(uid, deduped, (r) => r.authorId);
 
       state = state.copyWith(
+        followingRecent: followingRecent,
         reviews: refresh ? filtered : [...state.reviews, ...filtered],
         isLoading: false,
         isLoadingMore: false,
-        hasMore: reviews.length >= 20,
+        hasMore: fetched.length >= 20,
       );
     } catch (e) {
       state = state.copyWith(isLoading: false, isLoadingMore: false);
@@ -157,16 +149,18 @@ class FeedNotifier extends StateNotifier<FeedState> {
     final uid = _ref.read(currentUidProvider);
     if (uid == null) return;
     await _ref.read(reviewRepoProvider).toggleLike(reviewId, uid, isLiked);
+
+    ReviewModel apply(ReviewModel r) {
+      if (r.id != reviewId) return r;
+      return r.copyWith(
+        isLiked: !isLiked,
+        likeCount: isLiked ? r.likeCount - 1 : r.likeCount + 1,
+      );
+    }
+
     state = state.copyWith(
-      reviews: state.reviews.map((r) {
-        if (r.id == reviewId) {
-          return r.copyWith(
-            isLiked: !isLiked,
-            likeCount: isLiked ? r.likeCount - 1 : r.likeCount + 1,
-          );
-        }
-        return r;
-      }).toList(),
+      followingRecent: state.followingRecent.map(apply).toList(),
+      reviews: state.reviews.map(apply).toList(),
     );
   }
 
@@ -174,16 +168,18 @@ class FeedNotifier extends StateNotifier<FeedState> {
     final uid = _ref.read(currentUidProvider);
     if (uid == null) return;
     await _ref.read(reviewRepoProvider).toggleScrap(reviewId, uid, isScrapped);
+
+    ReviewModel apply(ReviewModel r) {
+      if (r.id != reviewId) return r;
+      return r.copyWith(
+        isScrapped: !isScrapped,
+        scrapCount: isScrapped ? r.scrapCount - 1 : r.scrapCount + 1,
+      );
+    }
+
     state = state.copyWith(
-      reviews: state.reviews.map((r) {
-        if (r.id == reviewId) {
-          return r.copyWith(
-            isScrapped: !isScrapped,
-            scrapCount: isScrapped ? r.scrapCount - 1 : r.scrapCount + 1,
-          );
-        }
-        return r;
-      }).toList(),
+      followingRecent: state.followingRecent.map(apply).toList(),
+      reviews: state.reviews.map(apply).toList(),
     );
     _ref.invalidate(scrappedReviewsProvider(uid));
   }
@@ -191,22 +187,4 @@ class FeedNotifier extends StateNotifier<FeedState> {
 
 final feedProvider = StateNotifierProvider<FeedNotifier, FeedState>((ref) {
   return FeedNotifier(ref);
-});
-
-// 팔로잉 탭에 새 리뷰가 있는지 확인
-final followingHasNewProvider = FutureProvider<bool>((ref) async {
-  final uid = ref.watch(currentUidProvider);
-  if (uid == null) return false;
-
-  final prefs = await SharedPreferences.getInstance();
-  final lastSeenMs = prefs.getInt('following_last_seen') ?? 0;
-  if (lastSeenMs == 0) return false;
-
-  final lastSeen = DateTime.fromMillisecondsSinceEpoch(lastSeenMs);
-  final followingUids = await ref.read(userRepoProvider).getFollowingUids(uid);
-
-  return ref.read(reviewRepoProvider).hasNewFollowingReview(
-    followingUids: followingUids,
-    since: lastSeen,
-  );
 });
