@@ -14,13 +14,13 @@
 **화면 구성**
 - 상단 AppBar
   - 앱 로고/타이틀
+  - 우측 검색 아이콘 → `/search?type=all`
   - 우측 종 아이콘 → `/notifications` 이동. 미읽 알림이 있으면 빨간 뱃지 표시
-- **최신 리뷰 섹션** — 수평 스크롤 카드 리스트
-  - 각 카드: 썸네일 이미지 + 제목 + 별점 + 좋아요 수 + 작성 시간
-  - 카드 탭 → `/review/:reviewId`
-- **최근 커뮤니티 게시글 섹션** — 세로 리스트
-  - 각 항목: 제목 + 본문 미리보기 + 댓글/좋아요 수 + 작성자 닉네임(네이비) + 레벨 뱃지
-  - 항목 탭 → `/community/:postId`
+- 4개 섹션이 순서대로 표시 (각 섹션은 데이터가 없으면 통째로 숨겨짐)
+  1. **최신 리뷰** — 수평 스크롤 카드. 각 카드: 썸네일 + 제목 + 별점 + 좋아요 수. 더보기 → `/review`, 카드 탭 → `/review/:reviewId`
+  2. **인기 잉크** — 수평 스크롤 원형 스와치(`InkDropCircle`) + 이름. 더보기 → `/archive`, 아이템 탭 → `/archive/ink/:id`
+  3. **커뮤니티 최신글** — 세로 리스트(`PostCard`, 최대 4개 미리보기). 더보기 → `/community`, 항목 탭 → `/community/:postId`
+  4. **인기 만년필** — 수평 스크롤 카드. 더보기 → `/archive`, 카드 탭 → `/archive/pen/:id`
 - **FAB (+)** — 탭 시 바텀 시트 열림
   - "리뷰 작성" 탭 → `/write/review`
   - "게시글 작성" 탭 → `/community/write`
@@ -117,7 +117,10 @@
 
 | Provider | 종류 | 역할 |
 |---|---|---|
-| `homeDiscoveryProvider` | FutureProvider | 인기 리뷰 + 최근 게시글 |
+| `homeLatestReviewsProvider` | FutureProvider | 최신 리뷰 목록 |
+| `homePopularInksProvider` | FutureProvider | 인기 잉크 목록 |
+| `homePopularPensProvider` | FutureProvider | 인기 만년필 목록 |
+| `filteredPostsProvider` | StreamProvider | 커뮤니티 최신글 (카테고리 필터 적용) |
 | `notificationProvider` | StreamProvider | 알림 목록 |
 | `reviewDetailProvider` | StateNotifierProvider.family | 리뷰 상세 + 좋아요/스크랩 |
 | `levelUpProvider` | StateProvider\<LevelUpInfo?\> | 레벨업 다이얼로그 트리거 |
@@ -132,6 +135,7 @@
 - `lib/features/home/providers/home_discovery_provider.dart`
 - `lib/features/home/providers/review_detail_provider.dart`
 - `lib/features/home/providers/notification_provider.dart`
+- `lib/features/community/providers/community_provider.dart`
 - `lib/features/feed/screens/feed_screen.dart`
 - `lib/core/shell/main_shell.dart`
 - `lib/core/router/app_router.dart`

@@ -125,3 +125,4 @@ flutter run
 | [mypage.md](docs/mypage.md) | 마이페이지·잉크차트·설정 |
 | [search.md](docs/search.md) | 통합 검색 |
 | [chat.md](docs/chat.md) | 1:1 채팅 |
+| [qa_checklist.md](docs/qa_checklist.md) | 기능 QA 체크리스트 (버튼별 기대 동작) |
