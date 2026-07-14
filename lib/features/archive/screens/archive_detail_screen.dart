@@ -225,6 +225,36 @@ class _InkProfileHeader extends StatelessWidget {
                   ),
                 ],
               ),
+              const SizedBox(height: 6),
+              if (data.reviewCount > 0)
+                Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    const Icon(Icons.star, color: Colors.amber, size: 14),
+                    const SizedBox(width: 2),
+                    Text(
+                      data.avgRating.toStringAsFixed(1),
+                      style: const TextStyle(
+                        fontSize: 13,
+                        fontWeight: FontWeight.w600,
+                        color: AppColors.textPrimary,
+                      ),
+                    ),
+                    const SizedBox(width: 6),
+                    Text(
+                      '· 리뷰 ${data.reviewCount}개',
+                      style: const TextStyle(
+                        fontSize: 13,
+                        color: AppColors.textSecondary,
+                      ),
+                    ),
+                  ],
+                )
+              else
+                const Text(
+                  '아직 리뷰가 없어요',
+                  style: TextStyle(fontSize: 13, color: AppColors.textTertiary),
+                ),
             ],
           ),
         ),

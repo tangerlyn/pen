@@ -255,10 +255,9 @@ class _ReviewWriteScreenState extends ConsumerState<ReviewWriteScreen> {
 
 // ── 공통 헤더 ────────────────────────────────────────────────
 class _SectionHeader extends StatelessWidget {
-  const _SectionHeader({required this.title, this.subtitle, this.required = false});
+  const _SectionHeader({required this.title, this.subtitle});
   final String title;
   final String? subtitle;
-  final bool required;
 
   @override
   Widget build(BuildContext context) {
@@ -267,18 +266,6 @@ class _SectionHeader extends StatelessWidget {
       child: Row(
         children: [
           Text(title, style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w700)),
-          if (required)
-            Container(
-              margin: const EdgeInsets.only(left: 6),
-              padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-              decoration: BoxDecoration(
-                color: AppColors.primary,
-                borderRadius: BorderRadius.circular(4),
-              ),
-              child: const Text('필수',
-                  style: TextStyle(
-                      color: Colors.white, fontSize: 10, fontWeight: FontWeight.w600)),
-            ),
           if (subtitle != null)
             Padding(
               padding: const EdgeInsets.only(left: 8),

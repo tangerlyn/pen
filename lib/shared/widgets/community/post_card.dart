@@ -38,7 +38,7 @@ class PostCard extends ConsumerWidget {
         : false;
 
     final hasImage = post.imageUrls.isNotEmpty;
-    final showBadge = post.category == '질문' || post.category == '정보공유';
+    final showBadge = post.category != null;
 
     return TapScale(
       onTap: onTap,
@@ -204,6 +204,8 @@ class _CategoryBadge extends StatelessWidget {
     final (color, bg) = switch (category) {
       '질문' => (const Color(0xFF1565C0), const Color(0xFFE3F2FD)),
       '정보공유' => (const Color(0xFF2E7D32), const Color(0xFFE8F5E9)),
+      '필사' => (const Color(0xFF6A1B9A), const Color(0xFFF3E5F5)),
+      '그림' => (const Color(0xFFEF6C00), const Color(0xFFFFF3E0)),
       _ => (AppColors.textSecondary, AppColors.chipBackground),
     };
     return Container(

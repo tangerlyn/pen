@@ -9,7 +9,6 @@ import '../../../shared/widgets/editor/blog_body_editor.dart';
 import '../../../shared/widgets/center_toast.dart';
 import '../providers/community_provider.dart';
 import '../../../data/models/post_model.dart';
-import '../../../data/repositories/post_repository.dart';
 
 class PostWriteScreen extends ConsumerStatefulWidget {
   const PostWriteScreen({super.key, this.postToEdit});
@@ -218,7 +217,7 @@ class _PostWriteScreenState extends ConsumerState<PostWriteScreen> {
                 padding: const EdgeInsets.fromLTRB(16, 12, 16, 0),
                 child: Wrap(
                   spacing: 8,
-                  children: ['질문', '정보공유'].map((cat) {
+                  children: ['질문', '정보공유', '필사', '그림'].map((cat) {
                     final isSelected = _selectedCategory == cat;
                     return ChoiceChip(
                       label: Text(cat),

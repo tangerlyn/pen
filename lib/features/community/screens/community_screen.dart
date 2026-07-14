@@ -203,7 +203,7 @@ class _CategoryFilterBar extends StatelessWidget {
   final String? selected;
   final ValueChanged<String?> onSelected;
 
-  static const _categories = ['질문', '정보공유'];
+  static const _categories = ['질문', '정보공유', '필사', '그림'];
 
   @override
   Widget build(BuildContext context) {

@@ -123,7 +123,7 @@ class _ChatRoomScreenState extends ConsumerState<ChatRoomScreen> {
           if (_showDangerWarning)
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
-              color: AppColors.warning.withOpacity(0.1),
+              color: AppColors.warning.withValues(alpha: 0.1),
               child: Row(
                 children: [
                   const Icon(Icons.warning_amber, color: AppColors.warning, size: 18),

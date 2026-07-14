@@ -109,6 +109,7 @@ class _CommentTileState extends ConsumerState<CommentTile> {
                 onTap: () async {
                   Navigator.pop(context);
                   await Future.delayed(const Duration(milliseconds: 100));
+                  if (!mounted) return;
                   FocusScope.of(context).unfocus();
                   await ref
                       .read(reviewRepoProvider)
@@ -476,6 +477,7 @@ class _ReplyTileState extends ConsumerState<_ReplyTile> {
                 onTap: () async {
                   Navigator.pop(context);
                   await Future.delayed(const Duration(milliseconds: 100));
+                  if (!mounted) return;
                   FocusScope.of(context).unfocus();
                   await ref
                       .read(reviewRepoProvider)

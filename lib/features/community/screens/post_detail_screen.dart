@@ -310,7 +310,7 @@ class _PostDetailScreenState extends ConsumerState<PostDetailScreen> {
                 final willScrap = !isScrapped;
                 await ref
                     .read(postRepositoryProvider)
-                    .toggleScrap(widget.postId, currentUid!);
+                    .toggleScrap(widget.postId, currentUid);
                 if (willScrap && context.mounted) {
                   showScrapToast(context);
                 }
@@ -812,133 +812,6 @@ class _EditorialByline extends ConsumerWidget {
   }
 }
 
-// ── 작성자 프로필 행 ──────────────────────────────────────────────────
-class _PostProfileRow extends ConsumerWidget {
-  const _PostProfileRow({required this.post, required this.currentUid});
-  final PostModel post;
-  final String? currentUid;
-
-  @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final authorAsync = ref.watch(_postAuthorProvider(post.authorId));
-    final isOwnPost = post.authorId == currentUid;
-    final isDeletedUser = authorAsync.valueOrNull == null;
-    final isFollowing = (!isOwnPost && currentUid != null && !isDeletedUser)
-        ? ref
-                .watch(followStatusProvider((currentUid!, post.authorId)))
-                .valueOrNull ??
-            false
-        : false;
-
-    return Row(
-      children: [
-        TapScale(
-          onTap: () => navigateToProfile(context, ref, post.authorId),
-          child: authorAsync.when(
-            data: (user) => CircleAvatar(
-              radius: 20,
-              backgroundColor: AppColors.chipBackground,
-              backgroundImage: user?.profileImageUrl != null
-                  ? CachedNetworkImageProvider(user!.profileImageUrl!)
-                  : null,
-              child: user?.profileImageUrl == null
-                  ? const Icon(Icons.person, size: 20, color: AppColors.textTertiary)
-                  : null,
-            ),
-            loading: () => const CircleAvatar(
-              radius: 20,
-              backgroundColor: AppColors.chipBackground,
-            ),
-            error: (_, __) => const CircleAvatar(
-              radius: 20,
-              backgroundColor: AppColors.chipBackground,
-              child: Icon(Icons.person, size: 20, color: AppColors.textTertiary),
-            ),
-          ),
-        ),
-        const SizedBox(width: 12),
-        Expanded(
-          child: TapScale(
-            onTap: () => navigateToProfile(context, ref, post.authorId),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                authorAsync.when(
-                  data: (user) => Row(
-                    children: [
-                      Text(
-                        user == null
-                            ? '${post.authorNickname} (탈퇴)'
-                            : user.nickname,
-                        style: const TextStyle(
-                            fontWeight: FontWeight.w600, fontSize: 14),
-                      ),
-                      const SizedBox(width: 6),
-                      LevelBadge(user?.level ?? post.authorLevel),
-                    ],
-                  ),
-                  loading: () => Container(
-                    height: 14,
-                    width: 80,
-                    decoration: BoxDecoration(
-                      color: AppColors.chipBackground,
-                      borderRadius: BorderRadius.circular(4),
-                    ),
-                  ),
-                  error: (_, __) => Row(
-                    children: [
-                      Text(
-                        post.authorNickname,
-                        style: const TextStyle(
-                            fontWeight: FontWeight.w600, fontSize: 14),
-                      ),
-                      const SizedBox(width: 6),
-                      LevelBadge(post.authorLevel),
-                    ],
-                  ),
-                ),
-                const SizedBox(height: 2),
-                Text(
-                  timeago.format(post.createdAt, locale: 'ko'),
-                  style: const TextStyle(
-                      fontSize: 12, color: AppColors.textTertiary),
-                ),
-              ],
-            ),
-          ),
-        ),
-        if (!isOwnPost && currentUid != null && !isDeletedUser)
-          isFollowing
-              ? ElevatedButton(
-                  onPressed: () =>
-                      ref.read(userRepoProvider).unfollow(currentUid!, post.authorId),
-                  style: ElevatedButton.styleFrom(
-                    minimumSize: const Size(72, 32),
-                    padding: const EdgeInsets.symmetric(horizontal: 16),
-                    textStyle: const TextStyle(fontSize: 13),
-                    backgroundColor: AppColors.chipBackground,
-                    foregroundColor: AppColors.textSecondary,
-                    elevation: 0,
-                  ),
-                  child: const Text('팔로잉'),
-                )
-              : OutlinedButton(
-                  onPressed: () =>
-                      ref.read(userRepoProvider).follow(currentUid!, post.authorId),
-                  style: OutlinedButton.styleFrom(
-                    minimumSize: const Size(72, 32),
-                    padding: const EdgeInsets.symmetric(horizontal: 16),
-                    textStyle: const TextStyle(fontSize: 13),
-                    foregroundColor: AppColors.primary,
-                    side: const BorderSide(color: AppColors.primary),
-                  ),
-                  child: const Text('팔로우'),
-                ),
-      ],
-    );
-  }
-}
-
 class _CommentTile extends ConsumerStatefulWidget {
   const _CommentTile({
     required this.comment,
@@ -1012,6 +885,7 @@ class _CommentTileState extends ConsumerState<_CommentTile> {
                 onTap: () async {
                   Navigator.pop(context);
                   await Future.delayed(const Duration(milliseconds: 100));
+                  if (!mounted) return;
                   FocusScope.of(context).unfocus();
                   await ref.read(postRepositoryProvider).deleteComment(
                       widget.postId, widget.comment.id);
@@ -1311,6 +1185,7 @@ class _PostReplyTileState extends ConsumerState<_PostReplyTile> {
                 onTap: () async {
                   Navigator.pop(context);
                   await Future.delayed(const Duration(milliseconds: 100));
+                  if (!mounted) return;
                   FocusScope.of(context).unfocus();
                   await ref.read(postRepositoryProvider).deleteReply(
                       widget.postId, widget.commentId, widget.reply.id);

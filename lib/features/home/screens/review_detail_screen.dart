@@ -42,7 +42,6 @@ class _ReviewDetailScreenState extends ConsumerState<ReviewDetailScreen> {
   final _pageController = PageController();
   final _commentController = TextEditingController();
   final _commentFocusNode = FocusNode();
-  bool _expanded = false;
   bool _hasActiveEdit = false;
   String? _replyTargetCommentId;
   String? _replyTargetNickname;
@@ -126,7 +125,7 @@ class _ReviewDetailScreenState extends ConsumerState<ReviewDetailScreen> {
       backgroundColor: AppColors.surface,
       resizeToAvoidBottomInset: true,
       body: state.when(
-        loading: () => const SingleChildScrollView(child: DetailSkeleton()),
+        loading: () => const SingleChildScrollView(child: ReviewDetailSkeleton()),
         error: (e, _) => Center(child: Text('오류가 발생했습니다: $e')),
         data: (review) => review == null
             ? const Center(child: Text('삭제된 리뷰입니다.'))
