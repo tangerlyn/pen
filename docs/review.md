@@ -22,7 +22,7 @@
   - 전체 / 잉크 / 만년필
   - 선택 시 해당 카테고리 리뷰만 표시
 - **뷰 전환 버튼** — 그리드(2열) ↔ 리스트 토글 (설정 SharedPreferences에 저장)
-- **그리드 뷰 (`ReviewFeedCard`)** — 2열, 별점 + 좋아요/댓글 수 + 작성 시간 표시, 카드 탭 → `/review/:reviewId`
+- **그리드 뷰 (`ReviewFeedCard`)** — 2열, 사진 좌측 상단에 별점 뱃지(사진 여러 장이면 우측 상단에 장수 뱃지도 표시), 사진 하단에 작성자 프사·닉네임 + 제목만 표시 (태그·좋아요·댓글·작성시간은 그리드에서 생략, 카드 탭 → `/review/:reviewId`)
 - **리스트 뷰 (`ReviewListTile`, `lib/shared/widgets/review/review_list_tile.dart`)** — 한 줄씩 표시
   - 별점 뱃지(노란 별 + 점수) + 제목
   - 잉크/만년필 태그 칩 + 본문 미리보기

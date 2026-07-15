@@ -1,11 +1,15 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:cached_network_image/cached_network_image.dart';
-import 'package:timeago/timeago.dart' as timeago;
-import '../../../features/archive/providers/archive_detail_provider.dart';
 import '../../../data/models/review_model.dart';
+import '../../../data/models/user_model.dart';
 import '../../../core/theme/app_theme.dart';
+import '../../providers/providers.dart';
 import '../tap_scale.dart';
+
+final _reviewCardAuthorProvider = StreamProvider.family<UserModel?, String>((ref, uid) {
+  return ref.watch(userRepoProvider).watchUser(uid);
+});
 
 class ReviewFeedCard extends ConsumerWidget {
   const ReviewFeedCard({super.key, required this.review, required this.onTap});
@@ -15,6 +19,9 @@ class ReviewFeedCard extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final authorAsync = ref.watch(_reviewCardAuthorProvider(review.authorId));
+    final user = authorAsync.valueOrNull;
+
     return TapScale(
       onTap: onTap,
       child: Container(
@@ -47,6 +54,36 @@ class ReviewFeedCard extends ConsumerWidget {
                         Icons.image_not_supported,
                         color: AppColors.textTertiary,
                         size: 32,
+                      ),
+                    ),
+                  ),
+                  // 별점 뱃지 (좌측 상단)
+                  Positioned(
+                    top: 8,
+                    left: 8,
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 6,
+                        vertical: 3,
+                      ),
+                      decoration: BoxDecoration(
+                        color: Colors.black.withValues(alpha: 0.55),
+                        borderRadius: BorderRadius.circular(10),
+                      ),
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          const Icon(Icons.star, color: Colors.amber, size: 12),
+                          const SizedBox(width: 2),
+                          Text(
+                            review.rating.toStringAsFixed(1),
+                            style: const TextStyle(
+                              color: Colors.white,
+                              fontSize: 11,
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
+                        ],
                       ),
                     ),
                   ),
@@ -86,15 +123,42 @@ class ReviewFeedCard extends ConsumerWidget {
                 ],
               ),
             ),
-            // 하단 정보
+            // 하단 정보 — 작성자 프사·이름 + 제목만
             Padding(
               padding: const EdgeInsets.fromLTRB(10, 8, 10, 10),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  _GearTags(review: review),
+                  Row(
+                    children: [
+                      CircleAvatar(
+                        radius: 10,
+                        backgroundColor: AppColors.chipBackground,
+                        backgroundImage: user?.profileImageUrl != null
+                            ? CachedNetworkImageProvider(user!.profileImageUrl!)
+                            : null,
+                        child: user?.profileImageUrl == null
+                            ? const Icon(Icons.person,
+                                size: 12, color: AppColors.textTertiary)
+                            : null,
+                      ),
+                      const SizedBox(width: 6),
+                      Expanded(
+                        child: Text(
+                          user?.nickname ?? review.authorNickname,
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: const TextStyle(
+                            fontSize: 11,
+                            fontWeight: FontWeight.w600,
+                            color: AppColors.textSecondary,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
                   if (review.title.isNotEmpty) ...[
-                    const SizedBox(height: AppSpacing.xs),
+                    const SizedBox(height: 6),
                     Text(
                       review.title,
                       maxLines: 1,
@@ -107,155 +171,10 @@ class ReviewFeedCard extends ConsumerWidget {
                       ),
                     ),
                   ],
-                  const SizedBox(height: 6),
-                  Row(
-                    children: [
-                      const Icon(Icons.star, color: Colors.amber, size: 14),
-                      const SizedBox(width: 2),
-                      Text(
-                        review.rating.toStringAsFixed(1),
-                        style: const TextStyle(
-                          fontSize: 12,
-                          fontWeight: FontWeight.w600,
-                        ),
-                      ),
-                      const Spacer(),
-                      const Icon(
-                        Icons.favorite_border,
-                        size: 14,
-                        color: AppColors.textTertiary,
-                      ),
-                      const SizedBox(width: 2),
-                      Text(
-                        '${review.likeCount}',
-                        style: const TextStyle(
-                          fontSize: 12,
-                          color: AppColors.textTertiary,
-                        ),
-                      ),
-                      const SizedBox(width: AppSpacing.sm),
-                      const Icon(
-                        Icons.chat_bubble_outline,
-                        size: 14,
-                        color: AppColors.textTertiary,
-                      ),
-                      const SizedBox(width: 2),
-                      Text(
-                        '${review.commentCount}',
-                        style: const TextStyle(
-                          fontSize: 12,
-                          color: AppColors.textTertiary,
-                        ),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 4),
-                  Text(
-                    timeago.format(review.createdAt, locale: 'ko'),
-                    style: const TextStyle(
-                      fontSize: 11,
-                      color: AppColors.textTertiary,
-                    ),
-                  ),
                 ],
               ),
             ),
           ],
-        ),
-      ),
-    );
-  }
-}
-
-class _GearTags extends ConsumerWidget {
-  const _GearTags({required this.review});
-  final ReviewModel review;
-
-  @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final allGear = [
-      ...review.inkIds.map((id) => (type: 'ink', id: id)),
-      ...review.penIds.map((id) => (type: 'pen', id: id)),
-    ];
-
-    if (allGear.isEmpty) return const SizedBox.shrink();
-
-    final first = allGear.first;
-    final remaining = allGear.length - 1;
-
-    return Row(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        Flexible(
-          child: _TagChip(type: first.type, id: first.id),
-        ),
-        if (remaining > 0) ...[
-          const SizedBox(width: 4),
-          Container(
-            padding: const EdgeInsets.symmetric(
-              horizontal: AppSpacing.sm,
-              vertical: 3,
-            ),
-            decoration: BoxDecoration(
-              color: AppColors.chipBackground,
-              borderRadius: BorderRadius.circular(20),
-            ),
-            child: Text(
-              '+$remaining',
-              style: const TextStyle(
-                fontSize: 11,
-                color: AppColors.textSecondary,
-                fontWeight: FontWeight.w500,
-              ),
-            ),
-          ),
-        ],
-      ],
-    );
-  }
-}
-
-class _TagChip extends ConsumerWidget {
-  const _TagChip({required this.type, required this.id});
-  final String type;
-  final String id;
-
-  @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final state = ref.watch(archiveDetailProvider((type: type, productId: id)));
-
-    final label = state.when(
-      data: (data) {
-        if (data == null) return '';
-        if (type == 'ink') return '잉크 · ${data.brand} ${data.name}';
-        return '펜 · ${data.brand} ${data.modelName}';
-      },
-      loading: () => '...',
-      error: (_, _) => '',
-    );
-
-    if (label.isEmpty) return const SizedBox.shrink();
-
-    return ConstrainedBox(
-      constraints: const BoxConstraints(maxWidth: 160),
-      child: Container(
-        padding: const EdgeInsets.symmetric(
-          horizontal: AppSpacing.sm,
-          vertical: 3,
-        ),
-        decoration: BoxDecoration(
-          color: AppColors.chipBackground,
-          borderRadius: BorderRadius.circular(20),
-        ),
-        child: Text(
-          label,
-          maxLines: 1,
-          overflow: TextOverflow.ellipsis,
-          style: const TextStyle(
-            fontSize: 11,
-            color: AppColors.textSecondary,
-            fontWeight: FontWeight.w500,
-          ),
         ),
       ),
     );
