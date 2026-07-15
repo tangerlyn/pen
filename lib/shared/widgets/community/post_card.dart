@@ -5,7 +5,6 @@ import 'package:timeago/timeago.dart' as timeago;
 import '../../../data/models/post_model.dart';
 import '../../../data/models/user_model.dart';
 import '../../../core/theme/app_theme.dart';
-import '../../../core/utils/profile_navigation.dart';
 import '../../providers/providers.dart';
 import '../../../features/community/providers/community_provider.dart';
 import '../level_badge.dart';
@@ -92,17 +91,10 @@ class PostCard extends ConsumerWidget {
                           mainAxisSize: MainAxisSize.min,
                           children: [
                             Flexible(
-                              child: TapScale(
-                                onTap: () => navigateToProfile(
-                                  context,
-                                  ref,
-                                  post.authorId,
-                                ),
-                                child: _AuthorRow(
-                                  authorId: post.authorId,
-                                  fallbackNickname: post.authorNickname,
-                                  authorLevel: post.authorLevel,
-                                ),
+                              child: _AuthorRow(
+                                authorId: post.authorId,
+                                fallbackNickname: post.authorNickname,
+                                authorLevel: post.authorLevel,
                               ),
                             ),
                             const SizedBox(width: AppSpacing.sm),

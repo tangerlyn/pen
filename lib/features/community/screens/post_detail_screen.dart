@@ -996,13 +996,17 @@ class _CommentTileState extends ConsumerState<_CommentTile> {
                     children: [
                       Row(
                         children: [
-                          TapScale(
-                            onTap: () => navigateToProfile(
-                                context, ref, widget.comment.authorId),
-                            child: Text(widget.comment.authorNickname,
-                                style: const TextStyle(
-                                    fontSize: 13,
-                                    fontWeight: FontWeight.w600)),
+                          Flexible(
+                            child: TapScale(
+                              onTap: () => navigateToProfile(
+                                  context, ref, widget.comment.authorId),
+                              child: Text(widget.comment.authorNickname,
+                                  maxLines: 1,
+                                  overflow: TextOverflow.ellipsis,
+                                  style: const TextStyle(
+                                      fontSize: 13,
+                                      fontWeight: FontWeight.w600)),
+                            ),
                           ),
                           const SizedBox(width: 4),
                           LevelBadge(authorLevel),
@@ -1024,7 +1028,7 @@ class _CommentTileState extends ConsumerState<_CommentTile> {
                                     fontSize: 11,
                                     color: AppColors.textTertiary)),
                           ],
-                          const Spacer(),
+                          const SizedBox(width: 8),
                           TapScale(
                             onTap: () => widget.onReplyTap(
                                 widget.comment.id,
@@ -1280,12 +1284,16 @@ class _PostReplyTileState extends ConsumerState<_PostReplyTile> {
               children: [
                 Row(
                   children: [
-                    TapScale(
-                      onTap: () => navigateToProfile(
-                          context, ref, widget.reply.authorId),
-                      child: Text(widget.reply.authorNickname,
-                          style: const TextStyle(
-                              fontWeight: FontWeight.w600, fontSize: 13)),
+                    Flexible(
+                      child: TapScale(
+                        onTap: () => navigateToProfile(
+                            context, ref, widget.reply.authorId),
+                        child: Text(widget.reply.authorNickname,
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style: const TextStyle(
+                                fontWeight: FontWeight.w600, fontSize: 13)),
+                      ),
                     ),
                     const SizedBox(width: 4),
                     LevelBadge(authorLevel),
@@ -1307,7 +1315,7 @@ class _PostReplyTileState extends ConsumerState<_PostReplyTile> {
                               fontSize: 11,
                               color: AppColors.textTertiary)),
                     ],
-                    const Spacer(),
+                    const SizedBox(width: 8),
                     TapScale(
                       onTap: _showMenu,
                       child: const Padding(

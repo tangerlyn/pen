@@ -3,7 +3,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:timeago/timeago.dart' as timeago;
 import '../../../core/theme/app_theme.dart';
-import '../../../core/utils/profile_navigation.dart';
 import '../../../data/models/review_model.dart';
 import '../../../data/models/user_model.dart';
 import '../../../features/archive/providers/archive_detail_provider.dart';
@@ -111,43 +110,38 @@ class ReviewListTile extends ConsumerWidget {
                           mainAxisSize: MainAxisSize.min,
                           children: [
                             Flexible(
-                              child: TapScale(
-                                onTap: () => navigateToProfile(
-                                    context, ref, review.authorId),
-                                child: Row(
-                                  mainAxisSize: MainAxisSize.min,
-                                  children: [
-                                    CircleAvatar(
-                                      radius: 11,
-                                      backgroundColor: AppColors.chipBackground,
-                                      backgroundImage: user?.profileImageUrl !=
-                                              null
-                                          ? CachedNetworkImageProvider(
-                                              user!.profileImageUrl!)
-                                          : null,
-                                      child: user?.profileImageUrl == null
-                                          ? const Icon(Icons.person,
-                                              size: 13,
-                                              color: AppColors.textTertiary)
-                                          : null,
-                                    ),
-                                    const SizedBox(width: 5),
-                                    Flexible(
-                                      child: Text(
-                                        user?.nickname ?? review.authorNickname,
-                                        maxLines: 1,
-                                        overflow: TextOverflow.ellipsis,
-                                        style: const TextStyle(
-                                          fontSize: 12,
-                                          fontWeight: FontWeight.w600,
-                                          color: AppColors.primary,
-                                        ),
+                              child: Row(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  CircleAvatar(
+                                    radius: 11,
+                                    backgroundColor: AppColors.chipBackground,
+                                    backgroundImage: user?.profileImageUrl != null
+                                        ? CachedNetworkImageProvider(
+                                            user!.profileImageUrl!)
+                                        : null,
+                                    child: user?.profileImageUrl == null
+                                        ? const Icon(Icons.person,
+                                            size: 13,
+                                            color: AppColors.textTertiary)
+                                        : null,
+                                  ),
+                                  const SizedBox(width: 5),
+                                  Flexible(
+                                    child: Text(
+                                      user?.nickname ?? review.authorNickname,
+                                      maxLines: 1,
+                                      overflow: TextOverflow.ellipsis,
+                                      style: const TextStyle(
+                                        fontSize: 12,
+                                        fontWeight: FontWeight.w600,
+                                        color: AppColors.primary,
                                       ),
                                     ),
-                                    const SizedBox(width: 5),
-                                    LevelBadge(user?.level ?? review.authorLevel),
-                                  ],
-                                ),
+                                  ),
+                                  const SizedBox(width: 5),
+                                  LevelBadge(user?.level ?? review.authorLevel),
+                                ],
                               ),
                             ),
                             const SizedBox(width: 6),

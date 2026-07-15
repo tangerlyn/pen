@@ -289,17 +289,21 @@ class _CommentTileState extends ConsumerState<CommentTile> {
             children: [
               Row(
                 children: [
-                  TapScale(
-                    onTap: () => navigateToProfile(
-                      context,
-                      ref,
-                      widget.comment.authorId,
-                    ),
-                    child: Text(
-                      _nickname,
-                      style: const TextStyle(
-                        fontWeight: FontWeight.w600,
-                        fontSize: 13,
+                  Flexible(
+                    child: TapScale(
+                      onTap: () => navigateToProfile(
+                        context,
+                        ref,
+                        widget.comment.authorId,
+                      ),
+                      child: Text(
+                        _nickname,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: const TextStyle(
+                          fontWeight: FontWeight.w600,
+                          fontSize: 13,
+                        ),
                       ),
                     ),
                   ),
@@ -327,7 +331,7 @@ class _CommentTileState extends ConsumerState<CommentTile> {
                       ),
                     ),
                   ],
-                  const Spacer(),
+                  const SizedBox(width: 8),
                   TapScale(
                     onTap: () =>
                         widget.onReplyTap(widget.comment.id, _nickname),
@@ -599,17 +603,21 @@ class _ReplyTileState extends ConsumerState<_ReplyTile> {
               children: [
                 Row(
                   children: [
-                    TapScale(
-                      onTap: () => navigateToProfile(
-                        context,
-                        ref,
-                        widget.reply.authorId,
-                      ),
-                      child: Text(
-                        widget.reply.authorNickname,
-                        style: const TextStyle(
-                          fontWeight: FontWeight.w600,
-                          fontSize: 13,
+                    Flexible(
+                      child: TapScale(
+                        onTap: () => navigateToProfile(
+                          context,
+                          ref,
+                          widget.reply.authorId,
+                        ),
+                        child: Text(
+                          widget.reply.authorNickname,
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: const TextStyle(
+                            fontWeight: FontWeight.w600,
+                            fontSize: 13,
+                          ),
                         ),
                       ),
                     ),
@@ -637,7 +645,7 @@ class _ReplyTileState extends ConsumerState<_ReplyTile> {
                         ),
                       ),
                     ],
-                    const Spacer(),
+                    const SizedBox(width: 8),
                     TapScale(
                       onTap: _showMenu,
                       child: const Padding(
