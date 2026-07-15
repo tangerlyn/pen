@@ -54,7 +54,7 @@
   - 좋아요(하트) + 좋아요 수 — 탭 시 좋아요 토글 (+EXP 1 원작성자 획득)
   - 댓글 아이콘 + 댓글 수
 - **댓글 목록 (`CommentTile`)**
-  - 댓글: CircleAvatar(실제 프로필 사진, 작성자 정보는 실시간 반영) + 닉네임 + 레벨 뱃지(현재 레벨) + 작성 시간 + 본문
+  - 댓글: CircleAvatar(실제 프로필 사진, 작성자 정보는 실시간 반영) + 닉네임 + 레벨 뱃지(현재 레벨) + (리뷰 작성자 본인이면 "작성자" 뱃지) + 작성 시간 + 본문
   - 댓글 ⋮ 메뉴: 본인 → 수정/삭제 / 타인 → 차단/신고
   - "답글" 텍스트 탭 → 하단 입력창이 "@닉네임에게 답글" 모드로 전환
   - 답글(들여쓰기): 닉네임 + 레벨 뱃지 + 작성 시간 + 본문 + ⋮ 메뉴
@@ -142,3 +142,4 @@
 - `lib/core/utils/toast_utils.dart`
 - `lib/shared/widgets/level_up_dialog.dart`
 - `lib/shared/widgets/level_badge.dart`
+- `lib/shared/widgets/author_badge.dart`

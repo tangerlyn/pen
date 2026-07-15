@@ -4,6 +4,7 @@ import 'package:cached_network_image/cached_network_image.dart';
 import '../../../data/models/review_model.dart';
 import '../../../data/models/user_model.dart';
 import '../../../core/theme/app_theme.dart';
+import '../../../features/archive/providers/archive_detail_provider.dart';
 import '../../providers/providers.dart';
 import '../tap_scale.dart';
 
@@ -87,6 +88,16 @@ class ReviewFeedCard extends ConsumerWidget {
                       ),
                     ),
                   ),
+                  if (review.inkIds.isNotEmpty || review.penIds.isNotEmpty)
+                    Positioned(
+                      left: 0,
+                      right: 0,
+                      bottom: 0,
+                      child: Padding(
+                        padding: const EdgeInsets.all(8),
+                        child: _GearTagOverlay(review: review),
+                      ),
+                    ),
                   if (review.imageUrls.length > 1)
                     Positioned(
                       top: 8,
@@ -176,6 +187,47 @@ class ReviewFeedCard extends ConsumerWidget {
             ),
           ],
         ),
+      ),
+    );
+  }
+}
+
+// 사진 위 태그된 잉크/만년필 이름 오버레이 (흰 글씨, ex. "블랙 45 +4")
+class _GearTagOverlay extends ConsumerWidget {
+  const _GearTagOverlay({required this.review});
+  final ReviewModel review;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final allGear = [
+      ...review.inkIds.map((id) => (type: 'ink', id: id)),
+      ...review.penIds.map((id) => (type: 'pen', id: id)),
+    ];
+    final first = allGear.first;
+    final remaining = allGear.length - 1;
+
+    final state =
+        ref.watch(archiveDetailProvider((type: first.type, productId: first.id)));
+    final name = state.when(
+      data: (data) {
+        if (data == null) return '';
+        return first.type == 'ink' ? data.name : data.modelName;
+      },
+      loading: () => '',
+      error: (_, _) => '',
+    );
+
+    if (name.isEmpty) return const SizedBox.shrink();
+
+    return Text(
+      remaining > 0 ? '$name +$remaining' : name,
+      maxLines: 1,
+      overflow: TextOverflow.ellipsis,
+      style: const TextStyle(
+        color: Colors.white,
+        fontSize: 13,
+        fontWeight: FontWeight.w600,
+        shadows: [Shadow(color: Colors.black45, blurRadius: 3)],
       ),
     );
   }

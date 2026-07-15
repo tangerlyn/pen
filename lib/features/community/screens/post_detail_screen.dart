@@ -14,6 +14,7 @@ import '../providers/community_provider.dart';
 import '../../../data/models/post_model.dart';
 import '../../../data/models/reply_model.dart';
 import '../../../shared/widgets/level_badge.dart';
+import '../../../shared/widgets/author_badge.dart';
 import '../../../data/models/user_model.dart';
 import '../../../core/utils/toast_utils.dart';
 import '../../../shared/widgets/content_moderation.dart';
@@ -542,6 +543,7 @@ class _PostDetailScreenState extends ConsumerState<PostDetailScreen> {
                                     .map((c) => _CommentTile(
                                           comment: c,
                                           postId: widget.postId,
+                                          postAuthorId: post.authorId,
                                           currentUid: currentUid,
                                           onReplyTap: _startReply,
                                           onEditStart: () => setState(
@@ -816,6 +818,7 @@ class _CommentTile extends ConsumerStatefulWidget {
   const _CommentTile({
     required this.comment,
     required this.postId,
+    required this.postAuthorId,
     required this.currentUid,
     required this.onReplyTap,
     this.onEditStart,
@@ -823,6 +826,7 @@ class _CommentTile extends ConsumerStatefulWidget {
   });
   final PostCommentModel comment;
   final String postId;
+  final String postAuthorId;
   final String? currentUid;
   final void Function(String commentId, String nickname) onReplyTap;
   final VoidCallback? onEditStart;
@@ -849,6 +853,7 @@ class _CommentTileState extends ConsumerState<_CommentTile> {
   }
 
   bool get _isOwn => widget.comment.authorId == widget.currentUid;
+  bool get _isPostAuthor => widget.comment.authorId == widget.postAuthorId;
 
   void _showMenu() {
     FocusScope.of(context).unfocus();
@@ -1001,6 +1006,10 @@ class _CommentTileState extends ConsumerState<_CommentTile> {
                           ),
                           const SizedBox(width: 4),
                           LevelBadge(authorLevel),
+                          if (_isPostAuthor) ...[
+                            const SizedBox(width: 6),
+                            const AuthorBadge(),
+                          ],
                           const SizedBox(width: 6),
                           Text(
                               timeago.format(widget.comment.createdAt,
@@ -1091,6 +1100,7 @@ class _CommentTileState extends ConsumerState<_CommentTile> {
                           .map((r) => _PostReplyTile(
                                 reply: r,
                                 postId: widget.postId,
+                                postAuthorId: widget.postAuthorId,
                                 commentId: widget.comment.id,
                                 currentUid: widget.currentUid,
                                 onReplyTap: () => widget.onReplyTap(
@@ -1114,6 +1124,7 @@ class _PostReplyTile extends ConsumerStatefulWidget {
   const _PostReplyTile({
     required this.reply,
     required this.postId,
+    required this.postAuthorId,
     required this.commentId,
     required this.currentUid,
     required this.onReplyTap,
@@ -1122,6 +1133,7 @@ class _PostReplyTile extends ConsumerStatefulWidget {
   });
   final ReplyModel reply;
   final String postId;
+  final String postAuthorId;
   final String commentId;
   final String? currentUid;
   final VoidCallback onReplyTap;
@@ -1149,6 +1161,7 @@ class _PostReplyTileState extends ConsumerState<_PostReplyTile> {
   }
 
   bool get _isOwn => widget.reply.authorId == widget.currentUid;
+  bool get _isPostAuthor => widget.reply.authorId == widget.postAuthorId;
 
   void _showMenu() {
     FocusScope.of(context).unfocus();
@@ -1276,6 +1289,10 @@ class _PostReplyTileState extends ConsumerState<_PostReplyTile> {
                     ),
                     const SizedBox(width: 4),
                     LevelBadge(authorLevel),
+                    if (_isPostAuthor) ...[
+                      const SizedBox(width: 6),
+                      const AuthorBadge(),
+                    ],
                     const SizedBox(width: 6),
                     Text(
                         timeago.format(widget.reply.createdAt,

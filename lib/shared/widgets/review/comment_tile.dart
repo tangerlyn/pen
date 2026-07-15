@@ -10,6 +10,7 @@ import '../../providers/providers.dart';
 import '../../../features/home/providers/review_detail_provider.dart';
 import '../content_moderation.dart';
 import '../level_badge.dart';
+import '../author_badge.dart';
 import '../../../data/models/user_model.dart';
 import '../tap_scale.dart';
 
@@ -25,6 +26,7 @@ class CommentTile extends ConsumerStatefulWidget {
     super.key,
     required this.comment,
     required this.reviewId,
+    required this.reviewAuthorId,
     required this.currentUid,
     required this.onReplyTap,
     this.onDeleted,
@@ -35,6 +37,7 @@ class CommentTile extends ConsumerStatefulWidget {
 
   final CommentModel comment;
   final String reviewId;
+  final String reviewAuthorId;
   final String? currentUid;
   final void Function(String commentId, String nickname) onReplyTap;
   final VoidCallback? onDeleted;
@@ -63,6 +66,7 @@ class _CommentTileState extends ConsumerState<CommentTile> {
   }
 
   bool get _isOwn => widget.comment.authorId == widget.currentUid;
+  bool get _isPostAuthor => widget.comment.authorId == widget.reviewAuthorId;
   String get _nickname => widget.comment.authorNickname.isNotEmpty
       ? widget.comment.authorNickname
       : widget.comment.authorId;
@@ -208,6 +212,7 @@ class _CommentTileState extends ConsumerState<CommentTile> {
                             (r) => _ReplyTile(
                               reply: r,
                               reviewId: widget.reviewId,
+                              reviewAuthorId: widget.reviewAuthorId,
                               commentId: widget.comment.id,
                               currentUid: widget.currentUid,
                               onReplyTap: () => widget.onReplyTap(
@@ -300,6 +305,10 @@ class _CommentTileState extends ConsumerState<CommentTile> {
                   ),
                   const SizedBox(width: 6),
                   LevelBadge(currentLevel),
+                  if (_isPostAuthor) ...[
+                    const SizedBox(width: 6),
+                    const AuthorBadge(),
+                  ],
                   const SizedBox(width: 6),
                   Text(
                     timeago.format(widget.comment.createdAt, locale: 'ko'),
@@ -396,6 +405,7 @@ class _ReplyTile extends ConsumerStatefulWidget {
   const _ReplyTile({
     required this.reply,
     required this.reviewId,
+    required this.reviewAuthorId,
     required this.commentId,
     required this.currentUid,
     required this.onReplyTap,
@@ -406,6 +416,7 @@ class _ReplyTile extends ConsumerStatefulWidget {
 
   final ReplyModel reply;
   final String reviewId;
+  final String reviewAuthorId;
   final String commentId;
   final String? currentUid;
   final VoidCallback onReplyTap;
@@ -434,6 +445,7 @@ class _ReplyTileState extends ConsumerState<_ReplyTile> {
   }
 
   bool get _isOwn => widget.reply.authorId == widget.currentUid;
+  bool get _isPostAuthor => widget.reply.authorId == widget.reviewAuthorId;
 
   void _showMenu() {
     FocusScope.of(context).unfocus();
@@ -603,6 +615,10 @@ class _ReplyTileState extends ConsumerState<_ReplyTile> {
                     ),
                     const SizedBox(width: 6),
                     LevelBadge(currentLevel),
+                    if (_isPostAuthor) ...[
+                      const SizedBox(width: 6),
+                      const AuthorBadge(),
+                    ],
                     const SizedBox(width: 6),
                     Text(
                       timeago.format(widget.reply.createdAt, locale: 'ko'),

@@ -128,12 +128,12 @@ class _ReviewFeedScreenState extends ConsumerState<ReviewFeedScreen> {
                   ? _isGridView
                       ? GridView.builder(
                           physics: const NeverScrollableScrollPhysics(),
-                          padding: const EdgeInsets.all(10),
+                          padding: EdgeInsets.zero,
                           gridDelegate:
                               const SliverGridDelegateWithFixedCrossAxisCount(
                             crossAxisCount: 2,
-                            crossAxisSpacing: 10,
-                            mainAxisSpacing: 10,
+                            crossAxisSpacing: 1,
+                            mainAxisSpacing: 1,
                             childAspectRatio: 0.85,
                           ),
                           itemCount: 6,
@@ -170,13 +170,13 @@ class _ReviewFeedScreenState extends ConsumerState<ReviewFeedScreen> {
                             slivers: [
                               _isGridView
                                   ? SliverPadding(
-                                      padding: const EdgeInsets.all(10),
+                                      padding: EdgeInsets.zero,
                                       sliver: SliverGrid(
                                         gridDelegate:
                                             const SliverGridDelegateWithFixedCrossAxisCount(
                                           crossAxisCount: 2,
-                                          crossAxisSpacing: 10,
-                                          mainAxisSpacing: 10,
+                                          crossAxisSpacing: 1,
+                                          mainAxisSpacing: 1,
                                           childAspectRatio: 0.85,
                                         ),
                                         delegate: SliverChildBuilderDelegate(

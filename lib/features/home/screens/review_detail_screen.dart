@@ -417,6 +417,7 @@ class _ReviewDetailScreenState extends ConsumerState<ReviewDetailScreen> {
               // 댓글
               _CommentList(
                 reviewId: widget.reviewId,
+                reviewAuthorId: review.authorId,
                 currentUid: currentUid,
                 onReplyTap: _startReply,
                 onCommentDeleted: () =>
@@ -896,6 +897,7 @@ class _ActionButton extends StatelessWidget {
 class _CommentList extends ConsumerWidget {
   const _CommentList({
     required this.reviewId,
+    required this.reviewAuthorId,
     required this.currentUid,
     required this.onReplyTap,
     required this.onCommentDeleted,
@@ -904,6 +906,7 @@ class _CommentList extends ConsumerWidget {
     this.onEditEnd,
   });
   final String reviewId;
+  final String reviewAuthorId;
   final String? currentUid;
   final void Function(String commentId, String nickname) onReplyTap;
   final VoidCallback onCommentDeleted;
@@ -922,6 +925,7 @@ class _CommentList extends ConsumerWidget {
           (_, i) => CommentTile(
             comment: list[i],
             reviewId: reviewId,
+            reviewAuthorId: reviewAuthorId,
             currentUid: currentUid,
             onReplyTap: onReplyTap,
             onDeleted: onCommentDeleted,
