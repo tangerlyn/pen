@@ -9,6 +9,7 @@ import 'package:kakao_flutter_sdk_user/kakao_flutter_sdk_user.dart';
 import 'firebase_options.dart';
 import 'app.dart';
 import 'core/constants/app_secrets.dart';
+import 'package:flutter_naver_login/flutter_naver_login.dart';
 
 // 백그라운드 메시지 핸들러 — 반드시 top-level 함수
 @pragma('vm:entry-point')
@@ -38,4 +39,11 @@ void main() async {
 
   FlutterNativeSplash.remove();
   runApp(const ProviderScope(child: NibpenApp()));
-}
+
+// // 네이버 SDK 초기화 코드
+//   await FlutterNaverLogin.initSDK(
+//     clientId: 'Y5EtV_fPw02vQtHSFd_C', // AppSecrets.naverClientId 등
+//     clientName: 'nibpen', // 네이버 개발자 센터에 등록한 앱 이름
+//     clientSecret: 'YSzIzVbqJk', // AppSecrets.naverClientSecret 등
+//   );
+ }

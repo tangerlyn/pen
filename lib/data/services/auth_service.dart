@@ -66,7 +66,7 @@ class AuthService {
         debugPrint('[Kakao] 신규 유저 문서 생성 중...');
         await _initUserDoc(uid, 'kakao', email);
       }
-      
+
       final hasProfile = await _checkProfile(uid);
       debugPrint('[Kakao] 로그인 완료 (신규여부: $isNew, 프로필완성: $hasProfile)');
 
@@ -86,6 +86,8 @@ class AuthService {
       const Duration(seconds: 20),
       onTimeout: () => throw Exception('네이버 로그인 시간 초과 (20초)'),
     );
+
+    debugPrint('[Naver] status: ${result.status}, error: ${result.errorMessage}');   // ← 여기 추가
 
     if (result.status != NaverLoginStatus.loggedIn) {
       throw Exception('네이버 로그인 실패: ${result.errorMessage}');
@@ -108,6 +110,37 @@ class AuthService {
 
     return AuthResult(uid: uid, isNewUser: isNew, hasProfile: hasProfile, provider: 'naver');
   }
+  // // ── Naver ────────────────────────────────────────────────────────────
+  // Future<AuthResult> signInWithNaver() async {
+  //   // 이전 세션 초기화
+  //   try { await FlutterNaverLogin.logOut(); } catch (_) {}
+  //
+  //   final result = await FlutterNaverLogin.logIn().timeout(
+  //     const Duration(seconds: 20),
+  //     onTimeout: () => throw Exception('네이버 로그인 시간 초과 (20초)'),
+  //   );
+  //
+  //   if (result.status != NaverLoginStatus.loggedIn) {
+  //     throw Exception('네이버 로그인 실패: ${result.errorMessage}');
+  //   }
+  //
+  //   final account = result.account;
+  //   if (account == null) throw Exception('네이버 계정 정보를 가져올 수 없습니다.');
+  //
+  //   final id = account.id ?? '';
+  //   final naverEmail = account.email ?? '';
+  //   final email = naverEmail.isNotEmpty ? naverEmail : 'naver_$id@nibpen.login';
+  //   final password = _hash(id);
+  //
+  //   final credential = await _firebaseEmailAuth(email, password);
+  //   final uid = credential.user!.uid;
+  //   final isNew = credential.additionalUserInfo?.isNewUser ?? false;
+  //
+  //   if (isNew) await _initUserDoc(uid, 'naver', email);
+  //   final hasProfile = await _checkProfile(uid);
+  //
+  //   return AuthResult(uid: uid, isNewUser: isNew, hasProfile: hasProfile, provider: 'naver');
+  // }
 
   // ── Apple ─────────────────────────────────────────────────────────────
   Future<AuthResult> signInWithApple() async {
