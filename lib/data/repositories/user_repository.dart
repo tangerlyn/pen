@@ -88,11 +88,6 @@ class UserRepository {
         .map((doc) => doc.exists);
   }
 
-  Future<bool> isFollowing(String fromUid, String toUid) async {
-    final doc = await _db.collection('follows').doc('${fromUid}_$toUid').get();
-    return doc.exists;
-  }
-
   Future<List<String>> getFollowingUids(String uid) async {
     final snap = await _db
         .collection('follows')
