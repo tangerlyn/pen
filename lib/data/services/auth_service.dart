@@ -146,7 +146,10 @@ class AuthService {
     await _db.collection('users').doc(uid).set({
       'uid': uid,
       'nickname': nickname,
-      'loginProvider': loginProvider,
+      // loginProvider를 모르는 채로(예: 프로세스 재시작 후 pendingProvider 유실)
+      // completeSignup이 호출된 경우, 최초 로그인 때 _initUserDoc이 이미
+      // 저장해둔 값을 빈 문자열로 덮어쓰지 않도록 알 때만 기록한다.
+      if (loginProvider.isNotEmpty) 'loginProvider': loginProvider,
       'interests': interests,
       'profileImageUrl': profileImageUrl,
       'bio': '',

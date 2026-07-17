@@ -97,9 +97,15 @@ class AuthNotifier extends StateNotifier<AuthState> {
       _authService.isNicknameAvailable(nickname);
 
   Future<void> completeSignup(BuildContext context) async {
-    final uid = state.pendingUid;
+    // pendingUid는 로그인 직후 메모리 상태라, 카카오 로그인처럼 외부 앱으로
+    // 전환됐다가 돌아오며 프로세스가 재시작되면 비어있을 수 있다. 이 경우
+    // Firebase Auth에 남아있는 세션의 uid로 폴백해야 회원가입을 이어갈 수 있다.
+    final uid = state.pendingUid ?? _authService.currentUid;
     final provider = state.pendingProvider ?? '';
-    if (uid == null) return;
+    if (uid == null) {
+      state = state.copyWith(error: '로그인 정보를 확인할 수 없어요. 다시 로그인해주세요.');
+      return;
+    }
 
     state = state.copyWith(isLoading: true);
     try {

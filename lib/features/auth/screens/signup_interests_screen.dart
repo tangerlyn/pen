@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../core/theme/app_theme.dart';
 import '../../../core/constants/app_constants.dart';
+import '../../../shared/widgets/center_toast.dart';
 import '../providers/auth_provider.dart';
 
 class SignupInterestsScreen extends ConsumerStatefulWidget {
@@ -17,6 +18,13 @@ class _SignupInterestsScreenState extends ConsumerState<SignupInterestsScreen> {
   @override
   Widget build(BuildContext context) {
     final state = ref.watch(authProvider);
+
+    ref.listen(authProvider, (_, next) {
+      if (next.error != null) {
+        showCenterToast(context,
+            message: next.error!, icon: Icons.error_outline, iconColor: AppColors.error);
+      }
+    });
 
     return Scaffold(
       appBar: AppBar(title: const Text('관심 카테고리')),
