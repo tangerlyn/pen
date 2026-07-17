@@ -33,7 +33,7 @@ class HomeReviewCardSkeleton extends StatelessWidget {
         Container(
           width: 150,
           height: 210,
-          margin: const EdgeInsets.only(right: 12),
+          margin: const EdgeInsets.only(right: 4),
           decoration: BoxDecoration(
             color: Colors.white,
             borderRadius: BorderRadius.circular(12),

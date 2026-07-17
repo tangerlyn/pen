@@ -1,14 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-import 'package:cached_network_image/cached_network_image.dart';
-import 'package:timeago/timeago.dart' as timeago;
 import '../../../core/theme/app_theme.dart';
 import '../providers/home_discovery_provider.dart';
 import '../providers/notification_provider.dart';
 import '../../community/providers/community_provider.dart';
 import '../../../shared/widgets/community/post_card.dart';
-import '../../../data/models/review_model.dart';
+import '../../../shared/widgets/review/review_feed_card.dart';
 import '../../../data/models/ink_model.dart';
 import '../../../data/models/pen_model.dart';
 import '../../../shared/widgets/common/skeletons.dart';
@@ -276,108 +274,21 @@ class _LatestReviewsSection extends ConsumerWidget {
                 scrollDirection: Axis.horizontal,
                 padding: AppSpacing.pagePadding,
                 itemCount: reviews.length,
-                itemBuilder: (_, i) => _ReviewCard(
-                  review: reviews[i],
-                  onTap: () => context.push('/review/${reviews[i].id}'),
+                itemBuilder: (_, i) => Padding(
+                  padding: const EdgeInsets.only(right: AppSpacing.xs),
+                  child: SizedBox(
+                    width: 150,
+                    child: ReviewFeedCard(
+                      review: reviews[i],
+                      onTap: () => context.push('/review/${reviews[i].id}'),
+                    ),
+                  ),
                 ),
               ),
             );
           },
         ),
       ],
-    );
-  }
-}
-
-class _ReviewCard extends StatelessWidget {
-  const _ReviewCard({required this.review, required this.onTap});
-  final ReviewModel review;
-  final VoidCallback onTap;
-
-  @override
-  Widget build(BuildContext context) {
-    return TapScale(
-      onTap: onTap,
-      child: Container(
-        width: 150,
-        margin: const EdgeInsets.only(right: AppSpacing.md),
-        decoration: BoxDecoration(
-          color: Colors.white.withValues(alpha: 0.82),
-          borderRadius: BorderRadius.circular(14),
-          border: Border.all(
-            color: Colors.white.withValues(alpha: 0.70),
-            width: 1.2,
-          ),
-          boxShadow: const [
-            BoxShadow(
-              color: AppColors.cardShadowColor,
-              blurRadius: 16,
-              offset: Offset(0, 4),
-            ),
-          ],
-        ),
-        child: ClipRRect(
-          borderRadius: BorderRadius.circular(14),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Expanded(
-                child: CachedNetworkImage(
-                  imageUrl: review.thumbnailUrl,
-                  fit: BoxFit.cover,
-                  width: double.infinity,
-                  placeholder: (_, __) =>
-                      Container(color: AppColors.chipBackground),
-                  errorWidget: (_, __, ___) => Container(
-                    color: AppColors.chipBackground,
-                    child: const Icon(Icons.image_not_supported,
-                        color: AppColors.textTertiary, size: 28),
-                  ),
-                ),
-              ),
-              Padding(
-                padding: const EdgeInsets.fromLTRB(
-                    AppSpacing.sm + 2, AppSpacing.sm, AppSpacing.sm + 2, AppSpacing.sm + 2),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    if (review.title.isNotEmpty)
-                      Text(review.title,
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                          style: AppTextStyles.bodySmall.copyWith(
-                              fontWeight: FontWeight.w600,
-                              color: AppColors.textPrimary)),
-                    const SizedBox(height: AppSpacing.xs),
-                    Row(
-                      children: [
-                        const Icon(Icons.star,
-                            color: Colors.amber, size: 13),
-                        const SizedBox(width: 2),
-                        Text(review.rating.toStringAsFixed(1),
-                            style: AppTextStyles.bodySmall.copyWith(
-                                fontWeight: FontWeight.w600,
-                                color: AppColors.textPrimary)),
-                        const Spacer(),
-                        const Icon(Icons.favorite_border,
-                            size: 12, color: AppColors.textTertiary),
-                        const SizedBox(width: 2),
-                        Text('${review.likeCount}',
-                            style: AppTextStyles.labelSmall),
-                      ],
-                    ),
-                    const SizedBox(height: AppSpacing.xs),
-                    Text(
-                      timeago.format(review.createdAt, locale: 'ko'),
-                      style: AppTextStyles.labelSmall,
-                    ),
-                  ],
-                ),
-              ),
-            ],
-          ),
-        ),
-      ),
     );
   }
 }
