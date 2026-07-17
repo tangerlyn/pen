@@ -723,7 +723,8 @@ class _PostDetailScreenState extends ConsumerState<PostDetailScreen> {
                                   : '댓글을 입력하세요',
                               border: InputBorder.none,
                               isDense: true,
-                              counterText: '',
+                              counterStyle: const TextStyle(
+                                  fontSize: 11, color: AppColors.textTertiary),
                             ),
                             maxLines: null,
                             maxLength: _replyTargetNickname != null
@@ -1062,7 +1063,8 @@ class _CommentTileState extends ConsumerState<_CommentTile> {
                             isDense: true,
                             contentPadding: EdgeInsets.symmetric(
                                 horizontal: 8, vertical: 6),
-                            counterText: '',
+                            counterStyle: TextStyle(
+                                fontSize: 11, color: AppColors.textTertiary),
                           ),
                           maxLines: null,
                           maxLength: AppConstants.maxComment,
@@ -1336,7 +1338,8 @@ class _PostReplyTileState extends ConsumerState<_PostReplyTile> {
                       isDense: true,
                       contentPadding: EdgeInsets.symmetric(
                           horizontal: 8, vertical: 6),
-                      counterText: '',
+                      counterStyle: TextStyle(
+                          fontSize: 11, color: AppColors.textTertiary),
                     ),
                     maxLines: null,
                     maxLength: AppConstants.maxReply,

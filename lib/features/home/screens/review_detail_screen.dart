@@ -996,7 +996,8 @@ class _CommentInput extends StatelessWidget {
                         : '댓글을 입력하세요...',
                     contentPadding:
                         const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
-                    counterText: '',
+                    counterStyle: const TextStyle(
+                        fontSize: 11, color: AppColors.textTertiary),
                   ),
                   maxLines: null,
                   maxLength: replyTargetNickname != null
