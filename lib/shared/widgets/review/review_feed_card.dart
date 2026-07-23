@@ -6,6 +6,7 @@ import '../../../data/models/user_model.dart';
 import '../../../core/theme/app_theme.dart';
 import '../../../features/archive/providers/archive_detail_provider.dart';
 import '../../providers/providers.dart';
+import '../level_badge.dart';
 import '../tap_scale.dart';
 
 final _reviewCardAuthorProvider = StreamProvider.family<UserModel?, String>((ref, uid) {
@@ -88,7 +89,25 @@ class ReviewFeedCard extends ConsumerWidget {
                       ),
                     ),
                   ),
-                  if (review.inkIds.isNotEmpty || review.penIds.isNotEmpty)
+                  if (review.inkIds.isNotEmpty || review.penIds.isNotEmpty) ...[
+                    Positioned(
+                      left: 0,
+                      right: 0,
+                      bottom: 0,
+                      child: Container(
+                        height: 44,
+                        decoration: BoxDecoration(
+                          gradient: LinearGradient(
+                            begin: Alignment.topCenter,
+                            end: Alignment.bottomCenter,
+                            colors: [
+                              Colors.black.withValues(alpha: 0),
+                              Colors.black.withValues(alpha: 0.55),
+                            ],
+                          ),
+                        ),
+                      ),
+                    ),
                     Positioned(
                       left: 0,
                       right: 0,
@@ -98,6 +117,7 @@ class ReviewFeedCard extends ConsumerWidget {
                         child: _GearTagOverlay(review: review),
                       ),
                     ),
+                  ],
                   if (review.imageUrls.length > 1)
                     Positioned(
                       top: 8,
@@ -154,7 +174,7 @@ class ReviewFeedCard extends ConsumerWidget {
                             : null,
                       ),
                       const SizedBox(width: 6),
-                      Expanded(
+                      Flexible(
                         child: Text(
                           user?.nickname ?? review.authorNickname,
                           maxLines: 1,
@@ -166,6 +186,8 @@ class ReviewFeedCard extends ConsumerWidget {
                           ),
                         ),
                       ),
+                      const SizedBox(width: 4),
+                      LevelBadge(user?.level ?? review.authorLevel),
                     ],
                   ),
                   if (review.title.isNotEmpty) ...[
