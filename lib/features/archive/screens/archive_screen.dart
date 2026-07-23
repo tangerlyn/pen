@@ -10,10 +10,16 @@ import '../../../shared/widgets/common/skeletons.dart';
 import '../../../shared/widgets/ink_drop_circle.dart';
 import '../../../shared/widgets/tap_scale.dart';
 
-// 색상 계열 목록
-const _colorFamilies = [
-  '레드', '오렌지', '옐로우', '그린', '시안', '블루', '퍼플', '핑크', '무채색', '기타',
-];
+// 색상 계열 목록 — 이름 → 칩에 보여줄 대표 색상
+const _colorFamilySwatches = {
+  '빨강': Color(0xFFE53935),
+  '주황': Color(0xFFFB8C00),
+  '노랑': Color(0xFFFDD835),
+  '초록': Color(0xFF43A047),
+  '파랑': Color(0xFF1E88E5),
+  '보라': Color(0xFF8E24AA),
+  '검정': Color(0xFF2B2B2B),
+};
 
 // 특수 속성 목록 (레이블 → DB 값 매핑)
 const _inkTypeLabels = ['일반', '펄', '테'];
@@ -303,9 +309,7 @@ class _FilterRow extends ConsumerWidget {
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
       ),
-      builder: (_) => _MultiSelectBottomSheet(
-        title: '색상 계열',
-        options: _colorFamilies,
+      builder: (_) => _ColorFamilyPickerSheet(
         selected: List.from(current.colorFamilies),
         onApply: (selected) {
           ref.read(archiveProvider.notifier).setInkFilter(
@@ -456,6 +460,149 @@ class _MultiSelectBottomSheetState extends State<_MultiSelectBottomSheet> {
                     _selected.isEmpty ? '적용' : '${_selected.length}개 선택 · 적용',
                     style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
                   ),
+                ),
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+// ── 색상 계열 선택 (색상칩) ────────────────────────────────────
+class _ColorFamilyPickerSheet extends StatefulWidget {
+  const _ColorFamilyPickerSheet({required this.selected, required this.onApply});
+  final List<String> selected;
+  final ValueChanged<List<String>> onApply;
+
+  @override
+  State<_ColorFamilyPickerSheet> createState() => _ColorFamilyPickerSheetState();
+}
+
+class _ColorFamilyPickerSheetState extends State<_ColorFamilyPickerSheet> {
+  late List<String> _selected;
+
+  @override
+  void initState() {
+    super.initState();
+    _selected = List.from(widget.selected);
+  }
+
+  void _toggle(String family) {
+    setState(() {
+      if (_selected.contains(family)) {
+        _selected.remove(family);
+      } else {
+        _selected.add(family);
+      }
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return SafeArea(
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Container(
+            margin: const EdgeInsets.only(top: 8, bottom: 4),
+            width: 40,
+            height: 4,
+            decoration: BoxDecoration(
+              color: AppColors.divider,
+              borderRadius: BorderRadius.circular(2),
+            ),
+          ),
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+            child: Row(
+              children: [
+                const Text(
+                  '색상 계열',
+                  style: TextStyle(fontSize: 17, fontWeight: FontWeight.w700),
+                ),
+                const Spacer(),
+                if (_selected.isNotEmpty)
+                  TapScale(
+                    onTap: () => setState(() => _selected.clear()),
+                    child: const Text(
+                      '초기화',
+                      style: TextStyle(fontSize: 14, color: AppColors.textTertiary),
+                    ),
+                  ),
+              ],
+            ),
+          ),
+          const Divider(height: 1),
+          Padding(
+            padding: const EdgeInsets.fromLTRB(20, 20, 20, 8),
+            child: Wrap(
+              spacing: 12,
+              runSpacing: 14,
+              children: _colorFamilySwatches.entries.map((entry) {
+                final family = entry.key;
+                final swatch = entry.value;
+                final isSelected = _selected.contains(family);
+                return TapScale(
+                  onTap: () => _toggle(family),
+                  child: Container(
+                    padding: const EdgeInsets.only(left: 8, right: 16, top: 8, bottom: 8),
+                    decoration: BoxDecoration(
+                      color: isSelected ? AppColors.primary.withValues(alpha: 0.10) : AppColors.chipBackground,
+                      borderRadius: BorderRadius.circular(24),
+                      border: Border.all(
+                        color: isSelected ? AppColors.primary : Colors.transparent,
+                        width: 1.5,
+                      ),
+                    ),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Container(
+                          width: 24,
+                          height: 24,
+                          decoration: BoxDecoration(
+                            color: swatch,
+                            shape: BoxShape.circle,
+                            border: Border.all(color: Colors.white, width: 1.5),
+                            boxShadow: const [
+                              BoxShadow(color: Colors.black12, blurRadius: 3, offset: Offset(0, 1)),
+                            ],
+                          ),
+                          child: isSelected
+                              ? const Icon(Icons.check, size: 14, color: Colors.white)
+                              : null,
+                        ),
+                        const SizedBox(width: 8),
+                        Text(
+                          family,
+                          style: TextStyle(
+                            fontSize: 14,
+                            fontWeight: isSelected ? FontWeight.w700 : FontWeight.w500,
+                            color: isSelected ? AppColors.primary : AppColors.textPrimary,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                );
+              }).toList(),
+            ),
+          ),
+          Padding(
+            padding: const EdgeInsets.fromLTRB(16, 8, 16, 16),
+            child: SizedBox(
+              width: double.infinity,
+              height: 52,
+              child: ElevatedButton(
+                onPressed: () {
+                  Navigator.pop(context);
+                  widget.onApply(_selected);
+                },
+                child: Text(
+                  _selected.isEmpty ? '적용' : '${_selected.length}개 선택 · 적용',
+                  style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
                 ),
               ),
             ),
