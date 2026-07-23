@@ -67,10 +67,8 @@ async function main() {
   try {
     // 1. Inks 업로드
     await processCsv('inks.csv', 'inks', (data) => {
-      // 용량은 숫자로 변환
-      if (data.capacityMl) {
-        data.capacityMl = parseInt(data.capacityMl, 10);
-      }
+      // 용량은 숫자로 변환 (빈 값이면 0 — 빈 문자열을 그대로 두면 Dart 쪽 num 캐스팅이 깨짐)
+      data.capacityMl = data.capacityMl ? parseInt(data.capacityMl, 10) : 0;
       return data;
     });
 
@@ -85,10 +83,8 @@ async function main() {
 
     // 3. Papers 업로드
     await processCsv('papers.csv', 'papers', (data) => {
-      // 평량은 숫자로 변환
-      if (data.grammage) {
-        data.grammage = parseInt(data.grammage, 10);
-      }
+      // 평량은 숫자로 변환 (빈 값이면 0)
+      data.grammage = data.grammage ? parseInt(data.grammage, 10) : 0;
       return data;
     });
 
