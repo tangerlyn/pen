@@ -4,10 +4,13 @@
   "description": "Scripts for nibpen Firestore administration",
   "main": "upload_csv.js",
   "scripts": {
-    "upload": "node upload_csv.js"
+    "upload": "node upload_csv.js",
+    "extract-colors": "node extract_ink_colors.js"
   },
   "dependencies": {
     "csv-parser": "^3.0.0",
-    "firebase-admin": "^12.1.0"
+    "csv-writer": "^1.6.0",
+    "firebase-admin": "^12.1.0",
+    "jimp": "^1.6.1"
   }
 }
