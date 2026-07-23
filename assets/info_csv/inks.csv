@@ -1,160 +1,269 @@
-id,brand,name,colorFamily,hexColor,capacityMl,inkType
-ink_w001,글입다,유리알 유희,,#C3B3CA,,shimmer
-ink_w002,글입다,홀로 아득한 매화 향기,,#CD8FAD,,normal
-ink_w003,글입다,떠도는 구름,,#B25A79,,normal
-ink_w004,글입다,키다리 아저씨,,#C4738D,,shimmer
-ink_w005,글입다,카르밀라,,#C06A6E,,normal
-ink_w006,글입다,봄바람의 고민,,#DD7270,,shimmer
-ink_w007,글입다,줄리엣,,#E46363,,shimmer
-ink_w008,글입다,꽃의 귀양,,#BC4D52,,normal
-ink_w009,글입다,놓인 그 꽃,,#914E63,,normal
-ink_w010,글입다,체셔 캣,,#771F62,,normal
-ink_w011,글입다,박제가 되어버린 천재,,#5F1838,,sheen
-ink_w012,글입다,오만과 편견,,#700227,,sheen
-ink_w013,글입다,안나 카레니나,,#601630,,shimmer
-ink_w014,글입다,드라큘라,,#8E2137,,shimmer
-ink_w015,글입다,장미의 요정,,#922445,,shimmer
-ink_w016,글입다,젊은 왕,,#932447,,shimmer
-ink_w017,글입다,헨리 지킬,,#6C2C39,,normal
-ink_w018,글입다,빨간 구두,,#B6243C,,normal
-ink_w019,글입다,빨간머리 앤,,#C11A2B,,sheen
-ink_w020,글입다,주홍색 연구,,#6C0505,,normal
-ink_w021,글입다,납치당한 산타클로스,,#6C181F,,shimmer
-ink_w022,글입다,제천대성,,#7F332A,,shimmer
-ink_w023,글입다,퀸 오브 하트,,#753535,,shimmer
-ink_w024,글입다,페르온 소브 에페란토,,#752C37,,normal
-ink_w025,글입다,후크 선장,,#690D1F,,normal
-ink_w026,글입다,인간문제,,#551E26,,normal
-ink_w027,글입다,1984,,#27120B,,shimmer
-ink_w028,글입다,바스커빌가의 개,,#471A1B,,sheen
-ink_w029,글입다,변신,,#4A2025,,sheen
-ink_w030,글입다,오셀로,,#594848,,shimmer
-ink_w031,글입다,아누비스,,#514240,,shimmer
-ink_w032,글입다,돈키호테,,#614446,,normal
-ink_w033,글입다,연옥,,#8C6265,,normal
-ink_w034,글입다,석공의 노래,,#9C877C,,normal
-ink_w035,글입다,제미나,,#A18C80,,shimmer
-ink_w036,글입다,봄감자,,#AC966C,,normal
-ink_w037,글입다,갈잎의 노래,,#917247,,normal
-ink_w038,글입다,나이팅게일과 장미,,#8C6749,,shimmer
-ink_w039,글입다,착,,#B37751,,shimmer
-ink_w040,글입다,화이트 래빗,,#DBA995,,normal
-ink_w041,글입다,제페토,,#CD6D5B,,normal
-ink_w042,글입다,별아이,,#B76635,,shimmer
-ink_w043,글입다,건축무한육면각체,,#843F39,,sheen
-ink_w044,글입다,장난감 병정,,#74383E,,normal
-ink_w045,글입다,이방인,,#9E4C2B,,shimmer
-ink_w046,글입다,겁쟁이 사자,,#734737,,normal
-ink_w047,글입다,싯다르타,,#C34C2C,,normal
-ink_w048,글입다,헤임달,,#DA5B0B,,normal
-ink_w049,글입다,경희,,#C3660D,,normal
-ink_w050,글입다,별과 꽃 사이,,#FA991A,,normal
-ink_w051,글입다,별빛이 나린 언덕,,#D69528,,shimmer
-ink_w052,글입다,산시로,,#D88D18,,normal
-ink_w053,글입다,레일라,,#E8A852,,shimmer
-ink_w054,글입다,프시케 폴리,,#B78E57,,shimmer
-ink_w055,글입다,풀섶 이슬,,#B8C154,,normal
-ink_w056,글입다,허수아비,,#58411C,,normal
-ink_w057,글입다,도정,,#8B6E25,,shimmer
-ink_w058,글입다,팅커벨,,#B2B591,,shimmer
-ink_w059,글입다,순수의 시대,,#B0AD9F,,normal
-ink_w060,글입다,피터 팬,,#6D7653,,normal
-ink_w061,글입다,톰 소여의 모험,,#6B7B62,,normal
-ink_w062,글입다,매드 해터,,#607058,,normal
-ink_w063,글입다,천년 뒤 이 가을 밤,,#5B554D,,shimmer
-ink_w064,글입다,죄와 벌,,#474E3A,,sheen
-ink_w065,글입다,흘러가는 잎,,#54623A,,shimmer
-ink_w066,글입다,비밀의 화원,,#607D57,,shimmer
-ink_w067,글입다,타피오,,#7DA16F,,normal
-ink_w068,글입다,바유,,#77A28A,,normal
-ink_w069,글입다,잎새에 이는 바람,,#4B765D,,normal
-ink_w070,글입다,피노키오,,#55B880,,shimmer
-ink_w071,글입다,희망의 정수박이,,#149781,,normal
-ink_w072,글입다,수레바퀴 아래서,,#27462F,,normal
-ink_w073,글입다,한 줄의 참회록,,#3B6C6C,,normal
-ink_w074,글입다,한여름 밤의 꿈,,#165452,,shimmer
-ink_w075,글입다,틱톡 크록,,#086560,,normal
-ink_w076,글입다,카라마조프가의 형제들,,#3F2D38,,sheen
-ink_w077,글입다,누구를 위하여 종은 울리나,,#1A242E,,sheen
-ink_w078,글입다,13인의 아해,,#354043,,sheen
-ink_w079,글입다,Mature,,#1D3243,,normal
-ink_w080,글입다,노인과 바다,,#416982,,shimmer
-ink_w081,글입다,행인,,#1A6075,,shimmer
-ink_w082,글입다,운디네,,#366A7E,,normal
-ink_w083,글입다,Lost,,#276B86,,normal
-ink_w084,글입다,로빈슨 크루소,,#019DA9,,normal
-ink_w085,글입다,부활,,#6DADB3,,normal
-ink_w086,글입다,이슬 젖은 별빛,,#6AA7A7,,shimmer
-ink_w087,글입다,인어공주,,#76ACB6,,shimmer
-ink_w088,글입다,애너벨 리,,#568798,,shimmer
-ink_w089,글입다,응앙응앙,,#90ADBA,,shimmer
-ink_w090,글입다,백야,,#9EB4B7,,shimmer
-ink_w091,글입다,앨리스,,#72B4D0,,shimmer
-ink_w092,글입다,웬디 달링,,#B0CBF2,,shimmer
-ink_w093,글입다,물 먹은 별,,#889CD1,,shimmer
-ink_w094,글입다,소공자,,#5E6BBB,,shimmer
-ink_w095,글입다,엔키,,#80A0D8,,shimmer
-ink_w096,글입다,환웅,,#728294,,normal
-ink_w097,글입다,천국,,#9FB4CB,,shimmer
-ink_w098,글입다,모비딕,,#7A8FAE,,normal
-ink_w099,글입다,Hope,,#6A7BA0,,normal
-ink_w100,글입다,행복한 왕자,,#5C668C,,shimmer
-ink_w101,글입다,몽테크리스토 백작,,#222778,,shimmer
-ink_w102,글입다,이아로스 오르나 에페란토,,#3B3F84,,shimmer
-ink_w103,글입다,해저 2만 리,,#284A8A,,shimmer
-ink_w104,글입다,세드나,,#245F86,,normal
-ink_w105,글입다,칠색 바다,,#263E67,,sheen
-ink_w106,글입다,오페라의 유령,,#382148,,sheen
-ink_w107,글입다,계절이 지나가는 하늘,,#1C3F5F,,normal
-ink_w108,글입다,도로시,,#455471,,normal
-ink_w109,글입다,마음,,#69708B,,normal
-ink_w110,글입다,이반 일리치의 죽음,,#6E7A89,,shimmer
-ink_w111,글입다,급류,,#466177,,normal
-ink_w112,글입다,존재의 이유,,#697B8E,,shimmer
-ink_w113,글입다,지구에서 달까지,,#496069,,shimmer
-ink_w114,글입다,마티어스,,#2B4056,,shimmer
-ink_w115,글입다,삼총사,,#2D3946,,normal
-ink_w116,글입다,공포의 계곡,,#2E3880,,sheen
-ink_w117,글입다,가을 속의 별들,,#2D3866,,shimmer
-ink_w118,글입다,햄릿,,#394959,,shimmer
-ink_w119,글입다,위키드 위치,,#34335A,,sheen
-ink_w120,글입다,인형의 집,,#1B1D25,,sheen
-ink_w121,글입다,소영위제,,#40395E,,shimmer
-ink_w122,글입다,프랑켄슈타인,,#38214C,,shimmer
-ink_w123,글입다,위대한 개츠비,,#3E2365,,sheen
-ink_w124,글입다,메데이아 벨리아르,,#48328B,,shimmer
-ink_w125,글입다,베레트라그나,,#542D73,,sheen
-ink_w126,글입다,페르세포네,,#5A4767,,shimmer
-ink_w127,글입다,에드워드 하이드,,#9D6A91,,sheen
-ink_w128,글입다,네 사람의 서명,,#3F2C39,,shimmer
-ink_w129,글입다,갈까마귀,,#342B37,,shimmer
-ink_w130,글입다,인간실격,,#433749,,normal
-ink_w131,글입다,포도빛 밤,,#554879,,shimmer
-ink_w132,글입다,슬픈 천명,,#605A96,,normal
-ink_w133,글입다,츠쿠요미,,#837AAB,,normal
-ink_w134,글입다,제인 에어,,#614D75,,normal
-ink_w135,글입다,이해 없는 세상에서,,#847FCC,,normal
-ink_w136,글입다,해가 지는 곳으로,,#8F65B7,,normal
-ink_w137,글입다,소공녀,,#AB90D2,,shimmer
-ink_w138,글입다,꿈속의 꿈,,#B29BD8,,shimmer
-ink_w139,글입다,누아다 아르게틀람,,#6A647F,,shimmer
-ink_w140,글입다,도리언 그레이의 초상,,#4D4A56,,normal
-ink_w141,글입다,양철 나무꾼,,#38363D,,normal
-ink_w142,글입다,거울 속의 나,,#6B707C,,shimmer
-ink_w143,글입다,헬리오 트로피움,,#878AA0,,shimmer
-ink_w144,글입다,멕베스,,#5D607A,,shimmer
-ink_w145,글입다,로미오,,#3A3F66,,shimmer
-ink_w146,글입다,하데스,,#1F1A16,,shimmer
-ink_w147,글입다,검은 튤립,,#221F27,,shimmer
-ink_w148,글입다,검은 꿈,,#1F1E28,,shimmer
-ink_w149,글입다,지옥,,#2B2525,,sheen
-ink_w150,글입다,파우스트,,#0F0A01,,sheen
-ink_w151,글입다,나르치스와 골드문트,,#323031,,shimmer
-ink_w152,글입다,달을 쏘다,,#332C28,,normal
-ink_w153,글입다,빛 죽은 반달,,#4E5B59,,shimmer
-ink_w154,글입다,나는 고양이로소이다,,#595D59,,shimmer
-ink_w155,글입다,젊은 베르테르의 슬픔,,#7F868A,,normal
-ink_w156,글입다,미운 오리 새끼,,#8C8483,,normal
-ink_w157,글입다,자기만의 방,,#745B5A,,shimmer
-ink_w158,글입다,리어 왕,,#625E63,,shimmer
-ink_w159,글입다,페스트,,#442D29,,sheen
+id,brand,name,nameEn,colorFamily,hexColor,capacityMl,inkType
+ink_w001,글입다,유리알 유희,,,#C3B3CA,,shimmer
+ink_w002,글입다,홀로 아득한 매화 향기,,,#CD8FAD,,normal
+ink_w003,글입다,떠도는 구름,,,#B25A79,,normal
+ink_w004,글입다,키다리 아저씨,,,#C4738D,,shimmer
+ink_w005,글입다,카르밀라,,,#C06A6E,,normal
+ink_w006,글입다,봄바람의 고민,,,#DD7270,,shimmer
+ink_w007,글입다,줄리엣,,,#E46363,,shimmer
+ink_w008,글입다,꽃의 귀양,,,#BC4D52,,normal
+ink_w009,글입다,놓인 그 꽃,,,#914E63,,normal
+ink_w010,글입다,체셔 캣,,,#771F62,,normal
+ink_w011,글입다,박제가 되어버린 천재,,,#5F1838,,sheen
+ink_w012,글입다,오만과 편견,,,#700227,,sheen
+ink_w013,글입다,안나 카레니나,,,#601630,,shimmer
+ink_w014,글입다,드라큘라,,,#8E2137,,shimmer
+ink_w015,글입다,장미의 요정,,,#922445,,shimmer
+ink_w016,글입다,젊은 왕,,,#932447,,shimmer
+ink_w017,글입다,헨리 지킬,,,#6C2C39,,normal
+ink_w018,글입다,빨간 구두,,,#B6243C,,normal
+ink_w019,글입다,빨간머리 앤,,,#C11A2B,,sheen
+ink_w020,글입다,주홍색 연구,,,#6C0505,,normal
+ink_w021,글입다,납치당한 산타클로스,,,#6C181F,,shimmer
+ink_w022,글입다,제천대성,,,#7F332A,,shimmer
+ink_w023,글입다,퀸 오브 하트,,,#753535,,shimmer
+ink_w024,글입다,페르온 소브 에페란토,,,#752C37,,normal
+ink_w025,글입다,후크 선장,,,#690D1F,,normal
+ink_w026,글입다,인간문제,,,#551E26,,normal
+ink_w027,글입다,1984,,,#27120B,,shimmer
+ink_w028,글입다,바스커빌가의 개,,,#471A1B,,sheen
+ink_w029,글입다,변신,,,#4A2025,,sheen
+ink_w030,글입다,오셀로,,,#594848,,shimmer
+ink_w031,글입다,아누비스,,,#514240,,shimmer
+ink_w032,글입다,돈키호테,,,#614446,,normal
+ink_w033,글입다,연옥,,,#8C6265,,normal
+ink_w034,글입다,석공의 노래,,,#9C877C,,normal
+ink_w035,글입다,제미나,,,#A18C80,,shimmer
+ink_w036,글입다,봄감자,,,#AC966C,,normal
+ink_w037,글입다,갈잎의 노래,,,#917247,,normal
+ink_w038,글입다,나이팅게일과 장미,,,#8C6749,,shimmer
+ink_w039,글입다,착,,,#B37751,,shimmer
+ink_w040,글입다,화이트 래빗,,,#DBA995,,normal
+ink_w041,글입다,제페토,,,#CD6D5B,,normal
+ink_w042,글입다,별아이,,,#B76635,,shimmer
+ink_w043,글입다,건축무한육면각체,,,#843F39,,sheen
+ink_w044,글입다,장난감 병정,,,#74383E,,normal
+ink_w045,글입다,이방인,,,#9E4C2B,,shimmer
+ink_w046,글입다,겁쟁이 사자,,,#734737,,normal
+ink_w047,글입다,싯다르타,,,#C34C2C,,normal
+ink_w048,글입다,헤임달,,,#DA5B0B,,normal
+ink_w049,글입다,경희,,,#C3660D,,normal
+ink_w050,글입다,별과 꽃 사이,,,#FA991A,,normal
+ink_w051,글입다,별빛이 나린 언덕,,,#D69528,,shimmer
+ink_w052,글입다,산시로,,,#D88D18,,normal
+ink_w053,글입다,레일라,,,#E8A852,,shimmer
+ink_w054,글입다,프시케 폴리,,,#B78E57,,shimmer
+ink_w055,글입다,풀섶 이슬,,,#B8C154,,normal
+ink_w056,글입다,허수아비,,,#58411C,,normal
+ink_w057,글입다,도정,,,#8B6E25,,shimmer
+ink_w058,글입다,팅커벨,,,#B2B591,,shimmer
+ink_w059,글입다,순수의 시대,,,#B0AD9F,,normal
+ink_w060,글입다,피터 팬,,,#6D7653,,normal
+ink_w061,글입다,톰 소여의 모험,,,#6B7B62,,normal
+ink_w062,글입다,매드 해터,,,#607058,,normal
+ink_w063,글입다,천년 뒤 이 가을 밤,,,#5B554D,,shimmer
+ink_w064,글입다,죄와 벌,,,#474E3A,,sheen
+ink_w065,글입다,흘러가는 잎,,,#54623A,,shimmer
+ink_w066,글입다,비밀의 화원,,,#607D57,,shimmer
+ink_w067,글입다,타피오,,,#7DA16F,,normal
+ink_w068,글입다,바유,,,#77A28A,,normal
+ink_w069,글입다,잎새에 이는 바람,,,#4B765D,,normal
+ink_w070,글입다,피노키오,,,#55B880,,shimmer
+ink_w071,글입다,희망의 정수박이,,,#149781,,normal
+ink_w072,글입다,수레바퀴 아래서,,,#27462F,,normal
+ink_w073,글입다,한 줄의 참회록,,,#3B6C6C,,normal
+ink_w074,글입다,한여름 밤의 꿈,,,#165452,,shimmer
+ink_w075,글입다,틱톡 크록,,,#086560,,normal
+ink_w076,글입다,카라마조프가의 형제들,,,#3F2D38,,sheen
+ink_w077,글입다,누구를 위하여 종은 울리나,,,#1A242E,,sheen
+ink_w078,글입다,13인의 아해,,,#354043,,sheen
+ink_w079,글입다,Mature,,,#1D3243,,normal
+ink_w080,글입다,노인과 바다,,,#416982,,shimmer
+ink_w081,글입다,행인,,,#1A6075,,shimmer
+ink_w082,글입다,운디네,,,#366A7E,,normal
+ink_w083,글입다,Lost,,,#276B86,,normal
+ink_w084,글입다,로빈슨 크루소,,,#019DA9,,normal
+ink_w085,글입다,부활,,,#6DADB3,,normal
+ink_w086,글입다,이슬 젖은 별빛,,,#6AA7A7,,shimmer
+ink_w087,글입다,인어공주,,,#76ACB6,,shimmer
+ink_w088,글입다,애너벨 리,,,#568798,,shimmer
+ink_w089,글입다,응앙응앙,,,#90ADBA,,shimmer
+ink_w090,글입다,백야,,,#9EB4B7,,shimmer
+ink_w091,글입다,앨리스,,,#72B4D0,,shimmer
+ink_w092,글입다,웬디 달링,,,#B0CBF2,,shimmer
+ink_w093,글입다,물 먹은 별,,,#889CD1,,shimmer
+ink_w094,글입다,소공자,,,#5E6BBB,,shimmer
+ink_w095,글입다,엔키,,,#80A0D8,,shimmer
+ink_w096,글입다,환웅,,,#728294,,normal
+ink_w097,글입다,천국,,,#9FB4CB,,shimmer
+ink_w098,글입다,모비딕,,,#7A8FAE,,normal
+ink_w099,글입다,Hope,,,#6A7BA0,,normal
+ink_w100,글입다,행복한 왕자,,,#5C668C,,shimmer
+ink_w101,글입다,몽테크리스토 백작,,,#222778,,shimmer
+ink_w102,글입다,이아로스 오르나 에페란토,,,#3B3F84,,shimmer
+ink_w103,글입다,해저 2만 리,,,#284A8A,,shimmer
+ink_w104,글입다,세드나,,,#245F86,,normal
+ink_w105,글입다,칠색 바다,,,#263E67,,sheen
+ink_w106,글입다,오페라의 유령,,,#382148,,sheen
+ink_w107,글입다,계절이 지나가는 하늘,,,#1C3F5F,,normal
+ink_w108,글입다,도로시,,,#455471,,normal
+ink_w109,글입다,마음,,,#69708B,,normal
+ink_w110,글입다,이반 일리치의 죽음,,,#6E7A89,,shimmer
+ink_w111,글입다,급류,,,#466177,,normal
+ink_w112,글입다,존재의 이유,,,#697B8E,,shimmer
+ink_w113,글입다,지구에서 달까지,,,#496069,,shimmer
+ink_w114,글입다,마티어스,,,#2B4056,,shimmer
+ink_w115,글입다,삼총사,,,#2D3946,,normal
+ink_w116,글입다,공포의 계곡,,,#2E3880,,sheen
+ink_w117,글입다,가을 속의 별들,,,#2D3866,,shimmer
+ink_w118,글입다,햄릿,,,#394959,,shimmer
+ink_w119,글입다,위키드 위치,,,#34335A,,sheen
+ink_w120,글입다,인형의 집,,,#1B1D25,,sheen
+ink_w121,글입다,소영위제,,,#40395E,,shimmer
+ink_w122,글입다,프랑켄슈타인,,,#38214C,,shimmer
+ink_w123,글입다,위대한 개츠비,,,#3E2365,,sheen
+ink_w124,글입다,메데이아 벨리아르,,,#48328B,,shimmer
+ink_w125,글입다,베레트라그나,,,#542D73,,sheen
+ink_w126,글입다,페르세포네,,,#5A4767,,shimmer
+ink_w127,글입다,에드워드 하이드,,,#9D6A91,,sheen
+ink_w128,글입다,네 사람의 서명,,,#3F2C39,,shimmer
+ink_w129,글입다,갈까마귀,,,#342B37,,shimmer
+ink_w130,글입다,인간실격,,,#433749,,normal
+ink_w131,글입다,포도빛 밤,,,#554879,,shimmer
+ink_w132,글입다,슬픈 천명,,,#605A96,,normal
+ink_w133,글입다,츠쿠요미,,,#837AAB,,normal
+ink_w134,글입다,제인 에어,,,#614D75,,normal
+ink_w135,글입다,이해 없는 세상에서,,,#847FCC,,normal
+ink_w136,글입다,해가 지는 곳으로,,,#8F65B7,,normal
+ink_w137,글입다,소공녀,,,#AB90D2,,shimmer
+ink_w138,글입다,꿈속의 꿈,,,#B29BD8,,shimmer
+ink_w139,글입다,누아다 아르게틀람,,,#6A647F,,shimmer
+ink_w140,글입다,도리언 그레이의 초상,,,#4D4A56,,normal
+ink_w141,글입다,양철 나무꾼,,,#38363D,,normal
+ink_w142,글입다,거울 속의 나,,,#6B707C,,shimmer
+ink_w143,글입다,헬리오 트로피움,,,#878AA0,,shimmer
+ink_w144,글입다,멕베스,,,#5D607A,,shimmer
+ink_w145,글입다,로미오,,,#3A3F66,,shimmer
+ink_w146,글입다,하데스,,,#1F1A16,,shimmer
+ink_w147,글입다,검은 튤립,,,#221F27,,shimmer
+ink_w148,글입다,검은 꿈,,,#1F1E28,,shimmer
+ink_w149,글입다,지옥,,,#2B2525,,sheen
+ink_w150,글입다,파우스트,,,#0F0A01,,sheen
+ink_w151,글입다,나르치스와 골드문트,,,#323031,,shimmer
+ink_w152,글입다,달을 쏘다,,,#332C28,,normal
+ink_w153,글입다,빛 죽은 반달,,,#4E5B59,,shimmer
+ink_w154,글입다,나는 고양이로소이다,,,#595D59,,shimmer
+ink_w155,글입다,젊은 베르테르의 슬픔,,,#7F868A,,normal
+ink_w156,글입다,미운 오리 새끼,,,#8C8483,,normal
+ink_w157,글입다,자기만의 방,,,#745B5A,,shimmer
+ink_w158,글입다,리어 왕,,,#625E63,,shimmer
+ink_w159,글입다,페스트,,,#442D29,,sheen
+ink_dm001,디아민,아마란스,Amaranth,,#9D4B6A,,normal
+ink_dm002,디아민,어메이징 아메시스트,Amazing Amethyst,,#796494,,normal
+ink_dm003,디아민,앰버,Amber,,#EA9B56,,normal
+ink_dm004,디아민,에인션트 코퍼,Ancient Copper,,#924742,,normal
+ink_dm005,디아민,애플 글로리,Apple Glory,,#4AA36B,,normal
+ink_dm006,디아민,아쿠아 블루,Aqua Blue,,#418ED4,,normal
+ink_dm007,디아민,아쿠아 라군,Aqua Lagoon,,#408EB9,,normal
+ink_dm008,디아민,아사 블루,Asa Blue,,#285AA1,,normal
+ink_dm009,디아민,보 블루,Beau Blue,,#51B1DF,,normal
+ink_dm010,디아민,빌베리,Bilberry,,#5D3F91,,normal
+ink_dm011,디아민,블레이즈 오렌지,Blaze Orange,,#E4734C,,normal
+ink_dm012,디아민,블루 블랙,Blue Black,,#354A67,,normal
+ink_dm013,디아민,브릴리언트 레드,Brilliant Red,,#E06057,,normal
+ink_dm014,디아민,번트 시에나,Burnt Sienna,,#B6694F,,normal
+ink_dm015,디아민,서리즈,Cerise,,#E35B70,,normal
+ink_dm016,디아민,차이나 블루,China Blue,,#395CA3,,normal
+ink_dm017,디아민,초콜릿 브라운,Chocolate Brown,,#7D564A,,normal
+ink_dm018,디아민,클래럿,Claret,,#B74991,,normal
+ink_dm019,디아민,클래식 레드,Classic Red,,#BF4856,,normal
+ink_dm020,디아민,코랄,Coral,,#E6745C,,normal
+ink_dm021,디아민,크림슨,Crimson,,#8F424E,,normal
+ink_dm022,디아민,댐슨,Damson,,#5E545D,,normal
+ink_dm023,디아민,웜 브라운,Warm Brown,,#AA7152,,normal
+ink_dm024,디아민,쿨 그린,Cool Green,,#408F89,,normal
+ink_dm025,디아민,딥 마젠타,Deep Magenta,,#B24790,,normal
+ink_dm026,디아민,델라미어 그린,Delamere Green,,#579F89,,normal
+ink_dm027,디아민,데님,Denim,,#3B4351,,normal
+ink_dm028,디아민,오 드 닐,Eau De Nil,,#325871,,normal
+ink_dm029,디아민,이클립스,Eclipse,,#454245,,normal
+ink_dm030,디아민,에메랄드,Emerald,,#6E9D72,,normal
+ink_dm031,디아민,에버그린,Evergreen,,#516159,,normal
+ink_dm032,디아민,플라밍고 핑크,Flamingo Pink,,#E5676E,,normal
+ink_dm033,디아민,플로리다 블루,Florida Blue,,#3778CC,,normal
+ink_dm034,디아민,골든 브라운,Golden Brown,,#B28A61,,normal
+ink_dm035,디아민,그레이프,Grape,,#5B4F68,,normal
+ink_dm036,디아민,그래파이트,Graphite,,#4D4C4B,,normal
+ink_dm037,디아민,그린 블랙,Green/Black,,#53645C,,normal
+ink_dm038,디아민,그레이,Grey,,#5C5C5E,,normal
+ink_dm039,디아민,하바수 터콰이즈,Havasu Turquoise,,#3B83B7,,normal
+ink_dm040,디아민,호프 핑크,Hope Pink,,#E66A95,,normal
+ink_dm041,디아민,임페리얼 블루,Imperial Blue,,#503E86,,normal
+ink_dm042,디아민,임페리얼 퍼플,Imperial Purple,,#6F3B63,,normal
+ink_dm043,디아민,인디고,Indigo,,#506788,,normal
+ink_dm044,디아민,제이드 그린,Jade Green,,#A0CE58,,normal
+ink_dm045,디아민,제트 블랙,Jet Black,,#514D4C,,normal
+ink_dm046,디아민,켈리 그린,Kelly Green,,#57A343,,normal
+ink_dm047,디아민,켄싱턴 블루,Kensington Blue,,#465DAD,,normal
+ink_dm048,디아민,라벤더,Lavender,,#B557A9,,normal
+ink_dm049,디아민,스프링 그린,Spring Green,,#B4CB65,,normal
+ink_dm050,디아민,마카사르,Macassar,,#45403D,,normal
+ink_dm051,디아민,마제스틱 블루,Majestic Blue,,#404386,,normal
+ink_dm052,디아민,마제스틱 퍼플,Majestic Purple,,#774287,,normal
+ink_dm053,디아민,마린,Marine,,#4292AE,,normal
+ink_dm054,디아민,마룬,Maroon,,#AF4552,,normal
+ink_dm055,디아민,마타도르,Matador,,#9C363B,,normal
+ink_dm056,디아민,메도우,Meadow,,#609E4B,,normal
+ink_dm057,디아민,메디터레이니언 블루,Mediterranean Blue,,#3677CC,,normal
+ink_dm058,디아민,메를로,Merlot,,#574C53,,normal
+ink_dm059,디아민,미드나이트,Midnight,,#455287,,normal
+ink_dm060,디아민,미스티 블루,Misty Blue,,#387198,,normal
+ink_dm061,디아민,모나코 레드,Monaco Red,,#874A52,,normal
+ink_dm062,디아민,오커,Ochre,,#674235,,normal
+ink_dm063,디아민,오닉스 블랙,Onyx Black,,#353331,,normal
+ink_dm064,디아민,오렌지,Orange,,#E8813A,,normal
+ink_dm065,디아민,옥스블러드,Oxblood,,#7A3742,,normal
+ink_dm066,디아민,패션 레드,Passion Red,,#D25258,,normal
+ink_dm067,디아민,피치 헤이즈,Peach Haze,,#EB9469,,normal
+ink_dm068,디아민,핑크,Pink,,#E87A75,,normal
+ink_dm069,디아민,포피 레드,Poppy Red,,#C83C47,,normal
+ink_dm070,디아민,프레지덴셜 블루,Presidential Blue,,#34529A,,normal
+ink_dm071,디아민,프러시안 블루,Prussian Blue,,#525D77,,normal
+ink_dm072,디아민,펌킨,Pumpkin,,#E67238,,normal
+ink_dm073,디아민,쿼츠 블랙,Quartz Black,,#4C4A4A,,normal
+ink_dm074,디아민,로 시에나,Raw Sienna,,#8E7061,,normal
+ink_dm075,디아민,레드 드래곤,Red Dragon,,#8D3947,,normal
+ink_dm076,디아민,로열 블루,Royal Blue,,#4056AE,,normal
+ink_dm077,디아민,루비,Ruby,,#A03E4B,,normal
+ink_dm078,디아민,러스틱 브라운,Rustic Brown,,#61484E,,normal
+ink_dm079,디아민,새들 브라운,Saddle Brown,,#554D4D,,normal
+ink_dm080,디아민,사파이어 블루,Sapphire Blue,,#4C4999,,normal
+ink_dm081,디아민,사르가소 씨,Sargasso Sea,,#3B447F,,normal
+ink_dm082,디아민,스칼렛,Scarlet,,#B5344F,,normal
+ink_dm083,디아민,세피아,Sepia,,#BB804A,,normal
+ink_dm084,디아민,셔우드 그린,Sherwood Green,,#4D7C64,,normal
+ink_dm085,디아민,소프트 민트,Soft Mint,,#4AA3A0,,normal
+ink_dm086,디아민,스틸 블루,Steel Blue,,#3F8BA0,,normal
+ink_dm087,디아민,선셋,Sunset,,#D95931,,normal
+ink_dm088,디아민,선샤인 옐로우,Sunshine Yellow,,#F2C54F,,normal
+ink_dm089,디아민,시라,Syrah,,#843B50,,normal
+ink_dm090,디아민,틸,Teal,,#3B545C,,normal
+ink_dm091,디아민,터콰이즈,Turquoise,,#3980C1,,normal
+ink_dm092,디아민,트와일라잇,Twilight,,#526D7C,,normal
+ink_dm093,디아민,울트라 그린,Ultra Green,,#3D8761,,normal
+ink_dm094,디아민,그린 엄버,Green Umber,,#4C685E,,normal
+ink_dm095,디아민,버밀리언,Vermillion,,#D25852,,normal
+ink_dm096,디아민,바이올렛,Violet,,#7F6A97,,normal
+ink_dm097,디아민,워셔블 블루,Washable Blue,,#3A5B9B,,normal
+ink_dm098,디아민,와일드 스트로베리,Wild Strawberry,,#C7494C,,normal
+ink_dm099,디아민,우드랜드 그린,Woodland Green,,#3F8B6F,,normal
+ink_dm100,디아민,옐로우,Yellow,,#F8E54D,,normal
+ink_dm101,디아민,샐러맨더,Salamander,,#87886B,,normal
+ink_dm102,디아민,오텀 오크,Autumn Oak,,#D0795B,,normal
+ink_dm103,디아민,티리언 퍼플,Tyrian Purple,,#815067,,normal
+ink_dm104,디아민,클래식 그린,Classic Green,,#7D8B78,,normal
+ink_dm105,디아민,데저트 버스트,Desert Burst,,#B88A5A,,normal
+ink_dm106,디아민,토바코 선버스트,Tobacco Sunburst,,#C0A260,,normal
+ink_dm107,디아민,체리 선버스트,Cherry Sunburst,,#965753,,normal
+ink_dm108,디아민,펠럼 블루,Pelham Blue,,#34639A,,normal
+ink_dm109,디아민,허니 버스트,Honey Burst,,#D68B55,,normal

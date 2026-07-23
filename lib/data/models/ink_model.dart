@@ -5,6 +5,7 @@ class InkModel {
     required this.id,
     required this.brand,
     required this.name,
+    this.nameEn = '',
     this.inkType = 'normal',
     this.hexColor = '',
     this.capacityMl = 0,
@@ -15,6 +16,8 @@ class InkModel {
   final String id;
   final String brand;
   final String name;
+  // 영문 원어 이름 — 화면엔 노출하지 않고 검색 매칭에만 사용 (예: name='임페리얼 블루', nameEn='Imperial Blue')
+  final String nameEn;
   final String inkType; // normal / shimmer / sheen / fluorescent
   final String hexColor;
   final int capacityMl;
@@ -32,23 +35,22 @@ class InkModel {
   }
 
   String get autoColorFamily {
-    if (hexColor.isEmpty) return '기타';
+    if (hexColor.isEmpty) return '검정';
     try {
       final color = Color(int.parse(hexColor.replaceAll('#', '0xFF')));
       final hsv = HSVColor.fromColor(color);
-      if (hsv.saturation < 0.15) return '무채색';
+      // 거의 검게 보이는 색은 색상값(hue)이 불안정해지므로 채도/명도로 먼저 걸러낸다
+      // (예: 매우 어두운 잉크가 hue 계산상 우연히 '노랑' 범위에 들어가는 경우 방지)
+      if (hsv.value < 0.13 || hsv.saturation < 0.15) return '검정';
       final hue = hsv.hue;
-      if (hue < 15 || hue >= 345) return '레드';
-      if (hue < 45) return '오렌지';
-      if (hue < 75) return '옐로우';
-      if (hue < 165) return '그린';
-      if (hue < 195) return '시안';
-      if (hue < 255) return '블루';
-      if (hue < 285) return '퍼플';
-      if (hue < 345) return '핑크';
-      return '기타';
+      if (hue < 20 || hue >= 330) return '빨강';
+      if (hue < 35) return '주황';
+      if (hue < 70) return '노랑';
+      if (hue < 170) return '초록';
+      if (hue < 255) return '파랑';
+      return '보라';
     } catch (_) {
-      return '기타';
+      return '검정';
     }
   }
 
@@ -66,6 +68,7 @@ class InkModel {
       id: id,
       brand: data['brand'] as String? ?? '',
       name: data['name'] as String? ?? '',
+      nameEn: data['nameEn'] as String? ?? '',
       inkType: data['inkType'] as String? ?? 'normal',
       hexColor: data['hexColor'] as String? ?? '',
       capacityMl: (data['capacityMl'] as num?)?.toInt() ?? 0,
@@ -77,6 +80,7 @@ class InkModel {
   Map<String, dynamic> toMap() => {
         'brand': brand,
         'name': name,
+        'nameEn': nameEn,
         'inkType': inkType,
         'hexColor': hexColor,
         'capacityMl': capacityMl,
@@ -85,11 +89,12 @@ class InkModel {
       };
 
   InkModel copyWith({
-    String? id, String? brand, String? name,
+    String? id, String? brand, String? name, String? nameEn,
     String? inkType, String? hexColor, int? capacityMl, int? reviewCount, double? avgRating,
   }) {
     return InkModel(
       id: id ?? this.id, brand: brand ?? this.brand, name: name ?? this.name,
+      nameEn: nameEn ?? this.nameEn,
       inkType: inkType ?? this.inkType,
       hexColor: hexColor ?? this.hexColor, capacityMl: capacityMl ?? this.capacityMl,
       reviewCount: reviewCount ?? this.reviewCount, avgRating: avgRating ?? this.avgRating,

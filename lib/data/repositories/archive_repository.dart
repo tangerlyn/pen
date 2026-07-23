@@ -149,7 +149,10 @@ class ArchiveRepository {
 
     if (search != null && search.isNotEmpty) {
       final lower = search.toLowerCase();
-      results = results.where((i) => i.brand.toLowerCase().contains(lower) || i.name.toLowerCase().contains(lower)).toList();
+      results = results.where((i) =>
+          i.brand.toLowerCase().contains(lower) ||
+          i.name.toLowerCase().contains(lower) ||
+          i.nameEn.toLowerCase().contains(lower)).toList();
     }
 
     results = await Future.wait(results.map((i) async {
@@ -173,7 +176,10 @@ class ArchiveRepository {
     final lower = query.toLowerCase();
     return snapshot.docs
         .map((doc) => InkModel.fromMap(doc.data() as Map<String, dynamic>, doc.id))
-        .where((i) => i.brand.toLowerCase().contains(lower) || i.name.toLowerCase().contains(lower))
+        .where((i) =>
+            i.brand.toLowerCase().contains(lower) ||
+            i.name.toLowerCase().contains(lower) ||
+            i.nameEn.toLowerCase().contains(lower))
         .toList();
   }
 
@@ -278,6 +284,21 @@ class ArchiveRepository {
       'createdAt': FieldValue.serverTimestamp(),
     });
     return doc.id;
+  }
+
+  Future<void> updateInk({
+    required String inkId,
+    required String brand,
+    required String name,
+    required String inkType,
+    required String hexColor,
+  }) async {
+    await _inks.doc(inkId).update({
+      'brand': brand,
+      'name': name,
+      'inkType': inkType,
+      'hexColor': hexColor,
+    });
   }
 
   Future<String> addPen({
