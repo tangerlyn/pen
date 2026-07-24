@@ -303,11 +303,15 @@ class _PostListItem extends StatelessWidget {
                   const SizedBox(height: 8),
                   Row(
                     children: [
-                      Text(
-                        post.authorNickname,
-                        style: AppTextStyles.bodySmall.copyWith(
-                            color: AppColors.primary,
-                            fontWeight: FontWeight.w600),
+                      Flexible(
+                        child: Text(
+                          post.authorNickname,
+                          style: AppTextStyles.bodySmall.copyWith(
+                              color: AppColors.primary,
+                              fontWeight: FontWeight.w600),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                        ),
                       ),
                       const SizedBox(width: AppSpacing.sm),
                       Text(

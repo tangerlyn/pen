@@ -246,6 +246,9 @@ class _LatestReviewsSection extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final reviewsAsync = ref.watch(homeLatestReviewsProvider);
+    // 화면 폭에 비례한 카드 너비 — 좁은 폰에서도 다음 카드가 살짝 보이고,
+    // 넓은 폰/기기에서 카드가 지나치게 작아 보이지 않도록 상하한을 둔다.
+    final cardWidth = (MediaQuery.of(context).size.width * 0.42).clamp(140.0, 190.0);
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -262,7 +265,7 @@ class _LatestReviewsSection extends ConsumerWidget {
               scrollDirection: Axis.horizontal,
               padding: AppSpacing.pagePadding,
               itemCount: 4,
-              itemBuilder: (_, _) => const HomeReviewCardSkeleton(),
+              itemBuilder: (_, _) => HomeReviewCardSkeleton(width: cardWidth),
             ),
           ),
           error: (_, _) => const SizedBox.shrink(),
@@ -277,7 +280,7 @@ class _LatestReviewsSection extends ConsumerWidget {
                 itemBuilder: (_, i) => Padding(
                   padding: const EdgeInsets.only(right: AppSpacing.xs),
                   child: SizedBox(
-                    width: 150,
+                    width: cardWidth,
                     child: ReviewFeedCard(
                       review: reviews[i],
                       onTap: () => context.push('/review/${reviews[i].id}'),
@@ -393,6 +396,7 @@ class _CommunitySection extends ConsumerWidget {
               separatorBuilder: (_, __) => const Divider(height: 1),
               itemBuilder: (_, i) => PostCard(
                 post: preview[i],
+                showDate: false,
                 onTap: () =>
                     context.push('/community/${preview[i].id}'),
                 topPadding: i == 0 ? AppSpacing.xs : AppSpacing.sm,
@@ -417,6 +421,7 @@ class _PopularPensSection extends ConsumerWidget {
       error: (_, __) => const SizedBox.shrink(),
       data: (pens) {
         if (pens.isEmpty) return const SizedBox.shrink();
+        final cardWidth = (MediaQuery.of(context).size.width * 0.38).clamp(130.0, 175.0);
         return Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
@@ -432,6 +437,7 @@ class _PopularPensSection extends ConsumerWidget {
                 itemCount: pens.length,
                 itemBuilder: (_, i) => _PenCard(
                   pen: pens[i],
+                  width: cardWidth,
                   onTap: () =>
                       context.push('/archive/pen/${pens[i].id}'),
                 ),
@@ -474,16 +480,17 @@ class _NotificationBell extends ConsumerWidget {
 }
 
 class _PenCard extends StatelessWidget {
-  const _PenCard({required this.pen, required this.onTap});
+  const _PenCard({required this.pen, required this.onTap, this.width = 140});
   final PenModel pen;
   final VoidCallback onTap;
+  final double width;
 
   @override
   Widget build(BuildContext context) {
     return TapScale(
       onTap: onTap,
       child: Container(
-        width: 140,
+        width: width,
         margin: const EdgeInsets.only(right: AppSpacing.md),
         padding: AppSpacing.cardPadding
             .add(const EdgeInsets.all(AppSpacing.xs)),
