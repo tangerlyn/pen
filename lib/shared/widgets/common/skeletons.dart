@@ -26,12 +26,13 @@ Widget _shimmer(Widget child) => Shimmer.fromColors(
 
 // ── 홈 최신 리뷰 가로 스크롤 카드 ──────────────────────────────
 class HomeReviewCardSkeleton extends StatelessWidget {
-  const HomeReviewCardSkeleton({super.key});
+  const HomeReviewCardSkeleton({super.key, this.width = 150});
+  final double width;
 
   @override
   Widget build(BuildContext context) => _shimmer(
         Container(
-          width: 150,
+          width: width,
           height: 210,
           margin: const EdgeInsets.only(right: 4),
           decoration: BoxDecoration(
@@ -128,8 +129,8 @@ class InkCircleSkeleton extends StatelessWidget {
           children: [
             _circle(56),
             const SizedBox(height: 6),
-            _sBox(h: 10, w: 48, m: const EdgeInsets.only(bottom: 3)),
-            _sBox(h: 10, w: 36),
+            _sBox(h: 8, w: 32, m: const EdgeInsets.only(bottom: 4)), // 브랜드
+            _sBox(h: 10, w: 48), // 이름
           ],
         ),
       );

@@ -675,11 +675,13 @@ class _InkList extends ConsumerWidget {
                 (ctx, i) => const InkCircleSkeleton(),
                 childCount: 12,
               ),
-              gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                crossAxisCount: 4,
-                mainAxisSpacing: 20,
+              // 고정 4열 대신 셀 최대 폭을 지정 — 좁은 폰에선 4열(기존과 동일),
+              // 넓은 화면에선 열이 늘어나 셀이 지나치게 커지지 않는다.
+              gridDelegate: const SliverGridDelegateWithMaxCrossAxisExtent(
+                maxCrossAxisExtent: 95,
+                mainAxisSpacing: 12,
                 crossAxisSpacing: 12,
-                childAspectRatio: 0.75,
+                childAspectRatio: 0.72,
               ),
             ),
           )
@@ -711,9 +713,19 @@ class _InkList extends ConsumerWidget {
                           InkDropCircle(color: ink.inkColor, size: 56),
                           const SizedBox(height: 6),
                           Text(
+                            ink.brand,
+                            style: const TextStyle(
+                                fontSize: 9, color: AppColors.textSecondary),
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            textAlign: TextAlign.center,
+                          ),
+                          Text(
                             ink.name,
                             style: const TextStyle(
-                                fontSize: 10, color: AppColors.textSecondary),
+                                fontSize: 10,
+                                fontWeight: FontWeight.w600,
+                                color: AppColors.textSecondary),
                             maxLines: 2,
                             overflow: TextOverflow.ellipsis,
                             textAlign: TextAlign.center,
@@ -725,11 +737,13 @@ class _InkList extends ConsumerWidget {
                 },
                 childCount: state.inks.length,
               ),
-              gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                crossAxisCount: 4,
-                mainAxisSpacing: 20,
+              // 고정 4열 대신 셀 최대 폭을 지정 — 좁은 폰에선 4열(기존과 동일),
+              // 넓은 화면에선 열이 늘어나 셀이 지나치게 커지지 않는다.
+              gridDelegate: const SliverGridDelegateWithMaxCrossAxisExtent(
+                maxCrossAxisExtent: 95,
+                mainAxisSpacing: 12,
                 crossAxisSpacing: 12,
-                childAspectRatio: 0.75,
+                childAspectRatio: 0.72,
               ),
             ),
           ),
