@@ -19,8 +19,9 @@
   - 우측 검색 아이콘 → `/archive/search`
 - **잉크/만년필 탭 바** (스크롤 시 필터 칩과 함께 상단 고정)
 - **잉크 탭**
-  - 4열 그리드로 잉크 원형 스와치(`InkDropCircle`) + 이름 표시 — 탭 → `/archive/ink/:productId`
-  - 색상 계열 멀티 선택 칩 (레드·오렌지·옐로우·그린·시안·블루·퍼플·핑크·무채색·기타)
+  - 그리드로 잉크 원형 스와치(`InkDropCircle`, 56px) + 브랜드명(연한 색) + 이름(진한 색, 약간 굵게) 2줄 표시 — 탭 → `/archive/ink/:productId`
+    - 그리드는 `SliverGridDelegateWithMaxCrossAxisExtent`(셀 최대폭 95) 사용 — 좁은 화면(아이폰 기준)에서는 4열과 동일하게 나오고, 더 넓은 화면에서는 열이 자동으로 늘어나 셀이 커지지 않음
+  - 색상 계열 필터 — 텍스트 목록이 아니라 색상칩(원형 스와치 + 라벨) 바텀시트. 빨강·주황·노랑·초록·파랑·보라·검정 7개 (`InkModel.autoColorFamily`가 hexColor의 HSV로 자동 분류)
   - 특수 속성 멀티 선택 칩 (일반·펄·테)
   - 정렬 칩 (기본순·별점순·인기순)
   - 리스트 하단 "새 잉크 직접 등록하기" 버튼 → 제품 등록 바텀 시트
@@ -100,7 +101,8 @@
 |---|---|---|
 | id | String | 잉크 ID |
 | brand | String | 브랜드명 |
-| name | String | 잉크명 |
+| name | String | 잉크명 (화면엔 이 값만 표시) |
+| nameEn | String | 영문 원어명 — 화면엔 안 보이고 검색(`getInks`/`searchInks`)에서 `name`과 함께 매칭됨. 한국어 발음 표기 잉크(예: 디아민)에서 "임페리얼 블루"/"imperial blue" 둘 다 검색되게 하기 위함 |
 | inkType | String | 일반/펄/쉰 |
 | hexColor | String | 색상 헥스값 |
 | capacityMl | double | 용량(mL) |
@@ -137,8 +139,17 @@
 
 ## 데이터 초기화 (CSV)
 
-`assets/info_csv/inks.csv`, `pens.csv`를 읽어 Firestore에 batch write (`ArchiveRepository.initializeDatabase()`).
-설정 화면의 UI 트리거는 제거됨 — 필요 시 코드에서 직접 호출해야 함.
+`ArchiveRepository.initializeDatabase()`(앱 내부 메서드)는 UI 트리거가 없는 미사용 코드 — 실제 운영 데이터는 아래 Node 스크립트로 반영한다.
+
+**`scripts/upload_csv.js`** — `assets/info_csv/inks.csv`/`pens.csv`/`papers.csv`를 읽어 Firestore에 upsert(`batch.set`, 기존 컬렉션을 지우지 않고 문서 단위로 덮어씀). `serviceAccountKey.json`(gitignore 대상, 로컬에만 존재) 필요.
+```
+cd scripts && npm run upload
+```
+
+**`scripts/extract_ink_colors.js`** — 브랜드 공식 사이트의 "컬러차트" 페이지(잉크마다 이름 + 워터컬러 스와치 사진이 있는 페이지)에서 대표 색상(hexColor)을 자동으로 뽑아 `inks.csv`에 채워 넣는 도구.
+- `scrape` 단계: 사이트별 파서로 `[{title, thumbUrl}, ...]` 목록 JSON을 만듦. 지금은 글입다(wearingeul.kr) 파서만 등록돼 있음 — 새 브랜드는 그 사이트의 HTML 구조에 맞는 파서를 `SCRAPERS`에 추가해야 함. 파싱은 DOM 라이브러리(BeautifulSoup 등) 없이 정규식(regex)으로 직접 처리 — 페이지가 스크롤/무한로드 없이 항목이 한 번의 HTML 응답에 전부 포함된 정적 갤러리 위젯이라 가능했음. 만약 스크롤/AJAX로 항목을 추가 로드하는 사이트라면 이 방식으론 안 되고 브라우저 자동화가 필요함.
+- `apply` 단계: 그 목록을 `inks.csv`와 이름으로 매칭해 스와치 이미지를 다운로드하고, 흰 배경/텍스트를 제외한 뒤 채도 높은 픽셀의 중앙값으로 대표색을 계산해 `hexColor`에 반영. 펄/쉰(shimmer/sheen) 타입은 반짝이·테 효과가 베이스 잉크보다 채도가 높아 엉뚱한 색이 뽑힐 수 있어, `overrides.json`으로 실제 색 계열(red/green/blue/purple/gray)을 지정해 보정 가능.
+- 사용 예시는 파일 상단 주석 참고. 이 방식으로 글입다 159종 + 디아민(사용자가 올린 컬러차트 이미지에서 동일한 방식으로 추출) 109종의 hexColor를 채웠음.
 
 ---
 
@@ -156,4 +167,6 @@
 - `lib/data/models/pen_model.dart`
 - `lib/data/models/wishlist_model.dart`
 - `lib/features/mypage/screens/wishlist_screen.dart`
+- `scripts/upload_csv.js`
+- `scripts/extract_ink_colors.js`
 - `lib/shared/providers/wishlist_providers.dart`

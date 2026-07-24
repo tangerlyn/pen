@@ -17,10 +17,10 @@
   - 우측 검색 아이콘 → `/search?type=all`
   - 우측 종 아이콘 → `/notifications` 이동. 미읽 알림이 있으면 빨간 뱃지 표시
 - 4개 섹션이 순서대로 표시 (각 섹션은 데이터가 없으면 통째로 숨겨짐)
-  1. **최신 리뷰** — 수평 스크롤 카드. 각 카드: 썸네일 + 제목 + 별점 + 좋아요 수. 더보기 → `/review`, 카드 탭 → `/review/:reviewId`
+  1. **최신 리뷰** — 수평 스크롤 카드. 리뷰 탭 2열 그리드와 동일한 `ReviewFeedCard` 재사용(별점/사진장수 뱃지, 잉크·펜 태그 그라데이션 오버레이, 프사·닉네임·레벨 뱃지·제목). 카드 폭은 화면폭 비례(42%, 140~190px 사이로 clamp)라 화면 크기에 따라 자동 조정됨. 더보기 → `/review`, 카드 탭 → `/review/:reviewId`
   2. **인기 잉크** — 수평 스크롤 원형 스와치(`InkDropCircle`) + 이름. 더보기 → `/archive`, 아이템 탭 → `/archive/ink/:id`
-  3. **커뮤니티 최신글** — 세로 리스트(`PostCard`, 최대 4개 미리보기). 더보기 → `/community`, 항목 탭 → `/community/:postId`
-  4. **인기 만년필** — 수평 스크롤 카드. 더보기 → `/archive`, 카드 탭 → `/archive/pen/:id`
+  3. **커뮤니티 최신글** — 세로 리스트(`PostCard`, `showDate: false`, 최대 4개 미리보기). 더보기 → `/community`, 항목 탭 → `/community/:postId`
+  4. **인기 만년필** — 수평 스크롤 카드. 카드 폭도 화면폭 비례(38%, 130~175px)로 조정됨. 더보기 → `/archive`, 카드 탭 → `/archive/pen/:id`
 - **FAB (+)** — 탭 시 바텀 시트 열림
   - "리뷰 작성" 탭 → `/write/review`
   - "게시글 작성" 탭 → `/community/write`
@@ -49,7 +49,7 @@
   - 별점
   - 블로그 형식 본문 (텍스트+이미지 블록 혼합) 또는 기존 body+imageUrls
   - 이미지 탭 → 전체화면 ImageViewer (스와이프 가능)
-  - 작성 시간 / "수정됨" 표시
+  - 작성 시간 / "수정됨" 표시 — 작성 시간은 `formatPostDate`로 3일 이내 상대 시간, 4일 이상 "YYYY.MM.DD"
 - **액션 바**
   - 좋아요(하트) + 좋아요 수 — 탭 시 좋아요 토글 (+EXP 1 원작성자 획득)
   - 댓글 아이콘 + 댓글 수
@@ -75,15 +75,9 @@
 
 ---
 
-## 피드 화면 (`feed_screen.dart`)
-**경로:** 별도 경로 없음, 하단 탭 중 하나에 임베드 가능
+## 미사용 코드 (`feed_screen.dart`)
 
-**전체·리뷰·커뮤니티 탭 구조**
-- 전체 탭: 리뷰 + 커뮤니티 게시글 시간순 혼합
-  - 리뷰 항목: [리뷰] 배지 + 제목 + 별점 + 본문 미리보기 + 썸네일. 탭 → `/review/:id`
-  - 커뮤니티 항목: [커뮤니티] 배지 + 제목 + 본문 + 작성자 닉네임(네이비). 탭 → `/community/:id`
-- 리뷰 탭 → `ReviewFeedScreen(showAppBar: false)` 임베드
-- 커뮤니티 탭 → `CommunityScreen(showAppBar: false)` 임베드
+`lib/features/feed/screens/feed_screen.dart`에 전체·리뷰·커뮤니티 탭을 합친 `FeedScreen` 위젯이 있지만, `app_router.dart` 어디에도 라우팅되어 있지 않은 **죽은 코드**임 (실제 홈 탭 구성은 위 `home_screen.dart`의 4개 섹션). 이전 설계 단계의 잔재로 보임 — 삭제하거나 실제로 쓸지 결정 필요.
 
 ---
 
@@ -136,10 +130,12 @@
 - `lib/features/home/providers/review_detail_provider.dart`
 - `lib/features/home/providers/notification_provider.dart`
 - `lib/features/community/providers/community_provider.dart`
-- `lib/features/feed/screens/feed_screen.dart`
+- `lib/features/feed/screens/feed_screen.dart` (미사용, 위 참고)
 - `lib/core/shell/main_shell.dart`
 - `lib/core/router/app_router.dart`
 - `lib/core/utils/toast_utils.dart`
+- `lib/core/utils/post_date_format.dart`
 - `lib/shared/widgets/level_up_dialog.dart`
 - `lib/shared/widgets/level_badge.dart`
 - `lib/shared/widgets/author_badge.dart`
+- `lib/shared/widgets/tap_scale.dart`
