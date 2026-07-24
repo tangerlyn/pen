@@ -2,12 +2,12 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 // import 'package:share_plus/share_plus.dart' show Share; // 외부 공유 버튼 주석 처리로 미사용
-import 'package:timeago/timeago.dart' as timeago;
 import '../../../core/constants/app_constants.dart';
 import '../../../core/theme/app_theme.dart';
 import '../../../core/utils/level_system.dart';
 import '../../../core/utils/network_utils.dart';
 import '../../../core/utils/profile_navigation.dart';
+import '../../../core/utils/post_date_format.dart';
 import '../../../shared/providers/providers.dart';
 import '../../../shared/providers/user_providers.dart';
 import '../providers/community_provider.dart';
@@ -766,7 +766,7 @@ class _EditorialByline extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final authorAsync = ref.watch(_postAuthorProvider(post.authorId));
     final user = authorAsync.valueOrNull;
-    final timeStr = timeago.format(post.createdAt, locale: 'ko');
+    final timeStr = formatPostDate(post.createdAt);
 
     return TapScale(
       onTap: () => navigateToProfile(context, ref, post.authorId),
@@ -1017,8 +1017,7 @@ class _CommentTileState extends ConsumerState<_CommentTile> {
                           ],
                           const SizedBox(width: 6),
                           Text(
-                              timeago.format(widget.comment.createdAt,
-                                  locale: 'ko'),
+                              formatPostDate(widget.comment.createdAt),
                               style: const TextStyle(
                                   fontSize: 11,
                                   color: AppColors.textTertiary)),
@@ -1305,8 +1304,7 @@ class _PostReplyTileState extends ConsumerState<_PostReplyTile> {
                     ],
                     const SizedBox(width: 6),
                     Text(
-                        timeago.format(widget.reply.createdAt,
-                            locale: 'ko'),
+                        formatPostDate(widget.reply.createdAt),
                         style: const TextStyle(
                             fontSize: 11,
                             color: AppColors.textTertiary)),

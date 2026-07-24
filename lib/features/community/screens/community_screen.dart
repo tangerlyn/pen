@@ -2,7 +2,6 @@ import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-import 'package:timeago/timeago.dart' as timeago;
 import '../../../core/theme/app_theme.dart';
 import '../providers/community_provider.dart';
 import '../../../data/models/user_model.dart';
@@ -149,6 +148,7 @@ class _CommunityScreenState extends ConsumerState<CommunityScreen> {
                                 final post = posts[i - normalStart];
                                 return PostCard(
                                   post: post,
+                                  showDate: false,
                                   onTap: () =>
                                       context.push('/community/${post.id}'),
                                 );
@@ -431,12 +431,6 @@ class _PopularCard extends ConsumerWidget {
                                 style: const TextStyle(
                                     fontSize: 11, color: AppColors.textTertiary),
                               ),
-                            ),
-                            const SizedBox(width: 5),
-                            Text(
-                              timeago.format(post.createdAt as DateTime, locale: 'ko'),
-                              style: const TextStyle(
-                                  fontSize: 11, color: AppColors.textTertiary),
                             ),
                             const SizedBox(width: 8),
                           ],

@@ -1,8 +1,8 @@
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:timeago/timeago.dart' as timeago;
 import '../../../core/theme/app_theme.dart';
+import '../../../core/utils/post_date_format.dart';
 import '../../../data/models/review_model.dart';
 import '../../../data/models/user_model.dart';
 import '../../../features/archive/providers/archive_detail_provider.dart';
@@ -18,10 +18,16 @@ final _reviewTileAuthorProvider =
 /// 리뷰 탭 · 리뷰 검색 결과 · 마이페이지 리뷰 목록에서 공통으로 쓰는
 /// 한 줄(1열) 리뷰 리스트 타일.
 class ReviewListTile extends ConsumerWidget {
-  const ReviewListTile({super.key, required this.review, required this.onTap});
+  const ReviewListTile({
+    super.key,
+    required this.review,
+    required this.onTap,
+    this.showDate = true,
+  });
 
   final ReviewModel review;
   final VoidCallback onTap;
+  final bool showDate;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -144,12 +150,14 @@ class ReviewListTile extends ConsumerWidget {
                                 ],
                               ),
                             ),
-                            const SizedBox(width: 6),
-                            Text(
-                              timeago.format(review.createdAt, locale: 'ko'),
-                              style: const TextStyle(
-                                  fontSize: 12, color: AppColors.textTertiary),
-                            ),
+                            if (showDate) ...[
+                              const SizedBox(width: 6),
+                              Text(
+                                formatPostDate(review.createdAt),
+                                style: const TextStyle(
+                                    fontSize: 12, color: AppColors.textTertiary),
+                              ),
+                            ],
                             const SizedBox(width: 8),
                           ],
                         ),

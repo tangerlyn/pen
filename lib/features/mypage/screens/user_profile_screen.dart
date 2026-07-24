@@ -423,6 +423,7 @@ class _ReviewGrid extends ConsumerWidget {
           separatorBuilder: (context, index) => const Divider(height: 1),
           itemBuilder: (_, i) => ReviewListTile(
             review: reviews[i],
+            showDate: false,
             onTap: () => context.push('/review/${reviews[i].id}'),
           ),
         );
@@ -458,6 +459,7 @@ class _PostList extends ConsumerWidget {
           separatorBuilder: (context, index) => const Divider(height: 1),
           itemBuilder: (_, i) => PostCard(
             post: posts[i],
+            showDate: false,
             onTap: () => context.push('/community/${posts[i].id}'),
           ),
         );

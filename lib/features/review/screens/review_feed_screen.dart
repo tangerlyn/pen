@@ -212,6 +212,7 @@ class _ReviewFeedScreenState extends ConsumerState<ReviewFeedScreen> {
                                             children: [
                                               ReviewListTile(
                                                 review: review,
+                                                showDate: false,
                                                 onTap: () =>
                                                     context.push('/review/${review.id}'),
                                               ),

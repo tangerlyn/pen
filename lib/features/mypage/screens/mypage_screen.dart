@@ -200,6 +200,7 @@ class _MyReviewGrid extends ConsumerWidget {
           separatorBuilder: (_, __) => const Divider(height: 1),
           itemBuilder: (_, i) => ReviewListTile(
             review: reviews[i],
+            showDate: false,
             onTap: () => context.push('/review/${reviews[i].id}'),
           ),
         );
@@ -237,6 +238,7 @@ class _MyCommunityList extends ConsumerWidget {
           separatorBuilder: (_, __) => const Divider(height: 1),
           itemBuilder: (_, i) => PostCard(
             post: posts[i],
+            showDate: false,
             onTap: () => context.push('/community/${posts[i].id}'),
           ),
         );
@@ -323,10 +325,12 @@ class _ScrapbookGrid extends ConsumerWidget {
           return switch (item) {
             _ReviewScrap(:final review) => ReviewListTile(
                 review: review,
+                showDate: false,
                 onTap: () => context.push('/review/${review.id}'),
               ),
             _PostScrap(:final post) => PostCard(
                 post: post,
+                showDate: false,
                 onTap: () => context.push('/community/${post.id}'),
               ),
           };

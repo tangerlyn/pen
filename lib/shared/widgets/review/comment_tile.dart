@@ -1,11 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:cached_network_image/cached_network_image.dart';
-import 'package:timeago/timeago.dart' as timeago;
 import '../../../data/models/review_model.dart';
 import '../../../data/models/reply_model.dart';
 import '../../../core/theme/app_theme.dart';
 import '../../../core/utils/profile_navigation.dart';
+import '../../../core/utils/post_date_format.dart';
 import '../../providers/providers.dart';
 import '../../../features/home/providers/review_detail_provider.dart';
 import '../content_moderation.dart';
@@ -315,7 +315,7 @@ class _CommentTileState extends ConsumerState<CommentTile> {
                   ],
                   const SizedBox(width: 6),
                   Text(
-                    timeago.format(widget.comment.createdAt, locale: 'ko'),
+                    formatPostDate(widget.comment.createdAt),
                     style: const TextStyle(
                       color: AppColors.textTertiary,
                       fontSize: 11,
@@ -629,7 +629,7 @@ class _ReplyTileState extends ConsumerState<_ReplyTile> {
                     ],
                     const SizedBox(width: 6),
                     Text(
-                      timeago.format(widget.reply.createdAt, locale: 'ko'),
+                      formatPostDate(widget.reply.createdAt),
                       style: const TextStyle(
                         color: AppColors.textTertiary,
                         fontSize: 11,

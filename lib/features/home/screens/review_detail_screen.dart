@@ -4,11 +4,11 @@ import 'package:cached_network_image/cached_network_image.dart';
 import 'package:go_router/go_router.dart';
 // import 'package:share_plus/share_plus.dart' show Share; // 외부 공유 버튼 주석 처리로 미사용
 import 'package:smooth_page_indicator/smooth_page_indicator.dart';
-import 'package:timeago/timeago.dart' as timeago;
 import '../../../core/constants/app_constants.dart';
 import '../../../core/theme/app_theme.dart';
 import '../../../core/utils/network_utils.dart';
 import '../../../core/utils/profile_navigation.dart';
+import '../../../core/utils/post_date_format.dart';
 import '../../../core/utils/toast_utils.dart';
 import '../../../shared/widgets/image_viewer_screen.dart';
 import '../../../data/models/review_model.dart';
@@ -335,7 +335,7 @@ class _ReviewDetailScreenState extends ConsumerState<ReviewDetailScreen> {
                       Row(
                         children: [
                           Text(
-                            timeago.format(review.createdAt, locale: 'ko'),
+                            formatPostDate(review.createdAt),
                             style: const TextStyle(
                                 color: AppColors.textTertiary, fontSize: 12),
                           ),

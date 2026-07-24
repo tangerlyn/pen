@@ -1,10 +1,10 @@
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:timeago/timeago.dart' as timeago;
 import '../../../data/models/post_model.dart';
 import '../../../data/models/user_model.dart';
 import '../../../core/theme/app_theme.dart';
+import '../../../core/utils/post_date_format.dart';
 import '../../providers/providers.dart';
 import '../../../features/community/providers/community_provider.dart';
 import '../level_badge.dart';
@@ -23,11 +23,13 @@ class PostCard extends ConsumerWidget {
     required this.post,
     required this.onTap,
     this.topPadding = 8.0,
+    this.showDate = true,
   });
 
   final PostModel post;
   final VoidCallback onTap;
   final double topPadding;
+  final bool showDate;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -97,13 +99,15 @@ class PostCard extends ConsumerWidget {
                                 authorLevel: post.authorLevel,
                               ),
                             ),
-                            const SizedBox(width: AppSpacing.sm),
-                            Text(
-                              timeago.format(post.createdAt, locale: 'ko'),
-                              style: AppTextStyles.bodySmall.copyWith(
-                                color: AppColors.textTertiary,
+                            if (showDate) ...[
+                              const SizedBox(width: AppSpacing.sm),
+                              Text(
+                                formatPostDate(post.createdAt),
+                                style: AppTextStyles.bodySmall.copyWith(
+                                  color: AppColors.textTertiary,
+                                ),
                               ),
-                            ),
+                            ],
                             const SizedBox(width: 8),
                           ],
                         ),
