@@ -189,14 +189,14 @@ class ArchiveNotifier extends StateNotifier<ArchiveState> {
           return b.avgRating.compareTo(a.avgRating);
         });
       case ArchiveSortOption.defaultOrder:
-        sorted.sort((a, b) => _compareInkName(a.name, b.name));
+        sorted.sort((a, b) => _compareProductName(a.name, b.name));
     }
     return sorted;
   }
 
   /// 한글 이름은 가나다순으로 먼저, 영어/숫자로 시작하는 이름은 뒤로 빼서
   /// 그 안에서 알파벳/숫자 순으로 정렬
-  int _compareInkName(String a, String b) {
+  int _compareProductName(String a, String b) {
     final aKorean = _startsWithKorean(a);
     final bKorean = _startsWithKorean(b);
     if (aKorean != bKorean) return aKorean ? -1 : 1;
@@ -221,7 +221,7 @@ class ArchiveNotifier extends StateNotifier<ArchiveState> {
           return b.avgRating.compareTo(a.avgRating);
         });
       case ArchiveSortOption.defaultOrder:
-        break;
+        sorted.sort((a, b) => _compareProductName(a.modelName, b.modelName));
     }
     return sorted;
   }
