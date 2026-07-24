@@ -189,9 +189,24 @@ class ArchiveNotifier extends StateNotifier<ArchiveState> {
           return b.avgRating.compareTo(a.avgRating);
         });
       case ArchiveSortOption.defaultOrder:
-        break;
+        sorted.sort((a, b) => _compareInkName(a.name, b.name));
     }
     return sorted;
+  }
+
+  /// 한글 이름은 가나다순으로 먼저, 영어/숫자로 시작하는 이름은 뒤로 빼서
+  /// 그 안에서 알파벳/숫자 순으로 정렬
+  int _compareInkName(String a, String b) {
+    final aKorean = _startsWithKorean(a);
+    final bKorean = _startsWithKorean(b);
+    if (aKorean != bKorean) return aKorean ? -1 : 1;
+    return a.toLowerCase().compareTo(b.toLowerCase());
+  }
+
+  bool _startsWithKorean(String s) {
+    if (s.isEmpty) return false;
+    final code = s.codeUnitAt(0);
+    return code >= 0xAC00 && code <= 0xD7A3;
   }
 
   List<PenModel> _sortPens(List<PenModel> list, ArchiveSortOption sort) {
