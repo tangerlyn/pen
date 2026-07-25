@@ -469,7 +469,7 @@ class _AddProductBottomSheetState extends ConsumerState<AddProductBottomSheet> {
         style: TextStyle(fontSize: 12, color: AppColors.textTertiary),
       ),
       const SizedBox(height: 12),
-      _InkColorPicker(
+      InkColorPicker(
         color: _inkColor,
         onChanged: (c) => setState(() => _inkColor = c),
       ),
@@ -705,16 +705,16 @@ class _AddProductBottomSheetState extends ConsumerState<AddProductBottomSheet> {
 
 // ── 잉크 색상 피커 ────────────────────────────────────────────────────────────
 
-class _InkColorPicker extends StatefulWidget {
-  const _InkColorPicker({required this.color, required this.onChanged});
+class InkColorPicker extends StatefulWidget {
+  const InkColorPicker({super.key, required this.color, required this.onChanged});
   final Color color;
   final ValueChanged<Color> onChanged;
 
   @override
-  State<_InkColorPicker> createState() => _InkColorPickerState();
+  State<InkColorPicker> createState() => _InkColorPickerState();
 }
 
-class _InkColorPickerState extends State<_InkColorPicker> {
+class _InkColorPickerState extends State<InkColorPicker> {
   late HSVColor _hsv;
 
   @override
