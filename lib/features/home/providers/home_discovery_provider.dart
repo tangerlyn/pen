@@ -5,11 +5,15 @@ import '../../../data/models/pen_model.dart';
 import '../../../shared/providers/providers.dart';
 
 final homeLatestReviewsProvider = FutureProvider<List<ReviewModel>>((ref) async {
+  // Firebase Auth 세션 복원 전에 쿼리가 나가면 Firestore 규칙에 의해
+  // permission-denied가 나므로, 로그인 상태가 확정될 때까지 대기한다.
+  if (ref.watch(authUserProvider).value == null) return [];
   final (reviews, _) = await ref.read(reviewRepoProvider).getFeed(limit: 6);
   return reviews;
 });
 
 final homePopularInksProvider = FutureProvider<List<InkModel>>((ref) async {
+  if (ref.watch(authUserProvider).value == null) return [];
   final (reviews, _) = await ref.read(reviewRepoProvider).getFeed(limit: 60);
   final counts = <String, int>{};
   for (final r in reviews) {
@@ -28,6 +32,7 @@ final homePopularInksProvider = FutureProvider<List<InkModel>>((ref) async {
 });
 
 final homePopularPensProvider = FutureProvider<List<PenModel>>((ref) async {
+  if (ref.watch(authUserProvider).value == null) return [];
   final (reviews, _) = await ref.read(reviewRepoProvider).getFeed(limit: 60);
   final counts = <String, int>{};
   for (final r in reviews) {

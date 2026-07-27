@@ -64,10 +64,6 @@ class LoginScreen extends ConsumerWidget {
                     _NaverLoginButton(
                       onTap: () => ref.read(authProvider.notifier).signInWithNaver(context),
                     ),
-                    const SizedBox(height: 12),
-                    _AppleLoginButton(
-                      onTap: () => ref.read(authProvider.notifier).signInWithApple(context),
-                    ),
                   ],
                 ),
               const SizedBox(height: 32),
@@ -138,36 +134,6 @@ class _NaverLoginButton extends StatelessWidget {
             Text('N', style: TextStyle(fontSize: 20, fontWeight: FontWeight.w900)),
             SizedBox(width: 8),
             Text('네이버로 시작하기', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600)),
-          ],
-        ),
-      ),
-    );
-  }
-}
-
-class _AppleLoginButton extends StatelessWidget {
-  const _AppleLoginButton({required this.onTap});
-  final VoidCallback onTap;
-
-  @override
-  Widget build(BuildContext context) {
-    return SizedBox(
-      width: double.infinity,
-      height: 52,
-      child: ElevatedButton(
-        onPressed: onTap,
-        style: ElevatedButton.styleFrom(
-          backgroundColor: Colors.black,
-          foregroundColor: Colors.white,
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-          elevation: 0,
-        ),
-        child: const Row(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Icon(Icons.apple, size: 22),
-            SizedBox(width: 8),
-            Text('Apple로 시작하기', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600)),
           ],
         ),
       ),

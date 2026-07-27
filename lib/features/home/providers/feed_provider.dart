@@ -75,7 +75,18 @@ class FeedState {
 
 class FeedNotifier extends StateNotifier<FeedState> {
   FeedNotifier(this._ref) : super(const FeedState()) {
-    loadFeed(refresh: true);
+    // Firebase Auth 세션 복원 전에 쿼리가 나가면 permission-denied가 나므로,
+    // 로그인 상태가 확정된 뒤에 최초 로드를 실행한다.
+    if (_ref.read(authUserProvider).value != null) {
+      loadFeed(refresh: true);
+    } else {
+      late final ProviderSubscription<AsyncValue<String?>> sub;
+      sub = _ref.listen(authUserProvider, (_, next) {
+        if (next.isLoading) return;
+        sub.close();
+        loadFeed(refresh: true);
+      });
+    }
   }
 
   final Ref _ref;

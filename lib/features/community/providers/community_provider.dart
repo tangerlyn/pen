@@ -91,7 +91,18 @@ const _sentinel = Object();
 
 class CommunityFeedNotifier extends StateNotifier<CommunityFeedState> {
   CommunityFeedNotifier(this._ref) : super(const CommunityFeedState()) {
-    _load();
+    // Firebase Auth 세션 복원 전에 쿼리가 나가면 permission-denied가 나므로,
+    // 로그인 상태가 확정된 뒤에 최초 로드를 실행한다.
+    if (_ref.read(authUserProvider).value != null) {
+      _load();
+    } else {
+      late final ProviderSubscription<AsyncValue<String?>> sub;
+      sub = _ref.listen(authUserProvider, (_, next) {
+        if (next.isLoading) return;
+        sub.close();
+        _load();
+      });
+    }
   }
   final Ref _ref;
   DocumentSnapshot? _lastDoc;

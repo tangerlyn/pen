@@ -49,3 +49,4 @@ functions/node_modules/
 
 # Secrets
 lib/core/constants/app_secrets.dart
+android/secrets.properties
