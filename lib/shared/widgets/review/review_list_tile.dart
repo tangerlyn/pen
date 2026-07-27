@@ -89,6 +89,15 @@ class ReviewListTile extends ConsumerWidget {
                             ),
                           ),
                         ),
+                      ] else
+                        const Spacer(),
+                      if (showDate) ...[
+                        const SizedBox(width: 6),
+                        Text(
+                          formatPostDate(review.createdAt),
+                          style: const TextStyle(
+                              fontSize: 12, color: AppColors.textTertiary),
+                        ),
                       ],
                     ],
                   ),
@@ -150,14 +159,6 @@ class ReviewListTile extends ConsumerWidget {
                                 ],
                               ),
                             ),
-                            if (showDate) ...[
-                              const SizedBox(width: 6),
-                              Text(
-                                formatPostDate(review.createdAt),
-                                style: const TextStyle(
-                                    fontSize: 12, color: AppColors.textTertiary),
-                              ),
-                            ],
                             const SizedBox(width: 8),
                           ],
                         ),

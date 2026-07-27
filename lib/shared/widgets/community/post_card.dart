@@ -75,6 +75,15 @@ class PostCard extends ConsumerWidget {
                           overflow: TextOverflow.ellipsis,
                         ),
                       ),
+                      if (showDate) ...[
+                        const SizedBox(width: 6),
+                        Text(
+                          formatPostDate(post.createdAt),
+                          style: AppTextStyles.bodySmall.copyWith(
+                            color: AppColors.textTertiary,
+                          ),
+                        ),
+                      ],
                     ],
                   ),
                   const SizedBox(height: 6),
@@ -99,15 +108,6 @@ class PostCard extends ConsumerWidget {
                                 authorLevel: post.authorLevel,
                               ),
                             ),
-                            if (showDate) ...[
-                              const SizedBox(width: AppSpacing.sm),
-                              Text(
-                                formatPostDate(post.createdAt),
-                                style: AppTextStyles.bodySmall.copyWith(
-                                  color: AppColors.textTertiary,
-                                ),
-                              ),
-                            ],
                             const SizedBox(width: 8),
                           ],
                         ),

@@ -396,7 +396,6 @@ class _CommunitySection extends ConsumerWidget {
               separatorBuilder: (_, __) => const Divider(height: 1),
               itemBuilder: (_, i) => PostCard(
                 post: preview[i],
-                showDate: false,
                 onTap: () =>
                     context.push('/community/${preview[i].id}'),
                 topPadding: i == 0 ? AppSpacing.xs : AppSpacing.sm,

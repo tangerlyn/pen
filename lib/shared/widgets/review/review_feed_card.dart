@@ -4,6 +4,7 @@ import 'package:cached_network_image/cached_network_image.dart';
 import '../../../data/models/review_model.dart';
 import '../../../data/models/user_model.dart';
 import '../../../core/theme/app_theme.dart';
+import '../../../core/utils/post_date_format.dart';
 import '../../../features/archive/providers/archive_detail_provider.dart';
 import '../../providers/providers.dart';
 import '../level_badge.dart';
@@ -114,7 +115,21 @@ class ReviewFeedCard extends ConsumerWidget {
                       bottom: 0,
                       child: Padding(
                         padding: const EdgeInsets.all(8),
-                        child: _GearTagOverlay(review: review),
+                        child: Row(
+                          children: [
+                            Expanded(child: _GearTagOverlay(review: review)),
+                            const SizedBox(width: 6),
+                            Text(
+                              formatPostDate(review.createdAt),
+                              style: const TextStyle(
+                                color: Colors.white,
+                                fontSize: 11,
+                                fontWeight: FontWeight.w600,
+                                shadows: [Shadow(color: Colors.black45, blurRadius: 3)],
+                              ),
+                            ),
+                          ],
+                        ),
                       ),
                     ),
                   ],

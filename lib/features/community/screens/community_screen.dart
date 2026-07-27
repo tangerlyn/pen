@@ -148,7 +148,6 @@ class _CommunityScreenState extends ConsumerState<CommunityScreen> {
                                 final post = posts[i - normalStart];
                                 return PostCard(
                                   post: post,
-                                  showDate: false,
                                   onTap: () =>
                                       context.push('/community/${post.id}'),
                                 );
