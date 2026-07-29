@@ -406,7 +406,7 @@ class _PostDetailScreenState extends ConsumerState<PostDetailScreen> {
                             ),
                             const SizedBox(height: 12),
                             // by-line
-                            _EditorialByline(post: post),
+                            _EditorialByline(post: post, currentUid: currentUid),
                           ],
                         ),
                       ),
@@ -759,58 +759,103 @@ class _PostDetailScreenState extends ConsumerState<PostDetailScreen> {
 
 // ── 에디토리얼 바이라인 (LAYOUT A) ────────────────────────────────────
 class _EditorialByline extends ConsumerWidget {
-  const _EditorialByline({required this.post});
+  const _EditorialByline({required this.post, required this.currentUid});
   final PostModel post;
+  final String? currentUid;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final authorAsync = ref.watch(_postAuthorProvider(post.authorId));
     final user = authorAsync.valueOrNull;
     final timeStr = formatPostDate(post.createdAt);
+    final isOwnPost = post.authorId == currentUid;
+    final isDeletedUser = authorAsync.valueOrNull == null;
+    final isFollowing = (!isOwnPost && currentUid != null && !isDeletedUser)
+        ? ref
+                .watch(followStatusProvider((currentUid!, post.authorId)))
+                .valueOrNull ??
+            false
+        : false;
 
-    return TapScale(
-      onTap: () => navigateToProfile(context, ref, post.authorId),
-      child: Row(
-        children: [
-          CircleAvatar(
-            radius: 16,
-            backgroundColor: AppColors.chipBackground,
-            backgroundImage: user?.profileImageUrl != null
-                ? CachedNetworkImageProvider(user!.profileImageUrl!)
-                : null,
-            child: user?.profileImageUrl == null
-                ? const Icon(Icons.person, size: 16, color: AppColors.textTertiary)
-                : null,
-          ),
-          const SizedBox(width: 8),
-          Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Row(
-                children: [
-                  Text(
-                    user?.nickname ?? post.authorNickname,
-                    style: const TextStyle(
-                      fontSize: 13,
-                      fontWeight: FontWeight.w600,
-                      color: AppColors.textPrimary,
-                    ),
-                  ),
-                  const SizedBox(width: 6),
-                  LevelBadge(user?.level ?? post.authorLevel),
-                ],
-              ),
-              Text(
-                timeStr,
-                style: const TextStyle(
-                  fontSize: 11,
-                  color: AppColors.textTertiary,
+    return Row(
+      children: [
+        Expanded(
+          child: TapScale(
+            onTap: () => navigateToProfile(context, ref, post.authorId),
+            child: Row(
+              children: [
+                CircleAvatar(
+                  radius: 16,
+                  backgroundColor: AppColors.chipBackground,
+                  backgroundImage: user?.profileImageUrl != null
+                      ? CachedNetworkImageProvider(user!.profileImageUrl!)
+                      : null,
+                  child: user?.profileImageUrl == null
+                      ? const Icon(Icons.person, size: 16, color: AppColors.textTertiary)
+                      : null,
                 ),
-              ),
-            ],
+                const SizedBox(width: 8),
+                Flexible(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Row(
+                        children: [
+                          Text(
+                            user?.nickname ?? post.authorNickname,
+                            style: const TextStyle(
+                              fontSize: 13,
+                              fontWeight: FontWeight.w600,
+                              color: AppColors.textPrimary,
+                            ),
+                          ),
+                          const SizedBox(width: 6),
+                          LevelBadge(user?.level ?? post.authorLevel),
+                        ],
+                      ),
+                      Text(
+                        timeStr,
+                        style: const TextStyle(
+                          fontSize: 11,
+                          color: AppColors.textTertiary,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
           ),
-        ],
-      ),
+        ),
+        if (!isOwnPost && currentUid != null && !isDeletedUser)
+          isFollowing
+              ? ElevatedButton(
+                  onPressed: () =>
+                      ref.read(userRepoProvider).unfollow(currentUid!, post.authorId),
+                  style: ElevatedButton.styleFrom(
+                    minimumSize: const Size(72, 32),
+                    padding: const EdgeInsets.symmetric(horizontal: 16),
+                    textStyle: const TextStyle(fontSize: 13),
+                    backgroundColor: AppColors.chipBackground,
+                    foregroundColor: AppColors.textSecondary,
+                    elevation: 0,
+                  ),
+                  child: const Text('팔로잉'),
+                )
+              : OutlinedButton(
+                  onPressed: () =>
+                      ref.read(userRepoProvider).follow(currentUid!, post.authorId),
+                  style: OutlinedButton.styleFrom(
+                    minimumSize: const Size(72, 32),
+                    padding: const EdgeInsets.symmetric(horizontal: 16),
+                    textStyle: const TextStyle(fontSize: 13),
+                    foregroundColor: AppColors.primary,
+                    side: const BorderSide(color: AppColors.primary),
+                  ),
+                  child: const Text('팔로우'),
+                ),
+      ],
     );
   }
 }

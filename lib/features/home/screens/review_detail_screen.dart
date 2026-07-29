@@ -17,7 +17,7 @@ import '../../../shared/providers/providers.dart';
 import '../../../shared/providers/user_providers.dart';
 import '../providers/review_detail_provider.dart';
 import '../../archive/providers/archive_detail_provider.dart';
-import '../../../shared/widgets/common/star_rating.dart';
+// import '../../../shared/widgets/common/star_rating.dart'; // 별점 시스템 비활성화
 import '../../../shared/widgets/review/comment_tile.dart';
 import '../../review/screens/review_write_screen.dart';
 import '../providers/feed_provider.dart';
@@ -280,16 +280,12 @@ class _ReviewDetailScreenState extends ConsumerState<ReviewDetailScreen> {
             behavior: HitTestBehavior.translucent,
             child: CustomScrollView(
             slivers: [
-              // ── LAYOUT A: 블로그 형식 ─────────────────────
-              // 프로필
-              SliverToBoxAdapter(
-                child: _ProfileRow(review: review, currentUid: currentUid),
-              ),
+              // ── LAYOUT A: 블로그 형식 (커뮤니티 상세와 동일한 배치: 제목 → 작성자/날짜) ──
               // 제목
               if (review.title.isNotEmpty)
                 SliverToBoxAdapter(
                   child: Padding(
-                    padding: const EdgeInsets.fromLTRB(16, 4, 16, 0),
+                    padding: const EdgeInsets.fromLTRB(16, 16, 16, 0),
                     child: Text(
                       review.title,
                       style: const TextStyle(
@@ -301,15 +297,19 @@ class _ReviewDetailScreenState extends ConsumerState<ReviewDetailScreen> {
                     ),
                   ),
                 ),
+              // 작성자 + 날짜
+              SliverToBoxAdapter(
+                child: _ProfileRow(review: review, currentUid: currentUid),
+              ),
               // 장비 카드
               SliverToBoxAdapter(child: _GearCard(review: review)),
-              // 별점
-              SliverToBoxAdapter(
-                child: Padding(
-                  padding: const EdgeInsets.fromLTRB(16, 0, 16, 0),
-                  child: StarRatingDisplay(rating: review.rating),
-                ),
-              ),
+              // 별점 시스템 비활성화 — 재활성화 시 주석 해제
+              // SliverToBoxAdapter(
+              //   child: Padding(
+              //     padding: const EdgeInsets.fromLTRB(16, 0, 16, 0),
+              //     child: StarRatingDisplay(rating: review.rating),
+              //   ),
+              // ),
               const SliverToBoxAdapter(child: SizedBox(height: 12)),
               // 블로그 본문 (contentBlocks 또는 기존 body+imageUrls 폴백)
               SliverToBoxAdapter(
@@ -331,22 +331,6 @@ class _ReviewDetailScreenState extends ConsumerState<ReviewDetailScreen> {
                           const SizedBox(height: 12),
                         ],
                       ],
-                      const SizedBox(height: 8),
-                      Row(
-                        children: [
-                          Text(
-                            formatPostDate(review.createdAt),
-                            style: const TextStyle(
-                                color: AppColors.textTertiary, fontSize: 12),
-                          ),
-                          if (review.updatedAt != null) ...[
-                            const SizedBox(width: 6),
-                            const Text('· 수정됨',
-                                style: TextStyle(
-                                    color: AppColors.textTertiary, fontSize: 12)),
-                          ],
-                        ],
-                      ),
                       const SizedBox(height: 8),
                     ],
                   ),
@@ -640,51 +624,74 @@ class _ProfileRow extends ConsumerWidget {
                 .valueOrNull ??
             false
         : false;
+    final timeStr = formatPostDate(review.createdAt);
 
     return Padding(
-      padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
+      padding: const EdgeInsets.fromLTRB(16, 12, 16, 8),
       child: Row(
         children: [
           GestureDetector(
             onTap: () => navigateToProfile(context, ref, review.authorId),
             child: authorAsync.when(
               data: (user) => CircleAvatar(
-                radius: 20,
+                radius: 16,
                 backgroundColor: AppColors.chipBackground,
                 backgroundImage: user?.profileImageUrl != null
                     ? CachedNetworkImageProvider(user!.profileImageUrl!)
                     : null,
                 child: user?.profileImageUrl == null
-                    ? const Icon(Icons.person, size: 20, color: AppColors.textTertiary)
+                    ? const Icon(Icons.person, size: 16, color: AppColors.textTertiary)
                     : null,
               ),
               loading: () => const CircleAvatar(
-                radius: 20,
+                radius: 16,
                 backgroundColor: AppColors.chipBackground,
               ),
               error: (_, __) => const CircleAvatar(
-                radius: 20,
+                radius: 16,
                 backgroundColor: AppColors.chipBackground,
-                child: Icon(Icons.person, size: 20, color: AppColors.textTertiary),
+                child: Icon(Icons.person, size: 16, color: AppColors.textTertiary),
               ),
             ),
           ),
-          const SizedBox(width: 12),
+          const SizedBox(width: 8),
           Expanded(
             child: GestureDetector(
               onTap: () => navigateToProfile(context, ref, review.authorId),
               child: authorAsync.when(
-                data: (user) => Row(
+                data: (user) => Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    Text(
-                      user == null ? '(알 수 없음) (탈퇴)' : user.nickname,
-                      style: const TextStyle(fontWeight: FontWeight.w600),
+                    Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Text(
+                          user == null ? '(알 수 없음) (탈퇴)' : user.nickname,
+                          style: const TextStyle(
+                              fontSize: 13,
+                              fontWeight: FontWeight.w600,
+                              color: AppColors.textPrimary),
+                        ),
+                        if (user != null) ...[
+                          const SizedBox(width: 6),
+                          LevelBadge(user.level),
+                        ],
+                      ],
                     ),
-                    if (user != null) ...[
-                      const SizedBox(width: 6),
-                      LevelBadge(user.level),
-                    ],
+                    Row(
+                      children: [
+                        Text(
+                          timeStr,
+                          style: const TextStyle(fontSize: 11, color: AppColors.textTertiary),
+                        ),
+                        if (review.updatedAt != null) ...[
+                          const SizedBox(width: 4),
+                          const Text('· 수정됨',
+                              style: TextStyle(fontSize: 11, color: AppColors.textTertiary)),
+                        ],
+                      ],
+                    ),
                   ],
                 ),
                 loading: () => Container(
