@@ -1,0 +1,189 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    function isLoggedIn() {
+      return request.auth != null;
+    }
+
+    function isOwner(uid) {
+      return request.auth.uid == uid;
+    }
+
+    function isFollowing(followerId, followeeId) {
+      return exists(/databases/$(database)/documents/follows/$(followerId + '_' + followeeId));
+    }
+
+    function canReadInkBook(uid, bookData) {
+      return isOwner(uid)
+        || (isLoggedIn() && (bookData.visibility == 'public' || bookData.isPublic == true))
+        || (isLoggedIn() && bookData.visibility == 'followers'
+            && isFollowing(request.auth.uid, uid));
+    }
+
+    // get()을 함수 인자로 전달하면 파서 오류 → 별도 함수로 분리
+    function canReadInkChart(uid, bookId) {
+      return isLoggedIn() && (
+        get(/databases/$(database)/documents/users/$(uid)/inkBooks/$(bookId)).data.visibility == 'public'
+        || get(/databases/$(database)/documents/users/$(uid)/inkBooks/$(bookId)).data.isPublic == true
+        || (get(/databases/$(database)/documents/users/$(uid)/inkBooks/$(bookId)).data.visibility == 'followers'
+            && isFollowing(request.auth.uid, uid))
+      );
+    }
+
+    // create 시 요청 데이터의 소유자 필드가 본인 uid와 일치하는지 확인 (작성자 스푸핑 방지)
+    function isOwnedCreate(field) {
+      return isLoggedIn() && request.resource.data[field] == request.auth.uid;
+    }
+
+    match /users/{uid} {
+      allow read: if isLoggedIn();
+      allow write: if isOwner(uid);
+      allow update: if isOwner(uid)
+        || (isLoggedIn() && request.resource.data.diff(resource.data).affectedKeys()
+            .hasOnly(['followerCount', 'followingCount']));
+
+      match /following/{targetUid} {
+        allow read: if isLoggedIn();
+        allow write: if isOwner(uid);
+      }
+      match /followers/{fromUid} {
+        allow read: if isLoggedIn();
+        // 팔로우 시 상대방의 followers에 내 항목을 써야 하므로 isOwner(uid)로는 못 막지만,
+        // 최소한 "내 항목(fromUid)"만 건드리도록 제한 — 남의 팔로워 목록 조작 방지
+        allow write: if isLoggedIn() && request.auth.uid == fromUid;
+      }
+      match /inkCollection/{inkId} {
+        allow read: if isLoggedIn();
+        allow write: if isOwner(uid);
+      }
+      match /inkChart/{chartId} {
+        allow read: if isLoggedIn();
+        allow write: if isOwner(uid);
+      }
+      match /inkBooks/{bookId} {
+        allow read: if canReadInkBook(uid, resource.data);
+        allow write: if isOwner(uid);
+
+        match /inkChart/{chartId} {
+          allow read: if isOwner(uid) || canReadInkChart(uid, bookId);
+          allow write: if isOwner(uid);
+        }
+      }
+      match /wishlist/{itemId} {
+        allow read, write: if isOwner(uid);
+      }
+    }
+
+    match /follows/{docId} {
+      allow read: if isLoggedIn();
+      allow create: if isLoggedIn()
+          && request.auth.uid == request.resource.data.followerId;
+      allow delete: if isLoggedIn()
+          && request.auth.uid == resource.data.followerId;
+    }
+
+    match /inks/{inkId} {
+      allow read: if isLoggedIn();
+      allow create, update: if isLoggedIn();
+      allow delete: if false;
+    }
+
+    match /pens/{penId} {
+      allow read: if isLoggedIn();
+      allow create: if isLoggedIn();
+      allow update, delete: if false;
+    }
+
+    match /inquiries/{inquiryId} {
+      allow create: if isOwnedCreate('uid');
+      allow read: if isLoggedIn() && request.auth.uid == resource.data.uid;
+      allow update: if false;
+    }
+
+    match /papers/{paperId} {
+      allow read: if isLoggedIn();
+      allow write: if false;
+    }
+
+    match /reviews/{reviewId} {
+      allow read: if isLoggedIn();
+      allow create: if isOwnedCreate('authorId');
+      allow update: if isOwner(resource.data.authorId)
+        || (isLoggedIn() && request.resource.data.diff(resource.data).affectedKeys()
+            .hasOnly(['likeCount', 'scrapCount', 'commentCount']));
+      allow delete: if isOwner(resource.data.authorId);
+
+      match /likes/{likeId} {
+        // likes 문서 ID가 곧 uid — 본인 좋아요 문서만 읽고 쓸 수 있음
+        allow read: if isLoggedIn();
+        allow write: if isOwner(likeId);
+      }
+      match /scraps/{scrapId} {
+        // scraps 문서 ID가 곧 uid — 본인 스크랩 문서만 읽고 쓸 수 있음
+        allow read: if isLoggedIn();
+        allow write: if isOwner(scrapId);
+      }
+      match /comments/{commentId} {
+        allow read: if isLoggedIn();
+        allow create: if isOwnedCreate('authorId');
+        allow update: if isOwner(resource.data.authorId);
+        allow delete: if isOwner(resource.data.authorId);
+
+        match /replies/{replyId} {
+          allow read: if isLoggedIn();
+          allow create: if isOwnedCreate('authorId');
+          allow update: if isOwner(resource.data.authorId);
+          allow delete: if isOwner(resource.data.authorId);
+        }
+      }
+    }
+
+    match /posts/{postId} {
+      allow read: if isLoggedIn();
+      allow create: if isOwnedCreate('authorId');
+      allow update: if isOwner(resource.data.authorId)
+        || (isLoggedIn() && request.resource.data.diff(resource.data).affectedKeys()
+            .hasOnly(['likeCount', 'commentCount']));
+      allow delete: if isOwner(resource.data.authorId);
+
+      match /likes/{likeId} {
+        // likes 문서 ID가 곧 uid — 본인 좋아요 문서만 읽고 쓸 수 있음
+        allow read: if isLoggedIn();
+        allow write: if isOwner(likeId);
+      }
+      match /scraps/{scrapId} {
+        // scraps 문서 ID가 곧 uid — 본인 스크랩 문서만 읽고 쓸 수 있음
+        allow read: if isLoggedIn();
+        allow write: if isOwner(scrapId);
+      }
+      match /comments/{commentId} {
+        allow read: if isLoggedIn();
+        allow create: if isOwnedCreate('authorId');
+        allow update: if isOwner(resource.data.authorId);
+        allow delete: if isOwner(resource.data.authorId);
+
+        match /replies/{replyId} {
+          allow read: if isLoggedIn();
+          allow create: if isOwnedCreate('authorId');
+          allow update: if isOwner(resource.data.authorId);
+          allow delete: if isOwner(resource.data.authorId);
+        }
+      }
+    }
+
+    match /reports/{reportId} {
+      allow create: if isOwnedCreate('reporterId');
+      allow read: if false;
+    }
+
+    match /productRequests/{requestId} {
+      allow create: if isOwnedCreate('requesterId');
+      allow read: if isLoggedIn() && request.auth.uid == resource.data.requesterId;
+    }
+
+    match /notifications/{uid}/items/{itemId} {
+      allow read, write: if request.auth.uid == uid;
+    }
+  }
+}
