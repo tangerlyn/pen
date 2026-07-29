@@ -24,6 +24,7 @@ class _PostWriteScreenState extends ConsumerState<PostWriteScreen> {
   bool _isSubmitting = false;
   final _editorKey = GlobalKey<BlogBodyEditorState>();
   List<EditorBlock>? _initialEditorBlocks;
+  bool _showEditorToolbar = false;
 
   bool get _isEditing => widget.postToEdit != null;
 
@@ -257,10 +258,17 @@ class _PostWriteScreenState extends ConsumerState<PostWriteScreen> {
                 hintText: '내용을 입력하세요',
                 initialBlocks: _initialEditorBlocks,
                 maxTextLength: AppConstants.maxPostBody,
+                onFocusChanged: (hasFocus) => setState(() => _showEditorToolbar = hasFocus),
               ),
             ],
           ),
         ),
+        bottomNavigationBar: _showEditorToolbar
+            ? Padding(
+                padding: EdgeInsets.only(bottom: MediaQuery.of(context).viewInsets.bottom),
+                child: BlogEditorToolbar(editorKey: _editorKey),
+              )
+            : null,
       ),
     );
   }
