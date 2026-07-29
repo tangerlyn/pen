@@ -122,6 +122,7 @@ class FeedNotifier extends StateNotifier<FeedState> {
           .read(userRepoProvider)
           .filterByBlocked(uid, deduped, (r) => r.authorId);
 
+      if (!mounted) return;
       state = state.copyWith(
         followingRecent: followingRecent,
         reviews: refresh ? filtered : [...state.reviews, ...filtered],
@@ -130,6 +131,7 @@ class FeedNotifier extends StateNotifier<FeedState> {
         hasMore: fetched.length >= 20,
       );
     } catch (e) {
+      if (!mounted) return;
       state = state.copyWith(isLoading: false, isLoadingMore: false);
     }
   }
@@ -149,6 +151,7 @@ class FeedNotifier extends StateNotifier<FeedState> {
     final uid = _ref.read(currentUidProvider);
     if (uid == null) return;
     await _ref.read(reviewRepoProvider).toggleLike(reviewId, uid, isLiked);
+    if (!mounted) return;
 
     ReviewModel apply(ReviewModel r) {
       if (r.id != reviewId) return r;
@@ -168,6 +171,7 @@ class FeedNotifier extends StateNotifier<FeedState> {
     final uid = _ref.read(currentUidProvider);
     if (uid == null) return;
     await _ref.read(reviewRepoProvider).toggleScrap(reviewId, uid, isScrapped);
+    if (!mounted) return;
 
     ReviewModel apply(ReviewModel r) {
       if (r.id != reviewId) return r;
