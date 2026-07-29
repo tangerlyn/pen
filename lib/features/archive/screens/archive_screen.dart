@@ -420,7 +420,10 @@ class _FilterRowState extends ConsumerState<_FilterRow>
               ),
             ),
             const Divider(height: 1),
-            ...ArchiveSortOption.values.map(
+            // 별점 시스템 비활성화 — '별점순' 정렬 옵션 숨김
+            ...ArchiveSortOption.values
+                .where((opt) => opt != ArchiveSortOption.rating)
+                .map(
               (opt) => ListTile(
                 title: Text(opt.label),
                 trailing: current == opt

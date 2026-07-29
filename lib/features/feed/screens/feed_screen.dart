@@ -180,30 +180,37 @@ class _ReviewListItem extends StatelessWidget {
                     ],
                   ),
                   const SizedBox(height: 4),
-                  // 별점
-                  Row(
-                    children: [
-                      const Icon(Icons.star,
-                          size: 13, color: Colors.amber),
-                      const SizedBox(width: 2),
-                      Text(
-                        review.rating.toStringAsFixed(1),
-                        style: AppTextStyles.labelMedium.copyWith(
-                            fontWeight: FontWeight.w600),
-                      ),
-                      if (review.body.isNotEmpty) ...[
-                        const SizedBox(width: 8),
-                        Expanded(
-                          child: Text(
-                            review.body,
-                            style: AppTextStyles.labelMedium,
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
-                          ),
-                        ),
-                      ],
-                    ],
-                  ),
+                  // 별점 시스템 비활성화 — 재활성화 시 주석 해제
+                  // Row(
+                  //   children: [
+                  //     const Icon(Icons.star,
+                  //         size: 13, color: Colors.amber),
+                  //     const SizedBox(width: 2),
+                  //     Text(
+                  //       review.rating.toStringAsFixed(1),
+                  //       style: AppTextStyles.labelMedium.copyWith(
+                  //           fontWeight: FontWeight.w600),
+                  //     ),
+                  //     if (review.body.isNotEmpty) ...[
+                  //       const SizedBox(width: 8),
+                  //       Expanded(
+                  //         child: Text(
+                  //           review.body,
+                  //           style: AppTextStyles.labelMedium,
+                  //           maxLines: 1,
+                  //           overflow: TextOverflow.ellipsis,
+                  //         ),
+                  //       ),
+                  //     ],
+                  //   ],
+                  // ),
+                  if (review.body.isNotEmpty)
+                    Text(
+                      review.body,
+                      style: AppTextStyles.labelMedium,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                    ),
                   const SizedBox(height: 8),
                   // 하단 메타
                   Row(

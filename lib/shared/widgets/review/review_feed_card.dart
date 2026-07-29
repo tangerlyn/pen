@@ -60,36 +60,36 @@ class ReviewFeedCard extends ConsumerWidget {
                       ),
                     ),
                   ),
-                  // 별점 뱃지 (좌측 상단)
-                  Positioned(
-                    top: 8,
-                    left: 8,
-                    child: Container(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 6,
-                        vertical: 3,
-                      ),
-                      decoration: BoxDecoration(
-                        color: Colors.black.withValues(alpha: 0.55),
-                        borderRadius: BorderRadius.circular(10),
-                      ),
-                      child: Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          const Icon(Icons.star, color: Colors.amber, size: 12),
-                          const SizedBox(width: 2),
-                          Text(
-                            review.rating.toStringAsFixed(1),
-                            style: const TextStyle(
-                              color: Colors.white,
-                              fontSize: 11,
-                              fontWeight: FontWeight.w600,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ),
+                  // 별점 뱃지 (좌측 상단) — 별점 시스템 비활성화, 재활성화 시 주석 해제
+                  // Positioned(
+                  //   top: 8,
+                  //   left: 8,
+                  //   child: Container(
+                  //     padding: const EdgeInsets.symmetric(
+                  //       horizontal: 6,
+                  //       vertical: 3,
+                  //     ),
+                  //     decoration: BoxDecoration(
+                  //       color: Colors.black.withValues(alpha: 0.55),
+                  //       borderRadius: BorderRadius.circular(10),
+                  //     ),
+                  //     child: Row(
+                  //       mainAxisSize: MainAxisSize.min,
+                  //       children: [
+                  //         const Icon(Icons.star, color: Colors.amber, size: 12),
+                  //         const SizedBox(width: 2),
+                  //         Text(
+                  //           review.rating.toStringAsFixed(1),
+                  //           style: const TextStyle(
+                  //             color: Colors.white,
+                  //             fontSize: 11,
+                  //             fontWeight: FontWeight.w600,
+                  //           ),
+                  //         ),
+                  //       ],
+                  //     ),
+                  //   ),
+                  // ),
                   if (review.inkIds.isNotEmpty || review.penIds.isNotEmpty) ...[
                     Positioned(
                       left: 0,

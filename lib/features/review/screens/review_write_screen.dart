@@ -8,7 +8,7 @@ import '../../../shared/widgets/editor/blog_body_editor.dart';
 import '../../archive/providers/archive_detail_provider.dart';
 import '../providers/review_write_provider.dart';
 import '../../../shared/widgets/archive/add_product_bottom_sheet.dart';
-import '../../../shared/widgets/common/star_rating.dart';
+// import '../../../shared/widgets/common/star_rating.dart'; // 별점 시스템 비활성화
 import '../../../shared/widgets/center_toast.dart';
 import '../../../data/models/review_model.dart';
 
@@ -25,6 +25,7 @@ class ReviewWriteScreen extends ConsumerStatefulWidget {
 class _ReviewWriteScreenState extends ConsumerState<ReviewWriteScreen> {
   final _editorKey = GlobalKey<BlogBodyEditorState>();
   List<EditorBlock>? _initialEditorBlocks;
+  bool _showEditorToolbar = false;
 
   @override
   void initState() {
@@ -64,7 +65,8 @@ class _ReviewWriteScreenState extends ConsumerState<ReviewWriteScreen> {
     final s = ref.read(reviewWriteProvider);
     if (s.inkIds.isNotEmpty || s.penIds.isNotEmpty) return true;
     if (s.title.isNotEmpty) return true;
-    if (s.rating > 0) return true;
+    // 별점 시스템 비활성화
+    // if (s.rating > 0) return true;
     final blocks = _editorKey.currentState?.getBlocks() ?? [];
     return blocks.any((b) {
       if (b is TextEditorBlock) return b.controller.text.isNotEmpty;
@@ -162,29 +164,36 @@ class _ReviewWriteScreenState extends ConsumerState<ReviewWriteScreen> {
                   hintText: '잉크 색상, 종이와의 궁합, 닙의 느낌 등을 자유롭게 작성해보세요.',
                   initialBlocks: _initialEditorBlocks,
                   maxTextLength: AppConstants.maxReviewBody,
+                  onFocusChanged: (hasFocus) => setState(() => _showEditorToolbar = hasFocus),
                 ),
 
-                _Divider(),
-
-                // ── 3. 별점 ──────────────────────────────────
-                _SectionHeader(title: '별점'),
-                _RatingSection(rating: state.rating),
+                // 별점 시스템 비활성화
+                // _Divider(),
+                // _SectionHeader(title: '별점'),
+                // _RatingSection(rating: state.rating),
 
                 const SizedBox(height: 16),
               ],
             ),
           ),
         ),
+        bottomNavigationBar: _showEditorToolbar
+            ? Padding(
+                padding: EdgeInsets.only(bottom: MediaQuery.of(context).viewInsets.bottom),
+                child: BlogEditorToolbar(editorKey: _editorKey),
+              )
+            : null,
       ),
     );
   }
 
   Future<void> _submit(BuildContext context) async {
-    final state = ref.read(reviewWriteProvider);
-    if (state.rating == 0.0) {
-      showCenterToast(context, message: '별점을 선택해주세요.');
-      return;
-    }
+    // 별점 시스템 비활성화
+    // final state = ref.read(reviewWriteProvider);
+    // if (state.rating == 0.0) {
+    //   showCenterToast(context, message: '별점을 선택해주세요.');
+    //   return;
+    // }
 
     final editorState = _editorKey.currentState;
     if (editorState == null) return;
@@ -461,43 +470,44 @@ class _TitleSectionState extends ConsumerState<_TitleSection> {
 
 
 // ── 5. 별점 (맨 아래) ────────────────────────────────────────
-class _RatingSection extends ConsumerWidget {
-  const _RatingSection({required this.rating});
-  final double rating;
-
-  @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-      child: Row(
-        children: [
-          StarRatingInput(
-            rating: rating,
-            onChanged: (r) => ref.read(reviewWriteProvider.notifier).setRating(r),
-            size: 36,
-          ),
-          const SizedBox(width: 12),
-          Text(
-            rating == 0.0 ? '별점을 선택해주세요' : _label(rating),
-            style: TextStyle(
-              fontSize: 15,
-              fontWeight: FontWeight.w600,
-              color: rating == 0.0 ? AppColors.textTertiary : AppColors.textPrimary,
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  String _label(double r) {
-    if (r >= 4.5) return '최고예요! ★ ${r.toStringAsFixed(1)}';
-    if (r >= 4.0) return '좋아요 ★ ${r.toStringAsFixed(1)}';
-    if (r >= 3.0) return '보통이에요 ★ ${r.toStringAsFixed(1)}';
-    if (r >= 2.0) return '별로예요 ★ ${r.toStringAsFixed(1)}';
-    return '최악이에요 ★ ${r.toStringAsFixed(1)}';
-  }
-}
+// 별점 시스템 비활성화 — 재활성화 시 주석 해제
+// class _RatingSection extends ConsumerWidget {
+//   const _RatingSection({required this.rating});
+//   final double rating;
+//
+//   @override
+//   Widget build(BuildContext context, WidgetRef ref) {
+//     return Padding(
+//       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+//       child: Row(
+//         children: [
+//           StarRatingInput(
+//             rating: rating,
+//             onChanged: (r) => ref.read(reviewWriteProvider.notifier).setRating(r),
+//             size: 36,
+//           ),
+//           const SizedBox(width: 12),
+//           Text(
+//             rating == 0.0 ? '별점을 선택해주세요' : _label(rating),
+//             style: TextStyle(
+//               fontSize: 15,
+//               fontWeight: FontWeight.w600,
+//               color: rating == 0.0 ? AppColors.textTertiary : AppColors.textPrimary,
+//             ),
+//           ),
+//         ],
+//       ),
+//     );
+//   }
+//
+//   String _label(double r) {
+//     if (r >= 4.5) return '최고예요! ★ ${r.toStringAsFixed(1)}';
+//     if (r >= 4.0) return '좋아요 ★ ${r.toStringAsFixed(1)}';
+//     if (r >= 3.0) return '보통이에요 ★ ${r.toStringAsFixed(1)}';
+//     if (r >= 2.0) return '별로예요 ★ ${r.toStringAsFixed(1)}';
+//     return '최악이에요 ★ ${r.toStringAsFixed(1)}';
+//   }
+// }
 
 // ── 제품 검색 시트 ────────────────────────────────────────────
 class _ProductSearchSheet extends ConsumerStatefulWidget {

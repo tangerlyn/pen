@@ -34,7 +34,8 @@ class ReviewListTile extends ConsumerWidget {
     final hasThumbnail = review.thumbnailUrl.isNotEmpty;
     final authorAsync = ref.watch(_reviewTileAuthorProvider(review.authorId));
     final user = authorAsync.valueOrNull;
-    final stars = review.rating.toStringAsFixed(1);
+    // 별점 시스템 비활성화
+    // final stars = review.rating.toStringAsFixed(1);
 
     return TapScale(
       onTap: onTap,
@@ -51,32 +52,32 @@ class ReviewListTile extends ConsumerWidget {
                   Row(
                     crossAxisAlignment: CrossAxisAlignment.center,
                     children: [
-                      Container(
-                        padding: const EdgeInsets.symmetric(
-                            horizontal: AppSpacing.sm, vertical: 3),
-                        decoration: BoxDecoration(
-                          color: const Color(0xFFFFF3E0),
-                          borderRadius: BorderRadius.circular(4),
-                        ),
-                        child: Row(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            const Icon(Icons.star,
-                                size: 11, color: Color(0xFFFFA000)),
-                            const SizedBox(width: 2),
-                            Text(
-                              stars,
-                              style: const TextStyle(
-                                fontSize: 11,
-                                fontWeight: FontWeight.w600,
-                                color: Color(0xFFFFA000),
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
+                      // 별점 시스템 비활성화 — 재활성화 시 주석 해제
+                      // Container(
+                      //   padding: const EdgeInsets.symmetric(
+                      //       horizontal: AppSpacing.sm, vertical: 3),
+                      //   decoration: BoxDecoration(
+                      //     color: const Color(0xFFFFF3E0),
+                      //     borderRadius: BorderRadius.circular(4),
+                      //   ),
+                      //   child: Row(
+                      //     mainAxisSize: MainAxisSize.min,
+                      //     children: [
+                      //       const Icon(Icons.star,
+                      //           size: 11, color: Color(0xFFFFA000)),
+                      //       const SizedBox(width: 2),
+                      //       Text(
+                      //         stars,
+                      //         style: const TextStyle(
+                      //           fontSize: 11,
+                      //           fontWeight: FontWeight.w600,
+                      //           color: Color(0xFFFFA000),
+                      //         ),
+                      //       ),
+                      //     ],
+                      //   ),
+                      // ),
                       if (review.title.isNotEmpty) ...[
-                        const SizedBox(width: 6),
                         Expanded(
                           child: Text(
                             review.title,

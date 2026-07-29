@@ -388,13 +388,16 @@ class _ReviewSortChip extends ConsumerWidget {
   }
 
   void _showPicker(BuildContext context, WidgetRef ref, ReviewSortOption current) {
+    // 별점 시스템 비활성화 — '평점순' 옵션 숨김
+    final options =
+        ReviewSortOption.values.where((o) => o != ReviewSortOption.rating).toList();
     _showSortSheet(
       context: context,
-      options: ReviewSortOption.values.map((o) => o.label).toList(),
-      currentIndex: ReviewSortOption.values.indexOf(current),
+      options: options.map((o) => o.label).toList(),
+      currentIndex: options.indexOf(current),
       onSelected: (i) => ref
           .read(searchProvider(type).notifier)
-          .setReviewSort(ReviewSortOption.values[i]),
+          .setReviewSort(options[i]),
     );
   }
 }

@@ -20,28 +20,36 @@ class InkListTile extends StatelessWidget {
           style: const TextStyle(fontWeight: FontWeight.w600),
         ),
         subtitle: Text('${ink.brand} · ${ink.autoColorFamily}'),
-        trailing: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          crossAxisAlignment: CrossAxisAlignment.end,
-          children: [
-            Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                const Icon(Icons.star, color: Colors.amber, size: 14),
-                Text(
-                  ink.avgRating.toStringAsFixed(1),
-                  style: const TextStyle(fontSize: 12),
-                ),
-              ],
-            ),
-            Text(
-              '리뷰 ${ink.reviewCount}',
-              style: const TextStyle(
-                fontSize: 11,
-                color: AppColors.textSecondary,
-              ),
-            ),
-          ],
+        // 별점 시스템 비활성화 — 평균 별점 표시 제거, 리뷰 개수만 표시
+        // trailing: Column(
+        //   mainAxisAlignment: MainAxisAlignment.center,
+        //   crossAxisAlignment: CrossAxisAlignment.end,
+        //   children: [
+        //     Row(
+        //       mainAxisSize: MainAxisSize.min,
+        //       children: [
+        //         const Icon(Icons.star, color: Colors.amber, size: 14),
+        //         Text(
+        //           ink.avgRating.toStringAsFixed(1),
+        //           style: const TextStyle(fontSize: 12),
+        //         ),
+        //       ],
+        //     ),
+        //     Text(
+        //       '리뷰 ${ink.reviewCount}',
+        //       style: const TextStyle(
+        //         fontSize: 11,
+        //         color: AppColors.textSecondary,
+        //       ),
+        //     ),
+        //   ],
+        // ),
+        trailing: Text(
+          '리뷰 ${ink.reviewCount}',
+          style: const TextStyle(
+            fontSize: 11,
+            color: AppColors.textSecondary,
+          ),
         ),
       ),
     );
