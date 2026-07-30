@@ -43,7 +43,7 @@ class ReviewListTile extends ConsumerWidget {
         color: AppColors.surface,
         padding: const EdgeInsets.fromLTRB(16, 12, 16, 12),
         child: Row(
-          crossAxisAlignment: CrossAxisAlignment.start,
+          crossAxisAlignment: CrossAxisAlignment.center,
           children: [
             Expanded(
               child: Column(
@@ -193,8 +193,8 @@ class ReviewListTile extends ConsumerWidget {
                 borderRadius: BorderRadius.circular(8),
                 child: CachedNetworkImage(
                   imageUrl: review.thumbnailUrl,
-                  width: 72,
-                  height: 72,
+                  width: 84,
+                  height: 84,
                   fit: BoxFit.cover,
                   errorWidget: (_, _, _) => const SizedBox.shrink(),
                 ),

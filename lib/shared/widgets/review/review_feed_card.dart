@@ -115,21 +115,7 @@ class ReviewFeedCard extends ConsumerWidget {
                       bottom: 0,
                       child: Padding(
                         padding: const EdgeInsets.all(8),
-                        child: Row(
-                          children: [
-                            Expanded(child: _GearTagOverlay(review: review)),
-                            const SizedBox(width: 6),
-                            Text(
-                              formatPostDate(review.createdAt),
-                              style: const TextStyle(
-                                color: Colors.white,
-                                fontSize: 11,
-                                fontWeight: FontWeight.w600,
-                                shadows: [Shadow(color: Colors.black45, blurRadius: 3)],
-                              ),
-                            ),
-                          ],
-                        ),
+                        child: _GearTagOverlay(review: review),
                       ),
                     ),
                   ],
@@ -207,16 +193,30 @@ class ReviewFeedCard extends ConsumerWidget {
                   ),
                   if (review.title.isNotEmpty) ...[
                     const SizedBox(height: 6),
-                    Text(
-                      review.title,
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                      style: const TextStyle(
-                        fontSize: 12,
-                        color: AppColors.textPrimary,
-                        fontWeight: FontWeight.w600,
-                        height: 1.4,
-                      ),
+                    Row(
+                      children: [
+                        Expanded(
+                          child: Text(
+                            review.title,
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style: const TextStyle(
+                              fontSize: 12,
+                              color: AppColors.textPrimary,
+                              fontWeight: FontWeight.w600,
+                              height: 1.4,
+                            ),
+                          ),
+                        ),
+                        const SizedBox(width: 4),
+                        Text(
+                          formatPostDate(review.createdAt),
+                          style: const TextStyle(
+                            fontSize: 10,
+                            color: AppColors.textTertiary,
+                          ),
+                        ),
+                      ],
                     ),
                   ],
                 ],
