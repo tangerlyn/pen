@@ -15,24 +15,24 @@ enum ArchiveSortOption {
 
 class InkFilter {
   const InkFilter({
-    this.brand,
+    this.brands = const [],
     this.colorFamilies = const [],
     this.inkTypes = const [],
     this.capacityRange,
   });
-  final String? brand;
+  final List<String> brands;
   final List<String> colorFamilies;
   final List<String> inkTypes;
   final String? capacityRange;
 
   InkFilter copyWith({
-    String? brand,
+    List<String>? brands,
     List<String>? colorFamilies,
     List<String>? inkTypes,
     String? capacityRange,
   }) {
     return InkFilter(
-      brand: brand ?? this.brand,
+      brands: brands ?? this.brands,
       colorFamilies: colorFamilies ?? this.colorFamilies,
       inkTypes: inkTypes ?? this.inkTypes,
       capacityRange: capacityRange ?? this.capacityRange,
@@ -41,11 +41,30 @@ class InkFilter {
 }
 
 class PenFilter {
-  const PenFilter({this.brand, this.nibSize, this.nibMaterial, this.fillType});
-  final String? brand;
+  const PenFilter({
+    this.brands = const [],
+    this.nibSize,
+    this.nibMaterial,
+    this.fillType,
+  });
+  final List<String> brands;
   final String? nibSize;
   final String? nibMaterial;
   final String? fillType;
+
+  PenFilter copyWith({
+    List<String>? brands,
+    String? nibSize,
+    String? nibMaterial,
+    String? fillType,
+  }) {
+    return PenFilter(
+      brands: brands ?? this.brands,
+      nibSize: nibSize ?? this.nibSize,
+      nibMaterial: nibMaterial ?? this.nibMaterial,
+      fillType: fillType ?? this.fillType,
+    );
+  }
 }
 
 class ArchiveState {
@@ -120,7 +139,7 @@ class ArchiveNotifier extends StateNotifier<ArchiveState> {
       switch (state.tabIndex) {
         case 0:
           final raw = await repo.getInks(
-            brand: state.inkFilter.brand,
+            brands: state.inkFilter.brands.isNotEmpty ? state.inkFilter.brands : null,
             colorFamilies: state.inkFilter.colorFamilies.isNotEmpty ? state.inkFilter.colorFamilies : null,
             inkTypes: state.inkFilter.inkTypes.isNotEmpty ? state.inkFilter.inkTypes : null,
             search: state.search.isNotEmpty ? state.search : null,
@@ -128,7 +147,7 @@ class ArchiveNotifier extends StateNotifier<ArchiveState> {
           state = state.copyWith(rawInks: raw, inks: _sortInks(raw, state.inkSort), isLoading: false);
         case 1:
           final raw = await repo.getPens(
-            brand: state.penFilter.brand,
+            brands: state.penFilter.brands.isNotEmpty ? state.penFilter.brands : null,
             nibSize: state.penFilter.nibSize,
             nibMaterial: state.penFilter.nibMaterial,
             fillType: state.penFilter.fillType,
@@ -194,21 +213,6 @@ class ArchiveNotifier extends StateNotifier<ArchiveState> {
     return sorted;
   }
 
-  /// 한글 이름은 가나다순으로 먼저, 영어/숫자로 시작하는 이름은 뒤로 빼서
-  /// 그 안에서 알파벳/숫자 순으로 정렬
-  int _compareProductName(String a, String b) {
-    final aKorean = _startsWithKorean(a);
-    final bKorean = _startsWithKorean(b);
-    if (aKorean != bKorean) return aKorean ? -1 : 1;
-    return a.toLowerCase().compareTo(b.toLowerCase());
-  }
-
-  bool _startsWithKorean(String s) {
-    if (s.isEmpty) return false;
-    final code = s.codeUnitAt(0);
-    return code >= 0xAC00 && code <= 0xD7A3;
-  }
-
   List<PenModel> _sortPens(List<PenModel> list, ArchiveSortOption sort) {
     final sorted = [...list];
     switch (sort) {
@@ -229,4 +233,35 @@ class ArchiveNotifier extends StateNotifier<ArchiveState> {
 
 final archiveProvider = StateNotifierProvider<ArchiveNotifier, ArchiveState>((ref) {
   return ArchiveNotifier(ref);
+});
+
+/// 한글 이름은 가나다순으로 먼저, 영어/숫자로 시작하는 이름은 뒤로 빼서
+/// 그 안에서 알파벳/숫자 순으로 정렬
+int _compareProductName(String a, String b) {
+  final aKorean = _startsWithKorean(a);
+  final bKorean = _startsWithKorean(b);
+  if (aKorean != bKorean) return aKorean ? -1 : 1;
+  return a.toLowerCase().compareTo(b.toLowerCase());
+}
+
+bool _startsWithKorean(String s) {
+  if (s.isEmpty) return false;
+  final code = s.codeUnitAt(0);
+  return code >= 0xAC00 && code <= 0xD7A3;
+}
+
+// ── 브랜드 필터 옵션 — 현재 등록된 잉크/만년필의 브랜드 목록(중복 제거, 이름순 정렬) ──
+final inkBrandsProvider = FutureProvider<List<String>>((ref) async {
+  final repo = ref.read(archiveRepoProvider);
+  final suggestions = await repo.getInkFieldSuggestions();
+  final brands = [...suggestions.brands];
+  brands.sort(_compareProductName);
+  return brands;
+});
+
+final penBrandsProvider = FutureProvider<List<String>>((ref) async {
+  final repo = ref.read(archiveRepoProvider);
+  final brands = await repo.getPenBrands();
+  brands.sort(_compareProductName);
+  return brands;
 });

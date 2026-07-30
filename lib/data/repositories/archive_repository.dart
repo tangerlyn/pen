@@ -122,7 +122,7 @@ class ArchiveRepository {
 
   // ── 잉크 ───────────────────────────────────────────────────
   Future<List<InkModel>> getInks({
-    String? brand,
+    List<String>? brands,
     List<String>? colorFamilies,
     List<String>? inkTypes,
     String? capacityRange,
@@ -131,7 +131,6 @@ class ArchiveRepository {
     int limit = 200,
   }) async {
     Query query = _inks;
-    if (brand != null) query = query.where('brand', isEqualTo: brand);
     if (inkTypes != null && inkTypes.isNotEmpty) {
       query = query.where('inkType', whereIn: inkTypes);
     }
@@ -142,6 +141,10 @@ class ArchiveRepository {
         .map((doc) => InkModel.fromMap(doc.data() as Map<String, dynamic>, doc.id))
         .where((i) => i.brand.isNotEmpty && i.name.isNotEmpty)
         .toList();
+
+    if (brands != null && brands.isNotEmpty) {
+      results = results.where((i) => brands.contains(i.brand)).toList();
+    }
 
     if (colorFamilies != null && colorFamilies.isNotEmpty) {
       results = results.where((i) => colorFamilies.contains(i.autoColorFamily)).toList();
@@ -211,14 +214,24 @@ class ArchiveRepository {
     );
   }
 
+  // 만년필 브랜드 필터용 — 현재 등록된 만년필들의 브랜드 목록(중복 제거)
+  Future<List<String>> getPenBrands() async {
+    final snap = await _pens.limit(500).get();
+    final brands = <String>{};
+    for (final doc in snap.docs) {
+      final b = (doc.data() as Map<String, dynamic>)['brand'] as String? ?? '';
+      if (b.isNotEmpty) brands.add(b);
+    }
+    return brands.toList();
+  }
+
   // ── 만년필 ──────────────────────────────────────────────────
   Future<List<PenModel>> getPens({
-    String? brand, String? nibSize, String? nibMaterial,
+    List<String>? brands, String? nibSize, String? nibMaterial,
     String? fillType, String? search, Object? lastDoc, int limit = 500,
   }) async {
     debugPrint('getPens - collection path: ${_pens.path}');
     Query query = _pens;
-    if (brand != null) query = query.where('brand', isEqualTo: brand);
     if (nibMaterial != null) query = query.where('nibMaterial', isEqualTo: nibMaterial);
     if (fillType != null) query = query.where('fillType', isEqualTo: fillType);
     if (nibSize != null) query = query.where('nibSizes', arrayContains: nibSize);
@@ -230,6 +243,10 @@ class ArchiveRepository {
         .map((doc) => PenModel.fromMap(doc.data() as Map<String, dynamic>, doc.id))
         .where((p) => p.brand.isNotEmpty && p.modelName.isNotEmpty)
         .toList();
+
+    if (brands != null && brands.isNotEmpty) {
+      results = results.where((p) => brands.contains(p.brand)).toList();
+    }
 
     if (search != null && search.isNotEmpty) {
       final lower = search.toLowerCase();

@@ -184,7 +184,7 @@ class _ArchiveScreenState extends ConsumerState<ArchiveScreen>
   }
 }
 
-enum _ExpandedFilter { color, type }
+enum _ExpandedFilter { color, type, brand, sort }
 
 class _FilterRow extends ConsumerStatefulWidget {
   const _FilterRow({required this.tabIndex});
@@ -196,6 +196,12 @@ class _FilterRow extends ConsumerStatefulWidget {
 
 class _FilterRowState extends ConsumerState<_FilterRow>
     with SingleTickerProviderStateMixin {
+  // 드롭다운이 열려있을 때만 칩 목록 맨 끝에 붙이는 보이지 않는 여유 스크롤 폭.
+  // 항상 붙어있으면 사용자가 손으로 스와이프해서 그 빈 공간까지 무한정
+  // 밀 수 있게 돼버리므로(칩이 하나도 안 보이는 상태까지), 드롭다운이
+  // 닫혀있을 땐 0으로 둬서 평소엔 칩 목록 실제 길이만큼만 스크롤되게 함.
+  double get _scrollReserveWidth => _expanded != null ? 400.0 : 0.0;
+
   _ExpandedFilter? _expanded;
   OverlayEntry? _overlayEntry;
   late final AnimationController _animController = AnimationController(
@@ -205,23 +211,47 @@ class _FilterRowState extends ConsumerState<_FilterRow>
   );
   final _colorLink = LayerLink();
   final _typeLink = LayerLink();
+  final _brandLink = LayerLink();
+  final _sortLink = LayerLink();
   final _colorChipKey = GlobalKey();
   final _typeChipKey = GlobalKey();
+  final _brandChipKey = GlobalKey();
+  final _sortChipKey = GlobalKey();
+  final _chipScrollController = ScrollController();
+  // 열려있는 드롭다운(헤더+패널) 박스의 실제 렌더 크기를 재기 위한 키
+  final _dropdownBoxKey = GlobalKey();
 
   // 드롭다운이 열려있는 동안 임시로 들고 있는 선택값 — 완료/바깥 탭으로
   // 닫힐 때만 실제 필터(archiveProvider)에 반영해서, 고를 때마다 뒤의
   // 목록이 바로바로 바뀌지 않도록 함.
   List<String> _pendingColorFamilies = [];
   List<String> _pendingInkTypes = [];
+  List<String> _pendingBrands = [];
 
   @override
   void dispose() {
     _overlayEntry?.remove();
     _animController.dispose();
+    _chipScrollController.dispose();
     super.dispose();
   }
 
   void _commit(_ExpandedFilter filter) {
+    if (filter == _ExpandedFilter.sort) return; // 정렬은 탭 즉시 적용되므로 커밋할 게 없음
+    if (filter == _ExpandedFilter.brand) {
+      if (widget.tabIndex == 0) {
+        final current = ref.read(archiveProvider).inkFilter;
+        ref
+            .read(archiveProvider.notifier)
+            .setInkFilter(current.copyWith(brands: _pendingBrands));
+      } else {
+        final current = ref.read(archiveProvider).penFilter;
+        ref
+            .read(archiveProvider.notifier)
+            .setPenFilter(current.copyWith(brands: _pendingBrands));
+      }
+      return;
+    }
     final current = ref.read(archiveProvider).inkFilter;
     if (filter == _ExpandedFilter.color) {
       ref
@@ -235,22 +265,33 @@ class _FilterRowState extends ConsumerState<_FilterRow>
   }
 
   void _togglePending(_ExpandedFilter filter, String value) {
-    final list = filter == _ExpandedFilter.color
-        ? _pendingColorFamilies
-        : _pendingInkTypes;
+    final list = switch (filter) {
+      _ExpandedFilter.color => _pendingColorFamilies,
+      _ExpandedFilter.type => _pendingInkTypes,
+      _ExpandedFilter.brand => _pendingBrands,
+      _ExpandedFilter.sort => <String>[], // 정렬은 즉시 적용이라 호출되지 않음
+    };
     if (list.contains(value)) {
       list.remove(value);
     } else {
       list.add(value);
     }
     _overlayEntry?.markNeedsBuild();
+    // 선택이 늘어나 헤더 텍스트가 길어지면서 드롭다운이 화면 오른쪽 밖으로
+    // 넘칠 수 있으므로, 다시 그려진 뒤 실제 크기를 재서 필요하면 보정한다.
+    WidgetsBinding.instance.addPostFrameCallback((_) => _adjustScrollForOverflow());
   }
 
   void _clearPending(_ExpandedFilter filter) {
-    if (filter == _ExpandedFilter.color) {
-      _pendingColorFamilies = [];
-    } else {
-      _pendingInkTypes = [];
+    switch (filter) {
+      case _ExpandedFilter.color:
+        _pendingColorFamilies = [];
+      case _ExpandedFilter.type:
+        _pendingInkTypes = [];
+      case _ExpandedFilter.brand:
+        _pendingBrands = [];
+      case _ExpandedFilter.sort:
+        break; // 정렬은 즉시 적용이라 호출되지 않음
     }
     _overlayEntry?.markNeedsBuild();
   }
@@ -264,7 +305,7 @@ class _FilterRowState extends ConsumerState<_FilterRow>
     if (mounted) setState(() => _expanded = null);
   }
 
-  void _toggleDropdown(_ExpandedFilter filter) {
+  void _toggleDropdown(_ExpandedFilter filter, {List<String> brandOptions = const []}) {
     if (_expanded == filter) {
       _closeDropdown();
       return;
@@ -276,176 +317,242 @@ class _FilterRowState extends ConsumerState<_FilterRow>
     _overlayEntry = null;
     _animController.value = 0;
 
-    final current = ref.read(archiveProvider).inkFilter;
-    _pendingColorFamilies = List.from(current.colorFamilies);
-    _pendingInkTypes = List.from(current.inkTypes);
+    final inkCurrent = ref.read(archiveProvider).inkFilter;
+    final penCurrent = ref.read(archiveProvider).penFilter;
+    _pendingColorFamilies = List.from(inkCurrent.colorFamilies);
+    _pendingInkTypes = List.from(inkCurrent.inkTypes);
+    _pendingBrands = List.from(
+      widget.tabIndex == 0 ? inkCurrent.brands : penCurrent.brands,
+    );
+    final currentSort = widget.tabIndex == 0
+        ? ref.read(archiveProvider).inkSort
+        : ref.read(archiveProvider).penSort;
 
-    final key = filter == _ExpandedFilter.color ? _colorChipKey : _typeChipKey;
-    final link = filter == _ExpandedFilter.color ? _colorLink : _typeLink;
+    final key = switch (filter) {
+      _ExpandedFilter.color => _colorChipKey,
+      _ExpandedFilter.type => _typeChipKey,
+      _ExpandedFilter.brand => _brandChipKey,
+      _ExpandedFilter.sort => _sortChipKey,
+    };
+    final link = switch (filter) {
+      _ExpandedFilter.color => _colorLink,
+      _ExpandedFilter.type => _typeLink,
+      _ExpandedFilter.brand => _brandLink,
+      _ExpandedFilter.sort => _sortLink,
+    };
     final box = key.currentContext!.findRenderObject() as RenderBox;
     final chipSize = box.size;
+    // 최대 폭은 화면 좌우 여백만 뺀 넉넉한 값으로 고정 — 칩 위치에 따라
+    // 폭을 줄이는 대신, 내용이 길어져서 화면 밖으로 넘치려 하면
+    // _adjustScrollForOverflow()가 칩 목록 전체를 왼쪽으로 밀어서 맞춘다.
+    final screenWidth = MediaQuery.of(context).size.width;
+    final maxDropdownWidth = screenWidth - 24;
 
     _overlayEntry = OverlayEntry(
       builder: (_) => _FilterDropdownOverlay(
+        boxKey: _dropdownBoxKey,
         link: link,
         chipSize: chipSize,
+        maxWidth: maxDropdownWidth,
         filter: filter,
         animation: _animController,
         pendingColorFamilies: _pendingColorFamilies,
         pendingInkTypes: _pendingInkTypes,
+        pendingBrands: _pendingBrands,
+        brandOptions: brandOptions,
+        currentSort: currentSort,
         onToggle: (value) => _togglePending(filter, value),
         onClear: () => _clearPending(filter),
+        onSelectSort: (opt) {
+          switch (widget.tabIndex) {
+            case 0:
+              ref.read(archiveProvider.notifier).setInkSort(opt);
+            case 1:
+              ref.read(archiveProvider.notifier).setPenSort(opt);
+          }
+          _closeDropdown();
+        },
         onClose: _closeDropdown,
       ),
     );
     Overlay.of(context).insert(_overlayEntry!);
     setState(() => _expanded = filter);
     _animController.forward(from: 0);
+    // 다시 열었을 때 이미 선택된 값들 때문에 헤더가 처음부터 넓게
+    // 시작하는 경우도 있으므로, 연 직후에도 한 번 확인한다.
+    WidgetsBinding.instance.addPostFrameCallback((_) => _adjustScrollForOverflow());
+  }
+
+  /// 드롭다운(헤더+패널)이 실제로 그려진 뒤, 화면 오른쪽 경계를 넘지 않는
+  /// 선에서 필요한 스크롤 위치를 매번 절대값으로 다시 계산해서 맞춘다.
+  /// (예전엔 "현재 스크롤 + 넘친 만큼"으로 매번 더하기만 해서, 서로 다른
+  /// 칩을 열고 닫을 때마다 스크롤이 누적되어 계속 오른쪽으로 밀려버렸음 —
+  /// 항상 절대 위치로 계산하면 필요 없을 땐 자연스럽게 원래 자리로도 돌아옴)
+  /// CompositedTransformFollower가 칩 위치를 실시간으로 따라가므로,
+  /// 칩 목록이 스크롤되면 드롭다운도 같이 따라 움직인다.
+  void _adjustScrollForOverflow() {
+    if (!mounted || _overlayEntry == null) return;
+    if (!_chipScrollController.hasClients) return;
+    final box = _dropdownBoxKey.currentContext?.findRenderObject() as RenderBox?;
+    if (box == null) return;
+
+    const rightBoundaryMargin = 12.0; // 화면 오른쪽 끝에 둘 여유 경계
+    final screenWidth = MediaQuery.of(context).size.width;
+    final currentOffset = _chipScrollController.offset;
+    final visibleLeft = box.localToGlobal(Offset.zero).dx;
+    // 스크롤이 0이었다면 이 칩(드롭다운)이 원래 있었을 위치
+    final naturalLeft = visibleLeft + currentOffset;
+    final dropdownWidth = box.size.width;
+
+    final idealOffset =
+        (naturalLeft + dropdownWidth - (screenWidth - rightBoundaryMargin))
+            .clamp(0.0, _chipScrollController.position.maxScrollExtent);
+    if ((idealOffset - currentOffset).abs() < 1) return; // 이미 적절한 위치
+
+    _chipScrollController.animateTo(
+      idealOffset,
+      duration: const Duration(milliseconds: 200),
+      curve: Curves.easeOut,
+    );
   }
 
   @override
   Widget build(BuildContext context) {
     final state = ref.watch(archiveProvider);
     final currentSort = widget.tabIndex == 0 ? state.inkSort : state.penSort;
+    final brandOptions = ref.watch(
+      widget.tabIndex == 0 ? inkBrandsProvider : penBrandsProvider,
+    ).valueOrNull ?? [];
 
-    final sortChip = Padding(
-      padding: const EdgeInsets.only(right: 12, top: 4, bottom: 4),
+    final sortChip = CompositedTransformTarget(
+      link: _sortLink,
       child: _FilterChipItem(
+        key: _sortChipKey,
         label: currentSort.label,
         isActive: currentSort != ArchiveSortOption.defaultOrder,
-        icon: Icons.sort,
-        onTap: () =>
-            _showSortPicker(context, ref, widget.tabIndex, currentSort),
+        icon: _expanded == _ExpandedFilter.sort
+            ? Icons.keyboard_arrow_up
+            : Icons.keyboard_arrow_down,
+        onTap: () => _toggleDropdown(_ExpandedFilter.sort),
       ),
     );
 
     if (widget.tabIndex != 0) {
-      // 만년필/종이: 정렬 칩만 오른쪽 고정
+      // 만년필: 브랜드 필터 칩 + 정렬 칩, 함께 좌우 스크롤
+      final penBrandSelected = state.penFilter.brands;
+      final penBrandLabel = penBrandSelected.isEmpty
+          ? '브랜드'
+          : '브랜드 : ${penBrandSelected.join(', ')}';
       return SizedBox(
         height: 44,
-        child: Row(
-          mainAxisAlignment: MainAxisAlignment.end,
-          children: [sortChip],
+        child: ListView(
+          controller: _chipScrollController,
+          scrollDirection: Axis.horizontal,
+          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+          children: [
+            CompositedTransformTarget(
+              link: _brandLink,
+              child: _FilterChipItem(
+                key: _brandChipKey,
+                label: penBrandLabel,
+                isActive: penBrandSelected.isNotEmpty,
+                icon: _expanded == _ExpandedFilter.brand
+                    ? Icons.keyboard_arrow_up
+                    : Icons.keyboard_arrow_down,
+                onTap: () => _toggleDropdown(
+                  _ExpandedFilter.brand,
+                  brandOptions: brandOptions,
+                ),
+              ),
+            ),
+            const SizedBox(width: 8),
+            sortChip,
+            // 스크롤 여유 공간 — 칩이 몇 개 없어서 목록 자체가 스크롤할 폭이
+            // 부족하면(maxScrollExtent가 작으면), 드롭다운이 화면 밖으로
+            // 넘칠 때 _adjustScrollForOverflow가 왼쪽으로 밀 공간이 없어서
+            // 보정이 부족한 채로 끝나버림 — 항상 충분히 밀 수 있도록 확보
+            SizedBox(width: _scrollReserveWidth),
+          ],
         ),
       );
     }
 
-    // 잉크: 왼쪽 필터 칩(스크롤) + 오른쪽 정렬 칩 고정
+    // 잉크: 색상 계열/특수 속성/브랜드/정렬 칩, 함께 좌우 스크롤
     final colorSelected = state.inkFilter.colorFamilies;
     final typeSelected = state.inkFilter.inkTypes
         .map(_inkTypeValueToLabel)
         .toList();
+    final brandSelected = state.inkFilter.brands;
     final colorLabel = colorSelected.isEmpty
         ? '색상 계열'
         : '색상 계열 : ${colorSelected.join(', ')}';
     final typeLabel = typeSelected.isEmpty
         ? '특수 속성'
         : '특수 속성 : ${typeSelected.join(', ')}';
+    final brandLabel = brandSelected.isEmpty
+        ? '브랜드'
+        : '브랜드 : ${brandSelected.join(', ')}';
 
     return SizedBox(
       height: 44,
-      child: Row(
+      child: ListView(
+        controller: _chipScrollController,
+        scrollDirection: Axis.horizontal,
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
         children: [
-          Expanded(
-            child: ListView(
-              scrollDirection: Axis.horizontal,
-              padding: const EdgeInsets.only(left: 12, top: 4, bottom: 4),
-              children: [
-                CompositedTransformTarget(
-                  link: _colorLink,
-                  child: _FilterChipItem(
-                    key: _colorChipKey,
-                    label: colorLabel,
-                    isActive: colorSelected.isNotEmpty,
-                    icon: _expanded == _ExpandedFilter.color
-                        ? Icons.keyboard_arrow_up
-                        : Icons.keyboard_arrow_down,
-                    onTap: () => _toggleDropdown(_ExpandedFilter.color),
-                  ),
-                ),
-                const SizedBox(width: 8),
-                CompositedTransformTarget(
-                  link: _typeLink,
-                  child: _FilterChipItem(
-                    key: _typeChipKey,
-                    label: typeLabel,
-                    isActive: typeSelected.isNotEmpty,
-                    icon: _expanded == _ExpandedFilter.type
-                        ? Icons.keyboard_arrow_up
-                        : Icons.keyboard_arrow_down,
-                    onTap: () => _toggleDropdown(_ExpandedFilter.type),
-                  ),
-                ),
-              ],
+          CompositedTransformTarget(
+            link: _colorLink,
+            child: _FilterChipItem(
+              key: _colorChipKey,
+              label: colorLabel,
+              isActive: colorSelected.isNotEmpty,
+              icon: _expanded == _ExpandedFilter.color
+                  ? Icons.keyboard_arrow_up
+                  : Icons.keyboard_arrow_down,
+              onTap: () => _toggleDropdown(_ExpandedFilter.color),
             ),
           ),
+          const SizedBox(width: 8),
+          CompositedTransformTarget(
+            link: _typeLink,
+            child: _FilterChipItem(
+              key: _typeChipKey,
+              label: typeLabel,
+              isActive: typeSelected.isNotEmpty,
+              icon: _expanded == _ExpandedFilter.type
+                  ? Icons.keyboard_arrow_up
+                  : Icons.keyboard_arrow_down,
+              onTap: () => _toggleDropdown(_ExpandedFilter.type),
+            ),
+          ),
+          const SizedBox(width: 8),
+          CompositedTransformTarget(
+            link: _brandLink,
+            child: _FilterChipItem(
+              key: _brandChipKey,
+              label: brandLabel,
+              isActive: brandSelected.isNotEmpty,
+              icon: _expanded == _ExpandedFilter.brand
+                  ? Icons.keyboard_arrow_up
+                  : Icons.keyboard_arrow_down,
+              onTap: () => _toggleDropdown(
+                _ExpandedFilter.brand,
+                brandOptions: brandOptions,
+              ),
+            ),
+          ),
+          const SizedBox(width: 8),
           sortChip,
+          // 스크롤 여유 공간 — 칩이 몇 개 없어서 목록 자체가 스크롤할 폭이
+          // 부족하면(maxScrollExtent가 작으면), 드롭다운이 화면 밖으로
+          // 넘칠 때 _adjustScrollForOverflow가 왼쪽으로 밀 공간이 없어서
+          // 보정이 부족한 채로 끝나버림 — 항상 충분히 밀 수 있도록 확보
+          SizedBox(width: _scrollReserveWidth),
         ],
       ),
     );
   }
 
-  void _showSortPicker(
-    BuildContext context,
-    WidgetRef ref,
-    int tabIndex,
-    ArchiveSortOption current,
-  ) {
-    showModalBottomSheet(
-      context: context,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
-      ),
-      builder: (_) => SafeArea(
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Container(
-              margin: const EdgeInsets.only(top: 8, bottom: 4),
-              width: 40,
-              height: 4,
-              decoration: BoxDecoration(
-                color: AppColors.divider,
-                borderRadius: BorderRadius.circular(2),
-              ),
-            ),
-            const Padding(
-              padding: EdgeInsets.symmetric(horizontal: 20, vertical: 12),
-              child: Align(
-                alignment: Alignment.centerLeft,
-                child: Text(
-                  '정렬',
-                  style: TextStyle(fontSize: 17, fontWeight: FontWeight.w700),
-                ),
-              ),
-            ),
-            const Divider(height: 1),
-            // 별점 시스템 비활성화 — '별점순' 정렬 옵션 숨김
-            ...ArchiveSortOption.values
-                .where((opt) => opt != ArchiveSortOption.rating)
-                .map(
-              (opt) => ListTile(
-                title: Text(opt.label),
-                trailing: current == opt
-                    ? const Icon(Icons.check, color: AppColors.primary)
-                    : null,
-                onTap: () {
-                  Navigator.pop(context);
-                  switch (tabIndex) {
-                    case 0:
-                      ref.read(archiveProvider.notifier).setInkSort(opt);
-                    case 1:
-                      ref.read(archiveProvider.notifier).setPenSort(opt);
-                  }
-                },
-              ),
-            ),
-            const SizedBox(height: 8),
-          ],
-        ),
-      ),
-    );
-  }
 }
 
 // ── 색상 계열/특수 속성 드롭다운 — 칩이 그대로 헤더가 되어 아래로 패널이
@@ -455,24 +562,36 @@ class _FilterRowState extends ConsumerState<_FilterRow>
 // 떠 있는 것처럼 보이고 원래 칩과 끊김 없이 이어짐.
 class _FilterDropdownOverlay extends StatelessWidget {
   const _FilterDropdownOverlay({
+    required this.boxKey,
     required this.link,
     required this.chipSize,
+    required this.maxWidth,
     required this.filter,
     required this.animation,
     required this.pendingColorFamilies,
     required this.pendingInkTypes,
+    required this.pendingBrands,
+    required this.brandOptions,
+    required this.currentSort,
     required this.onToggle,
     required this.onClear,
+    required this.onSelectSort,
     required this.onClose,
   });
+  final GlobalKey boxKey;
   final LayerLink link;
   final Size chipSize;
+  final double maxWidth;
   final _ExpandedFilter filter;
   final Animation<double> animation;
   final List<String> pendingColorFamilies;
   final List<String> pendingInkTypes;
+  final List<String> pendingBrands;
+  final List<String> brandOptions;
+  final ArchiveSortOption currentSort;
   final ValueChanged<String> onToggle;
   final VoidCallback onClear;
+  final ValueChanged<ArchiveSortOption> onSelectSort;
   final VoidCallback onClose;
 
   static const _headerRadius = 20.0;
@@ -487,15 +606,27 @@ class _FilterDropdownOverlay extends StatelessWidget {
       reverseCurve: Curves.easeInCubic,
     );
     final isColor = filter == _ExpandedFilter.color;
+    final isType = filter == _ExpandedFilter.type;
+    final isBrand = filter == _ExpandedFilter.brand;
+    final isSort = filter == _ExpandedFilter.sort;
     // 완료/바깥 탭 전까지는 여기 담긴 값만 바뀌고, 실제 필터(뒤쪽 목록)에는
     // 반영되지 않음 — 고를 때마다 배경이 바뀌어 정신없던 문제 방지.
-    final pending = isColor ? pendingColorFamilies : pendingInkTypes;
-    final selectedLabels = isColor
-        ? pending
-        : pending.map(_inkTypeValueToLabel).toList();
-    final headerText = selectedLabels.isEmpty
-        ? (isColor ? '색상 계열' : '특수 속성')
-        : '${isColor ? '색상 계열' : '특수 속성'} : ${selectedLabels.join(', ')}';
+    // (정렬은 다중 선택이 아니라 탭하면 바로 적용되므로 pending 자체가 없음)
+    final pending = isColor
+        ? pendingColorFamilies
+        : isType
+            ? pendingInkTypes
+            : isBrand
+                ? pendingBrands
+                : const <String>[];
+    final selectedLabels =
+        isType ? pending.map(_inkTypeValueToLabel).toList() : pending;
+    final filterLabel = isColor ? '색상 계열' : (isType ? '특수 속성' : '브랜드');
+    final headerText = isSort
+        ? currentSort.label
+        : (selectedLabels.isEmpty
+            ? filterLabel
+            : '$filterLabel : ${selectedLabels.join(', ')}');
 
     return Stack(
       children: [
@@ -519,14 +650,14 @@ class _FilterDropdownOverlay extends StatelessWidget {
           child: Material(
             color: Colors.transparent,
             child: ConstrainedBox(
-              // 최대폭만 화면을 벗어나지 않도록 제한 — 최소폭을 열었을 때의
-              // 칩 크기에 고정해두면, 예전에 선택해서 넓어졌던 칩을 다시 열어
-              // "전체"로 줄여도 그 예전 폭 아래로는 안 줄어드는 문제가 있었음
-              constraints: BoxConstraints(
-                maxWidth: MediaQuery.of(context).size.width * 0.75,
-              ),
+              // 최대폭은 화면 좌우 여백만 뺀 값 — 실제로 화면 밖으로 넘치는지는
+              // 렌더링된 뒤 boxKey로 재서 판단하고, 넘치면 폭을 줄이는 대신
+              // _FilterRowState._adjustScrollForOverflow()가 칩 목록 전체를
+              // 왼쪽으로 스크롤해서 화면 안으로 당겨온다.
+              constraints: BoxConstraints(maxWidth: maxWidth),
               child: IntrinsicWidth(
                 child: Container(
+                  key: boxKey,
                   decoration: const BoxDecoration(
                     borderRadius: BorderRadius.only(
                       topLeft: Radius.circular(_headerRadius),
@@ -544,6 +675,11 @@ class _FilterDropdownOverlay extends StatelessWidget {
                   ),
                   child: Column(
                     mainAxisSize: MainAxisSize.min,
+                    // 기본값(center)이면 헤더가 패널보다 좁을 때(예: "브랜드"처럼
+                    // 짧은 라벨) Column이 헤더를 가운데로 밀어서 글씨가 왼쪽이
+                    // 아니라 중앙에 떠 보이는 문제가 있었음 — stretch로 헤더도
+                    // 패널과 같은 폭을 꽉 채우게 해서 텍스트가 항상 왼쪽에 붙게 함
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
                     children: [
                       // 헤더 — 원래 칩과 같은 자리에서 시작, 선택 내용에 맞춰
                       // 가로로 실시간으로 늘어남. 탭하면 닫힘(선택 확정). 패널과
@@ -602,62 +738,84 @@ class _FilterDropdownOverlay extends StatelessWidget {
                           child: Column(
                             mainAxisSize: MainAxisSize.min,
                             children: [
-                              // "전체" — 선택 해제(초기화) 역할을 겸함, 항상 맨 위
-                              _dropdownRow(
-                                label: '전체',
-                                isSelected: pending.isEmpty,
-                                onTap: onClear,
-                              ),
-                              ...(isColor
-                                  ? _colorFamilySwatches.entries.map(
-                                      (e) => _dropdownRow(
-                                        label: e.key,
-                                        swatch: e.value,
-                                        isSelected: pending.contains(e.key),
-                                        onTap: () => onToggle(e.key),
+                              if (isSort)
+                                // 정렬은 단일 선택 — 탭하면 바로 적용되고 닫힘.
+                                // "전체"/"완료" 없이 옵션 목록만 보여줌.
+                                ...ArchiveSortOption.values
+                                    .where((opt) => opt != ArchiveSortOption.rating)
+                                    .map(
+                                      (opt) => _dropdownRow(
+                                        label: opt.label,
+                                        isSelected: currentSort == opt,
+                                        onTap: () => onSelectSort(opt),
                                       ),
                                     )
-                                  : _inkTypeLabels.map(
-                                      (label) => _dropdownRow(
-                                        label: label,
-                                        isSelected: pending.contains(
-                                          _inkTypeLabelToValue(label),
-                                        ),
-                                        onTap: () =>
-                                            onToggle(_inkTypeLabelToValue(label)),
-                                      ),
-                                    )),
-                              Padding(
-                                padding: const EdgeInsets.fromLTRB(
-                                  12,
-                                  6,
-                                  12,
-                                  12,
+                              else ...[
+                                // "전체" — 선택 해제(초기화) 역할을 겸함, 항상 맨 위
+                                _dropdownRow(
+                                  label: '전체',
+                                  isSelected: pending.isEmpty,
+                                  onTap: onClear,
                                 ),
-                                child: SizedBox(
-                                  // IntrinsicWidth 아래에서는 width: infinity를 넣으면
-                                  // 고유 너비 계산이 무한대로 깨져서 드롭다운이 화면
-                                  // 가운데로 튀어보이는 버그가 있었음 — height만 지정하고
-                                  // 너비는 IntrinsicWidth가 강제하는 값을 그대로 따르게 둠
-                                  height: 40,
-                                  child: ElevatedButton(
-                                    onPressed: onClose,
-                                    style: ElevatedButton.styleFrom(
-                                      padding: EdgeInsets.zero,
-                                      shape: RoundedRectangleBorder(
-                                        borderRadius: BorderRadius.circular(10),
+                                ...(isColor
+                                    ? _colorFamilySwatches.entries.map(
+                                        (e) => _dropdownRow(
+                                          label: e.key,
+                                          swatch: e.value,
+                                          isSelected: pending.contains(e.key),
+                                          onTap: () => onToggle(e.key),
+                                        ),
+                                      )
+                                    : isType
+                                        ? _inkTypeLabels.map(
+                                            (label) => _dropdownRow(
+                                              label: label,
+                                              isSelected: pending.contains(
+                                                _inkTypeLabelToValue(label),
+                                              ),
+                                              onTap: () => onToggle(
+                                                  _inkTypeLabelToValue(label)),
+                                            ),
+                                          )
+                                        : brandOptions.map(
+                                            (brand) => _dropdownRow(
+                                              label: brand,
+                                              isSelected: pending.contains(brand),
+                                              onTap: () => onToggle(brand),
+                                            ),
+                                          )),
+                                Padding(
+                                  padding: const EdgeInsets.fromLTRB(
+                                    12,
+                                    6,
+                                    12,
+                                    12,
+                                  ),
+                                  child: SizedBox(
+                                    // IntrinsicWidth 아래에서는 width: infinity를 넣으면
+                                    // 고유 너비 계산이 무한대로 깨져서 드롭다운이 화면
+                                    // 가운데로 튀어보이는 버그가 있었음 — height만 지정하고
+                                    // 너비는 IntrinsicWidth가 강제하는 값을 그대로 따르게 둠
+                                    height: 40,
+                                    child: ElevatedButton(
+                                      onPressed: onClose,
+                                      style: ElevatedButton.styleFrom(
+                                        padding: EdgeInsets.zero,
+                                        shape: RoundedRectangleBorder(
+                                          borderRadius: BorderRadius.circular(10),
+                                        ),
                                       ),
-                                    ),
-                                    child: const Text(
-                                      '완료',
-                                      style: TextStyle(
-                                        fontSize: 14,
-                                        fontWeight: FontWeight.w600,
+                                      child: const Text(
+                                        '완료',
+                                        style: TextStyle(
+                                          fontSize: 14,
+                                          fontWeight: FontWeight.w600,
+                                        ),
                                       ),
                                     ),
                                   ),
                                 ),
-                              ),
+                              ],
                             ],
                           ),
                         ),
@@ -735,9 +893,10 @@ class _FilterChipItem extends StatelessWidget {
     return TapScale(
       onTap: onTap,
       child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
         decoration: BoxDecoration(
-          color: isActive ? AppColors.primary : AppColors.chipBackground,
+          // 조건을 선택했을 때만 배경을 채워 강조 — 선택 없으면 글씨만 보임
+          color: isActive ? AppColors.primary : Colors.transparent,
           borderRadius: BorderRadius.circular(20),
         ),
         child: Row(
