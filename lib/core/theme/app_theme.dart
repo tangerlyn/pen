@@ -272,6 +272,28 @@ class AppTheme {
         ),
         dividerTheme: const DividerThemeData(
             color: AppColors.divider, thickness: 1, space: 1),
+        // AlertDialog 등 팝업 — 기본값(각진 모서리)이 앱의 나머지 둥근
+        // 톤(바텀시트 16~22px, 카드 12px)과 안 어울려서 전역으로 통일
+        dialogTheme: DialogThemeData(
+          backgroundColor: AppColors.surface,
+          surfaceTintColor: Colors.transparent,
+          elevation: 6,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(20),
+          ),
+          titleTextStyle: const TextStyle(
+            fontFamily: 'Pretendard',
+            fontSize: 17,
+            fontWeight: FontWeight.w700,
+            color: AppColors.textPrimary,
+          ),
+          contentTextStyle: const TextStyle(
+            fontFamily: 'Pretendard',
+            fontSize: 14,
+            color: AppColors.textSecondary,
+            height: 1.5,
+          ),
+        ),
         cardTheme: CardThemeData(
           color: AppColors.surface,
           elevation: 0,

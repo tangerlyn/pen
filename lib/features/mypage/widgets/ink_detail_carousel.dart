@@ -11,11 +11,15 @@ class InkDetailCarousel extends StatefulWidget {
     required this.itemCount,
     required this.initialIndex,
     required this.pageBuilder,
+    this.menuBuilder,
   });
 
   final int itemCount;
   final int initialIndex;
   final Widget Function(BuildContext context, int index) pageBuilder;
+  /// 우측 상단 ⋮ 메뉴(수정/삭제 등) — 소유자 화면에서만 전달, 읽기 전용
+  /// 화면은 null로 둬서 메뉴 자체가 안 보이게 함
+  final Widget Function(BuildContext context, int index)? menuBuilder;
 
   @override
   State<InkDetailCarousel> createState() => _InkDetailCarouselState();
@@ -42,13 +46,13 @@ class _InkDetailCarouselState extends State<InkDetailCarousel> {
   Widget build(BuildContext context) {
     return Container(
       decoration: const BoxDecoration(
-        color: Color(0xFFFFFDF7),
+        color: Colors.white,
         borderRadius: BorderRadius.vertical(top: Radius.circular(22)),
       ),
       child: Column(
         children: [
           Padding(
-            padding: const EdgeInsets.fromLTRB(20, 10, 20, 6),
+            padding: const EdgeInsets.fromLTRB(12, 10, 12, 6),
             child: Stack(
               alignment: Alignment.center,
               children: [
@@ -56,17 +60,25 @@ class _InkDetailCarouselState extends State<InkDetailCarousel> {
                   width: 36,
                   height: 4,
                   decoration: BoxDecoration(
-                    color: const Color(0xFFECE4D4),
+                    color: AppColors.divider,
                     borderRadius: BorderRadius.circular(2),
                   ),
                 ),
                 Align(
-                  alignment: Alignment.centerRight,
-                  child: Text(
-                    '${_currentIndex + 1} / ${widget.itemCount}',
-                    style: const TextStyle(fontSize: 13, color: AppColors.textTertiary),
+                  alignment: Alignment.centerLeft,
+                  child: Padding(
+                    padding: const EdgeInsets.only(left: 8),
+                    child: Text(
+                      '${_currentIndex + 1} / ${widget.itemCount}',
+                      style: const TextStyle(fontSize: 13, color: AppColors.textTertiary),
+                    ),
                   ),
                 ),
+                if (widget.menuBuilder != null)
+                  Align(
+                    alignment: Alignment.centerRight,
+                    child: widget.menuBuilder!(context, _currentIndex),
+                  ),
               ],
             ),
           ),

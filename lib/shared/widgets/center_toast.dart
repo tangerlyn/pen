@@ -44,7 +44,7 @@ class _CenterToastState extends State<_CenterToast> {
   @override
   void initState() {
     super.initState();
-    Future.delayed(const Duration(milliseconds: 1300), () {
+    Future.delayed(const Duration(milliseconds: 1800), () {
       if (!mounted) return;
       // 여러 토스트가 겹칠 때 위에 쌓인 다른 토스트를 잘못 닫지 않도록,
       // 최상단 route를 무조건 pop하지 않고 자기 자신의 route만 제거한다.

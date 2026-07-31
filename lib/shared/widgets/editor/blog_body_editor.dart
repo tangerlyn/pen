@@ -10,8 +10,12 @@ import '../center_toast.dart';
 sealed class EditorBlock {}
 
 class TextEditorBlock extends EditorBlock {
+  // 컨트롤러 생성자에 text만 넘기면 selection이 기본으로 offset: -1(무효)이 되어
+  // 처음 포커스를 줄 때 텍스트가 순간적으로 사라지는 것처럼 보이는 문제가 있어서,
+  // 커서를 텍스트 끝으로 명시적으로 지정해줌
   TextEditorBlock({String initial = ''})
-      : controller = TextEditingController(text: initial),
+      : controller = TextEditingController(text: initial)
+          ..selection = TextSelection.collapsed(offset: initial.length),
         focusNode = FocusNode();
   final TextEditingController controller;
   final FocusNode focusNode;
@@ -351,11 +355,6 @@ class BlogEditorToolbar extends StatelessWidget {
           _ToolbarIconButton(
             icon: Icons.photo_outlined,
             onTap: () => editorKey.currentState?.insertImagesFromGallery(),
-          ),
-          _ToolbarIconButton(
-            icon: Icons.link,
-            // TODO: 링크 삽입 기능은 추후 구현
-            onTap: () => showCenterToast(context, message: '링크 삽입 기능은 준비 중이에요'),
           ),
         ],
       ),

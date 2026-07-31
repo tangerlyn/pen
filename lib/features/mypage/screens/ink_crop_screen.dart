@@ -25,6 +25,24 @@ class _InkCropScreenState extends State<InkCropScreen> {
 
   final _imageKey = GlobalKey();
 
+  // 잉크병 모양은 getShapePath()의 육각형 Path가 아니라 실제 병 모양 PNG
+  // 마스크(InkShapeClip이 스와치를 그릴 때 쓰는 것과 동일)를 써야
+  // 오버레이 구멍 모양이 실제 스와치 모양과 일치함
+  ui.Image? _bottleMask;
+
+  @override
+  void initState() {
+    super.initState();
+    if (widget.shape == InkSwatchShape.bottle) {
+      _bottleMask = BottleMask.cached;
+      if (_bottleMask == null) {
+        BottleMask.load().then((img) {
+          if (mounted) setState(() => _bottleMask = img);
+        });
+      }
+    }
+  }
+
   void _onScaleStart(ScaleStartDetails details) {
     _previousScale = _scale;
   }
@@ -131,9 +149,13 @@ class _InkCropScreenState extends State<InkCropScreen> {
               ),
             ),
             // 모양 오버레이: 바깥 어둡게, 안쪽 투명
+            // (잉크병 마스크 이미지가 아직 로드되기 전 짧은 순간에는 기존
+            // Path 오버레이로 잠깐 대체됨 — 대부분 캐싱돼있어 거의 안 보임)
             IgnorePointer(
               child: CustomPaint(
-                painter: _OverlayPainter(widget.shape),
+                painter: widget.shape == InkSwatchShape.bottle && _bottleMask != null
+                    ? _BottleOverlayPainter(_bottleMask!)
+                    : _OverlayPainter(widget.shape),
               ),
             ),
             // 안내 텍스트
@@ -176,4 +198,33 @@ class _OverlayPainter extends CustomPainter {
 
   @override
   bool shouldRepaint(_OverlayPainter old) => old.shape != shape;
+}
+
+// 잉크병 모양 전용 오버레이 — Path가 아니라 실제 병 PNG 마스크로 구멍을 뚫음
+// (getShapePath()의 bottle 케이스는 InkShapeClip이 안 쓰는 예전 육각형이라
+// 여기서 그대로 쓰면 스와치 실제 모양과 다른 육각형 구멍이 뚫려버림)
+class _BottleOverlayPainter extends CustomPainter {
+  const _BottleOverlayPainter(this.maskImage);
+  final ui.Image maskImage;
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final cs = math.min(size.width, size.height);
+    final left = (size.width - cs) / 2;
+    final top = (size.height - cs) / 2;
+    final rect = Rect.fromLTWH(left, top, cs, cs);
+
+    canvas.saveLayer(Offset.zero & size, Paint());
+    canvas.drawRect(Offset.zero & size, Paint()..color = const Color(0xAA000000));
+    canvas.drawImageRect(
+      maskImage,
+      Rect.fromLTWH(0, 0, maskImage.width.toDouble(), maskImage.height.toDouble()),
+      rect,
+      Paint()..blendMode = BlendMode.dstOut,
+    );
+    canvas.restore();
+  }
+
+  @override
+  bool shouldRepaint(_BottleOverlayPainter old) => old.maskImage != maskImage;
 }

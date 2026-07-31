@@ -150,6 +150,16 @@ class InkBookRepository {
   Future<void> deleteEntry(String uid, String bookId, String chartId) =>
       _chart(uid, bookId).doc(chartId).delete();
 
+  /// 잉크 스와치 내용 수정 — createdAt/order는 건드리지 않음
+  Future<void> updateEntry(String uid, String bookId, InkChartModel entry) =>
+      _chart(uid, bookId).doc(entry.id).update({
+        'photoUrl': entry.photoUrl,
+        'brand': entry.brand,
+        'inkName': entry.inkName,
+        'memo': entry.memo,
+        'contentBlocks': entry.contentBlocks ?? FieldValue.delete(),
+      });
+
   Future<void> reorderEntries(
       String uid, String bookId, List<InkChartModel> ordered) async {
     final batch = _db.batch();

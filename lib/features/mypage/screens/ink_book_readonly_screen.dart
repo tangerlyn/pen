@@ -10,6 +10,7 @@ import '../../../shared/widgets/common/empty_state.dart';
 import '../../../shared/widgets/tap_scale.dart';
 import '../providers/user_activity_provider.dart';
 import '../widgets/ink_detail_carousel.dart';
+import '../widgets/ink_memo_content.dart';
 import '../widgets/ink_swatch_shape.dart';
 import '../widgets/notebook_page.dart';
 
@@ -202,7 +203,7 @@ class _ReadonlySwatchCard extends StatelessWidget {
       backgroundColor: Colors.transparent,
       enableDrag: true,
       builder: (ctx) => SizedBox(
-        height: MediaQuery.of(ctx).size.height * 0.7,
+        height: MediaQuery.of(ctx).size.height * 0.75,
         child: InkDetailCarousel(
           itemCount: allEntries.length,
           initialIndex: absoluteIndex,
@@ -240,9 +241,9 @@ class _ReadonlyDetailPage extends StatelessWidget {
                   child: CachedNetworkImage(
                     imageUrl: entry.photoUrl,
                     fit: BoxFit.cover,
-                    placeholder: (_, _) => Container(color: const Color(0xFFECE4D4)),
+                    placeholder: (_, _) => Container(color: AppColors.chipBackground),
                     errorWidget: (_, _, _) => Container(
-                      color: const Color(0xFFECE4D4),
+                      color: AppColors.chipBackground,
                       child: const Icon(Icons.broken_image_outlined,
                           color: AppColors.textTertiary),
                     ),
@@ -252,7 +253,7 @@ class _ReadonlyDetailPage extends StatelessWidget {
             ),
           ),
         ),
-        Container(height: 1.5, color: const Color(0xFFECE4D4)),
+        Container(height: 1.5, color: AppColors.divider),
         const SizedBox(height: 20),
         Padding(
           padding: const EdgeInsets.symmetric(horizontal: 24),
@@ -274,15 +275,14 @@ class _ReadonlyDetailPage extends StatelessWidget {
                 Text(dateStr,
                     style: const TextStyle(fontSize: 12, color: AppColors.textTertiary)),
               ]),
-              if (entry.memo.isNotEmpty) ...[
+              if (entry.memo.isNotEmpty || (entry.contentBlocks?.isNotEmpty ?? false)) ...[
                 const SizedBox(height: 20),
                 Container(
                   width: double.infinity,
                   padding: const EdgeInsets.all(14),
                   decoration: BoxDecoration(
-                    color: const Color(0xFFF5F0E6),
+                    color: AppColors.chipBackground,
                     borderRadius: BorderRadius.circular(10),
-                    border: Border.all(color: const Color(0xFFECE4D4)),
                   ),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
@@ -294,9 +294,7 @@ class _ReadonlyDetailPage extends StatelessWidget {
                               color: AppColors.textTertiary,
                               letterSpacing: 0.5)),
                       const SizedBox(height: 6),
-                      Text(entry.memo,
-                          style: const TextStyle(
-                              fontSize: 14, color: AppColors.textPrimary, height: 1.6)),
+                      InkMemoContent(entry: entry),
                     ],
                   ),
                 ),

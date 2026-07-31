@@ -1,4 +1,5 @@
 import 'dart:io';
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -10,34 +11,96 @@ import '../../../shared/providers/providers.dart';
 import '../../../shared/providers/ink_book_providers.dart';
 import '../../../shared/widgets/tap_scale.dart';
 import '../../../shared/widgets/center_toast.dart';
+import '../../../shared/widgets/editor/blog_body_editor.dart';
 import '../providers/ink_shape_provider.dart';
 import '../widgets/ink_add_success_overlay.dart';
 import '../widgets/ink_swatch_shape.dart';
 import 'ink_crop_screen.dart';
 
 class InkChartAddScreen extends ConsumerStatefulWidget {
-  const InkChartAddScreen({super.key, required this.bookId});
+  const InkChartAddScreen({super.key, required this.bookId, this.entryToEdit});
   final String bookId;
+  final InkChartModel? entryToEdit;
 
   @override
   ConsumerState<InkChartAddScreen> createState() => _InkChartAddScreenState();
 }
 
 class _InkChartAddScreenState extends ConsumerState<InkChartAddScreen> {
-  static const _bg = Color(0xFFF5F0E6);
-
   File? _photo;
-  final _brandCtrl = TextEditingController();
-  final _inkNameCtrl = TextEditingController();
-  final _memoCtrl = TextEditingController();
+  late final TextEditingController _brandCtrl;
+  late final TextEditingController _inkNameCtrl;
+  final _editorKey = GlobalKey<BlogBodyEditorState>();
+  List<EditorBlock>? _initialEditorBlocks;
   bool _isSaving = false;
+  bool _showEditorToolbar = false;
+
+  bool get _isEditing => widget.entryToEdit != null;
+  String? get _initialPhotoUrl => widget.entryToEdit?.photoUrl;
+
+  @override
+  void initState() {
+    super.initState();
+    final entry = widget.entryToEdit;
+    final brandText = entry?.brand ?? '';
+    final inkNameText = entry?.inkName ?? '';
+    // text만 넘기고 끝내면 selection이 무효(offset: -1)로 남아서, 처음 탭해서
+    // 포커스를 줄 때 텍스트가 순간적으로 사라지는 것처럼 보이는 버그가 있었음
+    _brandCtrl = TextEditingController(text: brandText)
+      ..selection = TextSelection.collapsed(offset: brandText.length);
+    _inkNameCtrl = TextEditingController(text: inkNameText)
+      ..selection = TextSelection.collapsed(offset: inkNameText.length);
+    if (entry != null) {
+      if (entry.contentBlocks != null && entry.contentBlocks!.isNotEmpty) {
+        _initialEditorBlocks = editorBlocksFromMap(entry.contentBlocks!);
+      } else if (entry.memo.isNotEmpty) {
+        _initialEditorBlocks = [TextEditorBlock(initial: entry.memo)];
+      }
+    }
+  }
 
   @override
   void dispose() {
     _brandCtrl.dispose();
     _inkNameCtrl.dispose();
-    _memoCtrl.dispose();
     super.dispose();
+  }
+
+  // ── 뒤로가기 시 저장 확인 ──────────────────────────────────────────
+  bool _hasContent() {
+    if (_photo != null) return true;
+    if (_brandCtrl.text.isNotEmpty || _inkNameCtrl.text.isNotEmpty) return true;
+    final blocks = _editorKey.currentState?.getBlocks() ?? [];
+    return blocks.any((b) {
+      if (b is TextEditorBlock) return b.controller.text.isNotEmpty;
+      if (b is ImageEditorBlock) return true;
+      return false;
+    });
+  }
+
+  Future<bool> _confirmDiscard() async {
+    if (!_hasContent()) return true;
+    return await showDialog<bool>(
+          context: context,
+          builder: (ctx) => AlertDialog(
+            title: const Text('작성 중인 내용이 있어요'),
+            content: Text(_isEditing ? '지금 나가면 수정한 내용이 저장되지 않습니다.' : '지금 나가면 작성한 내용이 모두 삭제됩니다.'),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.pop(ctx, false),
+                child: const Text('계속 작성'),
+              ),
+              TextButton(
+                onPressed: () => Navigator.pop(ctx, true),
+                child: Text(
+                  '나가기',
+                  style: TextStyle(color: Theme.of(context).colorScheme.error),
+                ),
+              ),
+            ],
+          ),
+        ) ??
+        false;
   }
 
   // ── 사진 선택 ──────────────────────────────────────────────────
@@ -108,7 +171,7 @@ class _InkChartAddScreenState extends ConsumerState<InkChartAddScreen> {
     final brand = _brandCtrl.text.trim();
     final inkName = _inkNameCtrl.text.trim();
 
-    if (_photo == null) {
+    if (_photo == null && _initialPhotoUrl == null) {
       _showSnack('발색 사진을 추가해주세요');
       return;
     }
@@ -121,23 +184,66 @@ class _InkChartAddScreenState extends ConsumerState<InkChartAddScreen> {
 
     try {
       final uid = ref.read(currentUidProvider);
-      if (uid == null) return;
-      final id = const Uuid().v4();
+      if (uid == null) {
+        setState(() => _isSaving = false);
+        return;
+      }
 
-      // 1. 사진 업로드
-      final photoUrl = await ref
-          .read(storageServiceProvider)
-          .uploadInkChartPhoto(_photo!, uid);
+      // 1. 발색 사진 업로드 (새로 고른 사진이 있을 때만, 아니면 기존 사진 유지)
+      final oldPhotoUrl = _initialPhotoUrl;
+      final photoUrl = _photo != null
+          ? await ref.read(storageServiceProvider).uploadInkChartPhoto(_photo!, uid)
+          : oldPhotoUrl!;
 
-      // 2. Firestore 저장
+      // 2. 메모 블록(텍스트 + 추가 사진) 빌드
+      final editorState = _editorKey.currentState;
+      var memoBlocks = <Map<String, dynamic>>[];
+      if (editorState != null) {
+        memoBlocks = await editorState.buildContentBlocks(
+          uploadImage: (file) => ref.read(storageServiceProvider).uploadImage(
+            file: file,
+            folder: 'inkChart/$uid',
+          ),
+        );
+      }
+      final memoText = memoBlocks
+          .where((b) => b['type'] == 'text')
+          .map((b) => b['content'] as String)
+          .join('\n');
+
       final entry = InkChartModel(
-        id: id,
+        id: widget.entryToEdit?.id ?? const Uuid().v4(),
         photoUrl: photoUrl,
         brand: brand,
         inkName: inkName,
-        memo: _memoCtrl.text.trim(),
-        createdAt: DateTime.now(),
+        memo: memoText,
+        contentBlocks: memoBlocks.isNotEmpty ? memoBlocks : null,
+        createdAt: widget.entryToEdit?.createdAt ?? DateTime.now(),
       );
+
+      if (_isEditing) {
+        await ref.read(inkBookRepoProvider).updateEntry(uid, widget.bookId, entry);
+        // 사진을 새로 바꿨으면 예전 스토리지 파일은 정리
+        if (_photo != null && oldPhotoUrl != null && oldPhotoUrl != photoUrl) {
+          try {
+            await ref.read(storageServiceProvider).deleteByUrl(oldPhotoUrl);
+          } catch (_) {}
+        }
+        if (mounted) {
+          setState(() => _isSaving = false);
+          // showCenterToast는 자체적으로 다이얼로그 라우트를 push함 — pop()을
+          // 바로 이어 부르면 이 화면이 아니라 방금 띄운 토스트 라우트가 닫혀버려서
+          // 반드시 await로 토스트가 완전히 끝난 뒤에 pop 해야 함
+          await showCenterToast(context, message: '수정했어요', icon: Icons.check_circle);
+          if (mounted) {
+            // 이 화면은 go_router 라우트가 아니라 Navigator.push로 연 화면이라
+            // context.pop()(go_router용)이 아니라 일반 Navigator pop을 써야 함
+            Navigator.of(context).pop();
+          }
+        }
+        return;
+      }
+
       await ref.read(inkBookRepoProvider).addEntry(uid, widget.bookId, entry);
 
       if (mounted) {
@@ -163,104 +269,145 @@ class _InkChartAddScreenState extends ConsumerState<InkChartAddScreen> {
   // ── UI ──────────────────────────────────────────────────────────
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: _bg,
-      appBar: AppBar(
-        backgroundColor: _bg,
-        scrolledUnderElevation: 0,
-        title: const Text('잉크 스와치 추가'),
-        actions: [
-          Padding(
-            padding: const EdgeInsets.only(right: 8),
-            child: TextButton(
-              onPressed: _isSaving ? null : _save,
-              child: _isSaving
-                  ? const SizedBox(
-                      width: 18,
-                      height: 18,
-                      child: CircularProgressIndicator(strokeWidth: 2),
-                    )
-                  : const Text(
-                      '저장',
-                      style: TextStyle(
-                          fontWeight: FontWeight.w700,
-                          color: AppColors.primary,
-                          fontSize: 15),
+    return PopScope(
+      canPop: false,
+      onPopInvokedWithResult: (didPop, _) async {
+        if (didPop) return;
+        final leave = await _confirmDiscard();
+        if (leave && mounted) Navigator.of(context).pop();
+      },
+      child: Scaffold(
+        backgroundColor: AppColors.background,
+        appBar: AppBar(
+          backgroundColor: AppColors.background,
+          scrolledUnderElevation: 0,
+          title: Text(_isEditing ? '잉크 스와치 수정' : '잉크 스와치 추가'),
+          leading: IconButton(
+            icon: const Icon(Icons.close),
+            onPressed: () async {
+              final leave = await _confirmDiscard();
+              if (leave && mounted) Navigator.of(context).pop();
+            },
+          ),
+          actions: [
+            Padding(
+              padding: const EdgeInsets.only(right: 8),
+              child: TextButton(
+                onPressed: _isSaving ? null : _save,
+                child: _isSaving
+                    ? const SizedBox(
+                        width: 18,
+                        height: 18,
+                        child: CircularProgressIndicator(strokeWidth: 2),
+                      )
+                    : const Text(
+                        '저장',
+                        style: TextStyle(
+                            fontWeight: FontWeight.w700,
+                            color: AppColors.primary,
+                            fontSize: 15),
+                      ),
+              ),
+            ),
+          ],
+        ),
+        body: GestureDetector(
+          onTap: () => FocusScope.of(context).unfocus(),
+          child: SingleChildScrollView(
+            padding: const EdgeInsets.only(top: 8, bottom: 40),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                // 사진 선택 영역
+                Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 16),
+                  child: _PhotoPicker(
+                    photo: _photo,
+                    photoUrl: _initialPhotoUrl,
+                    shape: ref.watch(inkSwatchShapeProvider),
+                    onTap: _openPhotoPicker,
+                  ),
+                ),
+                const SizedBox(height: 24),
+
+                // 섹션 레이블
+                Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 16),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      const _Label('브랜드'),
+                      const SizedBox(height: 8),
+                      _Field(
+                        controller: _brandCtrl,
+                        hint: '예) Pilot, Diamine, Sailor',
+                        textCapitalization: TextCapitalization.words,
+                      ),
+                      const SizedBox(height: 16),
+                      const _Label('잉크 이름'),
+                      const SizedBox(height: 8),
+                      _Field(
+                        controller: _inkNameCtrl,
+                        hint: '예) Iroshizuku Tsuyugusa',
+                        textCapitalization: TextCapitalization.words,
+                      ),
+                    ],
+                  ),
+                ),
+                const SizedBox(height: 16),
+
+                const Padding(
+                  padding: EdgeInsets.symmetric(horizontal: 16),
+                  child: _Label('메모 (선택)'),
+                ),
+                const SizedBox(height: 8),
+                // 리뷰 본문 에디터와 동일한 컴포넌트 — 텍스트 중간에 사진 추가 가능,
+                // 자체적으로 좌우 16px 여백을 가지므로 바깥에 별도 padding 없음
+                BlogBodyEditor(
+                  key: _editorKey,
+                  hintText: '발색 느낌, 특성, 사용한 종이 등을 자유롭게 기록하세요',
+                  initialBlocks: _initialEditorBlocks,
+                  onFocusChanged: (hasFocus) => setState(() => _showEditorToolbar = hasFocus),
+                ),
+                const SizedBox(height: 12),
+
+                // 안내 텍스트
+                Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 16),
+                  child: Container(
+                    padding: const EdgeInsets.all(12),
+                    decoration: BoxDecoration(
+                      color: AppColors.chipBackground,
+                      borderRadius: BorderRadius.circular(10),
                     ),
+                    child: const Row(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Icon(Icons.info_outline, size: 14, color: AppColors.primary),
+                        SizedBox(width: 6),
+                        Expanded(
+                          child: Text(
+                            '직접 발색한 종이를 밝은 곳에서 사진 찍으면\n더 정확한 색감을 기록할 수 있어요',
+                            style: TextStyle(
+                                fontSize: 12,
+                                color: AppColors.textSecondary,
+                                height: 1.5),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              ],
             ),
           ),
-        ],
-      ),
-      body: GestureDetector(
-        onTap: () => FocusScope.of(context).unfocus(),
-        child: SingleChildScrollView(
-          padding: const EdgeInsets.fromLTRB(16, 8, 16, 40),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              // 사진 선택 영역
-              _PhotoPicker(
-                photo: _photo,
-                shape: ref.watch(inkSwatchShapeProvider),
-                onTap: _openPhotoPicker,
-              ),
-              const SizedBox(height: 24),
-
-              // 섹션 레이블
-              const _Label('브랜드'),
-              const SizedBox(height: 8),
-              _Field(
-                controller: _brandCtrl,
-                hint: '예) Pilot, Diamine, Sailor',
-                textCapitalization: TextCapitalization.words,
-              ),
-              const SizedBox(height: 16),
-
-              const _Label('잉크 이름'),
-              const SizedBox(height: 8),
-              _Field(
-                controller: _inkNameCtrl,
-                hint: '예) Iroshizuku Tsuyugusa',
-                textCapitalization: TextCapitalization.words,
-              ),
-              const SizedBox(height: 16),
-
-              const _Label('메모 (선택)'),
-              const SizedBox(height: 8),
-              _Field(
-                controller: _memoCtrl,
-                hint: '발색 느낌, 특성, 사용한 종이 등을 자유롭게 기록하세요',
-                maxLines: 5,
-              ),
-              const SizedBox(height: 12),
-
-              // 안내 텍스트
-              Container(
-                padding: const EdgeInsets.all(12),
-                decoration: BoxDecoration(
-                  color: const Color(0xFFEDE7D6),
-                  borderRadius: BorderRadius.circular(10),
-                ),
-                child: const Row(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Icon(Icons.info_outline, size: 14, color: Color(0xFFB8A98A)),
-                    SizedBox(width: 6),
-                    Expanded(
-                      child: Text(
-                        '직접 발색한 종이를 밝은 곳에서 사진 찍으면\n더 정확한 색감을 기록할 수 있어요',
-                        style: TextStyle(
-                            fontSize: 12,
-                            color: Color(0xFF8B7355),
-                            height: 1.5),
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ],
-          ),
         ),
+        bottomNavigationBar: _showEditorToolbar
+            ? Padding(
+                padding: EdgeInsets.only(bottom: MediaQuery.of(context).viewInsets.bottom),
+                child: BlogEditorToolbar(editorKey: _editorKey),
+              )
+            : null,
       ),
     );
   }
@@ -270,17 +417,18 @@ class _InkChartAddScreenState extends ConsumerState<InkChartAddScreen> {
 class _PhotoPicker extends StatelessWidget {
   const _PhotoPicker({
     required this.photo,
+    required this.photoUrl,
     required this.shape,
     required this.onTap,
   });
   final File? photo;
+  final String? photoUrl;
   final InkSwatchShape shape;
   final VoidCallback onTap;
 
-  static const _border = Color(0xFFD4C5A9);
-
   @override
   Widget build(BuildContext context) {
+    final hasPhoto = photo != null || photoUrl != null;
     return TapScale(
       onTap: onTap,
       scale: 0.97,
@@ -288,10 +436,10 @@ class _PhotoPicker extends StatelessWidget {
         aspectRatio: 1.4,
         child: Container(
           decoration: BoxDecoration(
-            color: const Color(0xFFFFFDF7),
+            color: Colors.white,
             borderRadius: BorderRadius.circular(16),
             border: Border.all(
-              color: photo != null ? _border : AppColors.divider,
+              color: hasPhoto ? AppColors.primary : AppColors.divider,
               width: 1.5,
             ),
             boxShadow: const [
@@ -302,7 +450,7 @@ class _PhotoPicker extends StatelessWidget {
               ),
             ],
           ),
-          child: photo != null
+          child: hasPhoto
               ? Stack(
                   alignment: Alignment.center,
                   children: [
@@ -313,7 +461,9 @@ class _PhotoPicker extends StatelessWidget {
                         aspectRatio: 1.0,
                         child: InkShapeClip(
                           shape: shape,
-                          child: Image.file(photo!, fit: BoxFit.cover),
+                          child: photo != null
+                              ? Image.file(photo!, fit: BoxFit.cover)
+                              : CachedNetworkImage(imageUrl: photoUrl!, fit: BoxFit.cover),
                         ),
                       ),
                     ),
@@ -348,14 +498,14 @@ class _PhotoPicker extends StatelessWidget {
                     mainAxisSize: MainAxisSize.min,
                     children: [
                       Icon(Icons.camera_alt_outlined,
-                          size: 44, color: Color(0xFFB8A98A)),
+                          size: 44, color: AppColors.primary),
                       SizedBox(height: 10),
                       Text(
                         '발색 사진 추가',
                         style: TextStyle(
                             fontSize: 15,
                             fontWeight: FontWeight.w600,
-                            color: Color(0xFF8B7355)),
+                            color: AppColors.primary),
                       ),
                       SizedBox(height: 4),
                       Text(
@@ -394,19 +544,16 @@ class _Field extends StatelessWidget {
   const _Field({
     required this.controller,
     required this.hint,
-    this.maxLines = 1,
     this.textCapitalization = TextCapitalization.none,
   });
   final TextEditingController controller;
   final String hint;
-  final int maxLines;
   final TextCapitalization textCapitalization;
 
   @override
   Widget build(BuildContext context) {
     return TextField(
       controller: controller,
-      maxLines: maxLines,
       textCapitalization: textCapitalization,
       style: const TextStyle(fontSize: 14, color: AppColors.textPrimary),
       decoration: InputDecoration(
@@ -414,14 +561,14 @@ class _Field extends StatelessWidget {
         hintStyle: const TextStyle(
             fontSize: 13, color: AppColors.textTertiary),
         filled: true,
-        fillColor: const Color(0xFFFFFDF7),
+        fillColor: Colors.white,
         border: OutlineInputBorder(
           borderRadius: BorderRadius.circular(12),
-          borderSide: const BorderSide(color: Color(0xFFD4C5A9)),
+          borderSide: const BorderSide(color: AppColors.divider),
         ),
         enabledBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(12),
-          borderSide: const BorderSide(color: Color(0xFFD4C5A9)),
+          borderSide: const BorderSide(color: AppColors.divider),
         ),
         focusedBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(12),

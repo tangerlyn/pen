@@ -21,6 +21,7 @@ import '../../../shared/widgets/content_moderation.dart';
 import '../../../shared/widgets/image_viewer_screen.dart';
 import '../../../shared/widgets/common/skeletons.dart';
 import '../../../shared/widgets/tap_scale.dart';
+import '../../../shared/widgets/linkified_text.dart';
 import 'post_write_screen.dart';
 
 final _postAuthorProvider = StreamProvider.family<UserModel?, String>((ref, uid) {
@@ -239,7 +240,7 @@ class _PostDetailScreenState extends ConsumerState<PostDetailScreen> {
         if (text.isNotEmpty) {
           widgets.add(Padding(
             padding: const EdgeInsets.only(bottom: 12),
-            child: Text(
+            child: LinkifiedText(
               text,
               style: const TextStyle(fontSize: 15, height: 1.75, color: AppColors.textPrimary),
             ),
@@ -443,7 +444,7 @@ class _PostDetailScreenState extends ConsumerState<PostDetailScreen> {
                                 ),
                                 const SizedBox(height: 20),
                               ],
-                              Text(
+                              LinkifiedText(
                                 post.body,
                                 style: const TextStyle(
                                     fontSize: 15, height: 1.75, color: AppColors.textPrimary),

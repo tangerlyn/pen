@@ -178,9 +178,12 @@ Path getShapePath(InkSwatchShape shape, Size size) {
 }
 
 // PNG mask 이미지 1회 로드 및 캐싱
-class _BottleMask {
+class BottleMask {
   static ui.Image? _cached;
   static Future<ui.Image>? _future;
+
+  /// 이미 로드돼 캐싱된 이미지가 있으면 즉시 반환(동기), 없으면 null
+  static ui.Image? get cached => _cached;
 
   static Future<ui.Image> load() {
     return _future ??= _doLoad().then((img) {
@@ -215,10 +218,10 @@ class _InkShapeClipState extends State<InkShapeClip> {
     super.initState();
     debugPrint('[InkShapeClip] shape: ${widget.shape}');
     if (widget.shape == InkSwatchShape.bottle) {
-      _maskImage = _BottleMask._cached;
+      _maskImage = BottleMask._cached;
       debugPrint('[InkShapeClip] cached image: $_maskImage');
       if (_maskImage == null) {
-        _BottleMask.load().then((img) {
+        BottleMask.load().then((img) {
           debugPrint('[InkShapeClip] image loaded: ${img.width}x${img.height}');
           if (mounted) setState(() => _maskImage = img);
         }).catchError((e) {
@@ -232,9 +235,9 @@ class _InkShapeClipState extends State<InkShapeClip> {
   void didUpdateWidget(InkShapeClip oldWidget) {
     super.didUpdateWidget(oldWidget);
     if (widget.shape == InkSwatchShape.bottle && _maskImage == null) {
-      _maskImage = _BottleMask._cached;
+      _maskImage = BottleMask._cached;
       if (_maskImage == null) {
-        _BottleMask.load().then((img) {
+        BottleMask.load().then((img) {
           if (mounted) setState(() => _maskImage = img);
         });
       }

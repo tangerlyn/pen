@@ -105,7 +105,10 @@
 - **내보내기** — 화면 캡처 후 갤러리 저장 (gal 패키지)
 - **잉크 추가 FAB** → `/ink-chart/:bookId/add`
 - 잉크 추가 후 자동 이동: 추가된 잉크가 속한 페이지로 `PageController.animateToPage` (450ms, easeOutCubic)
-- **잉크 상세 캐러셀** — 스와치 탭 시 좌우로 넘겨볼 수 있는 상세 시트 (`InkDetailCarousel` 공용 위젯), 사진·브랜드·이름·날짜·메모 + 삭제 버튼
+- **잉크 상세 캐러셀** — 스와치 탭 시 좌우로 넘겨볼 수 있는 상세 시트 (`InkDetailCarousel` 공용 위젯, 화면 높이의 75%로 표시, 흰색 배경). 사진·브랜드·이름·날짜·메모
+  - 상단 좌측: 페이지 카운터("N / 전체") — 예전엔 우측에 있었음
+  - 상단 우측: ⋮ 메뉴(`menuBuilder`, 소유자 화면에서만 전달) — **잉크 수정**(`InkChartAddScreen`을 `entryToEdit`와 함께 다시 열어 브랜드/이름/사진/메모 수정, 저장은 `InkBookRepository.updateEntry`) / **잉크 삭제**(예전엔 하단에 별도 버튼으로 있었음, 메뉴로 통합)
+  - 메모는 텍스트만이 아니라 작성 시 추가한 사진도 순서대로 함께 표시됨(`InkMemoContent` 공용 위젯, `lib/features/mypage/widgets/ink_memo_content.dart`) — 사진 탭 시 전체화면으로 확대
 - **공개 범위 설정 버튼** (AppBar) — 바텀 시트로 3단계 선택
   - 모든 사람에게 공개 (`public`, 새 차트 생성 시 기본값) — `Icons.public`
   - 팔로워에게만 공개 (`followers`) — `Icons.group_outlined`
@@ -125,20 +128,23 @@
 
 **화면 구성**
 - 소유자가 설정한 `pageStyle`(실선/격자/민무늬) · `viewMode`(좌우/위아래) · `inkSwatchShape`(원형/잉크병/붓터치)를 그대로 읽어와 `NotebookPage`로 렌더링 — 소유자 화면과 동일한 공용 위젯을 사용하므로 모양이 100% 동일
-- 스와치 탭 → `InkDetailCarousel` (소유자 화면과 동일한 상세 캐러셀, 삭제 버튼만 없음)
+- 스와치 탭 → `InkDetailCarousel` (소유자 화면과 동일한 상세 캐러셀, `menuBuilder`를 안 넘기므로 ⋮ 메뉴 자체가 안 보임 — 수정·삭제 불가)
 
 ---
 
 ### `ink_chart_add_screen.dart`
-**경로:** `/ink-chart/:bookId/add`
+**경로:** `/ink-chart/:bookId/add` (추가) — 수정은 이 경로가 아니라 잉크 상세의 ⋮ 메뉴에서 같은 화면을 `entryToEdit`와 함께 직접 push(`Navigator.push`, `reviewToEdit`/`postToEdit`와 동일한 패턴)
 
 **화면 구성**
+- 흰색 배경 + 포인트 색상은 네이비(`AppColors.primary`) — 예전엔 베이지 톤이었음
 - 잉크 검색 → 목록에서 선택
-- 스와치 사진 촬영 또는 갤러리 선택 (`TapScale` 탭 피드백 적용)
+- 스와치 사진 촬영 또는 갤러리 선택 (`TapScale` 탭 피드백 적용) — 수정 모드에서는 기존 사진(네트워크 URL)이 미리 채워지고, 새로 고르기 전까지는 그 사진을 그대로 유지
 - 사진 없으면 저장 불가 (화면 중앙 팝업 안내)
-- **저장 성공 시** — `showInkAddSuccess` 오버레이 표시
-  - 흰 배경 위에 스와치 사진이 elastic 바운스 + 기울기로 등장
-  - 브랜드명 / 잉크명 텍스트 + ripple 파동 3개 애니메이션
+- **메모 (선택)** — 리뷰/게시글 작성과 동일한 블로그 에디터(`BlogBodyEditor`) 사용. 텍스트 작성 중 키보드 위에 카메라/사진 툴바(`BlogEditorToolbar`)가 나타나 메모 중간에 사진을 추가로 첨부 가능. 저장 시 텍스트는 `memo`, 전체 블록(텍스트+사진)은 `contentBlocks`로 함께 저장됨(`InkChartModel`)
+- **뒤로가기 시 저장 확인** — 사진/브랜드/이름/메모 중 하나라도 입력된 상태에서 뒤로가기(제스처·닫기 버튼·시스템 백)를 누르면 "지금 나가면 [작성한/수정한] 내용이 삭제됩니다" 확인 다이얼로그 표시(`PopScope`, 리뷰/게시글 작성과 동일한 패턴)
+- **저장 성공 시**
+  - 추가: `showInkAddSuccess` 오버레이 표시 — 흰 배경 위에 스와치 사진이 elastic 바운스 + 기울기로 등장, 브랜드명/잉크명 텍스트 + ripple 파동 3개 애니메이션
+  - 수정: 오버레이 없이 "수정했어요" 토스트만 표시하고 바로 닫힘
   - 약 2.2초 후 자동 닫힘 → 차트 상세로 돌아감
 
 ---
@@ -239,7 +245,8 @@ EXP 기반 Lv.1~10 시스템.
 - `lib/shared/widgets/tap_scale.dart` — 탭 시 0.95 축소 피드백 (80ms in / 220ms elastic out)
 - `lib/features/mypage/widgets/notebook_card.dart` — `NotebookCard`: 공책 모양 카드(스프링 바인딩 + 표지), 내 잉크 차트 목록과 다른 유저 잉크 차트 목록에서 공용
 - `lib/features/mypage/widgets/notebook_page.dart` — `NotebookPage`: 노트 페이지 배경(실선/격자/민무늬) + 3×3 스와치 그리드, 소유자 화면과 읽기 전용 화면 공용
-- `lib/features/mypage/widgets/ink_detail_carousel.dart` — `InkDetailCarousel`: 잉크 상세 좌우 스와이프 캐러셀 셸(핸들/카운터/화살표), 소유자 화면과 읽기 전용 화면 공용
+- `lib/features/mypage/widgets/ink_detail_carousel.dart` — `InkDetailCarousel`: 잉크 상세 좌우 스와이프 캐러셀 셸(카운터 좌측 상단/화살표), 소유자 화면과 읽기 전용 화면 공용. `menuBuilder`(우측 상단 ⋮ 메뉴)를 넘기면 표시, 안 넘기면(읽기 전용) 숨김
+- `lib/features/mypage/widgets/ink_memo_content.dart` — `InkMemoContent`: 메모 카드 내용(텍스트+사진) 렌더링, 소유자 화면과 읽기 전용 화면 공용
 
 ---
 
@@ -261,6 +268,7 @@ EXP 기반 Lv.1~10 시스템.
 - `lib/features/mypage/widgets/notebook_card.dart`
 - `lib/features/mypage/widgets/notebook_page.dart`
 - `lib/features/mypage/widgets/ink_detail_carousel.dart`
+- `lib/features/mypage/widgets/ink_memo_content.dart`
 - `lib/features/mypage/widgets/ink_swatch_shape.dart`
 - `lib/features/mypage/providers/ink_shape_provider.dart`
 - `lib/core/utils/level_system.dart`

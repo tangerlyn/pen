@@ -20,8 +20,10 @@ import '../../../shared/providers/providers.dart';
 import '../../../shared/providers/ink_book_providers.dart';
 import '../../../shared/widgets/tap_scale.dart';
 import '../providers/ink_shape_provider.dart';
+import 'ink_chart_add_screen.dart';
 import '../widgets/ink_detail_carousel.dart';
 import '../widgets/ink_swatch_shape.dart';
+import '../widgets/ink_memo_content.dart';
 import '../widgets/notebook_page.dart';
 
 // ── Enums ──────────────────────────────────────────────────────────────────
@@ -1277,7 +1279,7 @@ class _SwatchCard extends ConsumerWidget {
       backgroundColor: Colors.transparent,
       enableDrag: true,
       builder: (ctx) => SizedBox(
-        height: MediaQuery.of(ctx).size.height * 0.7,
+        height: MediaQuery.of(ctx).size.height * 0.75,
         child: _DetailSheet(
           charts: allEntries,
           initialIndex: absoluteIndex,
@@ -1427,7 +1429,7 @@ class _ReorderCard extends StatelessWidget {
 
 // ── 잉크 상세 바텀시트 ────────────────────────────────────────────────────
 
-class _DetailSheet extends StatelessWidget {
+class _DetailSheet extends ConsumerWidget {
   const _DetailSheet({
     required this.charts,
     required this.initialIndex,
@@ -1442,18 +1444,131 @@ class _DetailSheet extends StatelessWidget {
   final InkSwatchShape shape;
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
+    // charts는 바텀시트를 열 때의 스냅샷이라 순서/필터는 그대로 유지하되,
+    // 각 항목 내용은 실시간 provider 데이터로 덮어써서 수정 사항이 바로 반영되게 함
+    final liveEntries =
+        ref.watch(inkChartInBookProvider((uid, bookId))).valueOrNull;
+    final liveById = {
+      for (final e in liveEntries ?? const <InkChartModel>[]) e.id: e,
+    };
+    final liveCharts = charts.map((e) => liveById[e.id] ?? e).toList();
+
     return InkDetailCarousel(
-      itemCount: charts.length,
+      itemCount: liveCharts.length,
       initialIndex: initialIndex,
       pageBuilder: (ctx, i) => _DetailPage(
-        entry: charts[i],
+        entry: liveCharts[i],
         uid: uid,
         bookId: bookId,
         shape: shape,
         onDeleted: () => Navigator.pop(context),
       ),
+      menuBuilder: (ctx, i) => _DetailMenuButton(
+        entry: liveCharts[i],
+        uid: uid,
+        bookId: bookId,
+        onDeleted: () => Navigator.pop(context),
+      ),
     );
+  }
+}
+
+// ── 잉크 상세 ⋮ 메뉴 (수정/삭제) ─────────────────────────────────────────
+class _DetailMenuButton extends ConsumerWidget {
+  const _DetailMenuButton({
+    required this.entry,
+    required this.uid,
+    required this.bookId,
+    required this.onDeleted,
+  });
+  final InkChartModel entry;
+  final String uid;
+  final String bookId;
+  final VoidCallback onDeleted;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    return IconButton(
+      icon: const Icon(Icons.more_vert, color: AppColors.textSecondary),
+      onPressed: () => _showMenu(context, ref),
+    );
+  }
+
+  // 앱 전체에서 쓰는 "⋮ 더보기" 바텀시트와 동일한 형태로 통일
+  // (PopupMenuButton은 이 앱 다른 곳에서 안 쓰는, 어울리지 않는 형태였음)
+  void _showMenu(BuildContext context, WidgetRef ref) {
+    showModalBottomSheet(
+      context: context,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
+      ),
+      builder: (_) => SafeArea(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Container(
+              width: 40,
+              height: 4,
+              margin: const EdgeInsets.symmetric(vertical: 12),
+              decoration: BoxDecoration(
+                color: AppColors.divider,
+                borderRadius: BorderRadius.circular(2),
+              ),
+            ),
+            ListTile(
+              leading: const Icon(Icons.edit_outlined),
+              title: const Text('잉크 수정'),
+              onTap: () {
+                Navigator.pop(context);
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (_) => InkChartAddScreen(bookId: bookId, entryToEdit: entry),
+                  ),
+                );
+              },
+            ),
+            ListTile(
+              leading: const Icon(Icons.delete_outline, color: AppColors.error),
+              title: const Text('잉크 삭제', style: TextStyle(color: AppColors.error)),
+              onTap: () {
+                Navigator.pop(context);
+                _confirmDelete(context, ref);
+              },
+            ),
+            const SizedBox(height: 8),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Future<void> _confirmDelete(BuildContext context, WidgetRef ref) async {
+    final ok = await showDialog<bool>(
+      context: context,
+      builder: (_) => AlertDialog(
+        title: const Text('잉크 삭제'),
+        content: Text('"${entry.brand} ${entry.inkName}"을 삭제할까요?'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context, false),
+            child: const Text('취소'),
+          ),
+          TextButton(
+            onPressed: () => Navigator.pop(context, true),
+            style: TextButton.styleFrom(foregroundColor: AppColors.error),
+            child: const Text('삭제'),
+          ),
+        ],
+      ),
+    );
+    if (ok != true || !context.mounted) return;
+    await ref.read(inkBookRepoProvider).deleteEntry(uid, bookId, entry.id);
+    try {
+      await ref.read(storageServiceProvider).deleteByUrl(entry.photoUrl);
+    } catch (_) {}
+    onDeleted();
   }
 }
 
@@ -1495,9 +1610,9 @@ class _DetailPage extends ConsumerWidget {
                     imageUrl: entry.photoUrl,
                     fit: BoxFit.cover,
                     placeholder: (_, __) =>
-                        Container(color: const Color(0xFFECE4D4)),
+                        Container(color: AppColors.chipBackground),
                     errorWidget: (_, __, ___) => Container(
-                      color: const Color(0xFFECE4D4),
+                      color: AppColors.chipBackground,
                       child: const Icon(Icons.broken_image_outlined,
                           color: AppColors.textTertiary),
                     ),
@@ -1507,7 +1622,7 @@ class _DetailPage extends ConsumerWidget {
             ),
           ),
         ),
-        Container(height: 1.5, color: const Color(0xFFECE4D4)),
+        Container(height: 1.5, color: AppColors.divider),
         const SizedBox(height: 20),
         Padding(
           padding: const EdgeInsets.symmetric(horizontal: 24),
@@ -1534,15 +1649,14 @@ class _DetailPage extends ConsumerWidget {
                     style: const TextStyle(
                         fontSize: 12, color: AppColors.textTertiary)),
               ]),
-              if (entry.memo.isNotEmpty) ...[
+              if (entry.memo.isNotEmpty || (entry.contentBlocks?.isNotEmpty ?? false)) ...[
                 const SizedBox(height: 20),
                 Container(
                   width: double.infinity,
                   padding: const EdgeInsets.all(14),
                   decoration: BoxDecoration(
-                    color: const Color(0xFFF5F0E6),
+                    color: AppColors.chipBackground,
                     borderRadius: BorderRadius.circular(10),
-                    border: Border.all(color: const Color(0xFFECE4D4)),
                   ),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
@@ -1554,57 +1668,17 @@ class _DetailPage extends ConsumerWidget {
                               color: AppColors.textTertiary,
                               letterSpacing: 0.5)),
                       const SizedBox(height: 6),
-                      Text(entry.memo,
-                          style: const TextStyle(
-                              fontSize: 14,
-                              color: AppColors.textPrimary,
-                              height: 1.6)),
+                      InkMemoContent(entry: entry),
                     ],
                   ),
                 ),
               ],
               const SizedBox(height: 24),
-              Center(
-                child: TextButton(
-                  onPressed: () => _confirmDelete(context, ref),
-                  child: const Text('잉크 삭제',
-                      style: TextStyle(
-                          color: AppColors.error, fontSize: 14)),
-                ),
-              ),
-              const SizedBox(height: 12),
             ],
           ),
         ),
       ],
     );
-  }
-
-  Future<void> _confirmDelete(BuildContext context, WidgetRef ref) async {
-    final ok = await showDialog<bool>(
-      context: context,
-      builder: (_) => AlertDialog(
-        title: const Text('잉크 삭제'),
-        content: Text('"${entry.brand} ${entry.inkName}"을 삭제할까요?'),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context, false),
-            child: const Text('취소'),
-          ),
-          TextButton(
-            onPressed: () => Navigator.pop(context, true),
-            style: TextButton.styleFrom(foregroundColor: AppColors.error),
-            child: const Text('삭제'),
-          ),
-        ],
-      ),
-    );
-    if (ok != true || !context.mounted) return;
-    await ref.read(inkBookRepoProvider).deleteEntry(uid, bookId, entry.id);
-    try {
-      await ref.read(storageServiceProvider).deleteByUrl(entry.photoUrl);
-    } catch (_) {}
-    onDeleted();
   }
 }
 

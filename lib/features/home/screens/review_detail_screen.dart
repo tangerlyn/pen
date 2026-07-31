@@ -25,6 +25,7 @@ import '../../../data/models/user_model.dart';
 import '../../../shared/widgets/content_moderation.dart';
 import '../../../shared/widgets/common/skeletons.dart';
 import '../../../shared/widgets/level_badge.dart';
+import '../../../shared/widgets/linkified_text.dart';
 
 final _reviewAuthorProvider = StreamProvider.family<UserModel?, String>((ref, uid) {
   return ref.watch(userRepoProvider).watchUser(uid);
@@ -146,7 +147,7 @@ class _ReviewDetailScreenState extends ConsumerState<ReviewDetailScreen> {
         if (text.isNotEmpty) {
           widgets.add(Padding(
             padding: const EdgeInsets.only(bottom: 12),
-            child: Text(text, style: const TextStyle(fontSize: 15, height: 1.75)),
+            child: LinkifiedText(text, style: const TextStyle(fontSize: 15, height: 1.75)),
           ));
         }
       } else if (block['type'] == 'image') {
@@ -324,7 +325,7 @@ class _ReviewDetailScreenState extends ConsumerState<ReviewDetailScreen> {
                         if (review.imageUrls.isNotEmpty)
                           ..._buildLegacyImages(context, review.imageUrls),
                         if (review.body.isNotEmpty) ...[
-                          Text(
+                          LinkifiedText(
                             review.body,
                             style: const TextStyle(fontSize: 15, height: 1.75),
                           ),
