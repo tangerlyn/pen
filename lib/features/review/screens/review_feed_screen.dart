@@ -253,13 +253,16 @@ class _ReviewFeedScreenState extends ConsumerState<ReviewFeedScreen> {
           Positioned(
             right: 16,
             bottom: 16,
-            child: FloatingActionButton(
+            child: FloatingActionButton.extended(
               heroTag: 'review_write',
               onPressed: () => context.push('/write/review'),
               backgroundColor: AppColors.primary,
               foregroundColor: Colors.white,
               elevation: 4,
-              child: const Icon(Icons.camera_alt_outlined),
+              label: const Text(
+                '리뷰 쓰기',
+                style: TextStyle(fontWeight: FontWeight.w600),
+              ),
             ),
           ),
         ],

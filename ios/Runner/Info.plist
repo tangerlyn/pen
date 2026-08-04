@@ -52,6 +52,8 @@
 		</array>
 		<key>LSRequiresIPhoneOS</key>
 		<true/>
+		<key>NSCameraUsageDescription</key>
+		<string>사진 촬영을 위해 카메라 접근 권한이 필요합니다.</string>
 		<key>NSPhotoLibraryAddUsageDescription</key>
 		<string>리뷰 사진 저장을 위해 사진 접근 권한이 필요합니다.</string>
 		<key>NSPhotoLibraryUsageDescription</key>

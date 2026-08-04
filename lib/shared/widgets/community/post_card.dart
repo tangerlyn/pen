@@ -115,34 +115,26 @@ class PostCard extends ConsumerWidget {
                       Row(
                         mainAxisSize: MainAxisSize.min,
                         children: [
-                          GestureDetector(
-                            behavior: HitTestBehavior.opaque,
-                            onTap: uid != null
-                                ? () => ref
-                                      .read(postRepositoryProvider)
-                                      .toggleLike(post.id, uid, post.authorId)
-                                : null,
-                            child: Row(
-                              mainAxisSize: MainAxisSize.min,
-                              children: [
-                                Icon(
-                                  isLiked
-                                      ? Icons.favorite
-                                      : Icons.favorite_border,
-                                  size: 14,
-                                  color: isLiked
-                                      ? AppColors.error
-                                      : AppColors.textTertiary,
+                          Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Icon(
+                                isLiked
+                                    ? Icons.favorite
+                                    : Icons.favorite_border,
+                                size: 14,
+                                color: isLiked
+                                    ? AppColors.error
+                                    : AppColors.textTertiary,
+                              ),
+                              const SizedBox(width: 3),
+                              Text(
+                                '${post.likeCount}',
+                                style: AppTextStyles.bodySmall.copyWith(
+                                  color: AppColors.textTertiary,
                                 ),
-                                const SizedBox(width: 3),
-                                Text(
-                                  '${post.likeCount}',
-                                  style: AppTextStyles.bodySmall.copyWith(
-                                    color: AppColors.textTertiary,
-                                  ),
-                                ),
-                              ],
-                            ),
+                              ),
+                            ],
                           ),
                           const SizedBox(width: 10),
                           const Icon(

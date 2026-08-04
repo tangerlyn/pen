@@ -10,8 +10,10 @@ import '../../../shared/widgets/community/post_card.dart';
 import '../../../shared/widgets/common/skeletons.dart';
 import '../../../shared/widgets/tap_scale.dart';
 
-final _popularCardAuthorProvider =
-    StreamProvider.family<UserModel?, String>((ref, uid) {
+final _popularCardAuthorProvider = StreamProvider.family<UserModel?, String>((
+  ref,
+  uid,
+) {
   return ref.watch(userRepoProvider).watchUser(uid);
 });
 
@@ -69,8 +71,10 @@ class _CommunityScreenState extends ConsumerState<CommunityScreen> {
       backgroundColor: AppColors.background,
       appBar: widget.showAppBar
           ? AppBar(
-              title: const Text('커뮤니티',
-                  style: TextStyle(fontWeight: FontWeight.w700)),
+              title: const Text(
+                '커뮤니티',
+                style: TextStyle(fontWeight: FontWeight.w700),
+              ),
               actions: [
                 IconButton(
                   icon: const Icon(Icons.search),
@@ -97,63 +101,68 @@ class _CommunityScreenState extends ConsumerState<CommunityScreen> {
                         itemBuilder: (_, _) => const PostCardSkeleton(),
                       )
                     : posts.isEmpty
-                        ? Center(
-                            child: Column(
-                              mainAxisSize: MainAxisSize.min,
-                              children: [
-                                const Icon(Icons.article_outlined,
-                                    size: 64, color: AppColors.textTertiary),
-                                const SizedBox(height: 12),
-                                Text(
-                                  feedState.selectedCategory != null
-                                      ? '${feedState.selectedCategory} 게시글이 없어요.'
-                                      : '첫 글을 작성해보세요!',
-                                  style: const TextStyle(
-                                      color: AppColors.textSecondary),
-                                ),
-                              ],
+                    ? Center(
+                        child: Column(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            const Icon(
+                              Icons.article_outlined,
+                              size: 64,
+                              color: AppColors.textTertiary,
                             ),
-                          )
-                        : RefreshIndicator(
-                            onRefresh: () async {
-                              ref.invalidate(filteredPostsProvider);
-                              await ref
-                                  .read(communityFeedProvider.notifier)
-                                  .loadPosts(refresh: true);
-                            },
-                            child: ListView.separated(
-                              controller: _scrollController,
-                              itemCount: posts.length +
-                                  (hasPopular ? 1 : 0) +
-                                  (feedState.isLoadingMore ? 1 : 0),
-                              separatorBuilder: (_, i) => const Divider(height: 1),
-                              itemBuilder: (_, i) {
-                                final normalStart = hasPopular ? 1 : 0;
-                                final normalEnd = posts.length + normalStart;
+                            const SizedBox(height: 12),
+                            Text(
+                              feedState.selectedCategory != null
+                                  ? '${feedState.selectedCategory} 게시글이 없어요.'
+                                  : '첫 글을 작성해보세요!',
+                              style: const TextStyle(
+                                color: AppColors.textSecondary,
+                              ),
+                            ),
+                          ],
+                        ),
+                      )
+                    : RefreshIndicator(
+                        onRefresh: () async {
+                          ref.invalidate(filteredPostsProvider);
+                          await ref
+                              .read(communityFeedProvider.notifier)
+                              .loadPosts(refresh: true);
+                        },
+                        child: ListView.separated(
+                          controller: _scrollController,
+                          itemCount:
+                              posts.length +
+                              (hasPopular ? 1 : 0) +
+                              (feedState.isLoadingMore ? 1 : 0),
+                          separatorBuilder: (_, i) => const Divider(height: 1),
+                          itemBuilder: (_, i) {
+                            final normalStart = hasPopular ? 1 : 0;
+                            final normalEnd = posts.length + normalStart;
 
-                                if (hasPopular && i == 0) {
-                                  return _PopularSection(
-                                    posts: popular,
-                                    onTap: (id) =>
-                                        context.push('/community/$id'),
-                                  );
-                                }
-                                if (feedState.isLoadingMore && i == normalEnd) {
-                                  return const Padding(
-                                    padding: EdgeInsets.all(16),
-                                    child: Center(
-                                        child: CircularProgressIndicator()),
-                                  );
-                                }
-                                final post = posts[i - normalStart];
-                                return PostCard(
-                                  post: post,
-                                  onTap: () =>
-                                      context.push('/community/${post.id}'),
-                                );
-                              },
-                            ),
-                          ),
+                            if (hasPopular && i == 0) {
+                              return _PopularSection(
+                                posts: popular,
+                                onTap: (id) => context.push('/community/$id'),
+                              );
+                            }
+                            if (feedState.isLoadingMore && i == normalEnd) {
+                              return const Padding(
+                                padding: EdgeInsets.all(16),
+                                child: Center(
+                                  child: CircularProgressIndicator(),
+                                ),
+                              );
+                            }
+                            final post = posts[i - normalStart];
+                            return PostCard(
+                              post: post,
+                              onTap: () =>
+                                  context.push('/community/${post.id}'),
+                            );
+                          },
+                        ),
+                      ),
               ),
             ],
           ),
@@ -181,13 +190,16 @@ class _CommunityScreenState extends ConsumerState<CommunityScreen> {
           Positioned(
             right: 16,
             bottom: 16,
-            child: FloatingActionButton(
+            child: FloatingActionButton.extended(
               heroTag: 'community_write',
               onPressed: () => context.push('/community/write'),
               backgroundColor: AppColors.primary,
               foregroundColor: Colors.white,
               elevation: 4,
-              child: const Icon(Icons.edit_outlined),
+              label: const Text(
+                '글 쓰기',
+                style: TextStyle(fontWeight: FontWeight.w600),
+              ),
             ),
           ),
         ],
@@ -211,10 +223,7 @@ class _CategoryFilterBar extends StatelessWidget {
       child: ListView(
         scrollDirection: Axis.horizontal,
         padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-        children: [
-          _chip(null, '전체'),
-          ..._categories.map((c) => _chip(c, c)),
-        ],
+        children: [_chip(null, '전체'), ..._categories.map((c) => _chip(c, c))],
       ),
     );
   }
@@ -227,6 +236,7 @@ class _CategoryFilterBar extends StatelessWidget {
         duration: const Duration(milliseconds: 150),
         margin: const EdgeInsets.only(right: 8),
         padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 4),
+        alignment: Alignment.center,
         decoration: BoxDecoration(
           color: isSelected ? AppColors.primary : AppColors.chipBackground,
           borderRadius: BorderRadius.circular(20),
@@ -275,8 +285,11 @@ class _PopularSectionState extends State<_PopularSection> {
             padding: const EdgeInsets.fromLTRB(16, 16, 16, 10),
             child: Row(
               children: const [
-                Icon(Icons.local_fire_department,
-                    size: 18, color: Color(0xFFFF5722)),
+                Icon(
+                  Icons.local_fire_department,
+                  size: 18,
+                  color: Color(0xFFFF5722),
+                ),
                 SizedBox(width: 4),
                 Text(
                   '인기글',
@@ -317,9 +330,7 @@ class _PopularSectionState extends State<_PopularSection> {
                   width: active ? 16 : 6,
                   height: 6,
                   decoration: BoxDecoration(
-                    color: active
-                        ? AppColors.primary
-                        : AppColors.divider,
+                    color: active ? AppColors.primary : AppColors.divider,
                     borderRadius: BorderRadius.circular(3),
                   ),
                 );
@@ -352,7 +363,9 @@ class _PopularCard extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final authorAsync = ref.watch(_popularCardAuthorProvider(post.authorId as String));
+    final authorAsync = ref.watch(
+      _popularCardAuthorProvider(post.authorId as String),
+    );
     final user = authorAsync.valueOrNull;
     final hasThumbnail = (post.imageUrls as List).isNotEmpty == true;
 
@@ -414,11 +427,16 @@ class _PopularCard extends ConsumerWidget {
                               radius: 10,
                               backgroundColor: AppColors.chipBackground,
                               backgroundImage: user?.profileImageUrl != null
-                                  ? CachedNetworkImageProvider(user!.profileImageUrl!)
+                                  ? CachedNetworkImageProvider(
+                                      user!.profileImageUrl!,
+                                    )
                                   : null,
                               child: user?.profileImageUrl == null
-                                  ? const Icon(Icons.person,
-                                      size: 11, color: AppColors.textTertiary)
+                                  ? const Icon(
+                                      Icons.person,
+                                      size: 11,
+                                      color: AppColors.textTertiary,
+                                    )
                                   : null,
                             ),
                             const SizedBox(width: 5),
@@ -428,7 +446,9 @@ class _PopularCard extends ConsumerWidget {
                                 maxLines: 1,
                                 overflow: TextOverflow.ellipsis,
                                 style: const TextStyle(
-                                    fontSize: 11, color: AppColors.textTertiary),
+                                  fontSize: 11,
+                                  color: AppColors.textTertiary,
+                                ),
                               ),
                             ),
                             const SizedBox(width: 8),
@@ -438,19 +458,33 @@ class _PopularCard extends ConsumerWidget {
                       Row(
                         mainAxisSize: MainAxisSize.min,
                         children: [
-                          const Icon(Icons.favorite_border,
-                              size: 11, color: AppColors.textTertiary),
+                          const Icon(
+                            Icons.favorite_border,
+                            size: 11,
+                            color: AppColors.textTertiary,
+                          ),
                           const SizedBox(width: 2),
-                          Text('${post.likeCount}',
-                              style: const TextStyle(
-                                  fontSize: 11, color: AppColors.textTertiary)),
+                          Text(
+                            '${post.likeCount}',
+                            style: const TextStyle(
+                              fontSize: 11,
+                              color: AppColors.textTertiary,
+                            ),
+                          ),
                           const SizedBox(width: 8),
-                          const Icon(Icons.chat_bubble_outline,
-                              size: 11, color: AppColors.textTertiary),
+                          const Icon(
+                            Icons.chat_bubble_outline,
+                            size: 11,
+                            color: AppColors.textTertiary,
+                          ),
                           const SizedBox(width: 2),
-                          Text('${post.commentCount}',
-                              style: const TextStyle(
-                                  fontSize: 11, color: AppColors.textTertiary)),
+                          Text(
+                            '${post.commentCount}',
+                            style: const TextStyle(
+                              fontSize: 11,
+                              color: AppColors.textTertiary,
+                            ),
+                          ),
                         ],
                       ),
                     ],

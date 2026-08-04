@@ -348,10 +348,12 @@ class BlogEditorToolbar extends StatelessWidget {
       ),
       child: Row(
         children: [
+          const SizedBox(width: 24),
           _ToolbarIconButton(
             icon: Icons.camera_alt_outlined,
             onTap: () => editorKey.currentState?.insertImageFromCamera(),
           ),
+          const SizedBox(width: 20),
           _ToolbarIconButton(
             icon: Icons.photo_outlined,
             onTap: () => editorKey.currentState?.insertImagesFromGallery(),
