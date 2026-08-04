@@ -37,7 +37,7 @@
 - 무한 스크롤: 스크롤 하단 200px 이내 진입 시 다음 페이지 자동 로드
 - 스켈레톤 로딩 UI (`ReviewGridSkeleton` / `ReviewListTileSkeleton`)
 - 스크롤 맨 위로 버튼 (우측 하단, 100px 이상 스크롤 시 표시)
-- **하단 우측 FAB** (카메라 아이콘) → `/write/review`
+- **하단 우측 FAB** ("리뷰 쓰기" 텍스트 버튼, 아이콘 없음) → `/write/review`
 
 ---
 
