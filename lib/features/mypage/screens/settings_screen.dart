@@ -20,17 +20,20 @@ class SettingsScreen extends ConsumerWidget {
           _SwitchTile(
             title: '좋아요',
             value: notifSettings.likes,
-            onChanged: (v) => ref.read(notificationSettingsProvider.notifier).setLikes(v),
+            onChanged: (v) =>
+                ref.read(notificationSettingsProvider.notifier).setLikes(v),
           ),
           _SwitchTile(
             title: '댓글',
             value: notifSettings.comments,
-            onChanged: (v) => ref.read(notificationSettingsProvider.notifier).setComments(v),
+            onChanged: (v) =>
+                ref.read(notificationSettingsProvider.notifier).setComments(v),
           ),
           _SwitchTile(
             title: '팔로우',
             value: notifSettings.follows,
-            onChanged: (v) => ref.read(notificationSettingsProvider.notifier).setFollows(v),
+            onChanged: (v) =>
+                ref.read(notificationSettingsProvider.notifier).setFollows(v),
           ),
           const Divider(),
           const _SectionHeader('계정'),
@@ -80,7 +83,10 @@ class SettingsScreen extends ConsumerWidget {
         title: const Text('로그아웃'),
         content: const Text('로그아웃 하시겠습니까?'),
         actions: [
-          TextButton(onPressed: () => Navigator.pop(context), child: const Text('취소')),
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('취소'),
+          ),
           TextButton(
             onPressed: () async {
               Navigator.pop(context);
@@ -100,7 +106,10 @@ class SettingsScreen extends ConsumerWidget {
         title: const Text('회원 탈퇴'),
         content: const Text('탈퇴하면 모든 데이터가 삭제됩니다.\n정말 탈퇴하시겠습니까?'),
         actions: [
-          TextButton(onPressed: () => Navigator.pop(context), child: const Text('취소')),
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('취소'),
+          ),
           TextButton(
             onPressed: () async {
               Navigator.pop(context);
@@ -122,13 +131,20 @@ class _SectionHeader extends StatelessWidget {
   Widget build(BuildContext context) {
     return Padding(
       padding: const EdgeInsets.fromLTRB(16, 20, 16, 8),
-      child: Text(title, style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: AppColors.textSecondary)),
+      child: Text(
+        title,
+        style: AppTextStyles.bodySmall.copyWith(fontWeight: FontWeight.w600),
+      ),
     );
   }
 }
 
 class _SwitchTile extends StatelessWidget {
-  const _SwitchTile({required this.title, required this.value, required this.onChanged});
+  const _SwitchTile({
+    required this.title,
+    required this.value,
+    required this.onChanged,
+  });
   final String title;
   final bool value;
   final ValueChanged<bool> onChanged;

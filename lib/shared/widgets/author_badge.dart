@@ -13,10 +13,9 @@ class AuthorBadge extends StatelessWidget {
         color: AppColors.primary,
         borderRadius: BorderRadius.circular(6),
       ),
-      child: const Text(
+      child: Text(
         '작성자',
-        style: TextStyle(
-          fontSize: 10,
+        style: AppTextStyles.caption.copyWith(
           fontWeight: FontWeight.w600,
           color: Colors.white,
         ),

@@ -13,8 +13,12 @@ class LoginScreen extends ConsumerWidget {
 
     ref.listen(authProvider, (_, next) {
       if (next.error != null) {
-        showCenterToast(context,
-            message: next.error!, icon: Icons.error_outline, iconColor: AppColors.error);
+        showCenterToast(
+          context,
+          message: next.error!,
+          icon: Icons.error_outline,
+          iconColor: AppColors.error,
+        );
       }
     });
 
@@ -34,19 +38,30 @@ class LoginScreen extends ConsumerWidget {
                     height: 80,
                     decoration: BoxDecoration(
                       color: AppColors.primary,
-                      borderRadius: BorderRadius.circular(20),
+                      borderRadius: BorderRadius.circular(AppRadius.xl),
                     ),
-                    child: const Icon(Icons.edit, color: Colors.white, size: 40),
+                    child: const Icon(
+                      Icons.edit,
+                      color: Colors.white,
+                      size: 40,
+                    ),
                   ),
                   const SizedBox(height: 16),
                   const Text(
-                    '문어다방',
-                    style: TextStyle(fontSize: 32, fontWeight: FontWeight.w700, letterSpacing: -0.5),
+                    '펜귄',
+                    style: TextStyle(
+                      fontSize: 32,
+                      fontWeight: FontWeight.w700,
+                      letterSpacing: -0.5,
+                    ),
                   ),
                   const SizedBox(height: 8),
                   const Text(
                     '만년필·잉크·노트 커뮤니티',
-                    style: TextStyle(fontSize: 15, color: AppColors.textSecondary),
+                    style: TextStyle(
+                      fontSize: 15,
+                      color: AppColors.textSecondary,
+                    ),
                   ),
                 ],
               ),
@@ -58,15 +73,21 @@ class LoginScreen extends ConsumerWidget {
                 Column(
                   children: [
                     _KakaoLoginButton(
-                      onTap: () => ref.read(authProvider.notifier).signInWithKakao(context),
+                      onTap: () => ref
+                          .read(authProvider.notifier)
+                          .signInWithKakao(context),
                     ),
                     const SizedBox(height: 12),
                     _NaverLoginButton(
-                      onTap: () => ref.read(authProvider.notifier).signInWithNaver(context),
+                      onTap: () => ref
+                          .read(authProvider.notifier)
+                          .signInWithNaver(context),
                     ),
                     const SizedBox(height: 12),
                     _AppleLoginButton(
-                      onTap: () => ref.read(authProvider.notifier).signInWithApple(context),
+                      onTap: () => ref
+                          .read(authProvider.notifier)
+                          .signInWithApple(context),
                     ),
                   ],
                 ),
@@ -99,7 +120,9 @@ class _KakaoLoginButton extends StatelessWidget {
         style: ElevatedButton.styleFrom(
           backgroundColor: const Color(0xFFFEE500),
           foregroundColor: const Color(0xFF3A1D1D),
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(AppRadius.md),
+          ),
           elevation: 0,
         ),
         child: const Row(
@@ -107,7 +130,10 @@ class _KakaoLoginButton extends StatelessWidget {
           children: [
             Icon(Icons.chat_bubble, size: 20),
             SizedBox(width: 8),
-            Text('카카오로 시작하기', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600)),
+            Text(
+              '카카오로 시작하기',
+              style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
+            ),
           ],
         ),
       ),
@@ -129,15 +155,23 @@ class _NaverLoginButton extends StatelessWidget {
         style: ElevatedButton.styleFrom(
           backgroundColor: const Color(0xFF03C75A),
           foregroundColor: Colors.white,
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(AppRadius.md),
+          ),
           elevation: 0,
         ),
         child: const Row(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Text('N', style: TextStyle(fontSize: 20, fontWeight: FontWeight.w900)),
+            Text(
+              'N',
+              style: TextStyle(fontSize: 20, fontWeight: FontWeight.w900),
+            ),
             SizedBox(width: 8),
-            Text('네이버로 시작하기', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600)),
+            Text(
+              '네이버로 시작하기',
+              style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
+            ),
           ],
         ),
       ),
@@ -159,7 +193,9 @@ class _AppleLoginButton extends StatelessWidget {
         style: ElevatedButton.styleFrom(
           backgroundColor: Colors.black,
           foregroundColor: Colors.white,
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(AppRadius.md),
+          ),
           elevation: 0,
         ),
         child: const Row(
@@ -167,7 +203,10 @@ class _AppleLoginButton extends StatelessWidget {
           children: [
             Icon(Icons.apple, size: 22),
             SizedBox(width: 8),
-            Text('Apple로 시작하기', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600)),
+            Text(
+              'Apple로 시작하기',
+              style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
+            ),
           ],
         ),
       ),

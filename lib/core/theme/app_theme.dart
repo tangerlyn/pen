@@ -32,7 +32,7 @@ abstract class AppColors {
 // ── Glass ────────────────────────────────────────────────────────────────
 
 abstract class AppGlass {
-  static const Color cardColor = Color(0xCCFFFFFF);       // 80% 흰색
+  static const Color cardColor = Color(0xCCFFFFFF); // 80% 흰색
   static const Color cardBorderColor = Color(0x99FFFFFF); // 60% 흰 테두리
   static const double blur = 10.0;
   static const double cardOpacity = 0.80;
@@ -86,11 +86,11 @@ abstract class AppShadows {
 
 // ── Border Radius ────────────────────────────────────────────────────────
 abstract class AppRadius {
-  static const double xs = 4.0;   // 뱃지, 태그
-  static const double sm = 8.0;   // 칩, 입력 필드
-  static const double md = 12.0;  // 카드, 바텀시트, 이미지
-  static const double lg = 16.0;  // 모달, 대형 카드
-  static const double xl = 20.0;  // 필 버튼
+  static const double xs = 4.0; // 뱃지, 태그
+  static const double sm = 8.0; // 칩, 입력 필드
+  static const double md = 12.0; // 카드, 바텀시트, 이미지
+  static const double lg = 16.0; // 모달, 대형 카드
+  static const double xl = 20.0; // 필 버튼
   static const double full = 100.0; // 완전 원형
 
   static BorderRadius get cardAll => BorderRadius.circular(md);
@@ -103,29 +103,90 @@ abstract class AppRadius {
 
 abstract class AppTextStyles {
   // Headlines — 화면·섹션 타이틀 등 큰 제목
-  static const headlineLarge = TextStyle(fontSize: 28, fontWeight: FontWeight.w700, color: AppColors.textPrimary);
-  static const headlineMedium = TextStyle(fontSize: 24, fontWeight: FontWeight.w700, color: AppColors.textPrimary);
-  static const headlineSmall = TextStyle(fontSize: 20, fontWeight: FontWeight.w600, color: AppColors.textPrimary);
+  static const headlineLarge = TextStyle(
+    fontSize: 28,
+    fontWeight: FontWeight.w700,
+    color: AppColors.textPrimary,
+  );
+  static const headlineMedium = TextStyle(
+    fontSize: 24,
+    fontWeight: FontWeight.w700,
+    color: AppColors.textPrimary,
+  );
+  static const headlineSmall = TextStyle(
+    fontSize: 20,
+    fontWeight: FontWeight.w600,
+    color: AppColors.textPrimary,
+  );
 
   // Titles — 카드·앱바·모달 제목
-  static const titleLarge = TextStyle(fontSize: 18, fontWeight: FontWeight.w700, color: AppColors.textPrimary);
-  static const titleMedium = TextStyle(fontSize: 16, fontWeight: FontWeight.w600, color: AppColors.textPrimary);
-  static const titleSmall = TextStyle(fontSize: 14, fontWeight: FontWeight.w600, color: AppColors.textPrimary);
+  static const titleLarge = TextStyle(
+    fontSize: 18,
+    fontWeight: FontWeight.w700,
+    color: AppColors.textPrimary,
+  );
+  static const titleMedium = TextStyle(
+    fontSize: 16,
+    fontWeight: FontWeight.w600,
+    color: AppColors.textPrimary,
+  );
+  static const titleSmall = TextStyle(
+    fontSize: 14,
+    fontWeight: FontWeight.w600,
+    color: AppColors.textPrimary,
+  );
 
   // Body — 본문
-  static const bodyLarge = TextStyle(fontSize: 16, fontWeight: FontWeight.w400, color: AppColors.textPrimary);
-  static const bodyMedium = TextStyle(fontSize: 14, fontWeight: FontWeight.w400, color: AppColors.textPrimary);
-  static const bodySmall = TextStyle(fontSize: 12, fontWeight: FontWeight.w400, color: AppColors.textSecondary);
+  static const bodyLarge = TextStyle(
+    fontSize: 16,
+    fontWeight: FontWeight.w400,
+    color: AppColors.textPrimary,
+  );
+  static const bodyMedium = TextStyle(
+    fontSize: 14,
+    fontWeight: FontWeight.w400,
+    color: AppColors.textPrimary,
+  );
+  static const bodySmall = TextStyle(
+    fontSize: 12,
+    fontWeight: FontWeight.w400,
+    color: AppColors.textSecondary,
+  );
 
   // Labels — 보조 텍스트
-  static const labelLarge = TextStyle(fontSize: 14, fontWeight: FontWeight.w600, color: AppColors.textPrimary);
-  static const labelMedium = TextStyle(fontSize: 13, fontWeight: FontWeight.w500, color: AppColors.textSecondary);
-  static const labelSmall = TextStyle(fontSize: 11, fontWeight: FontWeight.w400, color: AppColors.textTertiary);
-  static const caption = TextStyle(fontSize: 10, fontWeight: FontWeight.w400, color: AppColors.textTertiary);
+  static const labelLarge = TextStyle(
+    fontSize: 14,
+    fontWeight: FontWeight.w600,
+    color: AppColors.textPrimary,
+  );
+  static const labelMedium = TextStyle(
+    fontSize: 13,
+    fontWeight: FontWeight.w500,
+    color: AppColors.textSecondary,
+  );
+  static const labelSmall = TextStyle(
+    fontSize: 11,
+    fontWeight: FontWeight.w400,
+    color: AppColors.textTertiary,
+  );
+  static const caption = TextStyle(
+    fontSize: 10,
+    fontWeight: FontWeight.w400,
+    color: AppColors.textTertiary,
+  );
 
   // Semantic aliases
-  static const sectionTitle = TextStyle(fontSize: 18, fontWeight: FontWeight.w700, color: AppColors.textPrimary, letterSpacing: -0.3);
-  static const appBarTitle = TextStyle(fontSize: 18, fontWeight: FontWeight.w600, color: AppColors.textPrimary);
+  static const sectionTitle = TextStyle(
+    fontSize: 18,
+    fontWeight: FontWeight.w700,
+    color: AppColors.textPrimary,
+    letterSpacing: -0.3,
+  );
+  static const appBarTitle = TextStyle(
+    fontSize: 18,
+    fontWeight: FontWeight.w600,
+    color: AppColors.textPrimary,
+  );
 }
 
 // ── Spacing ───────────────────────────────────────────────────────────────
@@ -143,7 +204,10 @@ abstract class AppSpacing {
   // Reusable EdgeInsets
   static const pagePadding = EdgeInsets.symmetric(horizontal: lg);
   static const cardPadding = EdgeInsets.all(md);
-  static const listItemPadding = EdgeInsets.symmetric(horizontal: xl, vertical: sm);
+  static const listItemPadding = EdgeInsets.symmetric(
+    horizontal: xl,
+    vertical: sm,
+  );
   static const sectionHeaderPadding = EdgeInsets.fromLTRB(xl, section, lg, md);
 }
 
@@ -151,156 +215,168 @@ abstract class AppSpacing {
 
 abstract class AppButtonStyles {
   static ButtonStyle get primary => ElevatedButton.styleFrom(
-        backgroundColor: AppColors.primary,
-        foregroundColor: Colors.white,
-        minimumSize: const Size.fromHeight(52),
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-        textStyle: AppTextStyles.titleMedium,
-      );
+    backgroundColor: AppColors.primary,
+    foregroundColor: Colors.white,
+    minimumSize: const Size.fromHeight(52),
+    shape: RoundedRectangleBorder(
+      borderRadius: BorderRadius.circular(AppRadius.md),
+    ),
+    textStyle: AppTextStyles.titleMedium,
+  );
 
   static ButtonStyle get outlined => OutlinedButton.styleFrom(
-        foregroundColor: AppColors.primary,
-        minimumSize: const Size.fromHeight(52),
-        side: const BorderSide(color: AppColors.primary),
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-        textStyle: AppTextStyles.titleMedium,
-      );
+    foregroundColor: AppColors.primary,
+    minimumSize: const Size.fromHeight(52),
+    side: const BorderSide(color: AppColors.primary),
+    shape: RoundedRectangleBorder(
+      borderRadius: BorderRadius.circular(AppRadius.md),
+    ),
+    textStyle: AppTextStyles.titleMedium,
+  );
 
   static ButtonStyle get ghost => TextButton.styleFrom(
-        foregroundColor: AppColors.textSecondary,
-        padding: const EdgeInsets.symmetric(horizontal: AppSpacing.sm),
-        minimumSize: Size.zero,
-        tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-      );
+    foregroundColor: AppColors.textSecondary,
+    padding: const EdgeInsets.symmetric(horizontal: AppSpacing.sm),
+    minimumSize: Size.zero,
+    tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+  );
 }
 
 // ── Theme ─────────────────────────────────────────────────────────────────
 
 class AppTheme {
   static ThemeData get light => ThemeData(
-        useMaterial3: true,
-        colorScheme: ColorScheme.fromSeed(
-          seedColor: AppColors.primary,
-          brightness: Brightness.light,
-          surface: AppColors.surface,
-        ),
-        scaffoldBackgroundColor: Colors.white,
-        pageTransitionsTheme: const PageTransitionsTheme(
-          builders: {
-            TargetPlatform.android: CupertinoPageTransitionsBuilder(),
-            TargetPlatform.iOS: CupertinoPageTransitionsBuilder(),
-          },
-        ),
+    useMaterial3: true,
+    colorScheme: ColorScheme.fromSeed(
+      seedColor: AppColors.primary,
+      brightness: Brightness.light,
+      surface: AppColors.surface,
+    ),
+    scaffoldBackgroundColor: Colors.white,
+    pageTransitionsTheme: const PageTransitionsTheme(
+      builders: {
+        TargetPlatform.android: CupertinoPageTransitionsBuilder(),
+        TargetPlatform.iOS: CupertinoPageTransitionsBuilder(),
+      },
+    ),
+    fontFamily: 'Pretendard',
+    appBarTheme: const AppBarTheme(
+      backgroundColor: Color(0xFFF0F5FD), // 투명한 네이비 틴트
+      foregroundColor: Color(0xFF1B2E4B),
+      elevation: 0,
+      scrolledUnderElevation: 0,
+      iconTheme: IconThemeData(color: Color(0xFF1B2E4B)),
+      actionsIconTheme: IconThemeData(color: Color(0xFF1B2E4B)),
+      titleTextStyle: TextStyle(
         fontFamily: 'Pretendard',
-        appBarTheme: const AppBarTheme(
-          backgroundColor: Color(0xFFF0F5FD), // 투명한 네이비 틴트
-          foregroundColor: Color(0xFF1B2E4B),
-          elevation: 0,
-          scrolledUnderElevation: 0,
-          iconTheme: IconThemeData(color: Color(0xFF1B2E4B)),
-          actionsIconTheme: IconThemeData(color: Color(0xFF1B2E4B)),
-          titleTextStyle: TextStyle(
-            fontFamily: 'Pretendard',
-            fontSize: 18,
-            fontWeight: FontWeight.w600,
-            color: Color(0xFF1B2E4B),
-          ),
-        ),
-        bottomNavigationBarTheme: const BottomNavigationBarThemeData(
-          backgroundColor: AppColors.surface,
-          selectedItemColor: AppColors.primary,
-          unselectedItemColor: AppColors.textTertiary,
-          showSelectedLabels: true,
-          showUnselectedLabels: true,
-          type: BottomNavigationBarType.fixed,
-          elevation: 8,
-        ),
-        chipTheme: ChipThemeData(
-          backgroundColor: AppColors.chipBackground,
-          selectedColor: AppColors.chipSelected,
-          labelStyle: const TextStyle(
-            fontFamily: 'Pretendard',
-            fontSize: 13,
-            fontWeight: FontWeight.w500,
-          ),
-          side: BorderSide.none,
-          shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(20)),
-          padding:
-              const EdgeInsets.symmetric(horizontal: AppSpacing.md, vertical: AppSpacing.sm - 2),
-        ),
-        textTheme: const TextTheme(
-          headlineLarge: AppTextStyles.headlineLarge,
-          headlineMedium: AppTextStyles.headlineMedium,
-          headlineSmall: AppTextStyles.headlineSmall,
-          titleLarge: AppTextStyles.titleLarge,
-          titleMedium: AppTextStyles.titleMedium,
-          titleSmall: AppTextStyles.titleSmall,
-          bodyLarge: AppTextStyles.bodyLarge,
-          bodyMedium: AppTextStyles.bodyMedium,
-          bodySmall: AppTextStyles.bodySmall,
-          labelLarge: AppTextStyles.labelLarge,
-          labelMedium: AppTextStyles.labelMedium,
-          labelSmall: AppTextStyles.labelSmall,
-        ),
-        inputDecorationTheme: InputDecorationTheme(
-          filled: true,
-          fillColor: AppColors.chipBackground,
-          border: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(12),
-            borderSide: BorderSide.none,
-          ),
-          enabledBorder: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(12),
-            borderSide: BorderSide.none,
-          ),
-          focusedBorder: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(12),
-            borderSide:
-                const BorderSide(color: AppColors.primary, width: 1.5),
-          ),
-          contentPadding: const EdgeInsets.symmetric(
-              horizontal: AppSpacing.lg, vertical: 14),
-          hintStyle: AppTextStyles.bodyMedium
-              .copyWith(color: AppColors.textTertiary),
-        ),
-        elevatedButtonTheme: ElevatedButtonThemeData(
-          style: AppButtonStyles.primary,
-        ),
-        outlinedButtonTheme: OutlinedButtonThemeData(
-          style: AppButtonStyles.outlined,
-        ),
-        dividerTheme: const DividerThemeData(
-            color: AppColors.divider, thickness: 1, space: 1),
-        // AlertDialog 등 팝업 — 기본값(각진 모서리)이 앱의 나머지 둥근
-        // 톤(바텀시트 16~22px, 카드 12px)과 안 어울려서 전역으로 통일
-        dialogTheme: DialogThemeData(
-          backgroundColor: AppColors.surface,
-          surfaceTintColor: Colors.transparent,
-          elevation: 6,
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(20),
-          ),
-          titleTextStyle: const TextStyle(
-            fontFamily: 'Pretendard',
-            fontSize: 17,
-            fontWeight: FontWeight.w700,
-            color: AppColors.textPrimary,
-          ),
-          contentTextStyle: const TextStyle(
-            fontFamily: 'Pretendard',
-            fontSize: 14,
-            color: AppColors.textSecondary,
-            height: 1.5,
-          ),
-        ),
-        cardTheme: CardThemeData(
-          color: AppColors.surface,
-          elevation: 0,
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(12),
-            side: const BorderSide(color: AppColors.divider),
-          ),
-        ),
-      );
+        fontSize: 18,
+        fontWeight: FontWeight.w600,
+        color: Color(0xFF1B2E4B),
+      ),
+    ),
+    bottomNavigationBarTheme: const BottomNavigationBarThemeData(
+      backgroundColor: AppColors.surface,
+      selectedItemColor: AppColors.primary,
+      unselectedItemColor: AppColors.textTertiary,
+      showSelectedLabels: true,
+      showUnselectedLabels: true,
+      type: BottomNavigationBarType.fixed,
+      elevation: 8,
+    ),
+    chipTheme: ChipThemeData(
+      backgroundColor: AppColors.chipBackground,
+      selectedColor: AppColors.chipSelected,
+      labelStyle: const TextStyle(
+        fontFamily: 'Pretendard',
+        fontSize: 13,
+        fontWeight: FontWeight.w500,
+      ),
+      side: BorderSide.none,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(AppRadius.xl),
+      ),
+      padding: const EdgeInsets.symmetric(
+        horizontal: AppSpacing.md,
+        vertical: AppSpacing.sm - 2,
+      ),
+    ),
+    textTheme: const TextTheme(
+      headlineLarge: AppTextStyles.headlineLarge,
+      headlineMedium: AppTextStyles.headlineMedium,
+      headlineSmall: AppTextStyles.headlineSmall,
+      titleLarge: AppTextStyles.titleLarge,
+      titleMedium: AppTextStyles.titleMedium,
+      titleSmall: AppTextStyles.titleSmall,
+      bodyLarge: AppTextStyles.bodyLarge,
+      bodyMedium: AppTextStyles.bodyMedium,
+      bodySmall: AppTextStyles.bodySmall,
+      labelLarge: AppTextStyles.labelLarge,
+      labelMedium: AppTextStyles.labelMedium,
+      labelSmall: AppTextStyles.labelSmall,
+    ),
+    inputDecorationTheme: InputDecorationTheme(
+      filled: true,
+      fillColor: AppColors.chipBackground,
+      border: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(AppRadius.md),
+        borderSide: BorderSide.none,
+      ),
+      enabledBorder: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(AppRadius.md),
+        borderSide: BorderSide.none,
+      ),
+      focusedBorder: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(AppRadius.md),
+        borderSide: const BorderSide(color: AppColors.primary, width: 1.5),
+      ),
+      contentPadding: const EdgeInsets.symmetric(
+        horizontal: AppSpacing.lg,
+        vertical: 14,
+      ),
+      hintStyle: AppTextStyles.bodyMedium.copyWith(
+        color: AppColors.textTertiary,
+      ),
+    ),
+    elevatedButtonTheme: ElevatedButtonThemeData(
+      style: AppButtonStyles.primary,
+    ),
+    outlinedButtonTheme: OutlinedButtonThemeData(
+      style: AppButtonStyles.outlined,
+    ),
+    dividerTheme: const DividerThemeData(
+      color: AppColors.divider,
+      thickness: 1,
+      space: 1,
+    ),
+    // AlertDialog 등 팝업 — 기본값(각진 모서리)이 앱의 나머지 둥근
+    // 톤(바텀시트 16~22px, 카드 12px)과 안 어울려서 전역으로 통일
+    dialogTheme: DialogThemeData(
+      backgroundColor: AppColors.surface,
+      surfaceTintColor: Colors.transparent,
+      elevation: 6,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(AppRadius.xl),
+      ),
+      titleTextStyle: const TextStyle(
+        fontFamily: 'Pretendard',
+        fontSize: 17,
+        fontWeight: FontWeight.w700,
+        color: AppColors.textPrimary,
+      ),
+      contentTextStyle: const TextStyle(
+        fontFamily: 'Pretendard',
+        fontSize: 14,
+        color: AppColors.textSecondary,
+        height: 1.5,
+      ),
+    ),
+    cardTheme: CardThemeData(
+      color: AppColors.surface,
+      elevation: 0,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(AppRadius.md),
+        side: const BorderSide(color: AppColors.divider),
+      ),
+    ),
+  );
 }

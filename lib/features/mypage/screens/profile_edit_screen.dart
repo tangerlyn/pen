@@ -3,11 +3,12 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:image_picker/image_picker.dart';
-import 'package:cached_network_image/cached_network_image.dart';
 import '../../../core/theme/app_theme.dart';
 import '../../../core/constants/app_constants.dart';
 import '../../../shared/providers/providers.dart';
+import '../../../shared/widgets/confirm_discard_dialog.dart';
 import '../../../shared/widgets/tap_scale.dart';
+import '../../../shared/widgets/user_avatar.dart';
 
 class ProfileEditScreen extends ConsumerStatefulWidget {
   const ProfileEditScreen({super.key});
@@ -129,27 +130,13 @@ class _ProfileEditScreenState extends ConsumerState<ProfileEditScreen> {
 
   Future<bool> _confirmDiscard() async {
     if (!_hasChanges) return true;
-    return await showDialog<bool>(
-          context: context,
-          builder: (ctx) => AlertDialog(
-            title: const Text('수정 중인 내용이 있어요'),
-            content: const Text('지금 나가면 변경사항이 저장되지 않습니다.'),
-            actions: [
-              TextButton(
-                onPressed: () => Navigator.pop(ctx, false),
-                child: const Text('계속 편집'),
-              ),
-              TextButton(
-                onPressed: () => Navigator.pop(ctx, true),
-                child: Text(
-                  '저장하지 않고 나가기',
-                  style: TextStyle(color: Theme.of(context).colorScheme.error),
-                ),
-              ),
-            ],
-          ),
-        ) ??
-        false;
+    return confirmDiscardDialog(
+      context,
+      title: '수정 중인 내용이 있어요',
+      content: '지금 나가면 변경사항이 저장되지 않습니다.',
+      cancelLabel: '계속 편집',
+      confirmLabel: '저장하지 않고 나가기',
+    );
   }
 
   @override
@@ -187,24 +174,10 @@ class _ProfileEditScreenState extends ConsumerState<ProfileEditScreen> {
                 onTap: _pickImage,
                 child: Stack(
                   children: [
-                    CircleAvatar(
+                    UserAvatar(
+                      localFile: _newImage,
+                      imageUrl: user?.profileImageUrl,
                       radius: 52,
-                      backgroundColor: AppColors.chipBackground,
-                      backgroundImage: _newImage != null
-                          ? FileImage(_newImage!) as ImageProvider
-                          : (user?.profileImageUrl != null
-                                ? CachedNetworkImageProvider(
-                                    user!.profileImageUrl!,
-                                  )
-                                : null),
-                      child:
-                          (_newImage == null && user?.profileImageUrl == null)
-                          ? const Icon(
-                              Icons.person,
-                              size: 52,
-                              color: AppColors.textTertiary,
-                            )
-                          : null,
                     ),
                     Positioned(
                       bottom: 0,
@@ -251,19 +224,23 @@ class _ProfileEditScreenState extends ConsumerState<ProfileEditScreen> {
                     onChanged: _onNicknameChanged,
                   ),
                   if (_nicknameStatus == _NicknameStatus.available)
-                    const Padding(
-                      padding: EdgeInsets.only(top: 4, left: 4),
+                    Padding(
+                      padding: const EdgeInsets.only(top: 4, left: 4),
                       child: Text(
                         '사용 가능한 닉네임이에요',
-                        style: TextStyle(fontSize: 12, color: Colors.green),
+                        style: AppTextStyles.bodySmall.copyWith(
+                          color: Colors.green,
+                        ),
                       ),
                     ),
                   if (_nicknameStatus == _NicknameStatus.duplicate)
-                    const Padding(
-                      padding: EdgeInsets.only(top: 4, left: 4),
+                    Padding(
+                      padding: const EdgeInsets.only(top: 4, left: 4),
                       child: Text(
                         '이미 사용 중인 닉네임이에요',
-                        style: TextStyle(fontSize: 12, color: AppColors.error),
+                        style: AppTextStyles.bodySmall.copyWith(
+                          color: AppColors.error,
+                        ),
                       ),
                     ),
                 ],

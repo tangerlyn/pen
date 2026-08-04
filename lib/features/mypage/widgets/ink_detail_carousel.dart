@@ -17,6 +17,7 @@ class InkDetailCarousel extends StatefulWidget {
   final int itemCount;
   final int initialIndex;
   final Widget Function(BuildContext context, int index) pageBuilder;
+
   /// 우측 상단 ⋮ 메뉴(수정/삭제 등) — 소유자 화면에서만 전달, 읽기 전용
   /// 화면은 null로 둬서 메뉴 자체가 안 보이게 함
   final Widget Function(BuildContext context, int index)? menuBuilder;
@@ -70,7 +71,10 @@ class _InkDetailCarouselState extends State<InkDetailCarousel> {
                     padding: const EdgeInsets.only(left: 8),
                     child: Text(
                       '${_currentIndex + 1} / ${widget.itemCount}',
-                      style: const TextStyle(fontSize: 13, color: AppColors.textTertiary),
+                      style: AppTextStyles.labelMedium.copyWith(
+                        color: AppColors.textTertiary,
+                        fontWeight: FontWeight.w400,
+                      ),
                     ),
                   ),
                 ),
@@ -83,50 +87,52 @@ class _InkDetailCarouselState extends State<InkDetailCarousel> {
             ),
           ),
           Expanded(
-            child: Builder(builder: (ctx) {
-              final imgH = MediaQuery.of(ctx).size.width * 0.68;
-              const imgTop = 20.0;
-              return Stack(
-                children: [
-                  PageView.builder(
-                    controller: _pageCtrl,
-                    itemCount: widget.itemCount,
-                    onPageChanged: (i) => setState(() => _currentIndex = i),
-                    itemBuilder: widget.pageBuilder,
-                  ),
-                  if (_currentIndex > 0)
-                    Positioned(
-                      left: 8,
-                      top: imgTop,
-                      height: imgH,
-                      child: Center(
-                        child: InkDetailNavButton(
-                          icon: Icons.chevron_left,
-                          onPressed: () => _pageCtrl.previousPage(
-                            duration: const Duration(milliseconds: 300),
-                            curve: Curves.easeInOut,
+            child: Builder(
+              builder: (ctx) {
+                final imgH = MediaQuery.of(ctx).size.width * 0.68;
+                const imgTop = 20.0;
+                return Stack(
+                  children: [
+                    PageView.builder(
+                      controller: _pageCtrl,
+                      itemCount: widget.itemCount,
+                      onPageChanged: (i) => setState(() => _currentIndex = i),
+                      itemBuilder: widget.pageBuilder,
+                    ),
+                    if (_currentIndex > 0)
+                      Positioned(
+                        left: 8,
+                        top: imgTop,
+                        height: imgH,
+                        child: Center(
+                          child: InkDetailNavButton(
+                            icon: Icons.chevron_left,
+                            onPressed: () => _pageCtrl.previousPage(
+                              duration: const Duration(milliseconds: 300),
+                              curve: Curves.easeInOut,
+                            ),
                           ),
                         ),
                       ),
-                    ),
-                  if (_currentIndex < widget.itemCount - 1)
-                    Positioned(
-                      right: 8,
-                      top: imgTop,
-                      height: imgH,
-                      child: Center(
-                        child: InkDetailNavButton(
-                          icon: Icons.chevron_right,
-                          onPressed: () => _pageCtrl.nextPage(
-                            duration: const Duration(milliseconds: 300),
-                            curve: Curves.easeInOut,
+                    if (_currentIndex < widget.itemCount - 1)
+                      Positioned(
+                        right: 8,
+                        top: imgTop,
+                        height: imgH,
+                        child: Center(
+                          child: InkDetailNavButton(
+                            icon: Icons.chevron_right,
+                            onPressed: () => _pageCtrl.nextPage(
+                              duration: const Duration(milliseconds: 300),
+                              curve: Curves.easeInOut,
+                            ),
                           ),
                         ),
                       ),
-                    ),
-                ],
-              );
-            }),
+                  ],
+                );
+              },
+            ),
           ),
         ],
       ),
@@ -137,7 +143,11 @@ class _InkDetailCarouselState extends State<InkDetailCarousel> {
 // ── 화살표 버튼 ───────────────────────────────────────────────────────────
 
 class InkDetailNavButton extends StatelessWidget {
-  const InkDetailNavButton({super.key, required this.icon, required this.onPressed});
+  const InkDetailNavButton({
+    super.key,
+    required this.icon,
+    required this.onPressed,
+  });
   final IconData icon;
   final VoidCallback onPressed;
 

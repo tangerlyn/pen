@@ -4,13 +4,15 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:image_picker/image_picker.dart';
 import '../../../core/theme/app_theme.dart';
+import '../../../shared/widgets/user_avatar.dart';
 import '../providers/auth_provider.dart';
 
 class SignupProfileScreen extends ConsumerStatefulWidget {
   const SignupProfileScreen({super.key});
 
   @override
-  ConsumerState<SignupProfileScreen> createState() => _SignupProfileScreenState();
+  ConsumerState<SignupProfileScreen> createState() =>
+      _SignupProfileScreenState();
 }
 
 class _SignupProfileScreenState extends ConsumerState<SignupProfileScreen> {
@@ -18,7 +20,10 @@ class _SignupProfileScreenState extends ConsumerState<SignupProfileScreen> {
 
   Future<void> _pickImage() async {
     final picker = ImagePicker();
-    final xfile = await picker.pickImage(source: ImageSource.gallery, imageQuality: 85);
+    final xfile = await picker.pickImage(
+      source: ImageSource.gallery,
+      imageQuality: 85,
+    );
     if (xfile != null) {
       setState(() => _imageFile = File(xfile.path));
       ref.read(authProvider.notifier).setProfileImagePath(xfile.path);
@@ -48,14 +53,7 @@ class _SignupProfileScreenState extends ConsumerState<SignupProfileScreen> {
               onTap: _pickImage,
               child: Stack(
                 children: [
-                  CircleAvatar(
-                    radius: 64,
-                    backgroundColor: AppColors.chipBackground,
-                    backgroundImage: _imageFile != null ? FileImage(_imageFile!) : null,
-                    child: _imageFile == null
-                        ? const Icon(Icons.person, size: 64, color: AppColors.textTertiary)
-                        : null,
-                  ),
+                  UserAvatar(localFile: _imageFile, radius: 64),
                   Positioned(
                     bottom: 4,
                     right: 4,
@@ -66,7 +64,11 @@ class _SignupProfileScreenState extends ConsumerState<SignupProfileScreen> {
                         color: AppColors.primary,
                         shape: BoxShape.circle,
                       ),
-                      child: const Icon(Icons.camera_alt, color: Colors.white, size: 18),
+                      child: const Icon(
+                        Icons.camera_alt,
+                        color: Colors.white,
+                        size: 18,
+                      ),
                     ),
                   ),
                 ],
@@ -80,7 +82,10 @@ class _SignupProfileScreenState extends ConsumerState<SignupProfileScreen> {
             const SizedBox(height: 12),
             TextButton(
               onPressed: () => context.go('/signup/interests'),
-              child: const Text('건너뛰기', style: TextStyle(color: AppColors.textSecondary)),
+              child: const Text(
+                '건너뛰기',
+                style: TextStyle(color: AppColors.textSecondary),
+              ),
             ),
           ],
         ),

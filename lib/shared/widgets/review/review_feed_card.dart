@@ -9,8 +9,12 @@ import '../../../features/archive/providers/archive_detail_provider.dart';
 import '../../providers/providers.dart';
 import '../level_badge.dart';
 import '../tap_scale.dart';
+import '../user_avatar.dart';
 
-final _reviewCardAuthorProvider = StreamProvider.family<UserModel?, String>((ref, uid) {
+final _reviewCardAuthorProvider = StreamProvider.family<UserModel?, String>((
+  ref,
+  uid,
+) {
   return ref.watch(userRepoProvider).watchUser(uid);
 });
 
@@ -143,9 +147,8 @@ class ReviewFeedCard extends ConsumerWidget {
                             const SizedBox(width: 2),
                             Text(
                               '${review.imageUrls.length}',
-                              style: const TextStyle(
+                              style: AppTextStyles.labelSmall.copyWith(
                                 color: Colors.white,
-                                fontSize: 11,
                               ),
                             ),
                           ],
@@ -163,16 +166,10 @@ class ReviewFeedCard extends ConsumerWidget {
                 children: [
                   Row(
                     children: [
-                      CircleAvatar(
+                      UserAvatar(
+                        imageUrl: user?.profileImageUrl,
                         radius: 10,
-                        backgroundColor: AppColors.chipBackground,
-                        backgroundImage: user?.profileImageUrl != null
-                            ? CachedNetworkImageProvider(user!.profileImageUrl!)
-                            : null,
-                        child: user?.profileImageUrl == null
-                            ? const Icon(Icons.person,
-                                size: 12, color: AppColors.textTertiary)
-                            : null,
+                        iconSize: 12,
                       ),
                       const SizedBox(width: 6),
                       Flexible(
@@ -180,8 +177,7 @@ class ReviewFeedCard extends ConsumerWidget {
                           user?.nickname ?? review.authorNickname,
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
-                          style: const TextStyle(
-                            fontSize: 11,
+                          style: AppTextStyles.labelSmall.copyWith(
                             fontWeight: FontWeight.w600,
                             color: AppColors.textSecondary,
                           ),
@@ -200,8 +196,7 @@ class ReviewFeedCard extends ConsumerWidget {
                             review.title,
                             maxLines: 1,
                             overflow: TextOverflow.ellipsis,
-                            style: const TextStyle(
-                              fontSize: 12,
+                            style: AppTextStyles.bodySmall.copyWith(
                               color: AppColors.textPrimary,
                               fontWeight: FontWeight.w600,
                               height: 1.4,
@@ -211,10 +206,7 @@ class ReviewFeedCard extends ConsumerWidget {
                         const SizedBox(width: 4),
                         Text(
                           formatPostDate(review.createdAt),
-                          style: const TextStyle(
-                            fontSize: 10,
-                            color: AppColors.textTertiary,
-                          ),
+                          style: AppTextStyles.caption,
                         ),
                       ],
                     ),
@@ -243,8 +235,9 @@ class _GearTagOverlay extends ConsumerWidget {
     final first = allGear.first;
     final remaining = allGear.length - 1;
 
-    final state =
-        ref.watch(archiveDetailProvider((type: first.type, productId: first.id)));
+    final state = ref.watch(
+      archiveDetailProvider((type: first.type, productId: first.id)),
+    );
     final name = state.when(
       data: (data) {
         if (data == null) return '';
@@ -260,11 +253,10 @@ class _GearTagOverlay extends ConsumerWidget {
       remaining > 0 ? '$name +$remaining' : name,
       maxLines: 1,
       overflow: TextOverflow.ellipsis,
-      style: const TextStyle(
+      style: AppTextStyles.labelMedium.copyWith(
         color: Colors.white,
-        fontSize: 13,
         fontWeight: FontWeight.w600,
-        shadows: [Shadow(color: Colors.black45, blurRadius: 3)],
+        shadows: const [Shadow(color: Colors.black45, blurRadius: 3)],
       ),
     );
   }

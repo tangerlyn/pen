@@ -1,4 +1,3 @@
-import 'package:cached_network_image/cached_network_image.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -8,6 +7,7 @@ import '../../../core/theme/app_theme.dart';
 import '../../../core/utils/profile_navigation.dart';
 import '../../../shared/providers/providers.dart';
 import '../../../shared/widgets/tap_scale.dart';
+import '../../../shared/widgets/user_avatar.dart';
 import '../providers/notification_provider.dart';
 
 class NotificationScreen extends ConsumerWidget {
@@ -60,9 +60,8 @@ class NotificationScreen extends ConsumerWidget {
               onPressed: () => _markAllRead(uid),
               child: Text(
                 '모두 읽음',
-                style: TextStyle(
+                style: AppTextStyles.labelMedium.copyWith(
                   color: AppColors.primary,
-                  fontSize: 13,
                   fontWeight: FontWeight.w600,
                 ),
               ),
@@ -78,11 +77,16 @@ class NotificationScreen extends ConsumerWidget {
               child: Column(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  Icon(Icons.notifications_none,
-                      size: 64, color: AppColors.textTertiary),
+                  Icon(
+                    Icons.notifications_none,
+                    size: 64,
+                    color: AppColors.textTertiary,
+                  ),
                   SizedBox(height: 12),
-                  Text('알림이 없습니다',
-                      style: TextStyle(color: AppColors.textSecondary)),
+                  Text(
+                    '알림이 없습니다',
+                    style: TextStyle(color: AppColors.textSecondary),
+                  ),
                 ],
               ),
             );
@@ -139,7 +143,9 @@ class _NotificationTile extends StatelessWidget {
       child: Container(
         color: item.isRead ? AppColors.surface : const Color(0xFFFFF8F0),
         padding: const EdgeInsets.symmetric(
-            horizontal: AppSpacing.lg, vertical: AppSpacing.md),
+          horizontal: AppSpacing.lg,
+          vertical: AppSpacing.md,
+        ),
         child: Row(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
@@ -147,17 +153,7 @@ class _NotificationTile extends StatelessWidget {
             Stack(
               clipBehavior: Clip.none,
               children: [
-                CircleAvatar(
-                  radius: 22,
-                  backgroundColor: AppColors.chipBackground,
-                  backgroundImage: item.fromProfileImageUrl != null
-                      ? CachedNetworkImageProvider(item.fromProfileImageUrl!)
-                      : null,
-                  child: item.fromProfileImageUrl == null
-                      ? const Icon(Icons.person,
-                          size: 22, color: AppColors.textTertiary)
-                      : null,
-                ),
+                UserAvatar(imageUrl: item.fromProfileImageUrl, radius: 22),
                 Positioned(
                   right: -2,
                   bottom: -2,
@@ -169,8 +165,7 @@ class _NotificationTile extends StatelessWidget {
                       shape: BoxShape.circle,
                       border: Border.all(color: AppColors.surface, width: 1.5),
                     ),
-                    child: Icon(_typeIcon,
-                        size: 10, color: Colors.white),
+                    child: Icon(_typeIcon, size: 10, color: Colors.white),
                   ),
                 ),
               ],
@@ -183,10 +178,7 @@ class _NotificationTile extends StatelessWidget {
                 children: [
                   RichText(
                     text: TextSpan(
-                      style: const TextStyle(
-                          fontSize: 14,
-                          color: AppColors.textPrimary,
-                          height: 1.4),
+                      style: AppTextStyles.bodyMedium.copyWith(height: 1.4),
                       children: [
                         TextSpan(
                           text: item.fromNickname,
@@ -199,8 +191,9 @@ class _NotificationTile extends StatelessWidget {
                   const SizedBox(height: 4),
                   Text(
                     timeago.format(item.createdAt, locale: 'ko'),
-                    style: const TextStyle(
-                        fontSize: 12, color: AppColors.textTertiary),
+                    style: AppTextStyles.bodySmall.copyWith(
+                      color: AppColors.textTertiary,
+                    ),
                   ),
                 ],
               ),

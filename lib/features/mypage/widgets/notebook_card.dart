@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../../../core/theme/app_theme.dart';
 import '../../../data/models/ink_book_model.dart';
 import '../../../shared/providers/ink_book_providers.dart';
 
@@ -25,9 +26,13 @@ class NotebookCard extends ConsumerWidget {
     final countAsync = ref.watch(inkChartInBookProvider((uid, book.id)));
     final count = countAsync.maybeWhen(data: (l) => l.length, orElse: () => 0);
     final coverColor = book.color;
-    final isDark = ThemeData.estimateBrightnessForColor(coverColor) == Brightness.dark;
+    final isDark =
+        ThemeData.estimateBrightnessForColor(coverColor) == Brightness.dark;
     final textColor = isDark ? Colors.white : const Color(0xFF2D2D2D);
-    final spineColor = Color.alphaBlend(Colors.black.withValues(alpha: 0.12), coverColor);
+    final spineColor = Color.alphaBlend(
+      Colors.black.withValues(alpha: 0.12),
+      coverColor,
+    );
 
     return GestureDetector(
       onTap: onTap,
@@ -36,7 +41,11 @@ class NotebookCard extends ConsumerWidget {
         decoration: BoxDecoration(
           borderRadius: BorderRadius.circular(10),
           boxShadow: const [
-            BoxShadow(color: Color(0x28000000), blurRadius: 8, offset: Offset(2, 4)),
+            BoxShadow(
+              color: Color(0x28000000),
+              blurRadius: 8,
+              offset: Offset(2, 4),
+            ),
           ],
         ),
         child: ClipRRect(
@@ -91,8 +100,7 @@ class NotebookCard extends ConsumerWidget {
                       // 공책 이름
                       Text(
                         book.name,
-                        style: TextStyle(
-                          fontSize: 14,
+                        style: AppTextStyles.titleSmall.copyWith(
                           fontWeight: FontWeight.w700,
                           color: textColor,
                           height: 1.3,
@@ -103,8 +111,7 @@ class NotebookCard extends ConsumerWidget {
                       const SizedBox(height: 4),
                       Text(
                         '$count개',
-                        style: TextStyle(
-                          fontSize: 11,
+                        style: AppTextStyles.labelSmall.copyWith(
                           color: textColor.withValues(alpha: 0.65),
                         ),
                       ),

@@ -1,4 +1,3 @@
-import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -6,18 +5,20 @@ import '../../../core/theme/app_theme.dart';
 import '../../../data/models/user_model.dart';
 import '../../../shared/providers/providers.dart';
 import '../../../shared/providers/user_providers.dart';
-import '../../../shared/providers/ink_book_providers.dart' show userVisibleBooksProvider;
+import '../../../shared/providers/ink_book_providers.dart'
+    show userVisibleBooksProvider;
 import '../../../shared/widgets/common/empty_state.dart';
 import '../../../shared/widgets/community/post_card.dart';
 import '../../../shared/widgets/review/review_list_tile.dart';
 import '../../../shared/widgets/tap_scale.dart';
+import '../../../shared/widgets/user_avatar.dart';
 import '../providers/user_activity_provider.dart';
 import '../widgets/notebook_card.dart';
 
 // 네이비 기반 색상
-const _kNavyTint  = Color(0xFFEEF2F8);
+const _kNavyTint = Color(0xFFEEF2F8);
 const _kNavyLight = Color(0xFFE2EAF4);
-const _kNavyMid   = Color(0xFF8BA5C8);
+const _kNavyMid = Color(0xFF8BA5C8);
 
 class UserProfileScreen extends ConsumerStatefulWidget {
   const UserProfileScreen({super.key, required this.uid});
@@ -68,8 +69,9 @@ class _UserProfileScreenState extends ConsumerState<UserProfileScreen>
     final userAsync = ref.watch(profileUserProvider(widget.uid));
 
     // 공개 잉크북 여부 감지 → 탭 개수 동적 조정 (팔로우 여부 반영)
-    final publicBooksAsync =
-        ref.watch(userVisibleBooksProvider((widget.uid, currentUid)));
+    final publicBooksAsync = ref.watch(
+      userVisibleBooksProvider((widget.uid, currentUid)),
+    );
     final hasPublicBooks = publicBooksAsync.maybeWhen(
       data: (books) => books.isNotEmpty,
       orElse: () => false,
@@ -81,10 +83,7 @@ class _UserProfileScreenState extends ConsumerState<UserProfileScreen>
     }
 
     return Scaffold(
-      appBar: AppBar(
-        scrolledUnderElevation: 0,
-        elevation: 0,
-      ),
+      appBar: AppBar(scrolledUnderElevation: 0, elevation: 0),
       body: NestedScrollView(
         headerSliverBuilder: (context, _) => [
           SliverToBoxAdapter(
@@ -109,7 +108,8 @@ class _UserProfileScreenState extends ConsumerState<UserProfileScreen>
           children: [
             _ReviewGrid(uid: widget.uid),
             _PostList(uid: widget.uid),
-            if (_hasPublicBooks) _InkChartTab(uid: widget.uid, viewerUid: currentUid),
+            if (_hasPublicBooks)
+              _InkChartTab(uid: widget.uid, viewerUid: currentUid),
           ],
         ),
       ),
@@ -128,7 +128,10 @@ class _ProfileHeader extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final isOwnProfile = user.uid == currentUid;
     final isFollowing = (!isOwnProfile && currentUid != null)
-        ? ref.watch(followStatusProvider((currentUid!, user.uid))).valueOrNull ?? false
+        ? ref
+                  .watch(followStatusProvider((currentUid!, user.uid)))
+                  .valueOrNull ??
+              false
         : false;
 
     return Padding(
@@ -136,9 +139,13 @@ class _ProfileHeader extends ConsumerWidget {
       child: Container(
         decoration: BoxDecoration(
           color: AppColors.surface,
-          borderRadius: BorderRadius.circular(16),
+          borderRadius: BorderRadius.circular(AppRadius.lg),
           boxShadow: const [
-            BoxShadow(color: Color(0x14000000), blurRadius: 12, offset: Offset(0, 3)),
+            BoxShadow(
+              color: Color(0x14000000),
+              blurRadius: 12,
+              offset: Offset(0, 3),
+            ),
           ],
         ),
         padding: const EdgeInsets.all(20),
@@ -160,10 +167,8 @@ class _ProfileHeader extends ConsumerWidget {
                           Expanded(
                             child: Text(
                               user.nickname,
-                              style: const TextStyle(
-                                fontSize: 20,
+                              style: AppTextStyles.headlineSmall.copyWith(
                                 fontWeight: FontWeight.w700,
-                                color: AppColors.textPrimary,
                                 letterSpacing: -0.3,
                               ),
                             ),
@@ -174,9 +179,13 @@ class _ProfileHeader extends ConsumerWidget {
                               isFollowing: isFollowing,
                               onTap: () {
                                 if (isFollowing) {
-                                  ref.read(userRepoProvider).unfollow(currentUid!, user.uid);
+                                  ref
+                                      .read(userRepoProvider)
+                                      .unfollow(currentUid!, user.uid);
                                 } else {
-                                  ref.read(userRepoProvider).follow(currentUid!, user.uid);
+                                  ref
+                                      .read(userRepoProvider)
+                                      .follow(currentUid!, user.uid);
                                 }
                               },
                             ),
@@ -186,8 +195,7 @@ class _ProfileHeader extends ConsumerWidget {
                       const SizedBox(height: 4),
                       Text(
                         user.levelTitle,
-                        style: const TextStyle(
-                          fontSize: 12,
+                        style: AppTextStyles.bodySmall.copyWith(
                           color: AppColors.primary,
                           fontWeight: FontWeight.w500,
                         ),
@@ -198,16 +206,24 @@ class _ProfileHeader extends ConsumerWidget {
                           _StatChip(
                             label: '팔로워',
                             value: _formatCount(user.followerCount),
-                            onTap: () => context.push('/profile/${user.uid}/followers?tab=0'),
+                            onTap: () => context.push(
+                              '/profile/${user.uid}/followers?tab=0',
+                            ),
                           ),
                           Padding(
                             padding: const EdgeInsets.symmetric(horizontal: 10),
-                            child: Container(width: 1, height: 14, color: AppColors.divider),
+                            child: Container(
+                              width: 1,
+                              height: 14,
+                              color: AppColors.divider,
+                            ),
                           ),
                           _StatChip(
                             label: '팔로잉',
                             value: _formatCount(user.followingCount),
-                            onTap: () => context.push('/profile/${user.uid}/followers?tab=1'),
+                            onTap: () => context.push(
+                              '/profile/${user.uid}/followers?tab=1',
+                            ),
                           ),
                         ],
                       ),
@@ -220,16 +236,18 @@ class _ProfileHeader extends ConsumerWidget {
               const SizedBox(height: 14),
               Container(
                 width: double.infinity,
-                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 12,
+                  vertical: 10,
+                ),
                 decoration: BoxDecoration(
                   color: _kNavyTint,
-                  borderRadius: BorderRadius.circular(8),
+                  borderRadius: BorderRadius.circular(AppRadius.sm),
                 ),
                 child: Text(
                   user.bio,
-                  style: const TextStyle(
-                    fontSize: 13,
-                    color: AppColors.textSecondary,
+                  style: AppTextStyles.labelMedium.copyWith(
+                    fontWeight: FontWeight.w400,
                     height: 1.5,
                     fontStyle: FontStyle.italic,
                   ),
@@ -262,16 +280,18 @@ class _ProfileAvatar extends StatelessWidget {
         shape: BoxShape.circle,
         border: Border.all(color: _kNavyLight, width: 3),
         boxShadow: const [
-          BoxShadow(color: Color(0x1A000000), blurRadius: 8, offset: Offset(0, 2)),
+          BoxShadow(
+            color: Color(0x1A000000),
+            blurRadius: 8,
+            offset: Offset(0, 2),
+          ),
         ],
       ),
-      child: CircleAvatar(
+      child: UserAvatar(
+        imageUrl: imageUrl,
         radius: 32,
         backgroundColor: _kNavyLight,
-        backgroundImage: imageUrl != null ? CachedNetworkImageProvider(imageUrl!) : null,
-        child: imageUrl == null
-            ? const Icon(Icons.person, size: 32, color: _kNavyMid)
-            : null,
+        iconColor: _kNavyMid,
       ),
     );
   }
@@ -293,13 +313,14 @@ class _FollowButton extends StatelessWidget {
         padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
         decoration: BoxDecoration(
           color: isFollowing ? _kNavyLight : AppColors.primary,
-          borderRadius: BorderRadius.circular(20),
-          border: isFollowing ? Border.all(color: const Color(0xFFCCD6E8)) : null,
+          borderRadius: BorderRadius.circular(AppRadius.xl),
+          border: isFollowing
+              ? Border.all(color: const Color(0xFFCCD6E8))
+              : null,
         ),
         child: Text(
           isFollowing ? '팔로잉' : '팔로우',
-          style: TextStyle(
-            fontSize: 12,
+          style: AppTextStyles.bodySmall.copyWith(
             fontWeight: FontWeight.w600,
             color: isFollowing ? AppColors.textSecondary : Colors.white,
           ),
@@ -312,7 +333,11 @@ class _FollowButton extends StatelessWidget {
 // ── 팔로워/팔로잉 수치 ────────────────────────────────────────────────────────
 
 class _StatChip extends StatelessWidget {
-  const _StatChip({required this.label, required this.value, required this.onTap});
+  const _StatChip({
+    required this.label,
+    required this.value,
+    required this.onTap,
+  });
   final String label;
   final String value;
   final VoidCallback onTap;
@@ -332,10 +357,7 @@ class _StatChip extends StatelessWidget {
                 color: AppColors.textPrimary,
               ),
             ),
-            TextSpan(
-              text: ' $label',
-              style: const TextStyle(fontSize: 12, color: AppColors.textSecondary),
-            ),
+            TextSpan(text: ' $label', style: AppTextStyles.bodySmall),
           ],
         ),
       ),
@@ -358,7 +380,11 @@ class _PillTabDelegate extends SliverPersistentHeaderDelegate {
   double get maxExtent => _height;
 
   @override
-  Widget build(BuildContext context, double shrinkOffset, bool overlapsContent) {
+  Widget build(
+    BuildContext context,
+    double shrinkOffset,
+    bool overlapsContent,
+  ) {
     return Container(
       color: AppColors.background,
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
@@ -372,15 +398,21 @@ class _PillTabDelegate extends SliverPersistentHeaderDelegate {
           controller: tabController,
           indicator: BoxDecoration(
             color: AppColors.primary,
-            borderRadius: BorderRadius.circular(20),
+            borderRadius: BorderRadius.circular(AppRadius.xl),
           ),
           indicatorSize: TabBarIndicatorSize.tab,
           dividerColor: Colors.transparent,
           overlayColor: WidgetStateProperty.all(Colors.transparent),
           labelColor: Colors.white,
           unselectedLabelColor: AppColors.textSecondary,
-          labelStyle: const TextStyle(fontWeight: FontWeight.w600, fontSize: 14),
-          unselectedLabelStyle: const TextStyle(fontWeight: FontWeight.w500, fontSize: 14),
+          labelStyle: const TextStyle(
+            fontWeight: FontWeight.w600,
+            fontSize: 14,
+          ),
+          unselectedLabelStyle: const TextStyle(
+            fontWeight: FontWeight.w500,
+            fontSize: 14,
+          ),
           tabs: [
             const Tab(text: '리뷰', height: 36),
             const Tab(text: '커뮤니티', height: 36),
@@ -393,7 +425,8 @@ class _PillTabDelegate extends SliverPersistentHeaderDelegate {
 
   @override
   bool shouldRebuild(covariant _PillTabDelegate old) =>
-      old.tabController != tabController || old.hasPublicBooks != hasPublicBooks;
+      old.tabController != tabController ||
+      old.hasPublicBooks != hasPublicBooks;
 }
 
 // ── 리뷰 목록 ────────────────────────────────────────────────────────────────

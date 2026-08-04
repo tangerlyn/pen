@@ -26,14 +26,18 @@ class EmptyStateWidget extends StatelessWidget {
           Text(
             message,
             style: const TextStyle(
-                fontSize: 15, color: AppColors.textSecondary),
+              fontSize: 15,
+              color: AppColors.textSecondary,
+            ),
           ),
           if (subtitle != null) ...[
             const SizedBox(height: AppSpacing.xs),
             Text(
               subtitle!,
-              style: const TextStyle(
-                  fontSize: 13, color: AppColors.textTertiary),
+              style: AppTextStyles.labelMedium.copyWith(
+                color: AppColors.textTertiary,
+                fontWeight: FontWeight.w400,
+              ),
             ),
           ],
         ],

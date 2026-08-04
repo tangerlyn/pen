@@ -14,16 +14,15 @@ Future<void> showCenterToast(
     barrierDismissible: false,
     barrierColor: Colors.black.withValues(alpha: 0.15),
     transitionDuration: const Duration(milliseconds: 200),
-    pageBuilder: (ctx, anim, secondAnim) => _CenterToast(
-      message: message,
-      icon: icon,
-      iconColor: iconColor,
-    ),
+    pageBuilder: (ctx, anim, secondAnim) =>
+        _CenterToast(message: message, icon: icon, iconColor: iconColor),
     transitionBuilder: (ctx, anim, secondAnim, child) => FadeTransition(
       opacity: anim,
       child: ScaleTransition(
-        scale: Tween<double>(begin: 0.85, end: 1.0)
-            .animate(CurvedAnimation(parent: anim, curve: Curves.easeOutBack)),
+        scale: Tween<double>(
+          begin: 0.85,
+          end: 1.0,
+        ).animate(CurvedAnimation(parent: anim, curve: Curves.easeOutBack)),
         child: child,
       ),
     ),
@@ -63,7 +62,7 @@ class _CenterToastState extends State<_CenterToast> {
           padding: const EdgeInsets.symmetric(horizontal: 28, vertical: 22),
           decoration: BoxDecoration(
             color: Colors.white,
-            borderRadius: BorderRadius.circular(16),
+            borderRadius: BorderRadius.circular(AppRadius.lg),
             boxShadow: [
               BoxShadow(
                 color: Colors.black.withValues(alpha: 0.12),
@@ -76,17 +75,17 @@ class _CenterToastState extends State<_CenterToast> {
             mainAxisSize: MainAxisSize.min,
             children: [
               if (widget.icon != null) ...[
-                Icon(widget.icon, color: widget.iconColor ?? AppColors.primary, size: 32),
+                Icon(
+                  widget.icon,
+                  color: widget.iconColor ?? AppColors.primary,
+                  size: 32,
+                ),
                 const SizedBox(height: 10),
               ],
               Text(
                 widget.message,
                 textAlign: TextAlign.center,
-                style: const TextStyle(
-                  fontSize: 14,
-                  fontWeight: FontWeight.w600,
-                  color: AppColors.textPrimary,
-                ),
+                style: AppTextStyles.titleSmall,
               ),
             ],
           ),

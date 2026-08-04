@@ -9,7 +9,8 @@ class SignupInterestsScreen extends ConsumerStatefulWidget {
   const SignupInterestsScreen({super.key});
 
   @override
-  ConsumerState<SignupInterestsScreen> createState() => _SignupInterestsScreenState();
+  ConsumerState<SignupInterestsScreen> createState() =>
+      _SignupInterestsScreenState();
 }
 
 class _SignupInterestsScreenState extends ConsumerState<SignupInterestsScreen> {
@@ -21,8 +22,12 @@ class _SignupInterestsScreenState extends ConsumerState<SignupInterestsScreen> {
 
     ref.listen(authProvider, (_, next) {
       if (next.error != null) {
-        showCenterToast(context,
-            message: next.error!, icon: Icons.error_outline, iconColor: AppColors.error);
+        showCenterToast(
+          context,
+          message: next.error!,
+          icon: Icons.error_outline,
+          iconColor: AppColors.error,
+        );
       }
     });
 
@@ -60,17 +65,24 @@ class _SignupInterestsScreenState extends ConsumerState<SignupInterestsScreen> {
                   },
                   child: AnimatedContainer(
                     duration: const Duration(milliseconds: 150),
-                    padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 20,
+                      vertical: 12,
+                    ),
                     decoration: BoxDecoration(
-                      color: isSelected ? AppColors.primary : AppColors.chipBackground,
-                      borderRadius: BorderRadius.circular(12),
+                      color: isSelected
+                          ? AppColors.primary
+                          : AppColors.chipBackground,
+                      borderRadius: BorderRadius.circular(AppRadius.md),
                     ),
                     child: Text(
                       cat,
                       style: TextStyle(
                         fontSize: 15,
                         fontWeight: FontWeight.w600,
-                        color: isSelected ? Colors.white : AppColors.textPrimary,
+                        color: isSelected
+                            ? Colors.white
+                            : AppColors.textPrimary,
                       ),
                     ),
                   ),
@@ -82,14 +94,19 @@ class _SignupInterestsScreenState extends ConsumerState<SignupInterestsScreen> {
               onPressed: state.isLoading
                   ? null
                   : () {
-                      ref.read(authProvider.notifier).setInterests(_selected.toList());
+                      ref
+                          .read(authProvider.notifier)
+                          .setInterests(_selected.toList());
                       ref.read(authProvider.notifier).completeSignup(context);
                     },
               child: state.isLoading
                   ? const SizedBox(
                       height: 20,
                       width: 20,
-                      child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2),
+                      child: CircularProgressIndicator(
+                        color: Colors.white,
+                        strokeWidth: 2,
+                      ),
                     )
                   : const Text('시작하기'),
             ),

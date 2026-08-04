@@ -3,11 +3,15 @@ import 'dart:math' as math;
 import 'dart:ui' as ui;
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
+import '../../../core/theme/app_theme.dart';
 import '../widgets/ink_swatch_shape.dart';
 
 class InkCropScreen extends StatefulWidget {
-  const InkCropScreen(
-      {super.key, required this.imageFile, required this.shape});
+  const InkCropScreen({
+    super.key,
+    required this.imageFile,
+    required this.shape,
+  });
   final File imageFile;
   final InkSwatchShape shape;
 
@@ -70,19 +74,29 @@ class _InkCropScreenState extends State<InkCropScreen> {
 
       final recorder = ui.PictureRecorder();
       final canvas = Canvas(
-          recorder, Rect.fromLTWH(0, 0, _outputSize, _outputSize));
+        recorder,
+        Rect.fromLTWH(0, 0, _outputSize, _outputSize),
+      );
       canvas.drawImageRect(
         captured,
-        Rect.fromLTWH(srcLeft.toDouble(), srcTop.toDouble(), cs.toDouble(), cs.toDouble()),
+        Rect.fromLTWH(
+          srcLeft.toDouble(),
+          srcTop.toDouble(),
+          cs.toDouble(),
+          cs.toDouble(),
+        ),
         Rect.fromLTWH(0, 0, _outputSize, _outputSize),
         Paint()..filterQuality = FilterQuality.high,
       );
 
       final picture = recorder.endRecording();
-      final rendered =
-          await picture.toImage(_outputSize.toInt(), _outputSize.toInt());
-      final byteData =
-          await rendered.toByteData(format: ui.ImageByteFormat.png);
+      final rendered = await picture.toImage(
+        _outputSize.toInt(),
+        _outputSize.toInt(),
+      );
+      final byteData = await rendered.toByteData(
+        format: ui.ImageByteFormat.png,
+      );
       final bytes = byteData!.buffer.asUint8List();
 
       final dir = widget.imageFile.parent.path;
@@ -105,8 +119,7 @@ class _InkCropScreenState extends State<InkCropScreen> {
         backgroundColor: Colors.black,
         foregroundColor: Colors.white,
         scrolledUnderElevation: 0,
-        title:
-            const Text('사진 맞추기', style: TextStyle(color: Colors.white)),
+        title: const Text('사진 맞추기', style: TextStyle(color: Colors.white)),
         actions: [
           TextButton(
             onPressed: _isSaving ? null : _confirmCrop,
@@ -115,13 +128,18 @@ class _InkCropScreenState extends State<InkCropScreen> {
                     width: 18,
                     height: 18,
                     child: CircularProgressIndicator(
-                        strokeWidth: 2, color: Colors.white),
+                      strokeWidth: 2,
+                      color: Colors.white,
+                    ),
                   )
-                : const Text('완료',
+                : const Text(
+                    '완료',
                     style: TextStyle(
-                        color: Colors.white,
-                        fontWeight: FontWeight.w700,
-                        fontSize: 15)),
+                      color: Colors.white,
+                      fontWeight: FontWeight.w700,
+                      fontSize: 15,
+                    ),
+                  ),
           ),
           const SizedBox(width: 8),
         ],
@@ -153,20 +171,21 @@ class _InkCropScreenState extends State<InkCropScreen> {
             // Path 오버레이로 잠깐 대체됨 — 대부분 캐싱돼있어 거의 안 보임)
             IgnorePointer(
               child: CustomPaint(
-                painter: widget.shape == InkSwatchShape.bottle && _bottleMask != null
+                painter:
+                    widget.shape == InkSwatchShape.bottle && _bottleMask != null
                     ? _BottleOverlayPainter(_bottleMask!)
                     : _OverlayPainter(widget.shape),
               ),
             ),
             // 안내 텍스트
-            const Positioned(
+            Positioned(
               bottom: 40,
               left: 0,
               right: 0,
               child: Text(
                 '두 손가락으로 확대/축소, 드래그로 위치 조정',
                 textAlign: TextAlign.center,
-                style: TextStyle(color: Colors.white70, fontSize: 12),
+                style: AppTextStyles.bodySmall.copyWith(color: Colors.white70),
               ),
             ),
           ],
@@ -189,9 +208,10 @@ class _OverlayPainter extends CustomPainter {
 
     canvas.saveLayer(Offset.zero & size, Paint());
     canvas.drawRect(
-        Offset.zero & size, Paint()..color = const Color(0xAA000000));
-    final path =
-        getShapePath(shape, Size(cs, cs)).shift(Offset(left, top));
+      Offset.zero & size,
+      Paint()..color = const Color(0xAA000000),
+    );
+    final path = getShapePath(shape, Size(cs, cs)).shift(Offset(left, top));
     canvas.drawPath(path, Paint()..blendMode = BlendMode.clear);
     canvas.restore();
   }
@@ -215,10 +235,18 @@ class _BottleOverlayPainter extends CustomPainter {
     final rect = Rect.fromLTWH(left, top, cs, cs);
 
     canvas.saveLayer(Offset.zero & size, Paint());
-    canvas.drawRect(Offset.zero & size, Paint()..color = const Color(0xAA000000));
+    canvas.drawRect(
+      Offset.zero & size,
+      Paint()..color = const Color(0xAA000000),
+    );
     canvas.drawImageRect(
       maskImage,
-      Rect.fromLTWH(0, 0, maskImage.width.toDouble(), maskImage.height.toDouble()),
+      Rect.fromLTWH(
+        0,
+        0,
+        maskImage.width.toDouble(),
+        maskImage.height.toDouble(),
+      ),
       rect,
       Paint()..blendMode = BlendMode.dstOut,
     );

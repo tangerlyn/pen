@@ -18,13 +18,17 @@ import '../../../shared/widgets/author_badge.dart';
 import '../../../data/models/user_model.dart';
 import '../../../core/utils/toast_utils.dart';
 import '../../../shared/widgets/content_moderation.dart';
+import '../../../shared/widgets/user_avatar.dart';
 import '../../../shared/widgets/image_viewer_screen.dart';
 import '../../../shared/widgets/common/skeletons.dart';
 import '../../../shared/widgets/tap_scale.dart';
 import '../../../shared/widgets/linkified_text.dart';
 import 'post_write_screen.dart';
 
-final _postAuthorProvider = StreamProvider.family<UserModel?, String>((ref, uid) {
+final _postAuthorProvider = StreamProvider.family<UserModel?, String>((
+  ref,
+  uid,
+) {
   return ref.watch(userRepoProvider).watchUser(uid);
 });
 
@@ -70,30 +74,38 @@ class _PostDetailScreenState extends ConsumerState<PostDetailScreen> {
     setState(() => _isSubmitting = true);
     try {
       if (_replyTargetCommentId != null) {
-        await withRetry(() => ref.read(postRepositoryProvider).addReply(
-              postId: widget.postId,
-              commentId: _replyTargetCommentId!,
-              reply: ReplyModel(
-                id: '',
-                authorId: user.uid,
-                authorNickname: user.nickname,
-                authorLevel: user.level,
-                body: text,
-                createdAt: DateTime.now(),
+        await withRetry(
+          () => ref
+              .read(postRepositoryProvider)
+              .addReply(
+                postId: widget.postId,
+                commentId: _replyTargetCommentId!,
+                reply: ReplyModel(
+                  id: '',
+                  authorId: user.uid,
+                  authorNickname: user.nickname,
+                  authorLevel: user.level,
+                  body: text,
+                  createdAt: DateTime.now(),
+                ),
               ),
-            ));
+        );
         setState(() {
           _replyTargetCommentId = null;
           _replyTargetNickname = null;
         });
       } else {
-        await withRetry(() => ref.read(postRepositoryProvider).addComment(
-              postId: widget.postId,
-              authorId: user.uid,
-              authorNickname: user.nickname,
-              authorLevel: user.level,
-              body: text,
-            ));
+        await withRetry(
+          () => ref
+              .read(postRepositoryProvider)
+              .addComment(
+                postId: widget.postId,
+                authorId: user.uid,
+                authorNickname: user.nickname,
+                authorLevel: user.level,
+                body: text,
+              ),
+        );
         final levelUp = await ref
             .read(userRepoProvider)
             .addExpAndCheck(user.uid, LevelSystem.expComment);
@@ -123,7 +135,7 @@ class _PostDetailScreenState extends ConsumerState<PostDetailScreen> {
     showModalBottomSheet(
       context: context,
       shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
+        borderRadius: BorderRadius.vertical(top: Radius.circular(AppRadius.lg)),
       ),
       builder: (_) => SafeArea(
         child: Column(
@@ -153,8 +165,14 @@ class _PostDetailScreenState extends ConsumerState<PostDetailScreen> {
                 },
               ),
               ListTile(
-                leading: const Icon(Icons.delete_outline, color: AppColors.error),
-                title: const Text('삭제', style: TextStyle(color: AppColors.error)),
+                leading: const Icon(
+                  Icons.delete_outline,
+                  color: AppColors.error,
+                ),
+                title: const Text(
+                  '삭제',
+                  style: TextStyle(color: AppColors.error),
+                ),
                 onTap: () {
                   Navigator.pop(context);
                   _confirmDelete(context, post);
@@ -175,9 +193,14 @@ class _PostDetailScreenState extends ConsumerState<PostDetailScreen> {
                 },
               ),
               ListTile(
-                leading: const Icon(Icons.flag_outlined, color: AppColors.error),
-                title: const Text('신고하기',
-                    style: TextStyle(color: AppColors.error)),
+                leading: const Icon(
+                  Icons.flag_outlined,
+                  color: AppColors.error,
+                ),
+                title: const Text(
+                  '신고하기',
+                  style: TextStyle(color: AppColors.error),
+                ),
                 onTap: () {
                   Navigator.pop(context);
                   showReportSheet(
@@ -238,40 +261,48 @@ class _PostDetailScreenState extends ConsumerState<PostDetailScreen> {
       if (block['type'] == 'text') {
         final text = block['content'] as String? ?? '';
         if (text.isNotEmpty) {
-          widgets.add(Padding(
-            padding: const EdgeInsets.only(bottom: 12),
-            child: LinkifiedText(
-              text,
-              style: const TextStyle(fontSize: 15, height: 1.75, color: AppColors.textPrimary),
+          widgets.add(
+            Padding(
+              padding: const EdgeInsets.only(bottom: 12),
+              child: LinkifiedText(
+                text,
+                style: const TextStyle(
+                  fontSize: 15,
+                  height: 1.75,
+                  color: AppColors.textPrimary,
+                ),
+              ),
             ),
-          ));
+          );
         }
       } else if (block['type'] == 'image') {
         final url = block['url'] as String? ?? '';
         if (url.isNotEmpty) {
           final imgIndex = allImageUrls.indexOf(url);
-          widgets.add(Padding(
-            padding: const EdgeInsets.only(bottom: 12),
-            child: GestureDetector(
-              onTap: () => Navigator.push(
-                context,
-                MaterialPageRoute(
-                  builder: (_) => ImageViewerScreen(
-                    imageUrls: allImageUrls.isNotEmpty ? allImageUrls : [url],
-                    initialIndex: imgIndex >= 0 ? imgIndex : 0,
+          widgets.add(
+            Padding(
+              padding: const EdgeInsets.only(bottom: 12),
+              child: GestureDetector(
+                onTap: () => Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (_) => ImageViewerScreen(
+                      imageUrls: allImageUrls.isNotEmpty ? allImageUrls : [url],
+                      initialIndex: imgIndex >= 0 ? imgIndex : 0,
+                    ),
+                  ),
+                ),
+                child: ClipRRect(
+                  borderRadius: BorderRadius.circular(10),
+                  child: CachedNetworkImage(
+                    imageUrl: url,
+                    width: double.infinity,
+                    fit: BoxFit.cover,
                   ),
                 ),
               ),
-              child: ClipRRect(
-                borderRadius: BorderRadius.circular(10),
-                child: CachedNetworkImage(
-                  imageUrl: url,
-                  width: double.infinity,
-                  fit: BoxFit.cover,
-                ),
-              ),
             ),
-          ));
+          );
         }
       }
     }
@@ -285,15 +316,15 @@ class _PostDetailScreenState extends ConsumerState<PostDetailScreen> {
     final currentUid = ref.watch(currentUidProvider);
     final isLiked = currentUid != null
         ? ref
-                .watch(postLikeStatusProvider((widget.postId, currentUid)))
-                .valueOrNull ??
-            false
+                  .watch(postLikeStatusProvider((widget.postId, currentUid)))
+                  .valueOrNull ??
+              false
         : false;
     final isScrapped = currentUid != null
         ? ref
-                .watch(postScrapStatusProvider((widget.postId, currentUid)))
-                .valueOrNull ??
-            false
+                  .watch(postScrapStatusProvider((widget.postId, currentUid)))
+                  .valueOrNull ??
+              false
         : false;
 
     return Scaffold(
@@ -334,7 +365,7 @@ class _PostDetailScreenState extends ConsumerState<PostDetailScreen> {
                   //           : '';
                   //       final box = btnContext.findRenderObject() as RenderBox?;
                   //       Share.share(
-                  //         '${post.title}\n$body\n\n문어다방 - 만년필 잉크 커뮤니티',
+                  //         '${post.title}\n$body\n\n펜귄 - 만년필 잉크 커뮤니티',
                   //         sharePositionOrigin:
                   //             box != null ? box.localToGlobal(Offset.zero) & box.size : null,
                   //       );
@@ -343,8 +374,11 @@ class _PostDetailScreenState extends ConsumerState<PostDetailScreen> {
                   // ),
                   IconButton(
                     icon: const Icon(Icons.more_vert),
-                    onPressed: () =>
-                        _showMoreOptions(context, post, post.authorId == currentUid),
+                    onPressed: () => _showMoreOptions(
+                      context,
+                      post,
+                      post.authorId == currentUid,
+                    ),
                   ),
                 ],
               );
@@ -377,18 +411,24 @@ class _PostDetailScreenState extends ConsumerState<PostDetailScreen> {
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             // 카테고리 뱃지
-                            if (post.category != null && post.category!.isNotEmpty)
+                            if (post.category != null &&
+                                post.category!.isNotEmpty)
                               Container(
                                 padding: const EdgeInsets.symmetric(
-                                    horizontal: 8, vertical: 3),
+                                  horizontal: 8,
+                                  vertical: 3,
+                                ),
                                 decoration: BoxDecoration(
-                                  color: AppColors.primary.withValues(alpha: 0.1),
-                                  borderRadius: BorderRadius.circular(4),
+                                  color: AppColors.primary.withValues(
+                                    alpha: 0.1,
+                                  ),
+                                  borderRadius: BorderRadius.circular(
+                                    AppRadius.xs,
+                                  ),
                                 ),
                                 child: Text(
                                   post.category!,
-                                  style: const TextStyle(
-                                    fontSize: 11,
+                                  style: AppTextStyles.labelSmall.copyWith(
                                     fontWeight: FontWeight.w600,
                                     color: AppColors.primary,
                                   ),
@@ -407,7 +447,10 @@ class _PostDetailScreenState extends ConsumerState<PostDetailScreen> {
                             ),
                             const SizedBox(height: 12),
                             // by-line
-                            _EditorialByline(post: post, currentUid: currentUid),
+                            _EditorialByline(
+                              post: post,
+                              currentUid: currentUid,
+                            ),
                           ],
                         ),
                       ),
@@ -418,8 +461,13 @@ class _PostDetailScreenState extends ConsumerState<PostDetailScreen> {
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             // ── 블로그 형식 (contentBlocks) ──
-                            if (post.contentBlocks != null && post.contentBlocks!.isNotEmpty)
-                              ..._buildContentBlocks(context, post.contentBlocks!, post.imageUrls)
+                            if (post.contentBlocks != null &&
+                                post.contentBlocks!.isNotEmpty)
+                              ..._buildContentBlocks(
+                                context,
+                                post.contentBlocks!,
+                                post.imageUrls,
+                              )
                             // ── 기존 형식 폴백 ──
                             else ...[
                               if (post.imageUrls.isNotEmpty) ...[
@@ -447,34 +495,46 @@ class _PostDetailScreenState extends ConsumerState<PostDetailScreen> {
                               LinkifiedText(
                                 post.body,
                                 style: const TextStyle(
-                                    fontSize: 15, height: 1.75, color: AppColors.textPrimary),
+                                  fontSize: 15,
+                                  height: 1.75,
+                                  color: AppColors.textPrimary,
+                                ),
                               ),
                               if (post.imageUrls.length > 1) ...[
                                 const SizedBox(height: 20),
-                                ...post.imageUrls.skip(1).toList().asMap().entries.map(
-                                  (e) => Padding(
-                                    padding: const EdgeInsets.only(bottom: 10),
-                                    child: GestureDetector(
-                                      onTap: () => Navigator.push(
-                                        context,
-                                        MaterialPageRoute(
-                                          builder: (_) => ImageViewerScreen(
-                                            imageUrls: post.imageUrls,
-                                            initialIndex: e.key + 1,
+                                ...post.imageUrls
+                                    .skip(1)
+                                    .toList()
+                                    .asMap()
+                                    .entries
+                                    .map(
+                                      (e) => Padding(
+                                        padding: const EdgeInsets.only(
+                                          bottom: 10,
+                                        ),
+                                        child: GestureDetector(
+                                          onTap: () => Navigator.push(
+                                            context,
+                                            MaterialPageRoute(
+                                              builder: (_) => ImageViewerScreen(
+                                                imageUrls: post.imageUrls,
+                                                initialIndex: e.key + 1,
+                                              ),
+                                            ),
+                                          ),
+                                          child: ClipRRect(
+                                            borderRadius: BorderRadius.circular(
+                                              10,
+                                            ),
+                                            child: CachedNetworkImage(
+                                              imageUrl: e.value,
+                                              width: double.infinity,
+                                              fit: BoxFit.cover,
+                                            ),
                                           ),
                                         ),
                                       ),
-                                      child: ClipRRect(
-                                        borderRadius: BorderRadius.circular(10),
-                                        child: CachedNetworkImage(
-                                          imageUrl: e.value,
-                                          width: double.infinity,
-                                          fit: BoxFit.cover,
-                                        ),
-                                      ),
                                     ),
-                                  ),
-                                ),
                               ],
                             ],
                             const SizedBox(height: 24),
@@ -485,12 +545,20 @@ class _PostDetailScreenState extends ConsumerState<PostDetailScreen> {
                                   onTap: currentUid != null
                                       ? () async {
                                           try {
-                                            await withRetry(() => ref
-                                                .read(postRepositoryProvider)
-                                                .toggleLike(post.id, currentUid, post.authorId));
+                                            await withRetry(
+                                              () => ref
+                                                  .read(postRepositoryProvider)
+                                                  .toggleLike(
+                                                    post.id,
+                                                    currentUid,
+                                                    post.authorId,
+                                                  ),
+                                            );
                                           } catch (_) {
                                             if (!context.mounted) return;
-                                            ScaffoldMessenger.of(context).showSnackBar(
+                                            ScaffoldMessenger.of(
+                                              context,
+                                            ).showSnackBar(
                                               const SnackBar(
                                                 content: Text('인터넷 연결을 확인해주세요'),
                                                 duration: Duration(seconds: 3),
@@ -503,24 +571,40 @@ class _PostDetailScreenState extends ConsumerState<PostDetailScreen> {
                                     mainAxisSize: MainAxisSize.min,
                                     children: [
                                       Icon(
-                                        isLiked ? Icons.favorite : Icons.favorite_border,
+                                        isLiked
+                                            ? Icons.favorite
+                                            : Icons.favorite_border,
                                         size: 18,
-                                        color: isLiked ? AppColors.error : AppColors.textTertiary,
+                                        color: isLiked
+                                            ? AppColors.error
+                                            : AppColors.textTertiary,
                                       ),
                                       const SizedBox(width: 4),
-                                      Text('${post.likeCount}',
-                                          style: const TextStyle(
-                                              color: AppColors.textTertiary, fontSize: 13)),
+                                      Text(
+                                        '${post.likeCount}',
+                                        style: AppTextStyles.labelMedium
+                                            .copyWith(
+                                              color: AppColors.textTertiary,
+                                              fontWeight: FontWeight.w400,
+                                            ),
+                                      ),
                                     ],
                                   ),
                                 ),
                                 const SizedBox(width: 16),
-                                const Icon(Icons.chat_bubble_outline,
-                                    size: 18, color: AppColors.textTertiary),
+                                const Icon(
+                                  Icons.chat_bubble_outline,
+                                  size: 18,
+                                  color: AppColors.textTertiary,
+                                ),
                                 const SizedBox(width: 4),
-                                Text('${post.commentCount}',
-                                    style: const TextStyle(
-                                        color: AppColors.textTertiary, fontSize: 13)),
+                                Text(
+                                  '${post.commentCount}',
+                                  style: AppTextStyles.labelMedium.copyWith(
+                                    color: AppColors.textTertiary,
+                                    fontWeight: FontWeight.w400,
+                                  ),
+                                ),
                               ],
                             ),
                             const SizedBox(height: 16),
@@ -534,28 +618,37 @@ class _PostDetailScreenState extends ConsumerState<PostDetailScreen> {
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            const Text('댓글',
-                                style: TextStyle(
-                                    fontSize: 15, fontWeight: FontWeight.w600)),
+                            const Text(
+                              '댓글',
+                              style: TextStyle(
+                                fontSize: 15,
+                                fontWeight: FontWeight.w600,
+                              ),
+                            ),
                             const SizedBox(height: 12),
                             commentsAsync.when(
                               data: (comments) => Column(
                                 children: comments
-                                    .map((c) => _CommentTile(
-                                          comment: c,
-                                          postId: widget.postId,
-                                          postAuthorId: post.authorId,
-                                          currentUid: currentUid,
-                                          onReplyTap: _startReply,
-                                          onEditStart: () => setState(
-                                              () => _hasActiveEdit = true),
-                                          onEditEnd: () => setState(
-                                              () => _hasActiveEdit = false),
-                                        ))
+                                    .map(
+                                      (c) => _CommentTile(
+                                        comment: c,
+                                        postId: widget.postId,
+                                        postAuthorId: post.authorId,
+                                        currentUid: currentUid,
+                                        onReplyTap: _startReply,
+                                        onEditStart: () => setState(
+                                          () => _hasActiveEdit = true,
+                                        ),
+                                        onEditEnd: () => setState(
+                                          () => _hasActiveEdit = false,
+                                        ),
+                                      ),
+                                    )
                                     .toList(),
                               ),
                               loading: () => const Center(
-                                  child: CircularProgressIndicator()),
+                                child: CircularProgressIndicator(),
+                              ),
                               error: (_, __) => const SizedBox.shrink(),
                             ),
                           ],
@@ -590,7 +683,7 @@ class _PostDetailScreenState extends ConsumerState<PostDetailScreen> {
                   //                 ),
                   //               ),
                   //               child: ClipRRect(
-                  //                 borderRadius: BorderRadius.circular(8),
+                  //                 borderRadius: BorderRadius.circular(AppRadius.sm),
                   //                 child: CachedNetworkImage(
                   //                     imageUrl: e.value, fit: BoxFit.cover),
                   //               ),
@@ -669,7 +762,8 @@ class _PostDetailScreenState extends ConsumerState<PostDetailScreen> {
                   // ),
                 );
               },
-              loading: () => const SingleChildScrollView(child: DetailSkeleton()),
+              loading: () =>
+                  const SingleChildScrollView(child: DetailSkeleton()),
               error: (e, _) => Center(child: Text('오류: $e')),
             ),
           ),
@@ -683,14 +777,16 @@ class _PostDetailScreenState extends ConsumerState<PostDetailScreen> {
                   if (_replyTargetNickname != null)
                     Container(
                       padding: const EdgeInsets.symmetric(
-                          horizontal: 12, vertical: 6),
+                        horizontal: 12,
+                        vertical: 6,
+                      ),
                       color: AppColors.chipBackground,
                       child: Row(
                         children: [
-                          Text('@$_replyTargetNickname 에게 답글',
-                              style: const TextStyle(
-                                  fontSize: 12,
-                                  color: AppColors.textSecondary)),
+                          Text(
+                            '@$_replyTargetNickname 에게 답글',
+                            style: AppTextStyles.bodySmall,
+                          ),
                           const Spacer(),
                           TapScale(
                             onTap: () => setState(() {
@@ -698,9 +794,11 @@ class _PostDetailScreenState extends ConsumerState<PostDetailScreen> {
                               _replyTargetNickname = null;
                               _commentController.clear();
                             }),
-                            child: const Icon(Icons.close,
-                                size: 16,
-                                color: AppColors.textTertiary),
+                            child: const Icon(
+                              Icons.close,
+                              size: 16,
+                              color: AppColors.textTertiary,
+                            ),
                           ),
                         ],
                       ),
@@ -708,8 +806,7 @@ class _PostDetailScreenState extends ConsumerState<PostDetailScreen> {
                   Container(
                     decoration: const BoxDecoration(
                       color: AppColors.surface,
-                      border: Border(
-                          top: BorderSide(color: AppColors.divider)),
+                      border: Border(top: BorderSide(color: AppColors.divider)),
                     ),
                     padding: const EdgeInsets.fromLTRB(12, 8, 12, 8),
                     child: Row(
@@ -724,8 +821,7 @@ class _PostDetailScreenState extends ConsumerState<PostDetailScreen> {
                                   : '댓글을 입력하세요',
                               border: InputBorder.none,
                               isDense: true,
-                              counterStyle: const TextStyle(
-                                  fontSize: 11, color: AppColors.textTertiary),
+                              counterStyle: AppTextStyles.labelSmall,
                             ),
                             maxLines: null,
                             maxLength: _replyTargetNickname != null
@@ -738,11 +834,15 @@ class _PostDetailScreenState extends ConsumerState<PostDetailScreen> {
                                 width: 24,
                                 height: 24,
                                 child: CircularProgressIndicator(
-                                    strokeWidth: 2))
+                                  strokeWidth: 2,
+                                ),
+                              )
                             : IconButton(
                                 onPressed: _submitComment,
-                                icon: const Icon(Icons.send,
-                                    color: AppColors.primary),
+                                icon: const Icon(
+                                  Icons.send,
+                                  color: AppColors.primary,
+                                ),
                                 padding: EdgeInsets.zero,
                                 constraints: const BoxConstraints(),
                               ),
@@ -773,9 +873,9 @@ class _EditorialByline extends ConsumerWidget {
     final isDeletedUser = authorAsync.valueOrNull == null;
     final isFollowing = (!isOwnPost && currentUid != null && !isDeletedUser)
         ? ref
-                .watch(followStatusProvider((currentUid!, post.authorId)))
-                .valueOrNull ??
-            false
+                  .watch(followStatusProvider((currentUid!, post.authorId)))
+                  .valueOrNull ??
+              false
         : false;
 
     return Row(
@@ -785,16 +885,7 @@ class _EditorialByline extends ConsumerWidget {
             onTap: () => navigateToProfile(context, ref, post.authorId),
             child: Row(
               children: [
-                CircleAvatar(
-                  radius: 16,
-                  backgroundColor: AppColors.chipBackground,
-                  backgroundImage: user?.profileImageUrl != null
-                      ? CachedNetworkImageProvider(user!.profileImageUrl!)
-                      : null,
-                  child: user?.profileImageUrl == null
-                      ? const Icon(Icons.person, size: 16, color: AppColors.textTertiary)
-                      : null,
-                ),
+                UserAvatar(imageUrl: user?.profileImageUrl, radius: 16),
                 const SizedBox(width: 8),
                 Flexible(
                   child: Column(
@@ -805,8 +896,7 @@ class _EditorialByline extends ConsumerWidget {
                         children: [
                           Text(
                             user?.nickname ?? post.authorNickname,
-                            style: const TextStyle(
-                              fontSize: 13,
+                            style: AppTextStyles.labelMedium.copyWith(
                               fontWeight: FontWeight.w600,
                               color: AppColors.textPrimary,
                             ),
@@ -815,13 +905,7 @@ class _EditorialByline extends ConsumerWidget {
                           LevelBadge(user?.level ?? post.authorLevel),
                         ],
                       ),
-                      Text(
-                        timeStr,
-                        style: const TextStyle(
-                          fontSize: 11,
-                          color: AppColors.textTertiary,
-                        ),
-                      ),
+                      Text(timeStr, style: AppTextStyles.labelSmall),
                     ],
                   ),
                 ),
@@ -832,8 +916,9 @@ class _EditorialByline extends ConsumerWidget {
         if (!isOwnPost && currentUid != null && !isDeletedUser)
           isFollowing
               ? ElevatedButton(
-                  onPressed: () =>
-                      ref.read(userRepoProvider).unfollow(currentUid!, post.authorId),
+                  onPressed: () => ref
+                      .read(userRepoProvider)
+                      .unfollow(currentUid!, post.authorId),
                   style: ElevatedButton.styleFrom(
                     minimumSize: const Size(72, 32),
                     padding: const EdgeInsets.symmetric(horizontal: 16),
@@ -845,8 +930,9 @@ class _EditorialByline extends ConsumerWidget {
                   child: const Text('팔로잉'),
                 )
               : OutlinedButton(
-                  onPressed: () =>
-                      ref.read(userRepoProvider).follow(currentUid!, post.authorId),
+                  onPressed: () => ref
+                      .read(userRepoProvider)
+                      .follow(currentUid!, post.authorId),
                   style: OutlinedButton.styleFrom(
                     minimumSize: const Size(72, 32),
                     padding: const EdgeInsets.symmetric(horizontal: 16),
@@ -907,17 +993,20 @@ class _CommentTileState extends ConsumerState<_CommentTile> {
     showModalBottomSheet(
       context: context,
       shape: const RoundedRectangleBorder(
-          borderRadius: BorderRadius.vertical(top: Radius.circular(16))),
+        borderRadius: BorderRadius.vertical(top: Radius.circular(AppRadius.lg)),
+      ),
       builder: (_) => SafeArea(
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
             Container(
-              width: 40, height: 4,
+              width: 40,
+              height: 4,
               margin: const EdgeInsets.symmetric(vertical: 12),
               decoration: BoxDecoration(
-                  color: AppColors.divider,
-                  borderRadius: BorderRadius.circular(2)),
+                color: AppColors.divider,
+                borderRadius: BorderRadius.circular(2),
+              ),
             ),
             if (_isOwn) ...[
               ListTile(
@@ -930,17 +1019,22 @@ class _CommentTileState extends ConsumerState<_CommentTile> {
                 },
               ),
               ListTile(
-                leading: const Icon(Icons.delete_outline,
-                    color: AppColors.error),
-                title: const Text('삭제',
-                    style: TextStyle(color: AppColors.error)),
+                leading: const Icon(
+                  Icons.delete_outline,
+                  color: AppColors.error,
+                ),
+                title: const Text(
+                  '삭제',
+                  style: TextStyle(color: AppColors.error),
+                ),
                 onTap: () async {
                   Navigator.pop(context);
                   await Future.delayed(const Duration(milliseconds: 100));
                   if (!mounted) return;
                   FocusScope.of(context).unfocus();
-                  await ref.read(postRepositoryProvider).deleteComment(
-                      widget.postId, widget.comment.id);
+                  await ref
+                      .read(postRepositoryProvider)
+                      .deleteComment(widget.postId, widget.comment.id);
                 },
               ),
             ] else ...[
@@ -949,21 +1043,31 @@ class _CommentTileState extends ConsumerState<_CommentTile> {
                 title: const Text('차단'),
                 onTap: () async {
                   Navigator.pop(context);
-                  await showBlockDialog(context, ref,
-                      targetUid: widget.comment.authorId,
-                      targetNickname: widget.comment.authorNickname);
+                  await showBlockDialog(
+                    context,
+                    ref,
+                    targetUid: widget.comment.authorId,
+                    targetNickname: widget.comment.authorNickname,
+                  );
                 },
               ),
               ListTile(
-                leading: const Icon(Icons.flag_outlined,
-                    color: AppColors.error),
-                title: const Text('신고하기',
-                    style: TextStyle(color: AppColors.error)),
+                leading: const Icon(
+                  Icons.flag_outlined,
+                  color: AppColors.error,
+                ),
+                title: const Text(
+                  '신고하기',
+                  style: TextStyle(color: AppColors.error),
+                ),
                 onTap: () {
                   Navigator.pop(context);
-                  showReportSheet(context, ref,
-                      targetType: 'comment',
-                      targetId: widget.comment.id);
+                  showReportSheet(
+                    context,
+                    ref,
+                    targetType: 'comment',
+                    targetId: widget.comment.id,
+                  );
                 },
               ),
             ],
@@ -981,18 +1085,24 @@ class _CommentTileState extends ConsumerState<_CommentTile> {
       widget.onEditEnd?.call();
       return;
     }
-    await ref.read(postRepositoryProvider).updateComment(
-        widget.postId, widget.comment.id, newBody);
+    await ref
+        .read(postRepositoryProvider)
+        .updateComment(widget.postId, widget.comment.id, newBody);
     setState(() => _isEditing = false);
     widget.onEditEnd?.call();
   }
 
   @override
   Widget build(BuildContext context) {
-    final replies = ref.watch(postRepliesProvider(
-        (postId: widget.postId, commentId: widget.comment.id)));
-    final author =
-        ref.watch(_postAuthorProvider(widget.comment.authorId)).valueOrNull;
+    final replies = ref.watch(
+      postRepliesProvider((
+        postId: widget.postId,
+        commentId: widget.comment.id,
+      )),
+    );
+    final author = ref
+        .watch(_postAuthorProvider(widget.comment.authorId))
+        .valueOrNull;
     final authorLevel = author?.level ?? widget.comment.authorLevel;
     final profileImageUrl = author?.profileImageUrl;
 
@@ -1004,18 +1114,15 @@ class _CommentTileState extends ConsumerState<_CommentTile> {
           if (widget.comment.isDeleted)
             Row(
               children: [
-                const CircleAvatar(
-                  radius: 16,
-                  backgroundColor: AppColors.chipBackground,
-                  child: Icon(Icons.person,
-                      size: 16, color: AppColors.textTertiary),
-                ),
+                const UserAvatar(radius: 16),
                 const SizedBox(width: 10),
-                const Text('삭제된 댓글입니다.',
-                    style: TextStyle(
-                        color: AppColors.textTertiary,
-                        fontSize: 14,
-                        fontStyle: FontStyle.italic)),
+                Text(
+                  '삭제된 댓글입니다.',
+                  style: AppTextStyles.bodyMedium.copyWith(
+                    color: AppColors.textTertiary,
+                    fontStyle: FontStyle.italic,
+                  ),
+                ),
               ],
             )
           else
@@ -1023,18 +1130,9 @@ class _CommentTileState extends ConsumerState<_CommentTile> {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 TapScale(
-                  onTap: () => navigateToProfile(
-                      context, ref, widget.comment.authorId),
-                  child: CircleAvatar(
-                    radius: 16,
-                    backgroundColor: AppColors.chipBackground,
-                    backgroundImage: (profileImageUrl != null && profileImageUrl.isNotEmpty)
-                        ? CachedNetworkImageProvider(profileImageUrl)
-                        : null,
-                    child: (profileImageUrl == null || profileImageUrl.isEmpty)
-                        ? const Icon(Icons.person, size: 16, color: AppColors.textTertiary)
-                        : null,
-                  ),
+                  onTap: () =>
+                      navigateToProfile(context, ref, widget.comment.authorId),
+                  child: UserAvatar(imageUrl: profileImageUrl, radius: 16),
                 ),
                 const SizedBox(width: 10),
                 Expanded(
@@ -1046,13 +1144,19 @@ class _CommentTileState extends ConsumerState<_CommentTile> {
                           Flexible(
                             child: TapScale(
                               onTap: () => navigateToProfile(
-                                  context, ref, widget.comment.authorId),
-                              child: Text(widget.comment.authorNickname,
-                                  maxLines: 1,
-                                  overflow: TextOverflow.ellipsis,
-                                  style: const TextStyle(
-                                      fontSize: 13,
-                                      fontWeight: FontWeight.w600)),
+                                context,
+                                ref,
+                                widget.comment.authorId,
+                              ),
+                              child: Text(
+                                widget.comment.authorNickname,
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                                style: const TextStyle(
+                                  fontSize: 13,
+                                  fontWeight: FontWeight.w600,
+                                ),
+                              ),
                             ),
                           ),
                           const SizedBox(width: 4),
@@ -1063,37 +1167,36 @@ class _CommentTileState extends ConsumerState<_CommentTile> {
                           ],
                           const SizedBox(width: 6),
                           Text(
-                              formatPostDate(widget.comment.createdAt),
-                              style: const TextStyle(
-                                  fontSize: 11,
-                                  color: AppColors.textTertiary)),
+                            formatPostDate(widget.comment.createdAt),
+                            style: AppTextStyles.labelSmall,
+                          ),
                           if (widget.comment.updatedAt != null) ...[
                             const SizedBox(width: 4),
-                            const Text('(수정됨)',
-                                style: TextStyle(
-                                    fontSize: 11,
-                                    color: AppColors.textTertiary)),
+                            const Text(
+                              '(수정됨)',
+                              style: AppTextStyles.labelSmall,
+                            ),
                           ],
                           const SizedBox(width: 8),
                           TapScale(
                             onTap: () => widget.onReplyTap(
-                                widget.comment.id,
-                                widget.comment.authorNickname),
+                              widget.comment.id,
+                              widget.comment.authorNickname,
+                            ),
                             child: const Padding(
                               padding: EdgeInsets.all(4),
-                              child: Text('답글',
-                                  style: TextStyle(
-                                      fontSize: 12,
-                                      color: AppColors.textSecondary)),
+                              child: Text('답글', style: AppTextStyles.bodySmall),
                             ),
                           ),
                           TapScale(
                             onTap: _showMenu,
                             child: const Padding(
                               padding: EdgeInsets.all(4),
-                              child: Icon(Icons.more_vert,
-                                  size: 16,
-                                  color: AppColors.textTertiary),
+                              child: Icon(
+                                Icons.more_vert,
+                                size: 16,
+                                color: AppColors.textTertiary,
+                              ),
                             ),
                           ),
                         ],
@@ -1107,9 +1210,10 @@ class _CommentTileState extends ConsumerState<_CommentTile> {
                           decoration: const InputDecoration(
                             isDense: true,
                             contentPadding: EdgeInsets.symmetric(
-                                horizontal: 8, vertical: 6),
-                            counterStyle: TextStyle(
-                                fontSize: 11, color: AppColors.textTertiary),
+                              horizontal: 8,
+                              vertical: 6,
+                            ),
+                            counterStyle: AppTextStyles.labelSmall,
                           ),
                           maxLines: null,
                           maxLength: AppConstants.maxComment,
@@ -1128,13 +1232,16 @@ class _CommentTileState extends ConsumerState<_CommentTile> {
                               child: const Text('취소'),
                             ),
                             TextButton(
-                                onPressed: _saveEdit,
-                                child: const Text('저장')),
+                              onPressed: _saveEdit,
+                              child: const Text('저장'),
+                            ),
                           ],
                         ),
                       ] else ...[
-                        Text(widget.comment.body ?? '',
-                            style: const TextStyle(fontSize: 14)),
+                        Text(
+                          widget.comment.body ?? '',
+                          style: const TextStyle(fontSize: 14),
+                        ),
                       ],
                     ],
                   ),
@@ -1148,17 +1255,21 @@ class _CommentTileState extends ConsumerState<_CommentTile> {
                     padding: const EdgeInsets.only(left: 36, top: 6),
                     child: Column(
                       children: list
-                          .map((r) => _PostReplyTile(
-                                reply: r,
-                                postId: widget.postId,
-                                postAuthorId: widget.postAuthorId,
-                                commentId: widget.comment.id,
-                                currentUid: widget.currentUid,
-                                onReplyTap: () => widget.onReplyTap(
-                                    widget.comment.id, r.authorNickname),
-                                onEditStart: widget.onEditStart,
-                                onEditEnd: widget.onEditEnd,
-                              ))
+                          .map(
+                            (r) => _PostReplyTile(
+                              reply: r,
+                              postId: widget.postId,
+                              postAuthorId: widget.postAuthorId,
+                              commentId: widget.comment.id,
+                              currentUid: widget.currentUid,
+                              onReplyTap: () => widget.onReplyTap(
+                                widget.comment.id,
+                                r.authorNickname,
+                              ),
+                              onEditStart: widget.onEditStart,
+                              onEditEnd: widget.onEditEnd,
+                            ),
+                          )
                           .toList(),
                     ),
                   ),
@@ -1219,17 +1330,20 @@ class _PostReplyTileState extends ConsumerState<_PostReplyTile> {
     showModalBottomSheet(
       context: context,
       shape: const RoundedRectangleBorder(
-          borderRadius: BorderRadius.vertical(top: Radius.circular(16))),
+        borderRadius: BorderRadius.vertical(top: Radius.circular(AppRadius.lg)),
+      ),
       builder: (_) => SafeArea(
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
             Container(
-              width: 40, height: 4,
+              width: 40,
+              height: 4,
               margin: const EdgeInsets.symmetric(vertical: 12),
               decoration: BoxDecoration(
-                  color: AppColors.divider,
-                  borderRadius: BorderRadius.circular(2)),
+                color: AppColors.divider,
+                borderRadius: BorderRadius.circular(2),
+              ),
             ),
             if (_isOwn) ...[
               ListTile(
@@ -1242,17 +1356,26 @@ class _PostReplyTileState extends ConsumerState<_PostReplyTile> {
                 },
               ),
               ListTile(
-                leading: const Icon(Icons.delete_outline,
-                    color: AppColors.error),
-                title: const Text('삭제',
-                    style: TextStyle(color: AppColors.error)),
+                leading: const Icon(
+                  Icons.delete_outline,
+                  color: AppColors.error,
+                ),
+                title: const Text(
+                  '삭제',
+                  style: TextStyle(color: AppColors.error),
+                ),
                 onTap: () async {
                   Navigator.pop(context);
                   await Future.delayed(const Duration(milliseconds: 100));
                   if (!mounted) return;
                   FocusScope.of(context).unfocus();
-                  await ref.read(postRepositoryProvider).deleteReply(
-                      widget.postId, widget.commentId, widget.reply.id);
+                  await ref
+                      .read(postRepositoryProvider)
+                      .deleteReply(
+                        widget.postId,
+                        widget.commentId,
+                        widget.reply.id,
+                      );
                 },
               ),
             ] else ...[
@@ -1261,20 +1384,31 @@ class _PostReplyTileState extends ConsumerState<_PostReplyTile> {
                 title: const Text('차단'),
                 onTap: () async {
                   Navigator.pop(context);
-                  await showBlockDialog(context, ref,
-                      targetUid: widget.reply.authorId,
-                      targetNickname: widget.reply.authorNickname);
+                  await showBlockDialog(
+                    context,
+                    ref,
+                    targetUid: widget.reply.authorId,
+                    targetNickname: widget.reply.authorNickname,
+                  );
                 },
               ),
               ListTile(
-                leading: const Icon(Icons.flag_outlined,
-                    color: AppColors.error),
-                title: const Text('신고하기',
-                    style: TextStyle(color: AppColors.error)),
+                leading: const Icon(
+                  Icons.flag_outlined,
+                  color: AppColors.error,
+                ),
+                title: const Text(
+                  '신고하기',
+                  style: TextStyle(color: AppColors.error),
+                ),
                 onTap: () {
                   Navigator.pop(context);
-                  showReportSheet(context, ref,
-                      targetType: 'reply', targetId: widget.reply.id);
+                  showReportSheet(
+                    context,
+                    ref,
+                    targetType: 'reply',
+                    targetId: widget.reply.id,
+                  );
                 },
               ),
             ],
@@ -1292,16 +1426,18 @@ class _PostReplyTileState extends ConsumerState<_PostReplyTile> {
       widget.onEditEnd?.call();
       return;
     }
-    await ref.read(postRepositoryProvider).updateReply(
-        widget.postId, widget.commentId, widget.reply.id, newBody);
+    await ref
+        .read(postRepositoryProvider)
+        .updateReply(widget.postId, widget.commentId, widget.reply.id, newBody);
     setState(() => _isEditing = false);
     widget.onEditEnd?.call();
   }
 
   @override
   Widget build(BuildContext context) {
-    final author =
-        ref.watch(_postAuthorProvider(widget.reply.authorId)).valueOrNull;
+    final author = ref
+        .watch(_postAuthorProvider(widget.reply.authorId))
+        .valueOrNull;
     final authorLevel = author?.level ?? widget.reply.authorLevel;
     final profileImageUrl = author?.profileImageUrl;
 
@@ -1311,18 +1447,8 @@ class _PostReplyTileState extends ConsumerState<_PostReplyTile> {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           TapScale(
-            onTap: () =>
-                navigateToProfile(context, ref, widget.reply.authorId),
-            child: CircleAvatar(
-              radius: 14,
-              backgroundColor: AppColors.chipBackground,
-              backgroundImage: (profileImageUrl != null && profileImageUrl.isNotEmpty)
-                  ? CachedNetworkImageProvider(profileImageUrl)
-                  : null,
-              child: (profileImageUrl == null || profileImageUrl.isEmpty)
-                  ? const Icon(Icons.person, size: 14, color: AppColors.textTertiary)
-                  : null,
-            ),
+            onTap: () => navigateToProfile(context, ref, widget.reply.authorId),
+            child: UserAvatar(imageUrl: profileImageUrl, radius: 14),
           ),
           const SizedBox(width: 8),
           Expanded(
@@ -1334,12 +1460,19 @@ class _PostReplyTileState extends ConsumerState<_PostReplyTile> {
                     Flexible(
                       child: TapScale(
                         onTap: () => navigateToProfile(
-                            context, ref, widget.reply.authorId),
-                        child: Text(widget.reply.authorNickname,
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
-                            style: const TextStyle(
-                                fontWeight: FontWeight.w600, fontSize: 13)),
+                          context,
+                          ref,
+                          widget.reply.authorId,
+                        ),
+                        child: Text(
+                          widget.reply.authorNickname,
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: const TextStyle(
+                            fontWeight: FontWeight.w600,
+                            fontSize: 13,
+                          ),
+                        ),
                       ),
                     ),
                     const SizedBox(width: 4),
@@ -1350,24 +1483,23 @@ class _PostReplyTileState extends ConsumerState<_PostReplyTile> {
                     ],
                     const SizedBox(width: 6),
                     Text(
-                        formatPostDate(widget.reply.createdAt),
-                        style: const TextStyle(
-                            fontSize: 11,
-                            color: AppColors.textTertiary)),
+                      formatPostDate(widget.reply.createdAt),
+                      style: AppTextStyles.labelSmall,
+                    ),
                     if (widget.reply.updatedAt != null) ...[
                       const SizedBox(width: 4),
-                      const Text('(수정됨)',
-                          style: TextStyle(
-                              fontSize: 11,
-                              color: AppColors.textTertiary)),
+                      const Text('(수정됨)', style: AppTextStyles.labelSmall),
                     ],
                     const SizedBox(width: 8),
                     TapScale(
                       onTap: _showMenu,
                       child: const Padding(
                         padding: EdgeInsets.all(4),
-                        child: Icon(Icons.more_vert,
-                            size: 16, color: AppColors.textTertiary),
+                        child: Icon(
+                          Icons.more_vert,
+                          size: 16,
+                          color: AppColors.textTertiary,
+                        ),
                       ),
                     ),
                   ],
@@ -1381,9 +1513,10 @@ class _PostReplyTileState extends ConsumerState<_PostReplyTile> {
                     decoration: const InputDecoration(
                       isDense: true,
                       contentPadding: EdgeInsets.symmetric(
-                          horizontal: 8, vertical: 6),
-                      counterStyle: TextStyle(
-                          fontSize: 11, color: AppColors.textTertiary),
+                        horizontal: 8,
+                        vertical: 6,
+                      ),
+                      counterStyle: AppTextStyles.labelSmall,
                     ),
                     maxLines: null,
                     maxLength: AppConstants.maxReply,
@@ -1401,14 +1534,14 @@ class _PostReplyTileState extends ConsumerState<_PostReplyTile> {
                         },
                         child: const Text('취소'),
                       ),
-                      TextButton(
-                          onPressed: _saveEdit,
-                          child: const Text('저장')),
+                      TextButton(onPressed: _saveEdit, child: const Text('저장')),
                     ],
                   ),
                 ] else ...[
-                  Text(widget.reply.body ?? '',
-                      style: const TextStyle(fontSize: 14)),
+                  Text(
+                    widget.reply.body ?? '',
+                    style: const TextStyle(fontSize: 14),
+                  ),
                 ],
               ],
             ),

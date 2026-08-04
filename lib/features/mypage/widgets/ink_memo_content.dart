@@ -10,8 +10,7 @@ class InkMemoContent extends StatelessWidget {
   const InkMemoContent({super.key, required this.entry});
   final InkChartModel entry;
 
-  static const _textStyle =
-      TextStyle(fontSize: 14, color: AppColors.textPrimary, height: 1.6);
+  static final _textStyle = AppTextStyles.bodyMedium.copyWith(height: 1.6);
 
   @override
   Widget build(BuildContext context) {

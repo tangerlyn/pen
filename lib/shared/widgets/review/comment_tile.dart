@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:cached_network_image/cached_network_image.dart';
 import '../../../data/models/review_model.dart';
 import '../../../data/models/reply_model.dart';
 import '../../../core/theme/app_theme.dart';
@@ -13,6 +12,7 @@ import '../level_badge.dart';
 import '../author_badge.dart';
 import '../../../data/models/user_model.dart';
 import '../tap_scale.dart';
+import '../user_avatar.dart';
 
 final _commentAuthorProvider = StreamProvider.family<UserModel?, String>((
   ref,
@@ -76,7 +76,7 @@ class _CommentTileState extends ConsumerState<CommentTile> {
     showModalBottomSheet(
       context: context,
       shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
+        borderRadius: BorderRadius.vertical(top: Radius.circular(AppRadius.lg)),
       ),
       builder: (_) => SafeArea(
         child: Column(
@@ -238,17 +238,12 @@ class _CommentTileState extends ConsumerState<CommentTile> {
   Widget _buildDeletedRow() {
     return Row(
       children: [
-        const CircleAvatar(
-          radius: 16,
-          backgroundColor: AppColors.chipBackground,
-          child: Icon(Icons.person, size: 16, color: AppColors.textTertiary),
-        ),
+        const UserAvatar(radius: 16),
         const SizedBox(width: 10),
-        const Text(
+        Text(
           '삭제된 댓글입니다.',
-          style: TextStyle(
+          style: AppTextStyles.bodyMedium.copyWith(
             color: AppColors.textTertiary,
-            fontSize: 14,
             fontStyle: FontStyle.italic,
           ),
         ),
@@ -266,21 +261,7 @@ class _CommentTileState extends ConsumerState<CommentTile> {
       children: [
         TapScale(
           onTap: () => navigateToProfile(context, ref, widget.comment.authorId),
-          child: CircleAvatar(
-            radius: 16,
-            backgroundColor: AppColors.chipBackground,
-            backgroundImage:
-                (profileImageUrl != null && profileImageUrl.isNotEmpty)
-                ? CachedNetworkImageProvider(profileImageUrl)
-                : null,
-            child: (profileImageUrl == null || profileImageUrl.isEmpty)
-                ? const Icon(
-                    Icons.person,
-                    size: 16,
-                    color: AppColors.textTertiary,
-                  )
-                : null,
-          ),
+          child: UserAvatar(imageUrl: profileImageUrl, radius: 16),
         ),
         const SizedBox(width: 10),
         Expanded(
@@ -316,20 +297,11 @@ class _CommentTileState extends ConsumerState<CommentTile> {
                   const SizedBox(width: 6),
                   Text(
                     formatPostDate(widget.comment.createdAt),
-                    style: const TextStyle(
-                      color: AppColors.textTertiary,
-                      fontSize: 11,
-                    ),
+                    style: AppTextStyles.labelSmall,
                   ),
                   if (widget.comment.updatedAt != null) ...[
                     const SizedBox(width: 4),
-                    const Text(
-                      '(수정됨)',
-                      style: TextStyle(
-                        color: AppColors.textTertiary,
-                        fontSize: 11,
-                      ),
-                    ),
+                    const Text('(수정됨)', style: AppTextStyles.labelSmall),
                   ],
                   const SizedBox(width: 8),
                   TapScale(
@@ -337,13 +309,7 @@ class _CommentTileState extends ConsumerState<CommentTile> {
                         widget.onReplyTap(widget.comment.id, _nickname),
                     child: const Padding(
                       padding: EdgeInsets.all(4),
-                      child: Text(
-                        '답글',
-                        style: TextStyle(
-                          fontSize: 12,
-                          color: AppColors.textSecondary,
-                        ),
-                      ),
+                      child: Text('답글', style: AppTextStyles.bodySmall),
                     ),
                   ),
                   TapScale(
@@ -456,7 +422,7 @@ class _ReplyTileState extends ConsumerState<_ReplyTile> {
     showModalBottomSheet(
       context: context,
       shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
+        borderRadius: BorderRadius.vertical(top: Radius.circular(AppRadius.lg)),
       ),
       builder: (_) => SafeArea(
         child: Column(
@@ -580,21 +546,7 @@ class _ReplyTileState extends ConsumerState<_ReplyTile> {
         children: [
           TapScale(
             onTap: () => navigateToProfile(context, ref, widget.reply.authorId),
-            child: CircleAvatar(
-              radius: 14,
-              backgroundColor: AppColors.chipBackground,
-              backgroundImage:
-                  (profileImageUrl != null && profileImageUrl.isNotEmpty)
-                  ? CachedNetworkImageProvider(profileImageUrl)
-                  : null,
-              child: (profileImageUrl == null || profileImageUrl.isEmpty)
-                  ? const Icon(
-                      Icons.person,
-                      size: 14,
-                      color: AppColors.textTertiary,
-                    )
-                  : null,
-            ),
+            child: UserAvatar(imageUrl: profileImageUrl, radius: 14),
           ),
           const SizedBox(width: 8),
           Expanded(
@@ -630,20 +582,11 @@ class _ReplyTileState extends ConsumerState<_ReplyTile> {
                     const SizedBox(width: 6),
                     Text(
                       formatPostDate(widget.reply.createdAt),
-                      style: const TextStyle(
-                        color: AppColors.textTertiary,
-                        fontSize: 11,
-                      ),
+                      style: AppTextStyles.labelSmall,
                     ),
                     if (widget.reply.updatedAt != null) ...[
                       const SizedBox(width: 4),
-                      const Text(
-                        '(수정됨)',
-                        style: TextStyle(
-                          color: AppColors.textTertiary,
-                          fontSize: 11,
-                        ),
-                      ),
+                      const Text('(수정됨)', style: AppTextStyles.labelSmall),
                     ],
                     const SizedBox(width: 8),
                     TapScale(

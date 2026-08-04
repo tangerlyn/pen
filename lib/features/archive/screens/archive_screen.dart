@@ -279,7 +279,9 @@ class _FilterRowState extends ConsumerState<_FilterRow>
     _overlayEntry?.markNeedsBuild();
     // 선택이 늘어나 헤더 텍스트가 길어지면서 드롭다운이 화면 오른쪽 밖으로
     // 넘칠 수 있으므로, 다시 그려진 뒤 실제 크기를 재서 필요하면 보정한다.
-    WidgetsBinding.instance.addPostFrameCallback((_) => _adjustScrollForOverflow());
+    WidgetsBinding.instance.addPostFrameCallback(
+      (_) => _adjustScrollForOverflow(),
+    );
   }
 
   void _clearPending(_ExpandedFilter filter) {
@@ -305,7 +307,10 @@ class _FilterRowState extends ConsumerState<_FilterRow>
     if (mounted) setState(() => _expanded = null);
   }
 
-  void _toggleDropdown(_ExpandedFilter filter, {List<String> brandOptions = const []}) {
+  void _toggleDropdown(
+    _ExpandedFilter filter, {
+    List<String> brandOptions = const [],
+  }) {
     if (_expanded == filter) {
       _closeDropdown();
       return;
@@ -380,7 +385,9 @@ class _FilterRowState extends ConsumerState<_FilterRow>
     _animController.forward(from: 0);
     // 다시 열었을 때 이미 선택된 값들 때문에 헤더가 처음부터 넓게
     // 시작하는 경우도 있으므로, 연 직후에도 한 번 확인한다.
-    WidgetsBinding.instance.addPostFrameCallback((_) => _adjustScrollForOverflow());
+    WidgetsBinding.instance.addPostFrameCallback(
+      (_) => _adjustScrollForOverflow(),
+    );
   }
 
   /// 드롭다운(헤더+패널)이 실제로 그려진 뒤, 화면 오른쪽 경계를 넘지 않는
@@ -393,7 +400,8 @@ class _FilterRowState extends ConsumerState<_FilterRow>
   void _adjustScrollForOverflow() {
     if (!mounted || _overlayEntry == null) return;
     if (!_chipScrollController.hasClients) return;
-    final box = _dropdownBoxKey.currentContext?.findRenderObject() as RenderBox?;
+    final box =
+        _dropdownBoxKey.currentContext?.findRenderObject() as RenderBox?;
     if (box == null) return;
 
     const rightBoundaryMargin = 12.0; // 화면 오른쪽 끝에 둘 여유 경계
@@ -420,9 +428,11 @@ class _FilterRowState extends ConsumerState<_FilterRow>
   Widget build(BuildContext context) {
     final state = ref.watch(archiveProvider);
     final currentSort = widget.tabIndex == 0 ? state.inkSort : state.penSort;
-    final brandOptions = ref.watch(
-      widget.tabIndex == 0 ? inkBrandsProvider : penBrandsProvider,
-    ).valueOrNull ?? [];
+    final brandOptions =
+        ref
+            .watch(widget.tabIndex == 0 ? inkBrandsProvider : penBrandsProvider)
+            .valueOrNull ??
+        [];
 
     final sortChip = CompositedTransformTarget(
       link: _sortLink,
@@ -552,7 +562,6 @@ class _FilterRowState extends ConsumerState<_FilterRow>
       ),
     );
   }
-
 }
 
 // ── 색상 계열/특수 속성 드롭다운 — 칩이 그대로 헤더가 되어 아래로 패널이
@@ -615,18 +624,19 @@ class _FilterDropdownOverlay extends StatelessWidget {
     final pending = isColor
         ? pendingColorFamilies
         : isType
-            ? pendingInkTypes
-            : isBrand
-                ? pendingBrands
-                : const <String>[];
-    final selectedLabels =
-        isType ? pending.map(_inkTypeValueToLabel).toList() : pending;
+        ? pendingInkTypes
+        : isBrand
+        ? pendingBrands
+        : const <String>[];
+    final selectedLabels = isType
+        ? pending.map(_inkTypeValueToLabel).toList()
+        : pending;
     final filterLabel = isColor ? '색상 계열' : (isType ? '특수 속성' : '브랜드');
     final headerText = isSort
         ? currentSort.label
         : (selectedLabels.isEmpty
-            ? filterLabel
-            : '$filterLabel : ${selectedLabels.join(', ')}');
+              ? filterLabel
+              : '$filterLabel : ${selectedLabels.join(', ')}');
 
     return Stack(
       children: [
@@ -704,8 +714,7 @@ class _FilterDropdownOverlay extends StatelessWidget {
                               Text(
                                 headerText,
                                 overflow: TextOverflow.ellipsis,
-                                style: const TextStyle(
-                                  fontSize: 13,
+                                style: AppTextStyles.labelMedium.copyWith(
                                   color: AppColors.primary,
                                   fontWeight: FontWeight.w600,
                                 ),
@@ -742,7 +751,9 @@ class _FilterDropdownOverlay extends StatelessWidget {
                                 // 정렬은 단일 선택 — 탭하면 바로 적용되고 닫힘.
                                 // "전체"/"완료" 없이 옵션 목록만 보여줌.
                                 ...ArchiveSortOption.values
-                                    .where((opt) => opt != ArchiveSortOption.rating)
+                                    .where(
+                                      (opt) => opt != ArchiveSortOption.rating,
+                                    )
                                     .map(
                                       (opt) => _dropdownRow(
                                         label: opt.label,
@@ -767,23 +778,24 @@ class _FilterDropdownOverlay extends StatelessWidget {
                                         ),
                                       )
                                     : isType
-                                        ? _inkTypeLabels.map(
-                                            (label) => _dropdownRow(
-                                              label: label,
-                                              isSelected: pending.contains(
-                                                _inkTypeLabelToValue(label),
-                                              ),
-                                              onTap: () => onToggle(
-                                                  _inkTypeLabelToValue(label)),
-                                            ),
-                                          )
-                                        : brandOptions.map(
-                                            (brand) => _dropdownRow(
-                                              label: brand,
-                                              isSelected: pending.contains(brand),
-                                              onTap: () => onToggle(brand),
-                                            ),
-                                          )),
+                                    ? _inkTypeLabels.map(
+                                        (label) => _dropdownRow(
+                                          label: label,
+                                          isSelected: pending.contains(
+                                            _inkTypeLabelToValue(label),
+                                          ),
+                                          onTap: () => onToggle(
+                                            _inkTypeLabelToValue(label),
+                                          ),
+                                        ),
+                                      )
+                                    : brandOptions.map(
+                                        (brand) => _dropdownRow(
+                                          label: brand,
+                                          isSelected: pending.contains(brand),
+                                          onTap: () => onToggle(brand),
+                                        ),
+                                      )),
                                 Padding(
                                   padding: const EdgeInsets.fromLTRB(
                                     12,
@@ -802,7 +814,9 @@ class _FilterDropdownOverlay extends StatelessWidget {
                                       style: ElevatedButton.styleFrom(
                                         padding: EdgeInsets.zero,
                                         shape: RoundedRectangleBorder(
-                                          borderRadius: BorderRadius.circular(10),
+                                          borderRadius: BorderRadius.circular(
+                                            10,
+                                          ),
                                         ),
                                       ),
                                       child: const Text(
@@ -858,8 +872,7 @@ class _FilterDropdownOverlay extends StatelessWidget {
               child: Text(
                 label,
                 overflow: TextOverflow.ellipsis,
-                style: TextStyle(
-                  fontSize: 14,
+                style: AppTextStyles.titleSmall.copyWith(
                   fontWeight: isSelected ? FontWeight.w700 : FontWeight.w500,
                   color: isSelected ? AppColors.primary : AppColors.textPrimary,
                 ),
@@ -897,17 +910,15 @@ class _FilterChipItem extends StatelessWidget {
         decoration: BoxDecoration(
           // 조건을 선택했을 때만 배경을 채워 강조 — 선택 없으면 글씨만 보임
           color: isActive ? AppColors.primary : Colors.transparent,
-          borderRadius: BorderRadius.circular(20),
+          borderRadius: BorderRadius.circular(AppRadius.xl),
         ),
         child: Row(
           mainAxisSize: MainAxisSize.min,
           children: [
             Text(
               label,
-              style: TextStyle(
-                fontSize: 13,
+              style: AppTextStyles.labelMedium.copyWith(
                 color: isActive ? Colors.white : AppColors.textPrimary,
-                fontWeight: FontWeight.w500,
               ),
             ),
             const SizedBox(width: 4),
@@ -990,8 +1001,7 @@ class _InkList extends ConsumerWidget {
                         ),
                         Text(
                           ink.name,
-                          style: const TextStyle(
-                            fontSize: 10,
+                          style: AppTextStyles.caption.copyWith(
                             fontWeight: FontWeight.w600,
                             color: AppColors.textSecondary,
                           ),

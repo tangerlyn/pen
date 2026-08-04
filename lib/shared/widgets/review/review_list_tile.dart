@@ -7,11 +7,15 @@ import '../../../data/models/review_model.dart';
 import '../../../data/models/user_model.dart';
 import '../../../features/archive/providers/archive_detail_provider.dart';
 import '../../providers/providers.dart';
+import '../icon_count.dart';
 import '../level_badge.dart';
 import '../tap_scale.dart';
+import '../user_avatar.dart';
 
-final _reviewTileAuthorProvider =
-    StreamProvider.family<UserModel?, String>((ref, uid) {
+final _reviewTileAuthorProvider = StreamProvider.family<UserModel?, String>((
+  ref,
+  uid,
+) {
   return ref.watch(userRepoProvider).watchUser(uid);
 });
 
@@ -58,7 +62,7 @@ class ReviewListTile extends ConsumerWidget {
                       //       horizontal: AppSpacing.sm, vertical: 3),
                       //   decoration: BoxDecoration(
                       //     color: const Color(0xFFFFF3E0),
-                      //     borderRadius: BorderRadius.circular(4),
+                      //     borderRadius: BorderRadius.circular(AppRadius.xs),
                       //   ),
                       //   child: Row(
                       //     mainAxisSize: MainAxisSize.min,
@@ -96,8 +100,9 @@ class ReviewListTile extends ConsumerWidget {
                         const SizedBox(width: 6),
                         Text(
                           formatPostDate(review.createdAt),
-                          style: const TextStyle(
-                              fontSize: 12, color: AppColors.textTertiary),
+                          style: AppTextStyles.bodySmall.copyWith(
+                            color: AppColors.textTertiary,
+                          ),
                         ),
                       ],
                     ],
@@ -110,9 +115,8 @@ class ReviewListTile extends ConsumerWidget {
                       review.body,
                       maxLines: hasThumbnail ? 1 : 2,
                       overflow: TextOverflow.ellipsis,
-                      style: const TextStyle(
-                        fontSize: 13,
-                        color: AppColors.textSecondary,
+                      style: AppTextStyles.labelMedium.copyWith(
+                        fontWeight: FontWeight.w400,
                         height: 1.4,
                       ),
                     ),
@@ -129,18 +133,10 @@ class ReviewListTile extends ConsumerWidget {
                               child: Row(
                                 mainAxisSize: MainAxisSize.min,
                                 children: [
-                                  CircleAvatar(
+                                  UserAvatar(
+                                    imageUrl: user?.profileImageUrl,
                                     radius: 11,
-                                    backgroundColor: AppColors.chipBackground,
-                                    backgroundImage: user?.profileImageUrl != null
-                                        ? CachedNetworkImageProvider(
-                                            user!.profileImageUrl!)
-                                        : null,
-                                    child: user?.profileImageUrl == null
-                                        ? const Icon(Icons.person,
-                                            size: 13,
-                                            color: AppColors.textTertiary)
-                                        : null,
+                                    iconSize: 13,
                                   ),
                                   const SizedBox(width: 5),
                                   Flexible(
@@ -148,8 +144,7 @@ class ReviewListTile extends ConsumerWidget {
                                       user?.nickname ?? review.authorNickname,
                                       maxLines: 1,
                                       overflow: TextOverflow.ellipsis,
-                                      style: const TextStyle(
-                                        fontSize: 12,
+                                      style: AppTextStyles.bodySmall.copyWith(
                                         fontWeight: FontWeight.w600,
                                         color: AppColors.primary,
                                       ),
@@ -167,19 +162,17 @@ class ReviewListTile extends ConsumerWidget {
                       Row(
                         mainAxisSize: MainAxisSize.min,
                         children: [
-                          const Icon(Icons.favorite_border,
-                              size: 14, color: AppColors.textTertiary),
-                          const SizedBox(width: 2),
-                          Text('${review.likeCount}',
-                              style: const TextStyle(
-                                  fontSize: 12, color: AppColors.textTertiary)),
+                          IconCount(
+                            icon: Icons.favorite_border,
+                            count: review.likeCount,
+                            spacing: 2,
+                          ),
                           const SizedBox(width: 8),
-                          const Icon(Icons.chat_bubble_outline,
-                              size: 14, color: AppColors.textTertiary),
-                          const SizedBox(width: 2),
-                          Text('${review.commentCount}',
-                              style: const TextStyle(
-                                  fontSize: 12, color: AppColors.textTertiary)),
+                          IconCount(
+                            icon: Icons.chat_bubble_outline,
+                            count: review.commentCount,
+                            spacing: 2,
+                          ),
                         ],
                       ),
                     ],
@@ -190,7 +183,7 @@ class ReviewListTile extends ConsumerWidget {
             if (hasThumbnail) ...[
               const SizedBox(width: 12),
               ClipRRect(
-                borderRadius: BorderRadius.circular(8),
+                borderRadius: BorderRadius.circular(AppRadius.sm),
                 child: CachedNetworkImage(
                   imageUrl: review.thumbnailUrl,
                   width: 84,
@@ -227,19 +220,20 @@ class _ListGearTags extends ConsumerWidget {
     return Row(
       mainAxisSize: MainAxisSize.min,
       children: [
-        Flexible(child: _ListTagChip(type: first.type, id: first.id)),
+        Flexible(
+          child: _ListTagChip(type: first.type, id: first.id),
+        ),
         if (remaining > 0) ...[
           const SizedBox(width: 6),
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
             decoration: BoxDecoration(
               color: AppColors.chipBackground,
-              borderRadius: BorderRadius.circular(20),
+              borderRadius: BorderRadius.circular(AppRadius.xl),
             ),
             child: Text(
               '+$remaining',
-              style: const TextStyle(
-                fontSize: 11,
+              style: AppTextStyles.labelSmall.copyWith(
                 color: AppColors.textSecondary,
                 fontWeight: FontWeight.w500,
               ),
@@ -279,14 +273,13 @@ class _ListTagChip extends ConsumerWidget {
         padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
         decoration: BoxDecoration(
           color: AppColors.chipBackground,
-          borderRadius: BorderRadius.circular(20),
+          borderRadius: BorderRadius.circular(AppRadius.xl),
         ),
         child: Text(
           label,
           maxLines: 1,
           overflow: TextOverflow.ellipsis,
-          style: const TextStyle(
-            fontSize: 11,
+          style: AppTextStyles.labelSmall.copyWith(
             color: AppColors.textSecondary,
             fontWeight: FontWeight.w500,
           ),

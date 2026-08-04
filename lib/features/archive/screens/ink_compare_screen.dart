@@ -40,7 +40,9 @@ class _InkCompareScreenState extends ConsumerState<InkCompareScreen> {
     }
     setState(() => _isSearching = true);
     try {
-      final results = await ref.read(archiveRepoProvider).searchInks(query.trim());
+      final results = await ref
+          .read(archiveRepoProvider)
+          .searchInks(query.trim());
       if (mounted) {
         setState(() {
           _searchResults = results
@@ -74,10 +76,7 @@ class _InkCompareScreenState extends ConsumerState<InkCompareScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('잉크 색상 비교'),
-        scrolledUnderElevation: 0,
-      ),
+      appBar: AppBar(title: const Text('잉크 색상 비교'), scrolledUnderElevation: 0),
       body: Column(
         children: [
           // 비교 패널
@@ -104,7 +103,7 @@ class _InkCompareScreenState extends ConsumerState<InkCompareScreen> {
                   filled: true,
                   fillColor: AppColors.chipBackground,
                   border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(12),
+                    borderRadius: BorderRadius.circular(AppRadius.md),
                     borderSide: BorderSide.none,
                   ),
                   contentPadding: const EdgeInsets.symmetric(vertical: 10),
@@ -117,27 +116,34 @@ class _InkCompareScreenState extends ConsumerState<InkCompareScreen> {
             child: _isSearching
                 ? const Center(child: CircularProgressIndicator())
                 : _searchResults.isEmpty && _searchCtrl.text.isNotEmpty
-                    ? const Center(
-                        child: Text('검색 결과가 없습니다',
-                            style: TextStyle(color: AppColors.textSecondary)),
-                      )
-                    : ListView.builder(
-                        itemCount: _searchResults.length,
-                        itemBuilder: (_, i) {
-                          final ink = _searchResults[i];
-                          return ListTile(
-                            leading: InkDropCircle(color: ink.inkColor, size: 36),
-                            title: Text(ink.name,
-                                style: const TextStyle(fontWeight: FontWeight.w500)),
-                            subtitle: Text(ink.brand,
-                                style: const TextStyle(
-                                    fontSize: 12, color: AppColors.textSecondary)),
-                            trailing: const Icon(Icons.add_circle_outline,
-                                color: AppColors.primary),
-                            onTap: () => _addInk(ink),
-                          );
-                        },
-                      ),
+                ? const Center(
+                    child: Text(
+                      '검색 결과가 없습니다',
+                      style: TextStyle(color: AppColors.textSecondary),
+                    ),
+                  )
+                : ListView.builder(
+                    itemCount: _searchResults.length,
+                    itemBuilder: (_, i) {
+                      final ink = _searchResults[i];
+                      return ListTile(
+                        leading: InkDropCircle(color: ink.inkColor, size: 36),
+                        title: Text(
+                          ink.name,
+                          style: const TextStyle(fontWeight: FontWeight.w500),
+                        ),
+                        subtitle: Text(
+                          ink.brand,
+                          style: AppTextStyles.bodySmall,
+                        ),
+                        trailing: const Icon(
+                          Icons.add_circle_outline,
+                          color: AppColors.primary,
+                        ),
+                        onTap: () => _addInk(ink),
+                      );
+                    },
+                  ),
           ),
         ],
       ),
@@ -158,11 +164,13 @@ class _ComparePanel extends StatelessWidget {
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceEvenly,
         children: [
-          ...selected.asMap().entries.map((e) => _InkCompareCard(
-                ink: e.value,
-                isBase: e.key == 0,
-                onRemove: () => onRemove(e.key),
-              )),
+          ...selected.asMap().entries.map(
+            (e) => _InkCompareCard(
+              ink: e.value,
+              isBase: e.key == 0,
+              onRemove: () => onRemove(e.key),
+            ),
+          ),
           if (selected.length < 3)
             _EmptyCompareSlot(slotNumber: selected.length + 1),
         ],
@@ -194,7 +202,7 @@ class _InkCompareCard extends StatelessWidget {
               height: 80,
               decoration: BoxDecoration(
                 color: ink.inkColor,
-                borderRadius: BorderRadius.circular(16),
+                borderRadius: BorderRadius.circular(AppRadius.lg),
                 boxShadow: [
                   BoxShadow(
                     color: ink.inkColor.withValues(alpha: 0.4),
@@ -209,10 +217,10 @@ class _InkCompareCard extends StatelessWidget {
               width: 88,
               child: Text(
                 ink.displayName,
-                style: const TextStyle(
-                    fontSize: 11,
-                    fontWeight: FontWeight.w500,
-                    color: AppColors.textPrimary),
+                style: AppTextStyles.labelSmall.copyWith(
+                  fontWeight: FontWeight.w500,
+                  color: AppColors.textPrimary,
+                ),
                 textAlign: TextAlign.center,
                 maxLines: 2,
                 overflow: TextOverflow.ellipsis,
@@ -221,10 +229,7 @@ class _InkCompareCard extends StatelessWidget {
             const SizedBox(height: 4),
             Text(
               ink.hexColor.toUpperCase(),
-              style: const TextStyle(
-                  fontSize: 10,
-                  color: AppColors.textTertiary,
-                  fontFamily: 'monospace'),
+              style: AppTextStyles.caption.copyWith(fontFamily: 'monospace'),
             ),
             if (ink.inkType != 'normal')
               Container(
@@ -232,11 +237,14 @@ class _InkCompareCard extends StatelessWidget {
                 padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
                 decoration: BoxDecoration(
                   color: AppColors.chipBackground,
-                  borderRadius: BorderRadius.circular(8),
+                  borderRadius: BorderRadius.circular(AppRadius.sm),
                 ),
                 child: Text(
                   ink.inkTypeLabel,
-                  style: const TextStyle(fontSize: 9, color: AppColors.textSecondary),
+                  style: const TextStyle(
+                    fontSize: 9,
+                    color: AppColors.textSecondary,
+                  ),
                 ),
               ),
           ],
@@ -277,7 +285,7 @@ class _EmptyCompareSlot extends StatelessWidget {
           height: 80,
           decoration: BoxDecoration(
             color: AppColors.chipBackground,
-            borderRadius: BorderRadius.circular(16),
+            borderRadius: BorderRadius.circular(AppRadius.lg),
             border: Border.all(
               color: AppColors.divider,
               width: 1.5,
@@ -289,10 +297,7 @@ class _EmptyCompareSlot extends StatelessWidget {
           ),
         ),
         const SizedBox(height: 8),
-        Text(
-          '잉크 $slotNumber',
-          style: const TextStyle(fontSize: 11, color: AppColors.textTertiary),
-        ),
+        Text('잉크 $slotNumber', style: AppTextStyles.labelSmall),
       ],
     );
   }

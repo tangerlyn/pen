@@ -1,6 +1,7 @@
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import '../../core/theme/app_theme.dart';
 
 class ImageViewerScreen extends StatefulWidget {
   const ImageViewerScreen({
@@ -83,15 +84,19 @@ class _ImageViewerScreenState extends State<ImageViewerScreen> {
                   padding: const EdgeInsets.only(top: 8, right: 16),
                   child: Container(
                     padding: const EdgeInsets.symmetric(
-                        horizontal: 10, vertical: 5),
+                      horizontal: 10,
+                      vertical: 5,
+                    ),
                     decoration: BoxDecoration(
                       color: Colors.black54,
-                      borderRadius: BorderRadius.circular(12),
+                      borderRadius: BorderRadius.circular(AppRadius.md),
                     ),
                     child: Text(
                       '${_currentIndex + 1} / ${widget.imageUrls.length}',
-                      style: const TextStyle(
-                          color: Colors.white, fontSize: 13),
+                      style: AppTextStyles.labelMedium.copyWith(
+                        color: Colors.white,
+                        fontWeight: FontWeight.w400,
+                      ),
                     ),
                   ),
                 ),

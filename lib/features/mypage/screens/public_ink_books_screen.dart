@@ -56,7 +56,7 @@ class PublicInkBooksScreen extends ConsumerWidget {
                 child: Container(
                   decoration: BoxDecoration(
                     color: book.color.withValues(alpha: 0.18),
-                    borderRadius: BorderRadius.circular(16),
+                    borderRadius: BorderRadius.circular(AppRadius.lg),
                     border: Border.all(
                       color: book.color.withValues(alpha: 0.35),
                       width: 1.5,
@@ -83,10 +83,8 @@ class PublicInkBooksScreen extends ConsumerWidget {
                       const SizedBox(height: 12),
                       Text(
                         book.name,
-                        style: const TextStyle(
+                        style: AppTextStyles.titleSmall.copyWith(
                           fontWeight: FontWeight.w700,
-                          fontSize: 14,
-                          color: AppColors.textPrimary,
                         ),
                         textAlign: TextAlign.center,
                         maxLines: 1,
@@ -94,9 +92,10 @@ class PublicInkBooksScreen extends ConsumerWidget {
                       ),
                       const SizedBox(height: 4),
                       Text(
-                        book.ownerNickname.isNotEmpty ? book.ownerNickname : '익명',
-                        style: const TextStyle(
-                          fontSize: 12,
+                        book.ownerNickname.isNotEmpty
+                            ? book.ownerNickname
+                            : '익명',
+                        style: AppTextStyles.bodySmall.copyWith(
                           color: AppColors.textSecondary,
                         ),
                       ),

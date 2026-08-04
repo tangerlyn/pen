@@ -41,8 +41,11 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
   }
 
   void _scrollToTop() {
-    _scrollController.animateTo(0,
-        duration: const Duration(milliseconds: 300), curve: Curves.easeOut);
+    _scrollController.animateTo(
+      0,
+      duration: const Duration(milliseconds: 300),
+      curve: Curves.easeOut,
+    );
   }
 
   void _showWriteModal(BuildContext context) {
@@ -50,7 +53,8 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
       context: context,
       backgroundColor: AppColors.surface,
       shape: const RoundedRectangleBorder(
-          borderRadius: BorderRadius.vertical(top: Radius.circular(20))),
+        borderRadius: BorderRadius.vertical(top: Radius.circular(AppRadius.xl)),
+      ),
       builder: (_) => SafeArea(
         child: Padding(
           padding: const EdgeInsets.symmetric(vertical: AppSpacing.lg),
@@ -61,8 +65,9 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                 width: 40,
                 height: 4,
                 decoration: BoxDecoration(
-                    color: AppColors.textTertiary,
-                    borderRadius: BorderRadius.circular(2)),
+                  color: AppColors.textTertiary,
+                  borderRadius: BorderRadius.circular(2),
+                ),
               ),
               const SizedBox(height: AppSpacing.xxl),
               ListTile(
@@ -74,17 +79,23 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                   width: 48,
                   height: 48,
                   decoration: BoxDecoration(
-                      color: AppColors.chipBackground,
-                      borderRadius: BorderRadius.circular(12)),
-                  child: const Icon(Icons.camera_alt_outlined,
-                      color: AppColors.primary),
+                    color: AppColors.chipBackground,
+                    borderRadius: BorderRadius.circular(AppRadius.md),
+                  ),
+                  child: const Icon(
+                    Icons.camera_alt_outlined,
+                    color: AppColors.primary,
+                  ),
                 ),
-                title: const Text('리뷰 작성',
-                    style: AppTextStyles.titleMedium),
-                subtitle: const Text('내가 사용한 잉크·펜·종이를 기록해요',
-                    style: AppTextStyles.labelMedium),
+                title: const Text('리뷰 작성', style: AppTextStyles.titleMedium),
+                subtitle: const Text(
+                  '내가 사용한 잉크·펜·종이를 기록해요',
+                  style: AppTextStyles.labelMedium,
+                ),
                 contentPadding: const EdgeInsets.symmetric(
-                    horizontal: AppSpacing.xxl, vertical: AppSpacing.sm),
+                  horizontal: AppSpacing.xxl,
+                  vertical: AppSpacing.sm,
+                ),
               ),
               ListTile(
                 onTap: () {
@@ -95,17 +106,23 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                   width: 48,
                   height: 48,
                   decoration: BoxDecoration(
-                      color: AppColors.chipBackground,
-                      borderRadius: BorderRadius.circular(12)),
-                  child: const Icon(Icons.article_outlined,
-                      color: AppColors.primary),
+                    color: AppColors.chipBackground,
+                    borderRadius: BorderRadius.circular(AppRadius.md),
+                  ),
+                  child: const Icon(
+                    Icons.article_outlined,
+                    color: AppColors.primary,
+                  ),
                 ),
-                title: const Text('커뮤니티 글쓰기',
-                    style: AppTextStyles.titleMedium),
-                subtitle: const Text('자유게시판에 이야기를 나눠요',
-                    style: AppTextStyles.labelMedium),
+                title: const Text('커뮤니티 글쓰기', style: AppTextStyles.titleMedium),
+                subtitle: const Text(
+                  '자유게시판에 이야기를 나눠요',
+                  style: AppTextStyles.labelMedium,
+                ),
                 contentPadding: const EdgeInsets.symmetric(
-                    horizontal: AppSpacing.xxl, vertical: AppSpacing.sm),
+                  horizontal: AppSpacing.xxl,
+                  vertical: AppSpacing.sm,
+                ),
               ),
             ],
           ),
@@ -136,14 +153,18 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                   floating: true,
                   snap: true,
                   centerTitle: true,
-                  title: const Text('문어다방',
-                      style: TextStyle(
-                          fontWeight: FontWeight.w700, letterSpacing: -0.5)),
+                  title: const Text(
+                    '펜귄',
+                    style: TextStyle(
+                      fontWeight: FontWeight.w700,
+                      letterSpacing: -0.5,
+                    ),
+                  ),
                   actions: [
                     IconButton(
-                        icon: const Icon(Icons.search),
-                        onPressed: () =>
-                            context.push('/search?type=all')),
+                      icon: const Icon(Icons.search),
+                      onPressed: () => context.push('/search?type=all'),
+                    ),
                     _NotificationBell(),
                   ],
                 ),
@@ -218,7 +239,11 @@ class _SectionHeader extends StatelessWidget {
   Widget build(BuildContext context) {
     return Padding(
       padding: EdgeInsets.fromLTRB(
-          AppSpacing.xl, topPadding, AppSpacing.lg, AppSpacing.md),
+        AppSpacing.xl,
+        topPadding,
+        AppSpacing.lg,
+        AppSpacing.md,
+      ),
       child: Row(
         children: [
           Text(title, style: AppTextStyles.sectionTitle),
@@ -248,7 +273,10 @@ class _LatestReviewsSection extends ConsumerWidget {
     final reviewsAsync = ref.watch(homeLatestReviewsProvider);
     // 화면 폭에 비례한 카드 너비 — 좁은 폰에서도 다음 카드가 살짝 보이고,
     // 넓은 폰/기기에서 카드가 지나치게 작아 보이지 않도록 상하한을 둔다.
-    final cardWidth = (MediaQuery.of(context).size.width * 0.42).clamp(140.0, 190.0);
+    final cardWidth = (MediaQuery.of(context).size.width * 0.42).clamp(
+      140.0,
+      190.0,
+    );
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -323,8 +351,7 @@ class _PopularInksSection extends ConsumerWidget {
                 itemCount: inks.length,
                 itemBuilder: (_, i) => _InkCircleItem(
                   ink: inks[i],
-                  onTap: () =>
-                      context.push('/archive/ink/${inks[i].id}'),
+                  onTap: () => context.push('/archive/ink/${inks[i].id}'),
                 ),
               ),
             ),
@@ -354,8 +381,9 @@ class _InkCircleItem extends StatelessWidget {
             const SizedBox(height: AppSpacing.sm - 2),
             Text(
               ink.name,
-              style: AppTextStyles.caption
-                  .copyWith(color: AppColors.textSecondary),
+              style: AppTextStyles.caption.copyWith(
+                color: AppColors.textSecondary,
+              ),
               maxLines: 2,
               overflow: TextOverflow.ellipsis,
               textAlign: TextAlign.center,
@@ -396,8 +424,7 @@ class _CommunitySection extends ConsumerWidget {
               separatorBuilder: (_, __) => const Divider(height: 1),
               itemBuilder: (_, i) => PostCard(
                 post: preview[i],
-                onTap: () =>
-                    context.push('/community/${preview[i].id}'),
+                onTap: () => context.push('/community/${preview[i].id}'),
                 topPadding: i == 0 ? AppSpacing.xs : AppSpacing.sm,
               ),
             ),
@@ -420,7 +447,10 @@ class _PopularPensSection extends ConsumerWidget {
       error: (_, __) => const SizedBox.shrink(),
       data: (pens) {
         if (pens.isEmpty) return const SizedBox.shrink();
-        final cardWidth = (MediaQuery.of(context).size.width * 0.38).clamp(130.0, 175.0);
+        final cardWidth = (MediaQuery.of(context).size.width * 0.38).clamp(
+          130.0,
+          175.0,
+        );
         return Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
@@ -437,8 +467,7 @@ class _PopularPensSection extends ConsumerWidget {
                 itemBuilder: (_, i) => _PenCard(
                   pen: pens[i],
                   width: cardWidth,
-                  onTap: () =>
-                      context.push('/archive/pen/${pens[i].id}'),
+                  onTap: () => context.push('/archive/pen/${pens[i].id}'),
                 ),
               ),
             ),
@@ -491,8 +520,9 @@ class _PenCard extends StatelessWidget {
       child: Container(
         width: width,
         margin: const EdgeInsets.only(right: AppSpacing.md),
-        padding: AppSpacing.cardPadding
-            .add(const EdgeInsets.all(AppSpacing.xs)),
+        padding: AppSpacing.cardPadding.add(
+          const EdgeInsets.all(AppSpacing.xs),
+        ),
         decoration: BoxDecoration(
           color: Colors.white.withValues(alpha: 0.82),
           borderRadius: BorderRadius.circular(14),
@@ -516,13 +546,16 @@ class _PenCard extends StatelessWidget {
             const SizedBox(height: AppSpacing.sm),
             Text(pen.brand, style: AppTextStyles.labelSmall),
             const SizedBox(height: 2),
-            Text(pen.modelName,
-                maxLines: 2,
-                overflow: TextOverflow.ellipsis,
-                style: AppTextStyles.labelMedium.copyWith(
-                    fontWeight: FontWeight.w600,
-                    color: AppColors.textPrimary,
-                    height: 1.3)),
+            Text(
+              pen.modelName,
+              maxLines: 2,
+              overflow: TextOverflow.ellipsis,
+              style: AppTextStyles.labelMedium.copyWith(
+                fontWeight: FontWeight.w600,
+                color: AppColors.textPrimary,
+                height: 1.3,
+              ),
+            ),
           ],
         ),
       ),

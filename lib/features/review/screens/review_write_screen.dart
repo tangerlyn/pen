@@ -10,12 +10,18 @@ import '../providers/review_write_provider.dart';
 import '../../../shared/widgets/archive/add_product_bottom_sheet.dart';
 // import '../../../shared/widgets/common/star_rating.dart'; // 별점 시스템 비활성화
 import '../../../shared/widgets/center_toast.dart';
+import '../../../shared/widgets/confirm_discard_dialog.dart';
 import '../../../data/models/review_model.dart';
 
 class ReviewWriteScreen extends ConsumerStatefulWidget {
-  const ReviewWriteScreen({super.key, this.reviewToEdit, this.initialType, this.initialProductId});
+  const ReviewWriteScreen({
+    super.key,
+    this.reviewToEdit,
+    this.initialType,
+    this.initialProductId,
+  });
   final ReviewModel? reviewToEdit;
-  final String? initialType;        // 'ink' | 'pen' | 'paper'
+  final String? initialType; // 'ink' | 'pen' | 'paper'
   final String? initialProductId;
 
   @override
@@ -52,9 +58,13 @@ class _ReviewWriteScreenState extends ConsumerState<ReviewWriteScreen> {
         if (widget.initialType != null && widget.initialProductId != null) {
           switch (widget.initialType) {
             case 'ink':
-              ref.read(reviewWriteProvider.notifier).addInk(widget.initialProductId!);
+              ref
+                  .read(reviewWriteProvider.notifier)
+                  .addInk(widget.initialProductId!);
             case 'pen':
-              ref.read(reviewWriteProvider.notifier).addPen(widget.initialProductId!);
+              ref
+                  .read(reviewWriteProvider.notifier)
+                  .addPen(widget.initialProductId!);
           }
         }
       });
@@ -77,27 +87,7 @@ class _ReviewWriteScreenState extends ConsumerState<ReviewWriteScreen> {
 
   Future<bool> _confirmDiscard() async {
     if (!_hasContent()) return true;
-    return await showDialog<bool>(
-          context: context,
-          builder: (ctx) => AlertDialog(
-            title: const Text('작성 중인 내용이 있어요'),
-            content: const Text('지금 나가면 작성한 내용이 모두 삭제됩니다.'),
-            actions: [
-              TextButton(
-                onPressed: () => Navigator.pop(ctx, false),
-                child: const Text('계속 작성'),
-              ),
-              TextButton(
-                onPressed: () => Navigator.pop(ctx, true),
-                child: Text(
-                  '삭제하고 나가기',
-                  style: TextStyle(color: Theme.of(context).colorScheme.error),
-                ),
-              ),
-            ],
-          ),
-        ) ??
-        false;
+    return confirmDiscardDialog(context, confirmLabel: '삭제하고 나가기');
   }
 
   @override
@@ -116,7 +106,7 @@ class _ReviewWriteScreenState extends ConsumerState<ReviewWriteScreen> {
       },
       child: Scaffold(
         appBar: AppBar(
-        title: Text(widget.reviewToEdit != null ? '리뷰 수정' : '리뷰 작성'),
+          title: Text(widget.reviewToEdit != null ? '리뷰 수정' : '리뷰 작성'),
           leading: IconButton(
             icon: const Icon(Icons.close),
             onPressed: () async {
@@ -164,14 +154,14 @@ class _ReviewWriteScreenState extends ConsumerState<ReviewWriteScreen> {
                   hintText: '잉크 색상, 종이와의 궁합, 닙의 느낌 등을 자유롭게 작성해보세요.',
                   initialBlocks: _initialEditorBlocks,
                   maxTextLength: AppConstants.maxReviewBody,
-                  onFocusChanged: (hasFocus) => setState(() => _showEditorToolbar = hasFocus),
+                  onFocusChanged: (hasFocus) =>
+                      setState(() => _showEditorToolbar = hasFocus),
                 ),
 
                 // 별점 시스템 비활성화
                 // _Divider(),
                 // _SectionHeader(title: '별점'),
                 // _RatingSection(rating: state.rating),
-
                 const SizedBox(height: 16),
               ],
             ),
@@ -179,7 +169,9 @@ class _ReviewWriteScreenState extends ConsumerState<ReviewWriteScreen> {
         ),
         bottomNavigationBar: _showEditorToolbar
             ? Padding(
-                padding: EdgeInsets.only(bottom: MediaQuery.of(context).viewInsets.bottom),
+                padding: EdgeInsets.only(
+                  bottom: MediaQuery.of(context).viewInsets.bottom,
+                ),
                 child: BlogEditorToolbar(editorKey: _editorKey),
               )
             : null,
@@ -220,17 +212,18 @@ class _ReviewWriteScreenState extends ConsumerState<ReviewWriteScreen> {
     List<Map<String, dynamic>> contentBlocks;
     try {
       contentBlocks = await editorState.buildContentBlocks(
-        uploadImage: (file) => ref.read(storageServiceProvider).uploadImage(
-          file: file,
-          folder: 'reviews',
-        ),
+        uploadImage: (file) => ref
+            .read(storageServiceProvider)
+            .uploadImage(file: file, folder: 'reviews'),
       );
     } catch (_) {
       if (context.mounted) {
-        showCenterToast(context,
-            message: '이미지 업로드에 실패했어요. 다시 시도해주세요.',
-            icon: Icons.error_outline,
-            iconColor: AppColors.error);
+        showCenterToast(
+          context,
+          message: '이미지 업로드에 실패했어요. 다시 시도해주세요.',
+          icon: Icons.error_outline,
+          iconColor: AppColors.error,
+        );
       }
       return;
     }
@@ -245,7 +238,9 @@ class _ReviewWriteScreenState extends ConsumerState<ReviewWriteScreen> {
         .join('\n');
 
     try {
-      final reviewId = await ref.read(reviewWriteProvider.notifier).submitWithBlocks(
+      final reviewId = await ref
+          .read(reviewWriteProvider.notifier)
+          .submitWithBlocks(
             contentBlocks: contentBlocks,
             imageUrls: imageUrls,
             body: body,
@@ -256,7 +251,12 @@ class _ReviewWriteScreenState extends ConsumerState<ReviewWriteScreen> {
     } catch (e) {
       if (context.mounted) {
         final msg = e.toString().replaceAll('Exception: ', '');
-        showCenterToast(context, message: msg, icon: Icons.error_outline, iconColor: AppColors.error);
+        showCenterToast(
+          context,
+          message: msg,
+          icon: Icons.error_outline,
+          iconColor: AppColors.error,
+        );
       }
     }
   }
@@ -274,12 +274,20 @@ class _SectionHeader extends StatelessWidget {
       padding: const EdgeInsets.fromLTRB(16, 20, 16, 10),
       child: Row(
         children: [
-          Text(title, style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w700)),
+          Text(
+            title,
+            style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w700),
+          ),
           if (subtitle != null)
             Padding(
               padding: const EdgeInsets.only(left: 8),
-              child: Text(subtitle!,
-                  style: const TextStyle(fontSize: 13, color: AppColors.textTertiary)),
+              child: Text(
+                subtitle!,
+                style: AppTextStyles.labelMedium.copyWith(
+                  color: AppColors.textTertiary,
+                  fontWeight: FontWeight.w400,
+                ),
+              ),
             ),
         ],
       ),
@@ -292,7 +300,6 @@ class _Divider extends StatelessWidget {
   Widget build(BuildContext context) =>
       const Divider(height: 1, thickness: 8, color: Color(0xFFF4F4F4));
 }
-
 
 // ── 2. 장비 태깅 ─────────────────────────────────────────────
 class _GearSection extends ConsumerWidget {
@@ -310,7 +317,8 @@ class _GearSection extends ConsumerWidget {
             label: '잉크 추가',
             items: state.inkIds,
             onAdd: () => _showSearch(context, ref, 'ink'),
-            onRemove: (id) => ref.read(reviewWriteProvider.notifier).removeInk(id),
+            onRemove: (id) =>
+                ref.read(reviewWriteProvider.notifier).removeInk(id),
           ),
           const SizedBox(height: 10),
           _GearRow(
@@ -319,7 +327,8 @@ class _GearSection extends ConsumerWidget {
             label: '만년필 추가',
             items: state.penIds,
             onAdd: () => _showSearch(context, ref, 'pen'),
-            onRemove: (id) => ref.read(reviewWriteProvider.notifier).removePen(id),
+            onRemove: (id) =>
+                ref.read(reviewWriteProvider.notifier).removePen(id),
           ),
           const SizedBox(height: 4),
         ],
@@ -339,8 +348,10 @@ class _GearSection extends ConsumerWidget {
         type: type,
         onSelected: (id, _) {
           switch (type) {
-            case 'ink': ref.read(reviewWriteProvider.notifier).addInk(id);
-            case 'pen': ref.read(reviewWriteProvider.notifier).addPen(id);
+            case 'ink':
+              ref.read(reviewWriteProvider.notifier).addInk(id);
+            case 'pen':
+              ref.read(reviewWriteProvider.notifier).addPen(id);
           }
           Navigator.pop(context);
         },
@@ -384,7 +395,15 @@ class _GearRow extends StatelessWidget {
           Wrap(
             spacing: 8,
             runSpacing: 6,
-            children: items.map((id) => _GearChip(type: type, id: id, onRemove: () => onRemove(id))).toList(),
+            children: items
+                .map(
+                  (id) => _GearChip(
+                    type: type,
+                    id: id,
+                    onRemove: () => onRemove(id),
+                  ),
+                )
+                .toList(),
           ),
         ],
       ],
@@ -393,7 +412,11 @@ class _GearRow extends StatelessWidget {
 }
 
 class _GearChip extends ConsumerWidget {
-  const _GearChip({required this.type, required this.id, required this.onRemove});
+  const _GearChip({
+    required this.type,
+    required this.id,
+    required this.onRemove,
+  });
   final String type;
   final String id;
   final VoidCallback onRemove;
@@ -413,9 +436,10 @@ class _GearChip extends ConsumerWidget {
     );
 
     return Chip(
-      label: Text(label,
-          style: const TextStyle(
-              fontSize: 13, color: Colors.white, fontWeight: FontWeight.w500)),
+      label: Text(
+        label,
+        style: AppTextStyles.labelMedium.copyWith(color: Colors.white),
+      ),
       deleteIcon: const Icon(Icons.close, size: 14, color: Colors.white70),
       onDeleted: onRemove,
       backgroundColor: AppColors.primary,
@@ -440,7 +464,9 @@ class _TitleSectionState extends ConsumerState<_TitleSection> {
   @override
   void initState() {
     super.initState();
-    _controller = TextEditingController(text: ref.read(reviewWriteProvider).title);
+    _controller = TextEditingController(
+      text: ref.read(reviewWriteProvider).title,
+    );
   }
 
   @override
@@ -467,7 +493,6 @@ class _TitleSectionState extends ConsumerState<_TitleSection> {
     );
   }
 }
-
 
 // ── 5. 별점 (맨 아래) ────────────────────────────────────────
 // 별점 시스템 비활성화 — 재활성화 시 주석 해제
@@ -516,7 +541,8 @@ class _ProductSearchSheet extends ConsumerStatefulWidget {
   final void Function(String id, String name) onSelected;
 
   @override
-  ConsumerState<_ProductSearchSheet> createState() => _ProductSearchSheetState();
+  ConsumerState<_ProductSearchSheet> createState() =>
+      _ProductSearchSheetState();
 }
 
 class _ProductSearchSheetState extends ConsumerState<_ProductSearchSheet> {
@@ -539,8 +565,10 @@ class _ProductSearchSheetState extends ConsumerState<_ProductSearchSheet> {
     final repo = ref.read(archiveRepoProvider);
     try {
       switch (widget.type) {
-        case 'ink': _results = await repo.searchInks(query);
-        case 'pen': _results = await repo.searchPens(query);
+        case 'ink':
+          _results = await repo.searchInks(query);
+        case 'pen':
+          _results = await repo.searchPens(query);
       }
     } finally {
       setState(() => _isLoading = false);
@@ -580,7 +608,9 @@ class _ProductSearchSheetState extends ConsumerState<_ProductSearchSheet> {
                           _controller.text.isEmpty
                               ? '$typeLabel 이름을 검색해보세요'
                               : '검색 결과가 없습니다.',
-                          style: const TextStyle(color: AppColors.textSecondary),
+                          style: const TextStyle(
+                            color: AppColors.textSecondary,
+                          ),
                         ),
                         if (_controller.text.isNotEmpty && !_isLoading) ...[
                           const SizedBox(height: 12),
@@ -608,7 +638,8 @@ class _ProductSearchSheetState extends ConsumerState<_ProductSearchSheet> {
                       final item = _results[i];
                       return ListTile(
                         title: Text(item.displayName),
-                        onTap: () => widget.onSelected(item.id, item.displayName),
+                        onTap: () =>
+                            widget.onSelected(item.id, item.displayName),
                       );
                     },
                   ),

@@ -18,7 +18,7 @@ class PenListTile extends StatelessWidget {
           height: 44,
           decoration: BoxDecoration(
             color: AppColors.chipBackground,
-            borderRadius: BorderRadius.circular(8),
+            borderRadius: BorderRadius.circular(AppRadius.sm),
           ),
           child: const Icon(Icons.edit, color: AppColors.textSecondary),
         ),
@@ -53,8 +53,7 @@ class PenListTile extends StatelessWidget {
         // ),
         trailing: Text(
           '리뷰 ${pen.reviewCount}',
-          style: const TextStyle(
-            fontSize: 11,
+          style: AppTextStyles.labelSmall.copyWith(
             color: AppColors.textSecondary,
           ),
         ),

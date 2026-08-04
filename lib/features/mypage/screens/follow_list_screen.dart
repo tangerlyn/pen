@@ -1,11 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:cached_network_image/cached_network_image.dart';
 import 'package:go_router/go_router.dart';
 import '../../../core/theme/app_theme.dart';
 import '../../../data/models/user_model.dart';
 import '../../../shared/providers/providers.dart';
 import '../../../shared/providers/user_providers.dart';
+import '../../../shared/widgets/user_avatar.dart';
 import '../providers/user_activity_provider.dart';
 
 class FollowListScreen extends ConsumerStatefulWidget {
@@ -93,8 +93,10 @@ class _UserList extends ConsumerWidget {
       data: (users) {
         if (users.isEmpty) {
           return Center(
-            child: Text(emptyMessage,
-                style: const TextStyle(color: AppColors.textSecondary)),
+            child: Text(
+              emptyMessage,
+              style: const TextStyle(color: AppColors.textSecondary),
+            ),
           );
         }
         return ListView.separated(
@@ -117,55 +119,46 @@ class _UserTile extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final isOwn = user.uid == viewerUid;
     final isFollowing = (viewerUid != null && !isOwn)
-        ? ref
-                .watch(followStatusProvider((viewerUid!, user.uid)))
-                .valueOrNull ??
-            false
+        ? ref.watch(followStatusProvider((viewerUid!, user.uid))).valueOrNull ??
+              false
         : false;
 
     return ListTile(
       onTap: () => context.push('/profile/${user.uid}'),
       contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-      leading: CircleAvatar(
-        radius: 24,
-        backgroundColor: AppColors.chipBackground,
-        backgroundImage: user.profileImageUrl != null
-            ? CachedNetworkImageProvider(user.profileImageUrl!)
-            : null,
-        child: user.profileImageUrl == null
-            ? const Icon(Icons.person, color: AppColors.textTertiary)
-            : null,
+      leading: UserAvatar(imageUrl: user.profileImageUrl, radius: 24),
+      title: Text(
+        user.nickname,
+        style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 14),
       ),
-      title: Text(user.nickname,
-          style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 14)),
       trailing: isOwn
           ? null
           : isFollowing
-              ? ElevatedButton(
-                  onPressed: () =>
-                      ref.read(userRepoProvider).unfollow(viewerUid!, user.uid),
-                  style: ElevatedButton.styleFrom(
-                    minimumSize: const Size(72, 32),
-                    padding: const EdgeInsets.symmetric(horizontal: 16),
-                    textStyle: const TextStyle(fontSize: 13),
-                    backgroundColor: AppColors.chipBackground,
-                    foregroundColor: AppColors.textSecondary,
-                    elevation: 0,
-                  ),
-                  child: const Text('팔로잉'),
-                )
-              : OutlinedButton(
-                  onPressed: () =>
-                      ref.read(userRepoProvider).follow(viewerUid!, user.uid),
-                  style: OutlinedButton.styleFrom(
-                    minimumSize: const Size(72, 32),
-                    padding: const EdgeInsets.symmetric(horizontal: 16),
-                    textStyle: const TextStyle(fontSize: 13),
-                    foregroundColor: AppColors.primary,
-                    side: const BorderSide(color: AppColors.primary),
-                  ),
-                  child: const Text('팔로우'),
-                ),
+          ? ElevatedButton(
+              onPressed: () =>
+                  ref.read(userRepoProvider).unfollow(viewerUid!, user.uid),
+              style: ElevatedButton.styleFrom(
+                minimumSize: const Size(72, 32),
+                padding: const EdgeInsets.symmetric(horizontal: 16),
+                textStyle: const TextStyle(fontSize: 13),
+                backgroundColor: AppColors.chipBackground,
+                foregroundColor: AppColors.textSecondary,
+                elevation: 0,
+              ),
+              child: const Text('팔로잉'),
+            )
+          : OutlinedButton(
+              onPressed: () =>
+                  ref.read(userRepoProvider).follow(viewerUid!, user.uid),
+              style: OutlinedButton.styleFrom(
+                minimumSize: const Size(72, 32),
+                padding: const EdgeInsets.symmetric(horizontal: 16),
+                textStyle: const TextStyle(fontSize: 13),
+                foregroundColor: AppColors.primary,
+                side: const BorderSide(color: AppColors.primary),
+              ),
+              child: const Text('팔로우'),
+            ),
     );
   }
 }

@@ -15,8 +15,10 @@ final _myInquiriesProvider = StreamProvider<List<InquiryModel>>((ref) {
   return ref.read(inquiryRepoProvider).watchMyInquiries(uid);
 });
 
-final _inquiryDetailProvider =
-    StreamProvider.family<InquiryModel?, String>((ref, id) {
+final _inquiryDetailProvider = StreamProvider.family<InquiryModel?, String>((
+  ref,
+  id,
+) {
   return ref.read(inquiryRepoProvider).watchInquiry(id);
 });
 
@@ -49,8 +51,11 @@ class InquiryListScreen extends ConsumerWidget {
               child: Column(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  const Icon(Icons.inbox_outlined,
-                      size: 56, color: AppColors.textTertiary),
+                  const Icon(
+                    Icons.inbox_outlined,
+                    size: 56,
+                    color: AppColors.textTertiary,
+                  ),
                   const SizedBox(height: 12),
                   const Text(
                     '문의 내역이 없습니다.',
@@ -86,20 +91,18 @@ class _InquiryTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final dateStr =
-        DateFormat('yyyy.MM.dd').format(inquiry.createdAt.toLocal());
+    final dateStr = DateFormat(
+      'yyyy.MM.dd',
+    ).format(inquiry.createdAt.toLocal());
     return ListTile(
-      onTap: () =>
-          context.push('/mypage/settings/inquiries/${inquiry.id}'),
-      contentPadding:
-          const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+      onTap: () => context.push('/mypage/settings/inquiries/${inquiry.id}'),
+      contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
       title: Row(
         children: [
           Expanded(
             child: Text(
               inquiry.title,
-              style: const TextStyle(
-                  fontSize: 15, fontWeight: FontWeight.w600),
+              style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w600),
               maxLines: 1,
               overflow: TextOverflow.ellipsis,
             ),
@@ -115,21 +118,28 @@ class _InquiryTile extends StatelessWidget {
             Expanded(
               child: Text(
                 inquiry.content,
-                style: const TextStyle(
-                    fontSize: 13, color: AppColors.textSecondary),
+                style: AppTextStyles.labelMedium.copyWith(
+                  fontWeight: FontWeight.w400,
+                ),
                 maxLines: 1,
                 overflow: TextOverflow.ellipsis,
               ),
             ),
             const SizedBox(width: 8),
-            Text(dateStr,
-                style: const TextStyle(
-                    fontSize: 12, color: AppColors.textTertiary)),
+            Text(
+              dateStr,
+              style: AppTextStyles.bodySmall.copyWith(
+                color: AppColors.textTertiary,
+              ),
+            ),
           ],
         ),
       ),
-      trailing: const Icon(Icons.chevron_right,
-          color: AppColors.textTertiary, size: 18),
+      trailing: const Icon(
+        Icons.chevron_right,
+        color: AppColors.textTertiary,
+        size: 18,
+      ),
     );
   }
 }
@@ -143,19 +153,14 @@ class _StatusBadge extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
       decoration: BoxDecoration(
-        color: isAnswered
-            ? const Color(0xFFE8F5E9)
-            : const Color(0xFFFFF3E0),
-        borderRadius: BorderRadius.circular(20),
+        color: isAnswered ? const Color(0xFFE8F5E9) : const Color(0xFFFFF3E0),
+        borderRadius: BorderRadius.circular(AppRadius.xl),
       ),
       child: Text(
         isAnswered ? '답변 완료' : '확인 중',
-        style: TextStyle(
-          fontSize: 11,
+        style: AppTextStyles.labelSmall.copyWith(
           fontWeight: FontWeight.w600,
-          color: isAnswered
-              ? const Color(0xFF2E7D32)
-              : const Color(0xFFE65100),
+          color: isAnswered ? const Color(0xFF2E7D32) : const Color(0xFFE65100),
         ),
       ),
     );
@@ -194,8 +199,9 @@ class _InquiryDetailBody extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final dateStr = DateFormat('yyyy년 MM월 dd일 HH:mm')
-        .format(inquiry.createdAt.toLocal());
+    final dateStr = DateFormat(
+      'yyyy년 MM월 dd일 HH:mm',
+    ).format(inquiry.createdAt.toLocal());
 
     return ListView(
       padding: const EdgeInsets.all(16),
@@ -207,7 +213,9 @@ class _InquiryDetailBody extends StatelessWidget {
               child: Text(
                 inquiry.title,
                 style: const TextStyle(
-                    fontSize: 18, fontWeight: FontWeight.w700),
+                  fontSize: 18,
+                  fontWeight: FontWeight.w700,
+                ),
               ),
             ),
             const SizedBox(width: 10),
@@ -215,9 +223,12 @@ class _InquiryDetailBody extends StatelessWidget {
           ],
         ),
         const SizedBox(height: 6),
-        Text(dateStr,
-            style: const TextStyle(
-                fontSize: 12, color: AppColors.textTertiary)),
+        Text(
+          dateStr,
+          style: AppTextStyles.bodySmall.copyWith(
+            color: AppColors.textTertiary,
+          ),
+        ),
         const Divider(height: 28),
         // 문의 내용
         Container(
@@ -225,7 +236,7 @@ class _InquiryDetailBody extends StatelessWidget {
           padding: const EdgeInsets.all(16),
           decoration: BoxDecoration(
             color: AppColors.chipBackground,
-            borderRadius: BorderRadius.circular(12),
+            borderRadius: BorderRadius.circular(AppRadius.md),
           ),
           child: Text(
             inquiry.content,
@@ -242,24 +253,28 @@ class _InquiryDetailBody extends StatelessWidget {
                 height: 28,
                 decoration: BoxDecoration(
                   color: AppColors.primary,
-                  borderRadius: BorderRadius.circular(8),
+                  borderRadius: BorderRadius.circular(AppRadius.sm),
                 ),
-                child: const Icon(Icons.support_agent,
-                    size: 16, color: Colors.white),
+                child: const Icon(
+                  Icons.support_agent,
+                  size: 16,
+                  color: Colors.white,
+                ),
               ),
               const SizedBox(width: 8),
               const Text(
                 '관리자 답변',
-                style: TextStyle(
-                    fontSize: 14, fontWeight: FontWeight.w700),
+                style: TextStyle(fontSize: 14, fontWeight: FontWeight.w700),
               ),
               if (inquiry.answeredAt != null) ...[
                 const SizedBox(width: 8),
                 Text(
-                  DateFormat('yyyy.MM.dd')
-                      .format(inquiry.answeredAt!.toLocal()),
-                  style: const TextStyle(
-                      fontSize: 12, color: AppColors.textTertiary),
+                  DateFormat(
+                    'yyyy.MM.dd',
+                  ).format(inquiry.answeredAt!.toLocal()),
+                  style: AppTextStyles.bodySmall.copyWith(
+                    color: AppColors.textTertiary,
+                  ),
                 ),
               ],
             ],
@@ -270,7 +285,7 @@ class _InquiryDetailBody extends StatelessWidget {
             padding: const EdgeInsets.all(16),
             decoration: BoxDecoration(
               color: const Color(0xFFE8F5E9),
-              borderRadius: BorderRadius.circular(12),
+              borderRadius: BorderRadius.circular(AppRadius.md),
             ),
             child: Text(
               inquiry.answer!,
@@ -282,14 +297,16 @@ class _InquiryDetailBody extends StatelessWidget {
           Center(
             child: Column(
               children: const [
-                Icon(Icons.hourglass_top_outlined,
-                    size: 32, color: AppColors.textTertiary),
+                Icon(
+                  Icons.hourglass_top_outlined,
+                  size: 32,
+                  color: AppColors.textTertiary,
+                ),
                 SizedBox(height: 8),
                 Text(
                   '답변을 준비 중입니다.\n빠른 시일 내 답변 드리겠습니다.',
                   textAlign: TextAlign.center,
-                  style: TextStyle(
-                      color: AppColors.textSecondary, height: 1.6),
+                  style: TextStyle(color: AppColors.textSecondary, height: 1.6),
                 ),
               ],
             ),
@@ -323,8 +340,7 @@ class _InquiryWriteScreenState extends ConsumerState<InquiryWriteScreen> {
   }
 
   bool get _isValid =>
-      _titleCtrl.text.trim().isNotEmpty &&
-      _contentCtrl.text.trim().isNotEmpty;
+      _titleCtrl.text.trim().isNotEmpty && _contentCtrl.text.trim().isNotEmpty;
 
   Future<void> _submit() async {
     if (!_isValid || _isSubmitting) return;
@@ -333,19 +349,29 @@ class _InquiryWriteScreenState extends ConsumerState<InquiryWriteScreen> {
 
     setState(() => _isSubmitting = true);
     try {
-      await ref.read(inquiryRepoProvider).createInquiry(
+      await ref
+          .read(inquiryRepoProvider)
+          .createInquiry(
             uid: uid,
             title: _titleCtrl.text.trim(),
             content: _contentCtrl.text.trim(),
           );
       if (mounted) {
-        showCenterToast(context, message: '문의가 접수됐습니다.', icon: Icons.check_circle);
+        showCenterToast(
+          context,
+          message: '문의가 접수됐습니다.',
+          icon: Icons.check_circle,
+        );
         context.pop();
       }
     } catch (e) {
       if (mounted) {
-        showCenterToast(context,
-            message: '오류: $e', icon: Icons.error_outline, iconColor: AppColors.error);
+        showCenterToast(
+          context,
+          message: '오류: $e',
+          icon: Icons.error_outline,
+          iconColor: AppColors.error,
+        );
         setState(() => _isSubmitting = false);
       }
     }
@@ -374,11 +400,12 @@ class _InquiryWriteScreenState extends ConsumerState<InquiryWriteScreen> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            const Text('제목',
-                style: TextStyle(
-                    fontSize: 13,
-                    fontWeight: FontWeight.w600,
-                    color: AppColors.textSecondary)),
+            Text(
+              '제목',
+              style: AppTextStyles.labelMedium.copyWith(
+                fontWeight: FontWeight.w600,
+              ),
+            ),
             const SizedBox(height: 8),
             TextField(
               controller: _titleCtrl,
@@ -386,24 +413,29 @@ class _InquiryWriteScreenState extends ConsumerState<InquiryWriteScreen> {
               onChanged: (_) => setState(() {}),
               decoration: InputDecoration(
                 hintText: '문의 제목을 입력해주세요',
-                hintStyle: const TextStyle(
-                    color: AppColors.textTertiary, fontSize: 14),
+                hintStyle: AppTextStyles.bodyMedium.copyWith(
+                  color: AppColors.textTertiary,
+                ),
                 filled: true,
                 fillColor: AppColors.chipBackground,
                 border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(10),
-                    borderSide: BorderSide.none),
+                  borderRadius: BorderRadius.circular(10),
+                  borderSide: BorderSide.none,
+                ),
                 contentPadding: const EdgeInsets.symmetric(
-                    horizontal: 14, vertical: 12),
+                  horizontal: 14,
+                  vertical: 12,
+                ),
                 counterText: '',
               ),
             ),
             const SizedBox(height: 20),
-            const Text('문의 내용',
-                style: TextStyle(
-                    fontSize: 13,
-                    fontWeight: FontWeight.w600,
-                    color: AppColors.textSecondary)),
+            Text(
+              '문의 내용',
+              style: AppTextStyles.labelMedium.copyWith(
+                fontWeight: FontWeight.w600,
+              ),
+            ),
             const SizedBox(height: 8),
             TextField(
               controller: _contentCtrl,
@@ -412,13 +444,15 @@ class _InquiryWriteScreenState extends ConsumerState<InquiryWriteScreen> {
               onChanged: (_) => setState(() {}),
               decoration: InputDecoration(
                 hintText: '문의하실 내용을 자세히 적어주세요.',
-                hintStyle: const TextStyle(
-                    color: AppColors.textTertiary, fontSize: 14),
+                hintStyle: AppTextStyles.bodyMedium.copyWith(
+                  color: AppColors.textTertiary,
+                ),
                 filled: true,
                 fillColor: AppColors.chipBackground,
                 border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(10),
-                    borderSide: BorderSide.none),
+                  borderRadius: BorderRadius.circular(10),
+                  borderSide: BorderSide.none,
+                ),
                 contentPadding: const EdgeInsets.all(14),
                 alignLabelWithHint: true,
               ),

@@ -52,8 +52,9 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
 
   void _tapSuggestion(String s) {
     _ctrl.text = s;
-    _ctrl.selection =
-        TextSelection.fromPosition(TextPosition(offset: s.length));
+    _ctrl.selection = TextSelection.fromPosition(
+      TextPosition(offset: s.length),
+    );
     _doSearch(s);
   }
 
@@ -66,7 +67,8 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
   Widget build(BuildContext context) {
     final history = ref.watch(searchHistoryProvider);
     final hasSearched = ref.watch(
-        searchProvider(widget.type).select((s) => s.hasSearched));
+      searchProvider(widget.type).select((s) => s.hasSearched),
+    );
 
     return Scaffold(
       backgroundColor: AppColors.background,
@@ -82,20 +84,16 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
         },
       ),
       body: _showSuggestions
-          ? _SuggestionsView(
-              query: _ctrl.text.trim(),
-              onTap: _tapSuggestion,
-            )
+          ? _SuggestionsView(query: _ctrl.text.trim(), onTap: _tapSuggestion)
           : !hasSearched
-              ? _HistoryView(
-                  history: history,
-                  onTap: _tapHistory,
-                  onRemove: (q) =>
-                      ref.read(searchHistoryProvider.notifier).remove(q),
-                  onClear: () =>
-                      ref.read(searchHistoryProvider.notifier).clear(),
-                )
-              : _ResultsView(type: widget.type),
+          ? _HistoryView(
+              history: history,
+              onTap: _tapHistory,
+              onRemove: (q) =>
+                  ref.read(searchHistoryProvider.notifier).remove(q),
+              onClear: () => ref.read(searchHistoryProvider.notifier).clear(),
+            )
+          : _ResultsView(type: widget.type),
     );
   }
 }
@@ -171,11 +169,12 @@ class _SuggestionsView extends ConsumerWidget {
           itemCount: suggestions.length,
           itemBuilder: (_, i) => ListTile(
             dense: true,
-            leading: const Icon(Icons.search,
-                size: 18, color: AppColors.textTertiary),
-            title: Text(suggestions[i],
-                style: const TextStyle(
-                    fontSize: 14, color: AppColors.textPrimary)),
+            leading: const Icon(
+              Icons.search,
+              size: 18,
+              color: AppColors.textTertiary,
+            ),
+            title: Text(suggestions[i], style: AppTextStyles.bodyMedium),
             onTap: () => onTap(suggestions[i]),
           ),
         );
@@ -201,10 +200,12 @@ class _HistoryView extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     if (history.isEmpty) {
-      return const Center(
+      return Center(
         child: Text(
           '최근 검색어가 없어요',
-          style: TextStyle(color: AppColors.textTertiary, fontSize: 14),
+          style: AppTextStyles.bodyMedium.copyWith(
+            color: AppColors.textTertiary,
+          ),
         ),
       );
     }
@@ -216,12 +217,11 @@ class _HistoryView extends StatelessWidget {
           padding: const EdgeInsets.fromLTRB(16, 16, 8, 8),
           child: Row(
             children: [
-              const Text(
+              Text(
                 '최근 검색어',
-                style: TextStyle(
-                    fontSize: 14,
-                    fontWeight: FontWeight.w600,
-                    color: AppColors.textSecondary),
+                style: AppTextStyles.titleSmall.copyWith(
+                  color: AppColors.textSecondary,
+                ),
               ),
               const Spacer(),
               TextButton(
@@ -244,14 +244,18 @@ class _HistoryView extends StatelessWidget {
               final q = history[i];
               return ListTile(
                 dense: true,
-                leading: const Icon(Icons.history,
-                    size: 18, color: AppColors.textTertiary),
-                title: Text(q,
-                    style: const TextStyle(
-                        fontSize: 14, color: AppColors.textPrimary)),
+                leading: const Icon(
+                  Icons.history,
+                  size: 18,
+                  color: AppColors.textTertiary,
+                ),
+                title: Text(q, style: AppTextStyles.bodyMedium),
                 trailing: IconButton(
-                  icon: const Icon(Icons.close,
-                      size: 16, color: AppColors.textTertiary),
+                  icon: const Icon(
+                    Icons.close,
+                    size: 16,
+                    color: AppColors.textTertiary,
+                  ),
                   onPressed: () => onRemove(q),
                 ),
                 onTap: () => onTap(q),
@@ -279,24 +283,37 @@ class _ResultsView extends ConsumerWidget {
 
     if (state.error != null) {
       return Center(
-        child: Text('오류가 발생했어요\n${state.error}',
-            textAlign: TextAlign.center,
-            style: const TextStyle(color: AppColors.textSecondary)),
+        child: Text(
+          '오류가 발생했어요\n${state.error}',
+          textAlign: TextAlign.center,
+          style: const TextStyle(color: AppColors.textSecondary),
+        ),
       );
     }
 
     if (state.hasSearched && state.reviews.isEmpty && state.posts.isEmpty) {
-      return const Center(
+      return Center(
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Icon(Icons.search_off, size: 56, color: AppColors.textTertiary),
-            SizedBox(height: 12),
-            Text('검색 결과가 없어요',
-                style: TextStyle(fontSize: 15, color: AppColors.textSecondary)),
-            SizedBox(height: 6),
-            Text('다른 검색어로 시도해보세요',
-                style: TextStyle(fontSize: 13, color: AppColors.textTertiary)),
+            const Icon(
+              Icons.search_off,
+              size: 56,
+              color: AppColors.textTertiary,
+            ),
+            const SizedBox(height: 12),
+            const Text(
+              '검색 결과가 없어요',
+              style: TextStyle(fontSize: 15, color: AppColors.textSecondary),
+            ),
+            const SizedBox(height: 6),
+            Text(
+              '다른 검색어로 시도해보세요',
+              style: AppTextStyles.labelMedium.copyWith(
+                color: AppColors.textTertiary,
+                fontWeight: FontWeight.w400,
+              ),
+            ),
           ],
         ),
       );
@@ -354,16 +371,18 @@ class _ResultsView extends ConsumerWidget {
         ],
         if (state.posts.isNotEmpty) ...[
           _SectionHeader(title: '커뮤니티', count: state.posts.length),
-          ...state.posts.map((post) => Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  PostCard(
-                    post: post,
-                    onTap: () => context.push('/community/${post.id}'),
-                  ),
-                  const Divider(height: 1),
-                ],
-              )),
+          ...state.posts.map(
+            (post) => Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                PostCard(
+                  post: post,
+                  onTap: () => context.push('/community/${post.id}'),
+                ),
+                const Divider(height: 1),
+              ],
+            ),
+          ),
         ],
         const SizedBox(height: 32),
       ],
@@ -378,8 +397,7 @@ class _ReviewSortChip extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final current =
-        ref.watch(searchProvider(type).select((s) => s.reviewSort));
+    final current = ref.watch(searchProvider(type).select((s) => s.reviewSort));
     return _SortChipRow(
       label: current.label,
       isActive: current != ReviewSortOption.newest,
@@ -387,17 +405,21 @@ class _ReviewSortChip extends ConsumerWidget {
     );
   }
 
-  void _showPicker(BuildContext context, WidgetRef ref, ReviewSortOption current) {
+  void _showPicker(
+    BuildContext context,
+    WidgetRef ref,
+    ReviewSortOption current,
+  ) {
     // 별점 시스템 비활성화 — '평점순' 옵션 숨김
-    final options =
-        ReviewSortOption.values.where((o) => o != ReviewSortOption.rating).toList();
+    final options = ReviewSortOption.values
+        .where((o) => o != ReviewSortOption.rating)
+        .toList();
     _showSortSheet(
       context: context,
       options: options.map((o) => o.label).toList(),
       currentIndex: options.indexOf(current),
-      onSelected: (i) => ref
-          .read(searchProvider(type).notifier)
-          .setReviewSort(options[i]),
+      onSelected: (i) =>
+          ref.read(searchProvider(type).notifier).setReviewSort(options[i]),
     );
   }
 }
@@ -416,7 +438,11 @@ class _PostSortChip extends ConsumerWidget {
     );
   }
 
-  void _showPicker(BuildContext context, WidgetRef ref, PostSortOption current) {
+  void _showPicker(
+    BuildContext context,
+    WidgetRef ref,
+    PostSortOption current,
+  ) {
     _showSortSheet(
       context: context,
       options: PostSortOption.values.map((o) => o.label).toList(),
@@ -450,17 +476,17 @@ class _SortChipRow extends StatelessWidget {
           child: Container(
             padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
             decoration: BoxDecoration(
-              color: isActive ? AppColors.chipSelected : AppColors.chipBackground,
-              borderRadius: BorderRadius.circular(20),
+              color: isActive
+                  ? AppColors.chipSelected
+                  : AppColors.chipBackground,
+              borderRadius: BorderRadius.circular(AppRadius.xl),
             ),
             child: Row(
               mainAxisSize: MainAxisSize.min,
               children: [
                 Text(
                   label,
-                  style: TextStyle(
-                    fontSize: 13,
-                    fontWeight: FontWeight.w500,
+                  style: AppTextStyles.labelMedium.copyWith(
                     color: isActive ? Colors.white : AppColors.textPrimary,
                   ),
                 ),
@@ -488,7 +514,7 @@ void _showSortSheet({
   showModalBottomSheet(
     context: context,
     shape: const RoundedRectangleBorder(
-      borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      borderRadius: BorderRadius.vertical(top: Radius.circular(AppRadius.xl)),
     ),
     builder: (_) => SafeArea(
       child: Column(
@@ -507,23 +533,25 @@ void _showSortSheet({
             padding: EdgeInsets.symmetric(horizontal: 20, vertical: 12),
             child: Align(
               alignment: Alignment.centerLeft,
-              child: Text('정렬',
-                  style: TextStyle(fontSize: 17, fontWeight: FontWeight.w700)),
+              child: Text(
+                '정렬',
+                style: TextStyle(fontSize: 17, fontWeight: FontWeight.w700),
+              ),
             ),
           ),
           const Divider(height: 1),
           ...options.asMap().entries.map(
-                (e) => ListTile(
-                  title: Text(e.value),
-                  trailing: e.key == currentIndex
-                      ? const Icon(Icons.check, color: AppColors.primary)
-                      : null,
-                  onTap: () {
-                    Navigator.pop(context);
-                    onSelected(e.key);
-                  },
-                ),
-              ),
+            (e) => ListTile(
+              title: Text(e.value),
+              trailing: e.key == currentIndex
+                  ? const Icon(Icons.check, color: AppColors.primary)
+                  : null,
+              onTap: () {
+                Navigator.pop(context);
+                onSelected(e.key);
+              },
+            ),
+          ),
           const SizedBox(height: 8),
         ],
       ),
@@ -542,13 +570,18 @@ class _SectionHeader extends StatelessWidget {
       padding: const EdgeInsets.fromLTRB(16, 20, 16, 10),
       child: Row(
         children: [
-          Text(title,
-              style: const TextStyle(
-                  fontSize: 16, fontWeight: FontWeight.w700)),
+          Text(
+            title,
+            style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w700),
+          ),
           const SizedBox(width: 6),
-          Text('$count건',
-              style: const TextStyle(
-                  fontSize: 13, color: AppColors.textTertiary)),
+          Text(
+            '$count건',
+            style: AppTextStyles.labelMedium.copyWith(
+              color: AppColors.textTertiary,
+              fontWeight: FontWeight.w400,
+            ),
+          ),
         ],
       ),
     );

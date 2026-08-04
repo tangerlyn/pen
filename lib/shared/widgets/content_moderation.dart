@@ -29,7 +29,7 @@ Future<void> showReportSheet(
     context: context,
     isScrollControlled: true,
     shape: const RoundedRectangleBorder(
-      borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
+      borderRadius: BorderRadius.vertical(top: Radius.circular(AppRadius.lg)),
     ),
     builder: (_) => _ReportSheet(
       targetType: targetType,
@@ -55,7 +55,9 @@ Future<void> showBlockDialog(
     context: context,
     builder: (_) => AlertDialog(
       title: const Text('사용자 차단'),
-      content: Text('$targetNickname 님을 차단하시겠습니까?\n차단하면 해당 사용자의 콘텐츠가 표시되지 않습니다.'),
+      content: Text(
+        '$targetNickname 님을 차단하시겠습니까?\n차단하면 해당 사용자의 콘텐츠가 표시되지 않습니다.',
+      ),
       actions: [
         TextButton(
           onPressed: () => Navigator.pop(context, false),
@@ -99,7 +101,9 @@ class _ReportSheetState extends ConsumerState<_ReportSheet> {
     if (_selectedReason == null) return;
     setState(() => _isSubmitting = true);
     try {
-      await ref.read(userRepoProvider).report(
+      await ref
+          .read(userRepoProvider)
+          .report(
             targetType: widget.targetType,
             targetId: widget.targetId,
             reporterId: widget.reporterId,
@@ -107,13 +111,21 @@ class _ReportSheetState extends ConsumerState<_ReportSheet> {
           );
       if (mounted) {
         Navigator.pop(context);
-        showCenterToast(context, message: '신고가 접수되었습니다.', icon: Icons.check_circle);
+        showCenterToast(
+          context,
+          message: '신고가 접수되었습니다.',
+          icon: Icons.check_circle,
+        );
       }
     } catch (e) {
       if (mounted) {
         setState(() => _isSubmitting = false);
-        showCenterToast(context,
-            message: '신고 실패: $e', icon: Icons.error_outline, iconColor: AppColors.error);
+        showCenterToast(
+          context,
+          message: '신고 실패: $e',
+          icon: Icons.error_outline,
+          iconColor: AppColors.error,
+        );
       }
     }
   }
@@ -122,7 +134,9 @@ class _ReportSheetState extends ConsumerState<_ReportSheet> {
   Widget build(BuildContext context) {
     return SafeArea(
       child: Padding(
-        padding: EdgeInsets.only(bottom: MediaQuery.of(context).viewInsets.bottom),
+        padding: EdgeInsets.only(
+          bottom: MediaQuery.of(context).viewInsets.bottom,
+        ),
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
@@ -137,26 +151,37 @@ class _ReportSheetState extends ConsumerState<_ReportSheet> {
             ),
             const Padding(
               padding: EdgeInsets.fromLTRB(16, 4, 16, 12),
-              child: Text('신고 사유 선택',
-                  style: TextStyle(fontSize: 16, fontWeight: FontWeight.w700)),
+              child: Text(
+                '신고 사유 선택',
+                style: TextStyle(fontSize: 16, fontWeight: FontWeight.w700),
+              ),
             ),
-            ..._reportReasons.map((reason) => RadioListTile<String>(
-                  title: Text(reason),
-                  value: reason,
-                  groupValue: _selectedReason,
-                  activeColor: AppColors.primary,
-                  onChanged: (v) => setState(() => _selectedReason = v),
-                )),
+            ..._reportReasons.map(
+              (reason) => RadioListTile<String>(
+                title: Text(reason),
+                value: reason,
+                groupValue: _selectedReason,
+                activeColor: AppColors.primary,
+                onChanged: (v) => setState(() => _selectedReason = v),
+              ),
+            ),
             Padding(
               padding: const EdgeInsets.fromLTRB(16, 8, 16, 16),
               child: SizedBox(
                 width: double.infinity,
                 child: ElevatedButton(
-                  onPressed: _selectedReason == null || _isSubmitting ? null : _submit,
+                  onPressed: _selectedReason == null || _isSubmitting
+                      ? null
+                      : _submit,
                   child: _isSubmitting
                       ? const SizedBox(
-                          width: 20, height: 20,
-                          child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white))
+                          width: 20,
+                          height: 20,
+                          child: CircularProgressIndicator(
+                            strokeWidth: 2,
+                            color: Colors.white,
+                          ),
+                        )
                       : const Text('신고하기'),
                 ),
               ),

@@ -1,4 +1,3 @@
-import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -14,6 +13,7 @@ import '../../../shared/widgets/common/empty_state.dart';
 import '../../../shared/widgets/community/post_card.dart';
 import '../../../shared/widgets/review/review_list_tile.dart';
 import '../../../shared/widgets/tap_scale.dart';
+import '../../../shared/widgets/user_avatar.dart';
 import '../providers/user_activity_provider.dart';
 
 // ── 메인 화면 ─────────────────────────────────────────────────────────
@@ -64,16 +64,7 @@ class _MypageScreenState extends ConsumerState<MypageScreen>
                   // 프로필
                   Row(
                     children: [
-                      CircleAvatar(
-                        radius: 40,
-                        backgroundColor: AppColors.chipBackground,
-                        backgroundImage: user?.profileImageUrl != null
-                            ? CachedNetworkImageProvider(user!.profileImageUrl!)
-                            : null,
-                        child: user?.profileImageUrl == null
-                            ? const Icon(Icons.person, size: 40, color: AppColors.textTertiary)
-                            : null,
-                      ),
+                      UserAvatar(imageUrl: user?.profileImageUrl, radius: 40),
                       const SizedBox(width: AppSpacing.xl),
                       Expanded(
                         child: Column(
@@ -83,7 +74,10 @@ class _MypageScreenState extends ConsumerState<MypageScreen>
                               children: [
                                 Text(
                                   user?.nickname ?? '',
-                                  style: const TextStyle(fontSize: 20, fontWeight: FontWeight.w700),
+                                  style: const TextStyle(
+                                    fontSize: 20,
+                                    fontWeight: FontWeight.w700,
+                                  ),
                                 ),
                               ],
                             ),
@@ -91,18 +85,19 @@ class _MypageScreenState extends ConsumerState<MypageScreen>
                               const SizedBox(height: 2),
                               Text(
                                 user.levelTitle,
-                                style: const TextStyle(
-                                    fontSize: 12,
-                                    color: AppColors.primary,
-                                    fontWeight: FontWeight.w500),
+                                style: AppTextStyles.bodySmall.copyWith(
+                                  color: AppColors.primary,
+                                  fontWeight: FontWeight.w500,
+                                ),
                               ),
                             ],
                             if (user?.bio.isNotEmpty == true) ...[
                               const SizedBox(height: AppSpacing.xs),
                               Text(
                                 user!.bio,
-                                style: const TextStyle(
-                                    color: AppColors.textSecondary, fontSize: 13),
+                                style: AppTextStyles.labelMedium.copyWith(
+                                  fontWeight: FontWeight.w400,
+                                ),
                               ),
                             ],
                           ],
@@ -116,22 +111,28 @@ class _MypageScreenState extends ConsumerState<MypageScreen>
                     mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                     children: [
                       Expanded(
-                          child: _StatItem(
-                            label: '팔로워',
-                            value: '${user?.followerCount ?? 0}',
-                            onTap: user != null
-                                ? () => context.push('/profile/${user.uid}/followers?tab=0')
-                                : null,
-                          )),
+                        child: _StatItem(
+                          label: '팔로워',
+                          value: '${user?.followerCount ?? 0}',
+                          onTap: user != null
+                              ? () => context.push(
+                                  '/profile/${user.uid}/followers?tab=0',
+                                )
+                              : null,
+                        ),
+                      ),
                       Container(height: 30, width: 1, color: AppColors.divider),
                       Expanded(
-                          child: _StatItem(
-                            label: '팔로잉',
-                            value: '${user?.followingCount ?? 0}',
-                            onTap: user != null
-                                ? () => context.push('/profile/${user.uid}/followers?tab=1')
-                                : null,
-                          )),
+                        child: _StatItem(
+                          label: '팔로잉',
+                          value: '${user?.followingCount ?? 0}',
+                          onTap: user != null
+                              ? () => context.push(
+                                  '/profile/${user.uid}/followers?tab=1',
+                                )
+                              : null,
+                        ),
+                      ),
                     ],
                   ),
                   const SizedBox(height: AppSpacing.lg),
@@ -322,13 +323,13 @@ class _ScrapbookGrid extends ConsumerWidget {
           final item = items[i];
           return switch (item) {
             _ReviewScrap(:final review) => ReviewListTile(
-                review: review,
-                onTap: () => context.push('/review/${review.id}'),
-              ),
+              review: review,
+              onTap: () => context.push('/review/${review.id}'),
+            ),
             _PostScrap(:final post) => PostCard(
-                post: post,
-                onTap: () => context.push('/community/${post.id}'),
-              ),
+              post: post,
+              onTap: () => context.push('/community/${post.id}'),
+            ),
           };
         },
       ),
@@ -348,8 +349,10 @@ class _StatItem extends StatelessWidget {
       onTap: onTap,
       child: Column(
         children: [
-          Text(value,
-              style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w700)),
+          Text(
+            value,
+            style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w700),
+          ),
           const SizedBox(height: 2),
           Text(label, style: AppTextStyles.bodySmall),
         ],
@@ -365,10 +368,13 @@ class _LevelProgressBar extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: AppSpacing.lg, vertical: 14),
+      padding: const EdgeInsets.symmetric(
+        horizontal: AppSpacing.lg,
+        vertical: 14,
+      ),
       decoration: BoxDecoration(
         color: AppColors.chipBackground,
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: BorderRadius.circular(AppRadius.md),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -378,23 +384,22 @@ class _LevelProgressBar extends StatelessWidget {
             children: [
               Text(
                 user.levelTitle,
-                style: const TextStyle(
-                    fontWeight: FontWeight.w700,
-                    fontSize: 14,
-                    color: AppColors.textPrimary),
+                style: AppTextStyles.titleSmall.copyWith(
+                  fontWeight: FontWeight.w700,
+                ),
               ),
               Text(
                 'EXP ${user.levelProgressLabel}',
-                style: const TextStyle(
-                    fontWeight: FontWeight.w600,
-                    fontSize: 12,
-                    color: AppColors.primary),
+                style: AppTextStyles.bodySmall.copyWith(
+                  fontWeight: FontWeight.w600,
+                  color: AppColors.primary,
+                ),
               ),
             ],
           ),
           const SizedBox(height: AppSpacing.sm),
           ClipRRect(
-            borderRadius: BorderRadius.circular(4),
+            borderRadius: BorderRadius.circular(AppRadius.xs),
             child: LinearProgressIndicator(
               value: user.levelProgress,
               backgroundColor: AppColors.divider,
@@ -444,7 +449,9 @@ class _WishlistCard extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final uid = ref.watch(currentUidProvider);
     final count = uid != null
-        ? ref.watch(wishlistProvider(uid)).maybeWhen(data: (l) => l.length, orElse: () => 0)
+        ? ref
+              .watch(wishlistProvider(uid))
+              .maybeWhen(data: (l) => l.length, orElse: () => 0)
         : 0;
 
     return OutlinedButton(
@@ -479,7 +486,10 @@ class _StickyTabBarDelegate extends SliverPersistentHeaderDelegate {
 
   @override
   Widget build(
-      BuildContext context, double shrinkOffset, bool overlapsContent) {
+    BuildContext context,
+    double shrinkOffset,
+    bool overlapsContent,
+  ) {
     return Container(color: AppColors.surface, child: tabBar);
   }
 

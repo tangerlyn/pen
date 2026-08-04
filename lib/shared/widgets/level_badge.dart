@@ -16,8 +16,7 @@ class LevelBadge extends StatelessWidget {
       ),
       child: Text(
         LevelSystem.shortLabel(level),
-        style: const TextStyle(
-          fontSize: 11,
+        style: AppTextStyles.labelSmall.copyWith(
           fontWeight: FontWeight.w600,
           color: AppColors.primary,
         ),

@@ -7,6 +7,7 @@ import '../../../core/utils/network_utils.dart';
 import '../../../shared/providers/providers.dart';
 import '../../../shared/widgets/editor/blog_body_editor.dart';
 import '../../../shared/widgets/center_toast.dart';
+import '../../../shared/widgets/confirm_discard_dialog.dart';
 import '../providers/community_provider.dart';
 import '../../../data/models/post_model.dart';
 
@@ -73,17 +74,18 @@ class _PostWriteScreenState extends ConsumerState<PostWriteScreen> {
       List<Map<String, dynamic>> contentBlocks;
       try {
         contentBlocks = await editorState.buildContentBlocks(
-          uploadImage: (file) => ref.read(storageServiceProvider).uploadImage(
-            file: file,
-            folder: 'posts',
-          ),
+          uploadImage: (file) => ref
+              .read(storageServiceProvider)
+              .uploadImage(file: file, folder: 'posts'),
         );
       } catch (_) {
         if (mounted) {
-          showCenterToast(context,
-              message: '이미지 업로드에 실패했어요. 다시 시도해주세요.',
-              icon: Icons.error_outline,
-              iconColor: const Color(0xFFE53935));
+          showCenterToast(
+            context,
+            message: '이미지 업로드에 실패했어요. 다시 시도해주세요.',
+            icon: Icons.error_outline,
+            iconColor: const Color(0xFFE53935),
+          );
           setState(() => _isSubmitting = false);
         }
         return;
@@ -99,27 +101,32 @@ class _PostWriteScreenState extends ConsumerState<PostWriteScreen> {
           .join('\n');
 
       if (_isEditing) {
-        await withRetry(() => ref.read(postRepositoryProvider).updatePost(
-          widget.postToEdit!.id,
-          {
-            'title': title,
-            'body': body,
-            'imageUrls': imageUrls,
-            'contentBlocks': contentBlocks,
-          },
-        ));
+        await withRetry(
+          () => ref
+              .read(postRepositoryProvider)
+              .updatePost(widget.postToEdit!.id, {
+                'title': title,
+                'body': body,
+                'imageUrls': imageUrls,
+                'contentBlocks': contentBlocks,
+              }),
+        );
         if (mounted) context.pop();
       } else {
-        final postId = await withRetry(() => ref.read(postWriteProvider.notifier).submit(
-              authorId: user.uid,
-              authorNickname: user.nickname,
-              authorLevel: user.level,
-              title: title,
-              body: body,
-              imageUrls: imageUrls,
-              category: _selectedCategory,
-              contentBlocks: contentBlocks,
-            ));
+        final postId = await withRetry(
+          () => ref
+              .read(postWriteProvider.notifier)
+              .submit(
+                authorId: user.uid,
+                authorNickname: user.nickname,
+                authorLevel: user.level,
+                title: title,
+                body: body,
+                imageUrls: imageUrls,
+                category: _selectedCategory,
+                contentBlocks: contentBlocks,
+              ),
+        );
         if (mounted && postId != null) {
           context.pop();
           context.push('/community/$postId');
@@ -152,27 +159,7 @@ class _PostWriteScreenState extends ConsumerState<PostWriteScreen> {
 
   Future<bool> _confirmDiscard() async {
     if (!_hasContent()) return true;
-    return await showDialog<bool>(
-          context: context,
-          builder: (ctx) => AlertDialog(
-            title: const Text('작성 중인 내용이 있어요'),
-            content: const Text('지금 나가면 작성한 내용이 모두 삭제됩니다.'),
-            actions: [
-              TextButton(
-                onPressed: () => Navigator.pop(ctx, false),
-                child: const Text('계속 작성'),
-              ),
-              TextButton(
-                onPressed: () => Navigator.pop(ctx, true),
-                child: Text(
-                  '삭제하고 나가기',
-                  style: TextStyle(color: Theme.of(context).colorScheme.error),
-                ),
-              ),
-            ],
-          ),
-        ) ??
-        false;
+    return confirmDiscardDialog(context, confirmLabel: '삭제하고 나가기');
   }
 
   @override
@@ -187,25 +174,27 @@ class _PostWriteScreenState extends ConsumerState<PostWriteScreen> {
       child: Scaffold(
         appBar: AppBar(
           title: Text(_isEditing ? '게시글 수정' : '글쓰기'),
-        actions: [
-          _isSubmitting
-                  ? const Padding(
-                      padding: EdgeInsets.all(16),
-                      child: SizedBox(
-                        width: 20,
-                        height: 20,
-                        child: CircularProgressIndicator(strokeWidth: 2),
-                      ),
-                    )
-                  : TextButton(
-                      onPressed: _submit,
-                      child: Text(
-                        _isEditing ? '수정' : '등록',
-                        style: const TextStyle(
-                            color: AppColors.primary, fontWeight: FontWeight.w600),
+          actions: [
+            _isSubmitting
+                ? const Padding(
+                    padding: EdgeInsets.all(16),
+                    child: SizedBox(
+                      width: 20,
+                      height: 20,
+                      child: CircularProgressIndicator(strokeWidth: 2),
+                    ),
+                  )
+                : TextButton(
+                    onPressed: _submit,
+                    child: Text(
+                      _isEditing ? '수정' : '등록',
+                      style: const TextStyle(
+                        color: AppColors.primary,
+                        fontWeight: FontWeight.w600,
                       ),
                     ),
-        ],
+                  ),
+          ],
         ),
         body: GestureDetector(
           onTap: () => FocusScope.of(context).unfocus(),
@@ -228,7 +217,9 @@ class _PostWriteScreenState extends ConsumerState<PostWriteScreen> {
                       ),
                       selectedColor: AppColors.primary,
                       labelStyle: TextStyle(
-                        color: isSelected ? Colors.white : AppColors.textPrimary,
+                        color: isSelected
+                            ? Colors.white
+                            : AppColors.textPrimary,
                         fontWeight: FontWeight.w500,
                       ),
                     );
@@ -246,7 +237,10 @@ class _PostWriteScreenState extends ConsumerState<PostWriteScreen> {
                     border: InputBorder.none,
                     counterText: '',
                   ),
-                  style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w600),
+                  style: const TextStyle(
+                    fontSize: 18,
+                    fontWeight: FontWeight.w600,
+                  ),
                   maxLength: AppConstants.maxPostTitle,
                 ),
               ),
@@ -258,14 +252,17 @@ class _PostWriteScreenState extends ConsumerState<PostWriteScreen> {
                 hintText: '내용을 입력하세요',
                 initialBlocks: _initialEditorBlocks,
                 maxTextLength: AppConstants.maxPostBody,
-                onFocusChanged: (hasFocus) => setState(() => _showEditorToolbar = hasFocus),
+                onFocusChanged: (hasFocus) =>
+                    setState(() => _showEditorToolbar = hasFocus),
               ),
             ],
           ),
         ),
         bottomNavigationBar: _showEditorToolbar
             ? Padding(
-                padding: EdgeInsets.only(bottom: MediaQuery.of(context).viewInsets.bottom),
+                padding: EdgeInsets.only(
+                  bottom: MediaQuery.of(context).viewInsets.bottom,
+                ),
                 child: BlogEditorToolbar(editorKey: _editorKey),
               )
             : null,

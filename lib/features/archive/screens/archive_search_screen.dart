@@ -27,7 +27,10 @@ class _ArchiveHistoryNotifier extends StateNotifier<List<String>> {
   Future<void> add(String q) async {
     final trimmed = q.trim();
     if (trimmed.isEmpty) return;
-    final list = [trimmed, ...state.where((s) => s != trimmed)].take(_max).toList();
+    final list = [
+      trimmed,
+      ...state.where((s) => s != trimmed),
+    ].take(_max).toList();
     state = list;
     (await SharedPreferences.getInstance()).setStringList(_key, list);
   }
@@ -46,7 +49,8 @@ class _ArchiveHistoryNotifier extends StateNotifier<List<String>> {
 
 final _archiveHistoryProvider =
     StateNotifierProvider<_ArchiveHistoryNotifier, List<String>>(
-        (_) => _ArchiveHistoryNotifier());
+      (_) => _ArchiveHistoryNotifier(),
+    );
 
 // ── 검색 화면 ─────────────────────────────────────────────────────────
 class ArchiveSearchScreen extends ConsumerStatefulWidget {
@@ -74,8 +78,9 @@ class _ArchiveSearchScreenState extends ConsumerState<ArchiveSearchScreen>
   void initState() {
     super.initState();
     _tabController = TabController(length: 2, vsync: this);
-    WidgetsBinding.instance
-        .addPostFrameCallback((_) => _focusNode.requestFocus());
+    WidgetsBinding.instance.addPostFrameCallback(
+      (_) => _focusNode.requestFocus(),
+    );
   }
 
   @override
@@ -115,8 +120,9 @@ class _ArchiveSearchScreenState extends ConsumerState<ArchiveSearchScreen>
 
   void _tapSuggestion(String s) {
     _ctrl.text = s;
-    _ctrl.selection =
-        TextSelection.fromPosition(TextPosition(offset: s.length));
+    _ctrl.selection = TextSelection.fromPosition(
+      TextPosition(offset: s.length),
+    );
     _doSearch(s);
   }
 
@@ -156,8 +162,7 @@ class _ArchiveSearchScreenState extends ConsumerState<ArchiveSearchScreen>
           onChanged: (_) => setState(() => _hasSearched = false),
           decoration: const InputDecoration(
             hintText: '브랜드명, 제품명으로 검색',
-            hintStyle:
-                TextStyle(fontSize: 15, color: AppColors.textTertiary),
+            hintStyle: TextStyle(fontSize: 15, color: AppColors.textTertiary),
             border: InputBorder.none,
             enabledBorder: InputBorder.none,
             focusedBorder: InputBorder.none,
@@ -177,21 +182,20 @@ class _ArchiveSearchScreenState extends ConsumerState<ArchiveSearchScreen>
       body: showSuggestions
           ? _SuggestionsView(query: query, onTap: _tapSuggestion)
           : showHistory
-              ? _HistoryView(
-                  history: history,
-                  onTap: _tapHistory,
-                  onRemove: (q) =>
-                      ref.read(_archiveHistoryProvider.notifier).remove(q),
-                  onClear: () =>
-                      ref.read(_archiveHistoryProvider.notifier).clear(),
-                )
-              : _ResultsView(
-                  tabController: _tabController,
-                  inks: _inks,
-                  pens: _pens,
-                  isLoading: _isLoading,
-                  query: _lastQuery,
-                ),
+          ? _HistoryView(
+              history: history,
+              onTap: _tapHistory,
+              onRemove: (q) =>
+                  ref.read(_archiveHistoryProvider.notifier).remove(q),
+              onClear: () => ref.read(_archiveHistoryProvider.notifier).clear(),
+            )
+          : _ResultsView(
+              tabController: _tabController,
+              inks: _inks,
+              pens: _pens,
+              isLoading: _isLoading,
+              query: _lastQuery,
+            ),
     );
   }
 }
@@ -214,11 +218,12 @@ class _SuggestionsView extends ConsumerWidget {
           itemCount: suggestions.length,
           itemBuilder: (_, i) => ListTile(
             dense: true,
-            leading: const Icon(Icons.search,
-                size: 18, color: AppColors.textTertiary),
-            title: Text(suggestions[i],
-                style: const TextStyle(
-                    fontSize: 14, color: AppColors.textPrimary)),
+            leading: const Icon(
+              Icons.search,
+              size: 18,
+              color: AppColors.textTertiary,
+            ),
+            title: Text(suggestions[i], style: AppTextStyles.bodyMedium),
             onTap: () => onTap(suggestions[i]),
           ),
         );
@@ -243,10 +248,13 @@ class _HistoryView extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     if (history.isEmpty) {
-      return const Center(
-        child: Text('최근 검색어가 없어요',
-            style:
-                TextStyle(color: AppColors.textTertiary, fontSize: 14)),
+      return Center(
+        child: Text(
+          '최근 검색어가 없어요',
+          style: AppTextStyles.bodyMedium.copyWith(
+            color: AppColors.textTertiary,
+          ),
+        ),
       );
     }
     return Column(
@@ -256,11 +264,12 @@ class _HistoryView extends StatelessWidget {
           padding: const EdgeInsets.fromLTRB(16, 16, 8, 8),
           child: Row(
             children: [
-              const Text('최근 검색어',
-                  style: TextStyle(
-                      fontSize: 14,
-                      fontWeight: FontWeight.w600,
-                      color: AppColors.textSecondary)),
+              Text(
+                '최근 검색어',
+                style: AppTextStyles.titleSmall.copyWith(
+                  color: AppColors.textSecondary,
+                ),
+              ),
               const Spacer(),
               TextButton(
                 onPressed: onClear,
@@ -270,8 +279,7 @@ class _HistoryView extends StatelessWidget {
                   minimumSize: Size.zero,
                   tapTargetSize: MaterialTapTargetSize.shrinkWrap,
                 ),
-                child: const Text('전체 삭제',
-                    style: TextStyle(fontSize: 13)),
+                child: const Text('전체 삭제', style: TextStyle(fontSize: 13)),
               ),
             ],
           ),
@@ -283,14 +291,18 @@ class _HistoryView extends StatelessWidget {
               final q = history[i];
               return ListTile(
                 dense: true,
-                leading: const Icon(Icons.history,
-                    size: 18, color: AppColors.textTertiary),
-                title: Text(q,
-                    style: const TextStyle(
-                        fontSize: 14, color: AppColors.textPrimary)),
+                leading: const Icon(
+                  Icons.history,
+                  size: 18,
+                  color: AppColors.textTertiary,
+                ),
+                title: Text(q, style: AppTextStyles.bodyMedium),
                 trailing: IconButton(
-                  icon: const Icon(Icons.close,
-                      size: 16, color: AppColors.textTertiary),
+                  icon: const Icon(
+                    Icons.close,
+                    size: 16,
+                    color: AppColors.textTertiary,
+                  ),
                   onPressed: () => onRemove(q),
                 ),
                 onTap: () => onTap(q),
@@ -360,8 +372,12 @@ class _InkResults extends StatelessWidget {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            const Text('잉크 검색 결과가 없어요',
-                style: TextStyle(color: AppColors.textSecondary, fontSize: 14)),
+            Text(
+              '잉크 검색 결과가 없어요',
+              style: AppTextStyles.bodyMedium.copyWith(
+                color: AppColors.textSecondary,
+              ),
+            ),
             const SizedBox(height: 16),
             TextButton.icon(
               icon: const Icon(Icons.add_circle_outline),
@@ -411,8 +427,9 @@ class _InkResults extends StatelessWidget {
               const SizedBox(height: 6),
               Text(
                 ink.name,
-                style: const TextStyle(
-                    fontSize: 10, color: AppColors.textSecondary),
+                style: AppTextStyles.caption.copyWith(
+                  color: AppColors.textSecondary,
+                ),
                 maxLines: 2,
                 overflow: TextOverflow.ellipsis,
                 textAlign: TextAlign.center,
@@ -437,8 +454,12 @@ class _PenResults extends StatelessWidget {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            const Text('만년필 검색 결과가 없어요',
-                style: TextStyle(color: AppColors.textSecondary, fontSize: 14)),
+            Text(
+              '만년필 검색 결과가 없어요',
+              style: AppTextStyles.bodyMedium.copyWith(
+                color: AppColors.textSecondary,
+              ),
+            ),
             const SizedBox(height: 16),
             TextButton.icon(
               icon: const Icon(Icons.add_circle_outline),

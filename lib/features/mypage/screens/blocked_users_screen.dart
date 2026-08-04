@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:cached_network_image/cached_network_image.dart';
 import '../../../core/theme/app_theme.dart';
 import '../../../shared/providers/providers.dart';
 import '../../../shared/widgets/center_toast.dart';
+import '../../../shared/widgets/user_avatar.dart';
 import '../../../data/models/user_model.dart';
 import '../providers/user_activity_provider.dart';
 
@@ -29,8 +29,10 @@ class BlockedUsersScreen extends ConsumerWidget {
                 children: [
                   Icon(Icons.block, size: 52, color: AppColors.textTertiary),
                   SizedBox(height: 12),
-                  Text('차단한 사용자가 없습니다',
-                      style: TextStyle(color: AppColors.textSecondary)),
+                  Text(
+                    '차단한 사용자가 없습니다',
+                    style: TextStyle(color: AppColors.textSecondary),
+                  ),
                 ],
               ),
             );
@@ -71,7 +73,11 @@ class BlockedUsersScreen extends ConsumerWidget {
               Navigator.pop(context);
               await ref.read(userRepoProvider).unblock(myUid, target.uid);
               if (context.mounted) {
-                showCenterToast(context, message: '차단이 해제되었습니다.', icon: Icons.check_circle);
+                showCenterToast(
+                  context,
+                  message: '차단이 해제되었습니다.',
+                  icon: Icons.check_circle,
+                );
               }
             },
             child: const Text('해제'),
@@ -91,18 +97,11 @@ class _BlockedUserTile extends StatelessWidget {
   Widget build(BuildContext context) {
     return ListTile(
       contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
-      leading: CircleAvatar(
-        radius: 24,
-        backgroundColor: AppColors.chipBackground,
-        backgroundImage: user.profileImageUrl != null
-            ? CachedNetworkImageProvider(user.profileImageUrl!)
-            : null,
-        child: user.profileImageUrl == null
-            ? const Icon(Icons.person, color: AppColors.textTertiary)
-            : null,
+      leading: UserAvatar(imageUrl: user.profileImageUrl, radius: 24),
+      title: Text(
+        user.nickname,
+        style: const TextStyle(fontWeight: FontWeight.w600),
       ),
-      title: Text(user.nickname,
-          style: const TextStyle(fontWeight: FontWeight.w600)),
       trailing: OutlinedButton(
         onPressed: onUnblock,
         style: OutlinedButton.styleFrom(

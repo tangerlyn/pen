@@ -14,15 +14,13 @@ class WishlistScreen extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final uid = ref.watch(currentUidProvider);
-    if (uid == null) return const Scaffold(body: Center(child: CircularProgressIndicator()));
+    if (uid == null)
+      return const Scaffold(body: Center(child: CircularProgressIndicator()));
 
     final wishlistAsync = ref.watch(wishlistProvider(uid));
 
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('위시리스트'),
-        scrolledUnderElevation: 0,
-      ),
+      appBar: AppBar(title: const Text('위시리스트'), scrolledUnderElevation: 0),
       body: wishlistAsync.when(
         loading: () => const Center(child: CircularProgressIndicator()),
         error: (_, __) => const EmptyStateWidget(
@@ -58,7 +56,9 @@ class _WishlistTile extends ConsumerWidget {
     Color inkColor = const Color(0xFFCCCCCC);
     if (item.hexColor.isNotEmpty) {
       try {
-        inkColor = Color(int.parse('FF${item.hexColor.replaceAll('#', '')}', radix: 16));
+        inkColor = Color(
+          int.parse('FF${item.hexColor.replaceAll('#', '')}', radix: 16),
+        );
       } catch (_) {}
     }
 
@@ -71,14 +71,19 @@ class _WishlistTile extends ConsumerWidget {
               height: 40,
               decoration: BoxDecoration(
                 color: AppColors.chipBackground,
-                borderRadius: BorderRadius.circular(8),
+                borderRadius: BorderRadius.circular(AppRadius.sm),
               ),
-              child: const Icon(Icons.edit_outlined, color: AppColors.textSecondary, size: 20),
+              child: const Icon(
+                Icons.edit_outlined,
+                color: AppColors.textSecondary,
+                size: 20,
+              ),
             ),
-      title: Text(item.productName,
-          style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 14)),
-      subtitle: Text(item.brand,
-          style: const TextStyle(color: AppColors.textSecondary, fontSize: 12)),
+      title: Text(
+        item.productName,
+        style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 14),
+      ),
+      subtitle: Text(item.brand, style: AppTextStyles.bodySmall),
       trailing: IconButton(
         icon: const Icon(Icons.favorite, color: Colors.redAccent, size: 20),
         onPressed: () async {

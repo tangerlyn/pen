@@ -9,7 +9,8 @@ class SignupNicknameScreen extends ConsumerStatefulWidget {
   const SignupNicknameScreen({super.key});
 
   @override
-  ConsumerState<SignupNicknameScreen> createState() => _SignupNicknameScreenState();
+  ConsumerState<SignupNicknameScreen> createState() =>
+      _SignupNicknameScreenState();
 }
 
 class _SignupNicknameScreenState extends ConsumerState<SignupNicknameScreen> {
@@ -33,7 +34,9 @@ class _SignupNicknameScreenState extends ConsumerState<SignupNicknameScreen> {
       _isAvailable = null;
     });
 
-    final available = await ref.read(authProvider.notifier).checkNickname(nickname);
+    final available = await ref
+        .read(authProvider.notifier)
+        .checkNickname(nickname);
     setState(() {
       _isChecking = false;
       _isAvailable = available;
@@ -53,7 +56,10 @@ class _SignupNicknameScreenState extends ConsumerState<SignupNicknameScreen> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            const Text('닉네임을 입력해주세요', style: TextStyle(fontSize: 22, fontWeight: FontWeight.w700)),
+            const Text(
+              '닉네임을 입력해주세요',
+              style: TextStyle(fontSize: 22, fontWeight: FontWeight.w700),
+            ),
             const SizedBox(height: 8),
             const Text(
               '커뮤니티에서 사용할 이름이에요. 나중에 변경할 수 있어요.',
@@ -85,7 +91,11 @@ class _SignupNicknameScreenState extends ConsumerState<SignupNicknameScreen> {
                     padding: const EdgeInsets.symmetric(horizontal: 16),
                   ),
                   child: _isChecking
-                      ? const SizedBox(width: 20, height: 20, child: CircularProgressIndicator(strokeWidth: 2))
+                      ? const SizedBox(
+                          width: 20,
+                          height: 20,
+                          child: CircularProgressIndicator(strokeWidth: 2),
+                        )
                       : const Text('중복확인'),
                 ),
               ],
@@ -94,16 +104,18 @@ class _SignupNicknameScreenState extends ConsumerState<SignupNicknameScreen> {
             if (_isAvailable != null)
               Text(
                 _isAvailable! ? '사용 가능한 닉네임이에요.' : '이미 사용 중인 닉네임이에요.',
-                style: TextStyle(
+                style: AppTextStyles.labelMedium.copyWith(
                   color: _isAvailable! ? AppColors.success : AppColors.error,
-                  fontSize: 13,
+                  fontWeight: FontWeight.w400,
                 ),
               ),
             const Spacer(),
             ElevatedButton(
               onPressed: canProceed
                   ? () {
-                      ref.read(authProvider.notifier).setNickname(_controller.text.trim());
+                      ref
+                          .read(authProvider.notifier)
+                          .setNickname(_controller.text.trim());
                       context.go('/signup/profile');
                     }
                   : null,

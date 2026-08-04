@@ -29,39 +29,41 @@ import '../widgets/notebook_page.dart';
 // ── Enums ──────────────────────────────────────────────────────────────────
 
 enum _SortOption { defaultOrder, brand, color }
+
 enum _PageStyle { lines, grid, plain }
+
 enum _ViewMode { pageView, scroll }
 
 extension _SortOptionX on _SortOption {
   String get label => switch (this) {
-        _SortOption.defaultOrder => '기본순',
-        _SortOption.brand => '브랜드순',
-        _SortOption.color => '색상순',
-      };
+    _SortOption.defaultOrder => '기본순',
+    _SortOption.brand => '브랜드순',
+    _SortOption.color => '색상순',
+  };
   String get description => switch (this) {
-        _SortOption.defaultOrder => '추가한 순서대로',
-        _SortOption.brand => '브랜드명 가나다순',
-        _SortOption.color => '사진의 주요 색상 기준',
-      };
+    _SortOption.defaultOrder => '추가한 순서대로',
+    _SortOption.brand => '브랜드명 가나다순',
+    _SortOption.color => '사진의 주요 색상 기준',
+  };
 }
 
 extension _PageStyleX on _PageStyle {
   String get label => switch (this) {
-        _PageStyle.lines => '실선',
-        _PageStyle.grid => '격자',
-        _PageStyle.plain => '민무늬',
-      };
+    _PageStyle.lines => '실선',
+    _PageStyle.grid => '격자',
+    _PageStyle.plain => '민무늬',
+  };
 }
 
 extension _ViewModeX on _ViewMode {
   String get label => switch (this) {
-        _ViewMode.pageView => '좌우 스와이프',
-        _ViewMode.scroll => '위아래 스와이프',
-      };
+    _ViewMode.pageView => '좌우 스와이프',
+    _ViewMode.scroll => '위아래 스와이프',
+  };
   String get description => switch (this) {
-        _ViewMode.pageView => '좌우 스와이프, 3×3 페이지',
-        _ViewMode.scroll => '위아래 스와이프, 3×3 페이지',
-      };
+    _ViewMode.pageView => '좌우 스와이프, 3×3 페이지',
+    _ViewMode.scroll => '위아래 스와이프, 3×3 페이지',
+  };
 }
 
 // ── Screen ─────────────────────────────────────────────────────────────────
@@ -180,15 +182,21 @@ class _InkBookDetailScreenState extends ConsumerState<InkBookDetailScreen> {
 
     // 첫 번째 패스: 모든 페이지를 방문해 이미지를 메모리 캐시에 올림
     for (int i = 0; i < pageCount; i++) {
-      await _pageCtrl.animateToPage(i,
-          duration: const Duration(milliseconds: 1), curve: Curves.linear);
+      await _pageCtrl.animateToPage(
+        i,
+        duration: const Duration(milliseconds: 1),
+        curve: Curves.linear,
+      );
       await Future.delayed(const Duration(milliseconds: 400));
     }
 
     // 두 번째 패스: 이미지가 캐시된 상태에서 캡처
     for (int i = 0; i < pageCount; i++) {
-      await _pageCtrl.animateToPage(i,
-          duration: const Duration(milliseconds: 1), curve: Curves.linear);
+      await _pageCtrl.animateToPage(
+        i,
+        duration: const Duration(milliseconds: 1),
+        curve: Curves.linear,
+      );
       await Future.delayed(const Duration(milliseconds: 300));
 
       if (i >= _pageKeys.length) continue;
@@ -216,7 +224,9 @@ class _InkBookDetailScreenState extends ConsumerState<InkBookDetailScreen> {
       context: context,
       barrierColor: Colors.black38,
       builder: (_) => Dialog(
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(AppRadius.xl),
+        ),
         backgroundColor: const Color(0xFFFFFCF5),
         child: Padding(
           padding: const EdgeInsets.fromLTRB(28, 32, 28, 24),
@@ -230,22 +240,20 @@ class _InkBookDetailScreenState extends ConsumerState<InkBookDetailScreen> {
                   color: AppColors.primary.withValues(alpha: 0.12),
                   shape: BoxShape.circle,
                 ),
-                child: const Icon(Icons.check_rounded,
-                    size: 32, color: AppColors.primary),
+                child: const Icon(
+                  Icons.check_rounded,
+                  size: 32,
+                  color: AppColors.primary,
+                ),
               ),
               const SizedBox(height: 16),
-              const Text(
-                '저장 완료',
-                style: TextStyle(
-                    fontSize: 18,
-                    fontWeight: FontWeight.w700,
-                    color: AppColors.textPrimary),
-              ),
+              const Text('저장 완료', style: AppTextStyles.titleLarge),
               const SizedBox(height: 6),
               Text(
                 '$saved장이 앨범에 저장됐어요',
-                style: const TextStyle(
-                    fontSize: 14, color: AppColors.textSecondary),
+                style: AppTextStyles.bodyMedium.copyWith(
+                  color: AppColors.textSecondary,
+                ),
               ),
               const SizedBox(height: 28),
               SizedBox(
@@ -263,19 +271,24 @@ class _InkBookDetailScreenState extends ConsumerState<InkBookDetailScreen> {
                     foregroundColor: Colors.white,
                     padding: const EdgeInsets.symmetric(vertical: 14),
                     shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(12)),
+                      borderRadius: BorderRadius.circular(AppRadius.md),
+                    ),
                   ),
-                  child: const Text('앨범에서 확인하기',
-                      style: TextStyle(
-                          fontSize: 15, fontWeight: FontWeight.w600)),
+                  child: const Text(
+                    '앨범에서 확인하기',
+                    style: TextStyle(fontSize: 15, fontWeight: FontWeight.w600),
+                  ),
                 ),
               ),
               const SizedBox(height: 10),
               TextButton(
                 onPressed: () => Navigator.pop(context),
-                child: const Text('닫기',
-                    style: TextStyle(
-                        fontSize: 14, color: AppColors.textSecondary)),
+                child: Text(
+                  '닫기',
+                  style: AppTextStyles.bodyMedium.copyWith(
+                    color: AppColors.textSecondary,
+                  ),
+                ),
               ),
             ],
           ),
@@ -290,9 +303,11 @@ class _InkBookDetailScreenState extends ConsumerState<InkBookDetailScreen> {
     if (_searchQuery.isEmpty) return raw;
     final q = _searchQuery.toLowerCase();
     return raw
-        .where((e) =>
-            e.brand.toLowerCase().contains(q) ||
-            e.inkName.toLowerCase().contains(q))
+        .where(
+          (e) =>
+              e.brand.toLowerCase().contains(q) ||
+              e.inkName.toLowerCase().contains(q),
+        )
         .toList();
   }
 
@@ -319,56 +334,65 @@ class _InkBookDetailScreenState extends ConsumerState<InkBookDetailScreen> {
 
   Future<void> _extractColors(List<InkChartModel> entries) async {
     setState(() => _extractingColors = true);
-    await Future.wait(entries.map((e) async {
-      if (_hueCache.containsKey(e.photoUrl)) return;
-      try {
-        final palette = await PaletteGenerator.fromImageProvider(
-          CachedNetworkImageProvider(e.photoUrl),
-          size: const Size(80, 80),
-          timeout: const Duration(seconds: 6),
-        );
-        final c = palette.dominantColor?.color ?? Colors.grey;
-        _hueCache[e.photoUrl] = HSVColor.fromColor(c).hue;
-      } catch (_) {
-        _hueCache[e.photoUrl] = 0.0;
-      }
-    }));
+    await Future.wait(
+      entries.map((e) async {
+        if (_hueCache.containsKey(e.photoUrl)) return;
+        try {
+          final palette = await PaletteGenerator.fromImageProvider(
+            CachedNetworkImageProvider(e.photoUrl),
+            size: const Size(80, 80),
+            timeout: const Duration(seconds: 6),
+          );
+          final c = palette.dominantColor?.color ?? Colors.grey;
+          _hueCache[e.photoUrl] = HSVColor.fromColor(c).hue;
+        } catch (_) {
+          _hueCache[e.photoUrl] = 0.0;
+        }
+      }),
+    );
     if (mounted) setState(() => _extractingColors = false);
   }
 
   Future<void> _saveReorder(String uid, List<InkChartModel> reordered) async {
-    await ref.read(inkBookRepoProvider).reorderEntries(
-      uid, widget.bookId, reordered,
-    );
+    await ref
+        .read(inkBookRepoProvider)
+        .reorderEntries(uid, widget.bookId, reordered);
   }
 
   // ── Visibility ───────────────────────────────────────────────────────────
 
   IconData _visibilityIcon(String? visibility) => switch (visibility) {
-        'public' => Icons.public,
-        'followers' => Icons.group_outlined,
-        _ => Icons.lock_outlined,
-      };
+    'public' => Icons.public,
+    'followers' => Icons.group_outlined,
+    _ => Icons.lock_outlined,
+  };
 
   String _visibilityLabel(String? visibility) => switch (visibility) {
-        'public' => '모든 사람에게 공개',
-        'followers' => '팔로워에게만 공개',
-        _ => '비공개',
-      };
+    'public' => '모든 사람에게 공개',
+    'followers' => '팔로워에게만 공개',
+    _ => '비공개',
+  };
 
   void _showVisibilitySheet(
-      BuildContext context, WidgetRef ref, String uid, InkBookModel book) {
+    BuildContext context,
+    WidgetRef ref,
+    String uid,
+    InkBookModel book,
+  ) {
     showModalBottomSheet<void>(
       context: context,
       shape: const RoundedRectangleBorder(
-          borderRadius: BorderRadius.vertical(top: Radius.circular(20))),
+        borderRadius: BorderRadius.vertical(top: Radius.circular(AppRadius.xl)),
+      ),
       builder: (ctx) => _VisibilitySheet(
         current: book.visibility,
         onSelect: (newVisibility) async {
           Navigator.pop(ctx);
           if (newVisibility == book.visibility) return;
           final currentUser = ref.read(currentUserProvider).value;
-          await ref.read(inkBookRepoProvider).updateBookVisibility(
+          await ref
+              .read(inkBookRepoProvider)
+              .updateBookVisibility(
                 uid,
                 widget.bookId,
                 visibility: newVisibility,
@@ -401,110 +425,141 @@ class _InkBookDetailScreenState extends ConsumerState<InkBookDetailScreen> {
       context: context,
       isScrollControlled: true,
       shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+        borderRadius: BorderRadius.vertical(top: Radius.circular(AppRadius.xl)),
       ),
       builder: (_) => SafeArea(
         child: SingleChildScrollView(
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-            _sheetHandle(),
-            ListTile(
-              leading: const Icon(Icons.sort),
-              title: const Text('정렬'),
-              subtitle: Text(_sort.label,
-                  style: const TextStyle(
-                      fontSize: 12, color: AppColors.textTertiary)),
-              trailing: const Icon(Icons.chevron_right,
-                  size: 18, color: AppColors.textTertiary),
-              onTap: () {
-                Navigator.pop(context);
-                _showSortSubSheet(context, entries);
-              },
-            ),
-            ListTile(
-              leading: const Icon(Icons.grid_on_outlined),
-              title: const Text('페이지 스타일'),
-              subtitle: Text(_pageStyle.label,
-                  style: const TextStyle(
-                      fontSize: 12, color: AppColors.textTertiary)),
-              trailing: const Icon(Icons.chevron_right,
-                  size: 18, color: AppColors.textTertiary),
-              onTap: () {
-                Navigator.pop(context);
-                _showStyleSubSheet(context);
-              },
-            ),
-            ListTile(
-              leading: const Icon(Icons.view_agenda_outlined),
-              title: const Text('보기 방식'),
-              subtitle: Text(_viewMode.label,
-                  style: const TextStyle(
-                      fontSize: 12, color: AppColors.textTertiary)),
-              trailing: const Icon(Icons.chevron_right,
-                  size: 18, color: AppColors.textTertiary),
-              onTap: () {
-                Navigator.pop(context);
-                _showViewSubSheet(context);
-              },
-            ),
-            ListTile(
-              leading: SizedBox(
-                width: 24,
-                height: 24,
-                child: shape == InkSwatchShape.bottle
-                    ? Image.asset(
-                        'assets/shapes/ink_jar.png',
-                        color: AppColors.textSecondary,
-                        colorBlendMode: BlendMode.srcIn,
-                      )
-                    : CustomPaint(
-                        painter: ShapePreviewPainter(shape, AppColors.textSecondary),
-                      ),
+              _sheetHandle(),
+              ListTile(
+                leading: const Icon(Icons.sort),
+                title: const Text('정렬'),
+                subtitle: Text(
+                  _sort.label,
+                  style: AppTextStyles.bodySmall.copyWith(
+                    color: AppColors.textTertiary,
+                  ),
+                ),
+                trailing: const Icon(
+                  Icons.chevron_right,
+                  size: 18,
+                  color: AppColors.textTertiary,
+                ),
+                onTap: () {
+                  Navigator.pop(context);
+                  _showSortSubSheet(context, entries);
+                },
               ),
-              title: const Text('스와치 모양'),
-              subtitle: Text(shape.label,
-                  style: const TextStyle(
-                      fontSize: 12, color: AppColors.textTertiary)),
-              trailing: const Icon(Icons.chevron_right,
-                  size: 18, color: AppColors.textTertiary),
-              onTap: () {
-                Navigator.pop(context);
-                _showShapeSubSheet(context);
-              },
-            ),
-            const Divider(height: 1),
-            ListTile(
-              leading: const Icon(Icons.save_alt_outlined),
-              title: const Text('앨범에 저장'),
-              onTap: () {
-                Navigator.pop(context);
-                final pageCount =
-                    (entries.length / NotebookPage.itemsPerPage).ceil();
-                _saveToAlbum(pageCount.clamp(1, pageCount));
-              },
-            ),
-            ListTile(
-              leading: const Icon(Icons.edit_outlined),
-              title: const Text('공책 이름 변경'),
-              onTap: () {
-                Navigator.pop(context);
-                _renameBook(context, uid, bookName);
-              },
-            ),
-            ListTile(
-              leading:
-                  const Icon(Icons.delete_outline, color: AppColors.error),
-              title: const Text('공책 삭제',
-                  style: TextStyle(color: AppColors.error)),
-              onTap: () {
-                Navigator.pop(context);
-                _deleteBook(context, uid, entries);
-              },
-            ),
-            const SizedBox(height: 8),
-          ],
-        ),
+              ListTile(
+                leading: const Icon(Icons.grid_on_outlined),
+                title: const Text('페이지 스타일'),
+                subtitle: Text(
+                  _pageStyle.label,
+                  style: AppTextStyles.bodySmall.copyWith(
+                    color: AppColors.textTertiary,
+                  ),
+                ),
+                trailing: const Icon(
+                  Icons.chevron_right,
+                  size: 18,
+                  color: AppColors.textTertiary,
+                ),
+                onTap: () {
+                  Navigator.pop(context);
+                  _showStyleSubSheet(context);
+                },
+              ),
+              ListTile(
+                leading: const Icon(Icons.view_agenda_outlined),
+                title: const Text('보기 방식'),
+                subtitle: Text(
+                  _viewMode.label,
+                  style: AppTextStyles.bodySmall.copyWith(
+                    color: AppColors.textTertiary,
+                  ),
+                ),
+                trailing: const Icon(
+                  Icons.chevron_right,
+                  size: 18,
+                  color: AppColors.textTertiary,
+                ),
+                onTap: () {
+                  Navigator.pop(context);
+                  _showViewSubSheet(context);
+                },
+              ),
+              ListTile(
+                leading: SizedBox(
+                  width: 24,
+                  height: 24,
+                  child: shape == InkSwatchShape.bottle
+                      ? Image.asset(
+                          'assets/shapes/ink_jar.png',
+                          color: AppColors.textSecondary,
+                          colorBlendMode: BlendMode.srcIn,
+                        )
+                      : CustomPaint(
+                          painter: ShapePreviewPainter(
+                            shape,
+                            AppColors.textSecondary,
+                          ),
+                        ),
+                ),
+                title: const Text('스와치 모양'),
+                subtitle: Text(
+                  shape.label,
+                  style: AppTextStyles.bodySmall.copyWith(
+                    color: AppColors.textTertiary,
+                  ),
+                ),
+                trailing: const Icon(
+                  Icons.chevron_right,
+                  size: 18,
+                  color: AppColors.textTertiary,
+                ),
+                onTap: () {
+                  Navigator.pop(context);
+                  _showShapeSubSheet(context);
+                },
+              ),
+              const Divider(height: 1),
+              ListTile(
+                leading: const Icon(Icons.save_alt_outlined),
+                title: const Text('앨범에 저장'),
+                onTap: () {
+                  Navigator.pop(context);
+                  final pageCount = (entries.length / NotebookPage.itemsPerPage)
+                      .ceil();
+                  _saveToAlbum(pageCount.clamp(1, pageCount));
+                },
+              ),
+              ListTile(
+                leading: const Icon(Icons.edit_outlined),
+                title: const Text('공책 이름 변경'),
+                onTap: () {
+                  Navigator.pop(context);
+                  _renameBook(context, uid, bookName);
+                },
+              ),
+              ListTile(
+                leading: const Icon(
+                  Icons.delete_outline,
+                  color: AppColors.error,
+                ),
+                title: const Text(
+                  '공책 삭제',
+                  style: TextStyle(color: AppColors.error),
+                ),
+                onTap: () {
+                  Navigator.pop(context);
+                  _deleteBook(context, uid, entries);
+                },
+              ),
+              const SizedBox(height: 8),
+            ],
+          ),
         ),
       ),
     );
@@ -514,7 +569,8 @@ class _InkBookDetailScreenState extends ConsumerState<InkBookDetailScreen> {
     showModalBottomSheet(
       context: context,
       shape: const RoundedRectangleBorder(
-          borderRadius: BorderRadius.vertical(top: Radius.circular(20))),
+        borderRadius: BorderRadius.vertical(top: Radius.circular(AppRadius.xl)),
+      ),
       builder: (_) => SafeArea(
         child: Padding(
           padding: const EdgeInsets.fromLTRB(20, 16, 20, 20),
@@ -524,32 +580,40 @@ class _InkBookDetailScreenState extends ConsumerState<InkBookDetailScreen> {
             children: [
               Center(child: _sheetHandle()),
               const SizedBox(height: 12),
-              const Text('정렬',
-                  style: TextStyle(
-                      fontSize: 15, fontWeight: FontWeight.w700)),
+              const Text(
+                '정렬',
+                style: TextStyle(fontSize: 15, fontWeight: FontWeight.w700),
+              ),
               const SizedBox(height: 4),
-              ..._SortOption.values.map((opt) => ListTile(
-                    contentPadding: EdgeInsets.zero,
-                    title: Text(opt.label,
-                        style: TextStyle(
-                            fontWeight: FontWeight.w600,
-                            color: _sort == opt ? AppColors.primary : null)),
-                    subtitle: Text(opt.description,
-                        style: const TextStyle(fontSize: 12)),
-                    trailing: _sort == opt
-                        ? const Icon(Icons.check, color: AppColors.primary)
-                        : null,
-                    onTap: () async {
-                      Navigator.pop(context);
-                      if (opt == _SortOption.color) {
-                        await _extractColors(entries);
-                      }
-                      if (mounted) {
-                        setState(() => _sort = opt);
-                        _savePrefs();
-                      }
-                    },
-                  )),
+              ..._SortOption.values.map(
+                (opt) => ListTile(
+                  contentPadding: EdgeInsets.zero,
+                  title: Text(
+                    opt.label,
+                    style: TextStyle(
+                      fontWeight: FontWeight.w600,
+                      color: _sort == opt ? AppColors.primary : null,
+                    ),
+                  ),
+                  subtitle: Text(
+                    opt.description,
+                    style: const TextStyle(fontSize: 12),
+                  ),
+                  trailing: _sort == opt
+                      ? const Icon(Icons.check, color: AppColors.primary)
+                      : null,
+                  onTap: () async {
+                    Navigator.pop(context);
+                    if (opt == _SortOption.color) {
+                      await _extractColors(entries);
+                    }
+                    if (mounted) {
+                      setState(() => _sort = opt);
+                      _savePrefs();
+                    }
+                  },
+                ),
+              ),
             ],
           ),
         ),
@@ -561,7 +625,8 @@ class _InkBookDetailScreenState extends ConsumerState<InkBookDetailScreen> {
     showModalBottomSheet(
       context: context,
       shape: const RoundedRectangleBorder(
-          borderRadius: BorderRadius.vertical(top: Radius.circular(20))),
+        borderRadius: BorderRadius.vertical(top: Radius.circular(AppRadius.xl)),
+      ),
       builder: (_) => SafeArea(
         child: Padding(
           padding: const EdgeInsets.fromLTRB(20, 16, 20, 20),
@@ -571,26 +636,31 @@ class _InkBookDetailScreenState extends ConsumerState<InkBookDetailScreen> {
             children: [
               Center(child: _sheetHandle()),
               const SizedBox(height: 12),
-              const Text('페이지 스타일',
-                  style: TextStyle(
-                      fontSize: 15, fontWeight: FontWeight.w700)),
+              const Text(
+                '페이지 스타일',
+                style: TextStyle(fontSize: 15, fontWeight: FontWeight.w700),
+              ),
               const SizedBox(height: 4),
-              ..._PageStyle.values.map((opt) => ListTile(
-                    contentPadding: EdgeInsets.zero,
-                    title: Text(opt.label,
-                        style: TextStyle(
-                            fontWeight: FontWeight.w600,
-                            color:
-                                _pageStyle == opt ? AppColors.primary : null)),
-                    trailing: _pageStyle == opt
-                        ? const Icon(Icons.check, color: AppColors.primary)
-                        : null,
-                    onTap: () {
-                      Navigator.pop(context);
-                      setState(() => _pageStyle = opt);
-                      _savePrefs();
-                    },
-                  )),
+              ..._PageStyle.values.map(
+                (opt) => ListTile(
+                  contentPadding: EdgeInsets.zero,
+                  title: Text(
+                    opt.label,
+                    style: TextStyle(
+                      fontWeight: FontWeight.w600,
+                      color: _pageStyle == opt ? AppColors.primary : null,
+                    ),
+                  ),
+                  trailing: _pageStyle == opt
+                      ? const Icon(Icons.check, color: AppColors.primary)
+                      : null,
+                  onTap: () {
+                    Navigator.pop(context);
+                    setState(() => _pageStyle = opt);
+                    _savePrefs();
+                  },
+                ),
+              ),
             ],
           ),
         ),
@@ -602,7 +672,8 @@ class _InkBookDetailScreenState extends ConsumerState<InkBookDetailScreen> {
     showModalBottomSheet(
       context: context,
       shape: const RoundedRectangleBorder(
-          borderRadius: BorderRadius.vertical(top: Radius.circular(20))),
+        borderRadius: BorderRadius.vertical(top: Radius.circular(AppRadius.xl)),
+      ),
       builder: (_) => SafeArea(
         child: Padding(
           padding: const EdgeInsets.fromLTRB(20, 16, 20, 20),
@@ -612,28 +683,35 @@ class _InkBookDetailScreenState extends ConsumerState<InkBookDetailScreen> {
             children: [
               Center(child: _sheetHandle()),
               const SizedBox(height: 12),
-              const Text('보기 방식',
-                  style: TextStyle(
-                      fontSize: 15, fontWeight: FontWeight.w700)),
+              const Text(
+                '보기 방식',
+                style: TextStyle(fontSize: 15, fontWeight: FontWeight.w700),
+              ),
               const SizedBox(height: 4),
-              ..._ViewMode.values.map((opt) => ListTile(
-                    contentPadding: EdgeInsets.zero,
-                    title: Text(opt.label,
-                        style: TextStyle(
-                            fontWeight: FontWeight.w600,
-                            color:
-                                _viewMode == opt ? AppColors.primary : null)),
-                    subtitle: Text(opt.description,
-                        style: const TextStyle(fontSize: 12)),
-                    trailing: _viewMode == opt
-                        ? const Icon(Icons.check, color: AppColors.primary)
-                        : null,
-                    onTap: () {
-                      Navigator.pop(context);
-                      setState(() => _viewMode = opt);
-                      _savePrefs();
-                    },
-                  )),
+              ..._ViewMode.values.map(
+                (opt) => ListTile(
+                  contentPadding: EdgeInsets.zero,
+                  title: Text(
+                    opt.label,
+                    style: TextStyle(
+                      fontWeight: FontWeight.w600,
+                      color: _viewMode == opt ? AppColors.primary : null,
+                    ),
+                  ),
+                  subtitle: Text(
+                    opt.description,
+                    style: const TextStyle(fontSize: 12),
+                  ),
+                  trailing: _viewMode == opt
+                      ? const Icon(Icons.check, color: AppColors.primary)
+                      : null,
+                  onTap: () {
+                    Navigator.pop(context);
+                    setState(() => _viewMode = opt);
+                    _savePrefs();
+                  },
+                ),
+              ),
             ],
           ),
         ),
@@ -646,7 +724,8 @@ class _InkBookDetailScreenState extends ConsumerState<InkBookDetailScreen> {
     showModalBottomSheet(
       context: context,
       shape: const RoundedRectangleBorder(
-          borderRadius: BorderRadius.vertical(top: Radius.circular(20))),
+        borderRadius: BorderRadius.vertical(top: Radius.circular(AppRadius.xl)),
+      ),
       builder: (_) => _ShapePickerSheet(current: shape, ref: ref),
     );
   }
@@ -662,7 +741,7 @@ class _InkBookDetailScreenState extends ConsumerState<InkBookDetailScreen> {
     showModalBottomSheet(
       context: context,
       shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+        borderRadius: BorderRadius.vertical(top: Radius.circular(AppRadius.xl)),
       ),
       builder: (ctx) => SafeArea(
         child: Column(
@@ -670,8 +749,7 @@ class _InkBookDetailScreenState extends ConsumerState<InkBookDetailScreen> {
           children: [
             _sheetHandle(topPadding: 10),
             Padding(
-              padding:
-                  const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
+              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
               child: Row(
                 children: [
                   InkShapeClip(
@@ -691,14 +769,14 @@ class _InkBookDetailScreenState extends ConsumerState<InkBookDetailScreen> {
                   Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Text(entry.brand,
-                          style: const TextStyle(
-                              fontSize: 11,
-                              color: AppColors.textTertiary)),
-                      Text(entry.inkName,
-                          style: const TextStyle(
-                              fontSize: 15,
-                              fontWeight: FontWeight.w600)),
+                      Text(entry.brand, style: AppTextStyles.labelSmall),
+                      Text(
+                        entry.inkName,
+                        style: const TextStyle(
+                          fontSize: 15,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
                     ],
                   ),
                 ],
@@ -718,10 +796,8 @@ class _InkBookDetailScreenState extends ConsumerState<InkBookDetailScreen> {
               },
             ),
             ListTile(
-              leading:
-                  const Icon(Icons.delete_outline, color: AppColors.error),
-              title: const Text('삭제',
-                  style: TextStyle(color: AppColors.error)),
+              leading: const Icon(Icons.delete_outline, color: AppColors.error),
+              title: const Text('삭제', style: TextStyle(color: AppColors.error)),
               onTap: () async {
                 Navigator.pop(ctx);
                 await _confirmDeleteEntry(context, entry, uid);
@@ -763,7 +839,9 @@ class _InkBookDetailScreenState extends ConsumerState<InkBookDetailScreen> {
       ),
     );
     if (ok != true || !mounted) return;
-    await ref.read(inkBookRepoProvider).deleteEntry(uid, widget.bookId, entry.id);
+    await ref
+        .read(inkBookRepoProvider)
+        .deleteEntry(uid, widget.bookId, entry.id);
     try {
       await ref.read(storageServiceProvider).deleteByUrl(entry.photoUrl);
     } catch (_) {}
@@ -774,7 +852,7 @@ class _InkBookDetailScreenState extends ConsumerState<InkBookDetailScreen> {
       context: context,
       isScrollControlled: true,
       shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+        borderRadius: BorderRadius.vertical(top: Radius.circular(AppRadius.xl)),
       ),
       builder: (_) => _RenameBottomSheet(
         initialName: currentName,
@@ -813,8 +891,9 @@ class _InkBookDetailScreenState extends ConsumerState<InkBookDetailScreen> {
       ),
     );
     if (ok != true || !mounted) return;
-    final deleted =
-        await ref.read(inkBookRepoProvider).deleteBook(uid, widget.bookId);
+    final deleted = await ref
+        .read(inkBookRepoProvider)
+        .deleteBook(uid, widget.bookId);
     for (final e in deleted) {
       try {
         await ref.read(storageServiceProvider).deleteByUrl(e.photoUrl);
@@ -829,20 +908,19 @@ class _InkBookDetailScreenState extends ConsumerState<InkBookDetailScreen> {
   Widget build(BuildContext context) {
     final uid = ref.watch(currentUidProvider);
     if (uid == null) {
-      return const Scaffold(
-          body: Center(child: CircularProgressIndicator()));
+      return const Scaffold(body: Center(child: CircularProgressIndicator()));
     }
 
     final booksAsync = ref.watch(inkBookListProvider(uid));
     final book = booksAsync.maybeWhen(
-      data: (list) => list
-          .cast<InkBookModel?>()
-          .firstWhere((b) => b!.id == widget.bookId, orElse: () => null),
+      data: (list) => list.cast<InkBookModel?>().firstWhere(
+        (b) => b!.id == widget.bookId,
+        orElse: () => null,
+      ),
       orElse: () => null,
     );
 
-    final chartAsync =
-        ref.watch(inkChartInBookProvider((uid, widget.bookId)));
+    final chartAsync = ref.watch(inkChartInBookProvider((uid, widget.bookId)));
 
     // 새 잉크 추가 감지 → 마지막 페이지로 이동
     ref.listen<AsyncValue<List<InkChartModel>>>(
@@ -867,8 +945,10 @@ class _InkBookDetailScreenState extends ConsumerState<InkBookDetailScreen> {
     );
 
     final shape = ref.watch(inkSwatchShapeProvider);
-    final inkCount =
-        chartAsync.maybeWhen(data: (l) => l.length, orElse: () => 0);
+    final inkCount = chartAsync.maybeWhen(
+      data: (l) => l.length,
+      orElse: () => 0,
+    );
 
     return Scaffold(
       backgroundColor: Colors.white,
@@ -889,8 +969,7 @@ class _InkBookDetailScreenState extends ConsumerState<InkBookDetailScreen> {
               if (inkCount > 0)
                 TextSpan(
                   text: ' · $inkCount개',
-                  style: const TextStyle(
-                    fontSize: 14,
+                  style: AppTextStyles.bodyMedium.copyWith(
                     color: AppColors.textSecondary,
                     decoration: TextDecoration.none,
                   ),
@@ -902,10 +981,13 @@ class _InkBookDetailScreenState extends ConsumerState<InkBookDetailScreen> {
           if (_isReordering)
             TextButton(
               onPressed: () => setState(() => _isReordering = false),
-              child: const Text('완료',
-                  style: TextStyle(
-                      fontWeight: FontWeight.w700,
-                      color: AppColors.primary)),
+              child: const Text(
+                '완료',
+                style: TextStyle(
+                  fontWeight: FontWeight.w700,
+                  color: AppColors.primary,
+                ),
+              ),
             )
           else ...[
             IconButton(
@@ -923,8 +1005,10 @@ class _InkBookDetailScreenState extends ConsumerState<InkBookDetailScreen> {
               },
             ),
             IconButton(
-              icon:
-                  Icon(_showSearch ? Icons.search_off : Icons.search, size: 22),
+              icon: Icon(
+                _showSearch ? Icons.search_off : Icons.search,
+                size: 22,
+              ),
               tooltip: '검색',
               onPressed: () => setState(() {
                 _showSearch = !_showSearch;
@@ -938,8 +1022,8 @@ class _InkBookDetailScreenState extends ConsumerState<InkBookDetailScreen> {
               icon: const Icon(Icons.more_vert),
               tooltip: '메뉴',
               onPressed: () => chartAsync.whenData(
-                (entries) => _showMenuSheet(
-                    context, entries, uid, book?.name ?? ''),
+                (entries) =>
+                    _showMenuSheet(context, entries, uid, book?.name ?? ''),
               ),
             ),
           ],
@@ -948,8 +1032,7 @@ class _InkBookDetailScreenState extends ConsumerState<InkBookDetailScreen> {
       floatingActionButton: _isReordering
           ? null
           : FloatingActionButton(
-              onPressed: () =>
-                  context.push('/ink-chart/${widget.bookId}/add'),
+              onPressed: () => context.push('/ink-chart/${widget.bookId}/add'),
               backgroundColor: AppColors.primary,
               child: const Icon(Icons.add, color: Colors.white),
             ),
@@ -964,10 +1047,11 @@ class _InkBookDetailScreenState extends ConsumerState<InkBookDetailScreen> {
                 style: const TextStyle(fontSize: 14),
                 decoration: InputDecoration(
                   hintText: '브랜드 또는 잉크 이름 검색',
-                  hintStyle: const TextStyle(
-                      fontSize: 13, color: AppColors.textTertiary),
-                  prefixIcon:
-                      const Icon(Icons.search, size: 20),
+                  hintStyle: AppTextStyles.labelMedium.copyWith(
+                    color: AppColors.textTertiary,
+                    fontWeight: FontWeight.w400,
+                  ),
+                  prefixIcon: const Icon(Icons.search, size: 20),
                   suffixIcon: _searchQuery.isNotEmpty
                       ? IconButton(
                           icon: const Icon(Icons.clear, size: 18),
@@ -980,30 +1064,31 @@ class _InkBookDetailScreenState extends ConsumerState<InkBookDetailScreen> {
                   filled: true,
                   fillColor: const Color(0xFFFFFDF7),
                   border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(12),
-                    borderSide:
-                        const BorderSide(color: Color(0xFFD4C5A9)),
+                    borderRadius: BorderRadius.circular(AppRadius.md),
+                    borderSide: const BorderSide(color: Color(0xFFD4C5A9)),
                   ),
                   enabledBorder: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(12),
-                    borderSide:
-                        const BorderSide(color: Color(0xFFD4C5A9)),
+                    borderRadius: BorderRadius.circular(AppRadius.md),
+                    borderSide: const BorderSide(color: Color(0xFFD4C5A9)),
                   ),
                   focusedBorder: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(12),
+                    borderRadius: BorderRadius.circular(AppRadius.md),
                     borderSide: const BorderSide(
-                        color: AppColors.primary, width: 1.5),
+                      color: AppColors.primary,
+                      width: 1.5,
+                    ),
                   ),
                   contentPadding: const EdgeInsets.symmetric(
-                      horizontal: 14, vertical: 10),
+                    horizontal: 14,
+                    vertical: 10,
+                  ),
                 ),
                 onChanged: (v) => setState(() => _searchQuery = v),
               ),
             ),
           Expanded(
             child: chartAsync.when(
-              loading: () =>
-                  const Center(child: CircularProgressIndicator()),
+              loading: () => const Center(child: CircularProgressIndicator()),
               error: (e, _) => Center(child: Text('오류: $e')),
               data: (raw) {
                 if (raw.isEmpty) {
@@ -1015,20 +1100,25 @@ class _InkBookDetailScreenState extends ConsumerState<InkBookDetailScreen> {
                     child: Column(
                       mainAxisSize: MainAxisSize.min,
                       children: [
-                        const Icon(Icons.search_off,
-                            size: 48, color: AppColors.textTertiary),
+                        const Icon(
+                          Icons.search_off,
+                          size: 48,
+                          color: AppColors.textTertiary,
+                        ),
                         const SizedBox(height: 12),
-                        Text('"$_searchQuery" 검색 결과 없음',
-                            style: const TextStyle(
-                                color: AppColors.textSecondary)),
+                        Text(
+                          '"$_searchQuery" 검색 결과 없음',
+                          style: const TextStyle(
+                            color: AppColors.textSecondary,
+                          ),
+                        ),
                       ],
                     ),
                   );
                 }
 
                 final entries = _applySort(filtered);
-                final pageCount =
-                    (entries.length / _itemsPerPage).ceil();
+                final pageCount = (entries.length / _itemsPerPage).ceil();
 
                 if (_isReordering) {
                   return _ReorderView(
@@ -1044,132 +1134,145 @@ class _InkBookDetailScreenState extends ConsumerState<InkBookDetailScreen> {
                 }
 
                 // ── PageView mode (좌우 or 위아래) ──────────────
-                return Builder(builder: (ctx) {
-                  final mq = MediaQuery.of(ctx);
-                  const pageIndicatorH = 40.0;
-                  const fabH = 80.0;
-                  final pageViewHeight = mq.size.height
-                      - mq.padding.top
-                      - mq.padding.bottom
-                      - kToolbarHeight
-                      - pageIndicatorH
-                      - fabH
-                      - 16.0;
+                return Builder(
+                  builder: (ctx) {
+                    final mq = MediaQuery.of(ctx);
+                    const pageIndicatorH = 40.0;
+                    const fabH = 80.0;
+                    final pageViewHeight =
+                        mq.size.height -
+                        mq.padding.top -
+                        mq.padding.bottom -
+                        kToolbarHeight -
+                        pageIndicatorH -
+                        fabH -
+                        16.0;
 
-                  return Stack(
-                    children: [
-                      Column(
-                        children: [
-                          Expanded(
-                            child: Align(
-                              alignment: const Alignment(0, -0.4),
-                              child: Column(
-                                mainAxisSize: MainAxisSize.min,
-                                children: [
-                                  SizedBox(
-                                    height: pageViewHeight - 60,
-                                    child: PageView.builder(
-                                      scrollDirection:
-                                          _viewMode == _ViewMode.scroll
-                                              ? Axis.vertical
-                                              : Axis.horizontal,
-                                      controller: _pageCtrl,
-                                      itemCount: pageCount,
-                                      onPageChanged: (p) => setState(
-                                          () => _currentPage = p),
-                                      itemBuilder: (_, pageIdx) {
-                                        final start =
-                                            pageIdx * _itemsPerPage;
-                                        final end = math.min(
+                    return Stack(
+                      children: [
+                        Column(
+                          children: [
+                            Expanded(
+                              child: Align(
+                                alignment: const Alignment(0, -0.4),
+                                child: Column(
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: [
+                                    SizedBox(
+                                      height: pageViewHeight - 60,
+                                      child: PageView.builder(
+                                        scrollDirection:
+                                            _viewMode == _ViewMode.scroll
+                                            ? Axis.vertical
+                                            : Axis.horizontal,
+                                        controller: _pageCtrl,
+                                        itemCount: pageCount,
+                                        onPageChanged: (p) =>
+                                            setState(() => _currentPage = p),
+                                        itemBuilder: (_, pageIdx) {
+                                          final start = pageIdx * _itemsPerPage;
+                                          final end = math.min(
                                             start + _itemsPerPage,
-                                            entries.length);
-                                        final pageEntries =
-                                            entries.sublist(start, end);
-                                        // GlobalKey 동적 확장
-                                        while (_pageKeys.length <= pageIdx) {
-                                          _pageKeys.add(GlobalKey());
-                                        }
-                                        return RepaintBoundary(
-                                          key: _pageKeys[pageIdx],
-                                          child: NotebookPage(
-                                            pageEntries: pageEntries,
-                                            pageStyle: notebookPageStyleFromString(
-                                                _pageStyle.name),
-                                            itemBuilder: (ctx, entry, i) => _SwatchCard(
-                                              entry: entry,
-                                              uid: uid,
-                                              bookId: widget.bookId,
-                                              shape: shape,
-                                              allEntries: entries,
-                                              absoluteIndex: start + i,
-                                              onLongPress: () =>
-                                                  _showInkContextMenu(
-                                                      context, entry, uid),
+                                            entries.length,
+                                          );
+                                          final pageEntries = entries.sublist(
+                                            start,
+                                            end,
+                                          );
+                                          // GlobalKey 동적 확장
+                                          while (_pageKeys.length <= pageIdx) {
+                                            _pageKeys.add(GlobalKey());
+                                          }
+                                          return RepaintBoundary(
+                                            key: _pageKeys[pageIdx],
+                                            child: NotebookPage(
+                                              pageEntries: pageEntries,
+                                              pageStyle:
+                                                  notebookPageStyleFromString(
+                                                    _pageStyle.name,
+                                                  ),
+                                              itemBuilder: (ctx, entry, i) =>
+                                                  _SwatchCard(
+                                                    entry: entry,
+                                                    uid: uid,
+                                                    bookId: widget.bookId,
+                                                    shape: shape,
+                                                    allEntries: entries,
+                                                    absoluteIndex: start + i,
+                                                    onLongPress: () =>
+                                                        _showInkContextMenu(
+                                                          context,
+                                                          entry,
+                                                          uid,
+                                                        ),
+                                                  ),
                                             ),
-                                          ),
-                                        );
-                                      },
+                                          );
+                                        },
+                                      ),
                                     ),
-                                  ),
-                                  const SizedBox(height: 8),
-                                  if (pageCount > 1)
-                                    Text(
-                                      '${_currentPage + 1} / $pageCount',
-                                      style: const TextStyle(
-                                          fontSize: 13,
-                                          color: AppColors.textTertiary),
-                                    ),
-                                ],
+                                    const SizedBox(height: 8),
+                                    if (pageCount > 1)
+                                      Text(
+                                        '${_currentPage + 1} / $pageCount',
+                                        style: AppTextStyles.labelMedium
+                                            .copyWith(
+                                              color: AppColors.textTertiary,
+                                              fontWeight: FontWeight.w400,
+                                            ),
+                                      ),
+                                  ],
+                                ),
                               ),
                             ),
-                          ),
-                        ],
-                      ),
-                      if (_extractingColors)
-                        Positioned.fill(
-                          child: Container(
-                            color: Colors.black26,
-                            child: const Center(
-                              child: Card(
-                                child: Padding(
-                                  padding: EdgeInsets.all(20),
-                                  child: Column(
-                                    mainAxisSize: MainAxisSize.min,
-                                    children: [
-                                      CircularProgressIndicator(),
-                                      SizedBox(height: 12),
-                                      Text('색상 분석 중...'),
-                                    ],
+                          ],
+                        ),
+                        if (_extractingColors)
+                          Positioned.fill(
+                            child: Container(
+                              color: Colors.black26,
+                              child: const Center(
+                                child: Card(
+                                  child: Padding(
+                                    padding: EdgeInsets.all(20),
+                                    child: Column(
+                                      mainAxisSize: MainAxisSize.min,
+                                      children: [
+                                        CircularProgressIndicator(),
+                                        SizedBox(height: 12),
+                                        Text('색상 분석 중...'),
+                                      ],
+                                    ),
                                   ),
                                 ),
                               ),
                             ),
                           ),
-                        ),
-                      if (_savingPages)
-                        Positioned.fill(
-                          child: Container(
-                            color: Colors.black26,
-                            child: const Center(
-                              child: Card(
-                                child: Padding(
-                                  padding: EdgeInsets.all(20),
-                                  child: Column(
-                                    mainAxisSize: MainAxisSize.min,
-                                    children: [
-                                      CircularProgressIndicator(),
-                                      SizedBox(height: 12),
-                                      Text('앨범에 저장 중...'),
-                                    ],
+                        if (_savingPages)
+                          Positioned.fill(
+                            child: Container(
+                              color: Colors.black26,
+                              child: const Center(
+                                child: Card(
+                                  child: Padding(
+                                    padding: EdgeInsets.all(20),
+                                    child: Column(
+                                      mainAxisSize: MainAxisSize.min,
+                                      children: [
+                                        CircularProgressIndicator(),
+                                        SizedBox(height: 12),
+                                        Text('앨범에 저장 중...'),
+                                      ],
+                                    ),
                                   ),
                                 ),
                               ),
                             ),
                           ),
-                        ),
-                    ],
-                  );
-                });
+                      ],
+                    );
+                  },
+                );
               },
             ),
           ),
@@ -1235,8 +1338,11 @@ class _SwatchCard extends ConsumerWidget {
                     Container(color: const Color(0xFFD4C5A9)),
                 errorWidget: (_, __, ___) => Container(
                   color: const Color(0xFFD4C5A9),
-                  child: const Icon(Icons.broken_image_outlined,
-                      color: AppColors.textTertiary, size: 18),
+                  child: const Icon(
+                    Icons.broken_image_outlined,
+                    color: AppColors.textTertiary,
+                    size: 18,
+                  ),
                 ),
               ),
             ),
@@ -1248,8 +1354,9 @@ class _SwatchCard extends ConsumerWidget {
               children: [
                 Text(
                   entry.brand,
-                  style: const TextStyle(
-                      fontSize: 13, color: AppColors.textSecondary),
+                  style: AppTextStyles.labelMedium.copyWith(
+                    fontWeight: FontWeight.w400,
+                  ),
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
                   textAlign: TextAlign.center,
@@ -1257,9 +1364,10 @@ class _SwatchCard extends ConsumerWidget {
                 Text(
                   entry.inkName,
                   style: const TextStyle(
-                      fontSize: 15,
-                      fontWeight: FontWeight.w600,
-                      color: AppColors.textPrimary),
+                    fontSize: 15,
+                    fontWeight: FontWeight.w600,
+                    color: AppColors.textPrimary,
+                  ),
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
                   textAlign: TextAlign.center,
@@ -1292,7 +1400,6 @@ class _SwatchCard extends ConsumerWidget {
   }
 }
 
-
 // ── 드래그 재정렬 뷰 ───────────────────────────────────────────────────────
 
 class _ReorderView extends ConsumerWidget {
@@ -1318,14 +1425,18 @@ class _ReorderView extends ConsumerWidget {
           padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
           color: const Color(0xFFEDE7D6),
           child: Row(
-            children: const [
-              Icon(Icons.drag_indicator,
-                  size: 18, color: AppColors.textSecondary),
-              SizedBox(width: 8),
+            children: [
+              const Icon(
+                Icons.drag_indicator,
+                size: 18,
+                color: AppColors.textSecondary,
+              ),
+              const SizedBox(width: 8),
               Text(
                 '드래그해서 순서를 변경하세요',
-                style: TextStyle(
-                    fontSize: 13, color: AppColors.textSecondary),
+                style: AppTextStyles.labelMedium.copyWith(
+                  fontWeight: FontWeight.w400,
+                ),
               ),
             ],
           ),
@@ -1345,12 +1456,14 @@ class _ReorderView extends ConsumerWidget {
             children: mutableList
                 .asMap()
                 .entries
-                .map((me) => _ReorderCard(
-                      key: ValueKey(me.value.id),
-                      entry: me.value,
-                      shape: shape,
-                      index: me.key,
-                    ))
+                .map(
+                  (me) => _ReorderCard(
+                    key: ValueKey(me.value.id),
+                    entry: me.value,
+                    shape: shape,
+                    index: me.key,
+                  ),
+                )
                 .toList(),
           ),
         ),
@@ -1403,8 +1516,11 @@ class _ReorderCard extends StatelessWidget {
                       color: Colors.black45,
                       borderRadius: BorderRadius.circular(6),
                     ),
-                    child: const Icon(Icons.drag_indicator,
-                        size: 14, color: Colors.white),
+                    child: const Icon(
+                      Icons.drag_indicator,
+                      size: 14,
+                      color: Colors.white,
+                    ),
                   ),
                 ),
               ),
@@ -1414,10 +1530,10 @@ class _ReorderCard extends StatelessWidget {
         const SizedBox(height: 5),
         Text(
           entry.inkName,
-          style: const TextStyle(
-              fontSize: 11,
-              fontWeight: FontWeight.w600,
-              color: AppColors.textPrimary),
+          style: AppTextStyles.labelSmall.copyWith(
+            fontWeight: FontWeight.w600,
+            color: AppColors.textPrimary,
+          ),
           maxLines: 1,
           overflow: TextOverflow.ellipsis,
           textAlign: TextAlign.center,
@@ -1447,8 +1563,9 @@ class _DetailSheet extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     // charts는 바텀시트를 열 때의 스냅샷이라 순서/필터는 그대로 유지하되,
     // 각 항목 내용은 실시간 provider 데이터로 덮어써서 수정 사항이 바로 반영되게 함
-    final liveEntries =
-        ref.watch(inkChartInBookProvider((uid, bookId))).valueOrNull;
+    final liveEntries = ref
+        .watch(inkChartInBookProvider((uid, bookId)))
+        .valueOrNull;
     final liveById = {
       for (final e in liveEntries ?? const <InkChartModel>[]) e.id: e,
     };
@@ -1501,7 +1618,7 @@ class _DetailMenuButton extends ConsumerWidget {
     showModalBottomSheet(
       context: context,
       shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
+        borderRadius: BorderRadius.vertical(top: Radius.circular(AppRadius.lg)),
       ),
       builder: (_) => SafeArea(
         child: Column(
@@ -1524,14 +1641,18 @@ class _DetailMenuButton extends ConsumerWidget {
                 Navigator.push(
                   context,
                   MaterialPageRoute(
-                    builder: (_) => InkChartAddScreen(bookId: bookId, entryToEdit: entry),
+                    builder: (_) =>
+                        InkChartAddScreen(bookId: bookId, entryToEdit: entry),
                   ),
                 );
               },
             ),
             ListTile(
               leading: const Icon(Icons.delete_outline, color: AppColors.error),
-              title: const Text('잉크 삭제', style: TextStyle(color: AppColors.error)),
+              title: const Text(
+                '잉크 삭제',
+                style: TextStyle(color: AppColors.error),
+              ),
               onTap: () {
                 Navigator.pop(context);
                 _confirmDelete(context, ref);
@@ -1591,8 +1712,7 @@ class _DetailPage extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final screenW = MediaQuery.of(context).size.width;
-    final dateStr =
-        DateFormat('yyyy년 M월 d일').format(entry.createdAt);
+    final dateStr = DateFormat('yyyy년 M월 d일').format(entry.createdAt);
 
     return ListView(
       padding: EdgeInsets.zero,
@@ -1613,8 +1733,10 @@ class _DetailPage extends ConsumerWidget {
                         Container(color: AppColors.chipBackground),
                     errorWidget: (_, __, ___) => Container(
                       color: AppColors.chipBackground,
-                      child: const Icon(Icons.broken_image_outlined,
-                          color: AppColors.textTertiary),
+                      child: const Icon(
+                        Icons.broken_image_outlined,
+                        color: AppColors.textTertiary,
+                      ),
                     ),
                   ),
                 ),
@@ -1629,27 +1751,41 @@ class _DetailPage extends ConsumerWidget {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text(entry.brand,
-                  style: const TextStyle(
-                      fontSize: 13,
-                      color: AppColors.textSecondary,
-                      letterSpacing: 0.5)),
+              Text(
+                entry.brand,
+                style: AppTextStyles.labelMedium.copyWith(
+                  fontWeight: FontWeight.w400,
+                  letterSpacing: 0.5,
+                ),
+              ),
               const SizedBox(height: 4),
-              Text(entry.inkName,
-                  style: const TextStyle(
-                      fontSize: 22,
-                      fontWeight: FontWeight.w700,
-                      color: AppColors.textPrimary)),
+              Text(
+                entry.inkName,
+                style: const TextStyle(
+                  fontSize: 22,
+                  fontWeight: FontWeight.w700,
+                  color: AppColors.textPrimary,
+                ),
+              ),
               const SizedBox(height: 16),
-              Row(children: [
-                const Icon(Icons.calendar_today_outlined,
-                    size: 13, color: AppColors.textTertiary),
-                const SizedBox(width: 5),
-                Text(dateStr,
-                    style: const TextStyle(
-                        fontSize: 12, color: AppColors.textTertiary)),
-              ]),
-              if (entry.memo.isNotEmpty || (entry.contentBlocks?.isNotEmpty ?? false)) ...[
+              Row(
+                children: [
+                  const Icon(
+                    Icons.calendar_today_outlined,
+                    size: 13,
+                    color: AppColors.textTertiary,
+                  ),
+                  const SizedBox(width: 5),
+                  Text(
+                    dateStr,
+                    style: AppTextStyles.bodySmall.copyWith(
+                      color: AppColors.textTertiary,
+                    ),
+                  ),
+                ],
+              ),
+              if (entry.memo.isNotEmpty ||
+                  (entry.contentBlocks?.isNotEmpty ?? false)) ...[
                 const SizedBox(height: 20),
                 Container(
                   width: double.infinity,
@@ -1661,12 +1797,13 @@ class _DetailPage extends ConsumerWidget {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      const Text('메모',
-                          style: TextStyle(
-                              fontSize: 11,
-                              fontWeight: FontWeight.w600,
-                              color: AppColors.textTertiary,
-                              letterSpacing: 0.5)),
+                      Text(
+                        '메모',
+                        style: AppTextStyles.labelSmall.copyWith(
+                          fontWeight: FontWeight.w600,
+                          letterSpacing: 0.5,
+                        ),
+                      ),
                       const SizedBox(height: 6),
                       InkMemoContent(entry: entry),
                     ],
@@ -1701,19 +1838,21 @@ class _EmptyState extends StatelessWidget {
               color: Color(0xFFEDE7D6),
               shape: BoxShape.circle,
             ),
-            child: const Icon(Icons.water_drop_outlined,
-                size: 44, color: Color(0xFFB8A98A)),
+            child: const Icon(
+              Icons.water_drop_outlined,
+              size: 44,
+              color: Color(0xFFB8A98A),
+            ),
           ),
           const SizedBox(height: 20),
-          const Text('아직 잉크가 없어요',
-              style: TextStyle(
-                  fontSize: 18,
-                  fontWeight: FontWeight.w700,
-                  color: AppColors.textPrimary)),
+          const Text('아직 잉크가 없어요', style: AppTextStyles.titleLarge),
           const SizedBox(height: 8),
-          const Text('+ 버튼으로 첫 번째 잉크를 추가해보세요',
-              style:
-                  TextStyle(fontSize: 14, color: AppColors.textSecondary)),
+          Text(
+            '+ 버튼으로 첫 번째 잉크를 추가해보세요',
+            style: AppTextStyles.bodyMedium.copyWith(
+              color: AppColors.textSecondary,
+            ),
+          ),
           const SizedBox(height: 28),
           ElevatedButton.icon(
             onPressed: () => context.push('/ink-chart/$bookId/add'),
@@ -1734,8 +1873,7 @@ class _EmptyState extends StatelessWidget {
 // ── 공책 이름 변경 바텀시트 ────────────────────────────────────────────────
 
 class _RenameBottomSheet extends StatefulWidget {
-  const _RenameBottomSheet(
-      {required this.initialName, required this.onSave});
+  const _RenameBottomSheet({required this.initialName, required this.onSave});
   final String initialName;
   final ValueChanged<String> onSave;
 
@@ -1761,8 +1899,9 @@ class _RenameBottomSheetState extends State<_RenameBottomSheet> {
   @override
   Widget build(BuildContext context) {
     return Padding(
-      padding:
-          EdgeInsets.only(bottom: MediaQuery.of(context).viewInsets.bottom),
+      padding: EdgeInsets.only(
+        bottom: MediaQuery.of(context).viewInsets.bottom,
+      ),
       child: SafeArea(
         child: Padding(
           padding: const EdgeInsets.fromLTRB(20, 16, 20, 20),
@@ -1772,38 +1911,42 @@ class _RenameBottomSheetState extends State<_RenameBottomSheet> {
             children: [
               Center(child: _sheetHandle()),
               const SizedBox(height: 16),
-              const Text('공책 이름 변경',
-                  style: TextStyle(
-                      fontSize: 15, fontWeight: FontWeight.w700)),
+              const Text(
+                '공책 이름 변경',
+                style: TextStyle(fontSize: 15, fontWeight: FontWeight.w700),
+              ),
               const SizedBox(height: 12),
               TextField(
                 controller: _ctrl,
                 autofocus: true,
-                style:
-                    const TextStyle(fontSize: 14, color: AppColors.textPrimary),
+                style: AppTextStyles.bodyMedium,
                 decoration: InputDecoration(
                   hintText: '공책 이름',
-                  hintStyle: const TextStyle(
-                      fontSize: 13, color: AppColors.textTertiary),
+                  hintStyle: AppTextStyles.labelMedium.copyWith(
+                    color: AppColors.textTertiary,
+                    fontWeight: FontWeight.w400,
+                  ),
                   filled: true,
                   fillColor: const Color(0xFFFFFDF7),
                   border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(12),
-                    borderSide:
-                        const BorderSide(color: Color(0xFFD4C5A9)),
+                    borderRadius: BorderRadius.circular(AppRadius.md),
+                    borderSide: const BorderSide(color: Color(0xFFD4C5A9)),
                   ),
                   enabledBorder: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(12),
-                    borderSide:
-                        const BorderSide(color: Color(0xFFD4C5A9)),
+                    borderRadius: BorderRadius.circular(AppRadius.md),
+                    borderSide: const BorderSide(color: Color(0xFFD4C5A9)),
                   ),
                   focusedBorder: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(12),
+                    borderRadius: BorderRadius.circular(AppRadius.md),
                     borderSide: const BorderSide(
-                        color: AppColors.primary, width: 1.5),
+                      color: AppColors.primary,
+                      width: 1.5,
+                    ),
                   ),
                   contentPadding: const EdgeInsets.symmetric(
-                      horizontal: 14, vertical: 12),
+                    horizontal: 14,
+                    vertical: 12,
+                  ),
                 ),
               ),
               const SizedBox(height: 16),
@@ -1822,8 +1965,9 @@ class _RenameBottomSheetState extends State<_RenameBottomSheet> {
                       widget.onSave(name);
                     },
                     style: ElevatedButton.styleFrom(
-                        backgroundColor: AppColors.primary,
-                        foregroundColor: Colors.white),
+                      backgroundColor: AppColors.primary,
+                      foregroundColor: Colors.white,
+                    ),
                     child: const Text('저장'),
                   ),
                 ],
@@ -1854,9 +1998,10 @@ class _ShapePickerSheet extends StatelessWidget {
           children: [
             Center(child: _sheetHandle()),
             const SizedBox(height: 16),
-            const Text('스와치 모양',
-                style: TextStyle(
-                    fontSize: 15, fontWeight: FontWeight.w700)),
+            const Text(
+              '스와치 모양',
+              style: TextStyle(fontSize: 15, fontWeight: FontWeight.w700),
+            ),
             const SizedBox(height: 16),
             Wrap(
               spacing: 10,
@@ -1865,9 +2010,7 @@ class _ShapePickerSheet extends StatelessWidget {
                 final selected = shape == current;
                 return TapScale(
                   onTap: () {
-                    ref
-                        .read(inkSwatchShapeProvider.notifier)
-                        .setShape(shape);
+                    ref.read(inkSwatchShapeProvider.notifier).setShape(shape);
                     // 다른 유저가 읽기 전용으로 볼 때도 동일한 모양이 보이도록
                     // 계정(users/{uid}) 문서에도 저장 — 스와치 모양은 책별이 아니라
                     // 계정 전체에 적용되는 설정이라 여기 저장한다.
@@ -1876,10 +2019,16 @@ class _ShapePickerSheet extends StatelessWidget {
                       ref
                           .read(userRepoProvider)
                           .updateUser(uid, {'inkSwatchShape': shape.name})
-                          .then((_) =>
-                              debugPrint('[InkBook] inkSwatchShape 저장 완료: ${shape.name}'))
-                          .catchError((e) =>
-                              debugPrint('[InkBook] inkSwatchShape 저장 실패: $e'));
+                          .then(
+                            (_) => debugPrint(
+                              '[InkBook] inkSwatchShape 저장 완료: ${shape.name}',
+                            ),
+                          )
+                          .catchError(
+                            (e) => debugPrint(
+                              '[InkBook] inkSwatchShape 저장 실패: $e',
+                            ),
+                          );
                     }
                     Navigator.pop(context);
                   },
@@ -1922,16 +2071,17 @@ class _ShapePickerSheet extends StatelessWidget {
                               ),
                       ),
                       const SizedBox(height: 6),
-                      Text(shape.label,
-                          style: TextStyle(
-                            fontSize: 11,
-                            color: selected
-                                ? AppColors.primary
-                                : AppColors.textSecondary,
-                            fontWeight: selected
-                                ? FontWeight.w600
-                                : FontWeight.normal,
-                          )),
+                      Text(
+                        shape.label,
+                        style: AppTextStyles.labelSmall.copyWith(
+                          color: selected
+                              ? AppColors.primary
+                              : AppColors.textSecondary,
+                          fontWeight: selected
+                              ? FontWeight.w600
+                              : FontWeight.normal,
+                        ),
+                      ),
                     ],
                   ),
                 );
@@ -2013,14 +2163,16 @@ class _VisibilityOption extends StatelessWidget {
   Widget build(BuildContext context) {
     return InkWell(
       onTap: onTap,
-      borderRadius: BorderRadius.circular(12),
+      borderRadius: BorderRadius.circular(AppRadius.md),
       child: Padding(
         padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 4),
         child: Row(
           children: [
-            Icon(icon,
-                size: 22,
-                color: isSelected ? AppColors.primary : AppColors.textSecondary),
+            Icon(
+              icon,
+              size: 22,
+              color: isSelected ? AppColors.primary : AppColors.textSecondary,
+            ),
             const SizedBox(width: 14),
             Expanded(
               child: Column(
@@ -2028,23 +2180,23 @@ class _VisibilityOption extends StatelessWidget {
                 children: [
                   Text(
                     label,
-                    style: TextStyle(
-                      fontSize: 14,
-                      fontWeight: FontWeight.w600,
-                      color: isSelected ? AppColors.primary : AppColors.textPrimary,
+                    style: AppTextStyles.titleSmall.copyWith(
+                      color: isSelected
+                          ? AppColors.primary
+                          : AppColors.textPrimary,
                     ),
                   ),
                   const SizedBox(height: 2),
-                  Text(
-                    description,
-                    style: const TextStyle(
-                        fontSize: 12, color: AppColors.textSecondary),
-                  ),
+                  Text(description, style: AppTextStyles.bodySmall),
                 ],
               ),
             ),
             if (isSelected)
-              const Icon(Icons.check_circle, size: 20, color: AppColors.primary),
+              const Icon(
+                Icons.check_circle,
+                size: 20,
+                color: AppColors.primary,
+              ),
           ],
         ),
       ),

@@ -10,18 +10,25 @@ import '../../../shared/widgets/center_toast.dart';
 import '../../../data/models/ink_model.dart';
 import '../../../shared/widgets/review/review_feed_card.dart';
 import '../../../shared/widgets/ink_drop_circle.dart';
-import '../../../shared/widgets/archive/add_product_bottom_sheet.dart' show InkColorPicker;
+import '../../../shared/widgets/archive/add_product_bottom_sheet.dart'
+    show InkColorPicker;
 import '../providers/archive_provider.dart';
 // import 'ink_compare_screen.dart'; // 색상 비교 — 구현 완료, 적용 보류
 
 class ArchiveDetailScreen extends ConsumerWidget {
-  const ArchiveDetailScreen({super.key, required this.type, required this.productId});
+  const ArchiveDetailScreen({
+    super.key,
+    required this.type,
+    required this.productId,
+  });
   final String type;
   final String productId;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final state = ref.watch(archiveDetailProvider((type: type, productId: productId)));
+    final state = ref.watch(
+      archiveDetailProvider((type: type, productId: productId)),
+    );
     final data = state.valueOrNull;
 
     return Scaffold(
@@ -31,7 +38,10 @@ class ArchiveDetailScreen extends ConsumerWidget {
             ? null
             : Text(
                 type == 'ink' ? (data as InkModel).name : data.displayName,
-                style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
+                style: const TextStyle(
+                  fontSize: 16,
+                  fontWeight: FontWeight.w600,
+                ),
               ),
         actions: data == null
             ? []
@@ -39,7 +49,9 @@ class ArchiveDetailScreen extends ConsumerWidget {
                 _WishlistButton(
                   type: type,
                   productId: productId,
-                  productName: type == 'ink' ? (data as InkModel).name : data.displayName,
+                  productName: type == 'ink'
+                      ? (data as InkModel).name
+                      : data.displayName,
                   brand: data.brand,
                   hexColor: type == 'ink' ? (data as InkModel).hexColor : '',
                 ),
@@ -63,15 +75,20 @@ class ArchiveDetailScreen extends ConsumerWidget {
 
 // ── 본문 (SingleChildScrollView — Viewport 없음, 너비 항상 유한) ──────────────
 class _DetailBody extends ConsumerWidget {
-  const _DetailBody({required this.type, required this.data, required this.productId});
+  const _DetailBody({
+    required this.type,
+    required this.data,
+    required this.productId,
+  });
   final String type;
   final dynamic data;
   final String productId;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final reviewsAsync =
-        ref.watch(productReviewsProvider((type: type, productId: productId)));
+    final reviewsAsync = ref.watch(
+      productReviewsProvider((type: type, productId: productId)),
+    );
 
     return SingleChildScrollView(
       child: Column(
@@ -95,15 +112,24 @@ class _DetailBody extends ConsumerWidget {
                 ),
                 OutlinedButton(
                   onPressed: () => context.push(
-                      '/write/review?type=$type&productId=$productId'),
+                    '/write/review?type=$type&productId=$productId',
+                  ),
                   style: OutlinedButton.styleFrom(
                     foregroundColor: AppColors.primary,
                     side: const BorderSide(color: AppColors.primary),
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-                    padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(AppRadius.xl),
+                    ),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 14,
+                      vertical: 6,
+                    ),
                     minimumSize: Size.zero,
                     tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                    textStyle: const TextStyle(fontSize: 13, fontWeight: FontWeight.w600),
+                    textStyle: const TextStyle(
+                      fontSize: 13,
+                      fontWeight: FontWeight.w600,
+                    ),
                   ),
                   child: const Text('새 리뷰 작성'),
                 ),
@@ -144,8 +170,7 @@ class _DetailBody extends ConsumerWidget {
                             height: w / 0.85,
                             child: ReviewFeedCard(
                               review: review,
-                              onTap: () =>
-                                  context.push('/review/${review.id}'),
+                              onTap: () => context.push('/review/${review.id}'),
                             ),
                           ),
                         )
@@ -171,7 +196,9 @@ class _InkProfileHeader extends StatelessWidget {
   Widget build(BuildContext context) {
     Color color;
     try {
-      color = Color(int.parse('FF${data.hexColor.replaceAll('#', '')}', radix: 16));
+      color = Color(
+        int.parse('FF${data.hexColor.replaceAll('#', '')}', radix: 16),
+      );
     } catch (e) {
       color = Colors.grey.shade300;
     }
@@ -185,14 +212,7 @@ class _InkProfileHeader extends StatelessWidget {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text(
-                data.brand,
-                style: const TextStyle(
-                  fontSize: 13,
-                  color: AppColors.textSecondary,
-                  fontWeight: FontWeight.w500,
-                ),
-              ),
+              Text(data.brand, style: AppTextStyles.labelMedium),
               const SizedBox(height: 2),
               Row(
                 crossAxisAlignment: CrossAxisAlignment.center,
@@ -200,10 +220,8 @@ class _InkProfileHeader extends StatelessWidget {
                   Flexible(
                     child: Text(
                       data.name,
-                      style: const TextStyle(
-                        fontSize: 20,
+                      style: AppTextStyles.headlineSmall.copyWith(
                         fontWeight: FontWeight.w700,
-                        color: AppColors.textPrimary,
                       ),
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
@@ -211,17 +229,18 @@ class _InkProfileHeader extends StatelessWidget {
                   ),
                   const SizedBox(width: 8),
                   Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 10,
+                      vertical: 4,
+                    ),
                     decoration: BoxDecoration(
                       color: AppColors.chipBackground,
-                      borderRadius: BorderRadius.circular(20),
+                      borderRadius: BorderRadius.circular(AppRadius.xl),
                     ),
                     child: Text(
                       data.inkTypeLabel,
-                      style: const TextStyle(
-                        fontSize: 12,
+                      style: AppTextStyles.bodySmall.copyWith(
                         fontWeight: FontWeight.w600,
-                        color: AppColors.textSecondary,
                       ),
                     ),
                   ),
@@ -255,15 +274,17 @@ class _InkProfileHeader extends StatelessWidget {
               if (data.reviewCount > 0)
                 Text(
                   '리뷰 ${data.reviewCount}개',
-                  style: const TextStyle(
-                    fontSize: 13,
-                    color: AppColors.textSecondary,
+                  style: AppTextStyles.labelMedium.copyWith(
+                    fontWeight: FontWeight.w400,
                   ),
                 )
               else
-                const Text(
+                Text(
                   '아직 리뷰가 없어요',
-                  style: TextStyle(fontSize: 13, color: AppColors.textTertiary),
+                  style: AppTextStyles.labelMedium.copyWith(
+                    color: AppColors.textTertiary,
+                    fontWeight: FontWeight.w400,
+                  ),
                 ),
             ],
           ),
@@ -311,8 +332,9 @@ class _InfoCard extends StatelessWidget {
                         width: 80,
                         child: Text(
                           e.key,
-                          style: const TextStyle(
-                              color: AppColors.textSecondary, fontSize: 13),
+                          style: AppTextStyles.labelMedium.copyWith(
+                            fontWeight: FontWeight.w400,
+                          ),
                         ),
                       ),
                       Expanded(
@@ -357,7 +379,9 @@ class _WishlistButton extends ConsumerWidget {
         color: isWishlisted ? Colors.redAccent : null,
       ),
       onPressed: () async {
-        final added = await ref.read(wishlistActionsProvider).toggle(
+        final added = await ref
+            .read(wishlistActionsProvider)
+            .toggle(
               type: type,
               productId: productId,
               productName: productName,
@@ -396,7 +420,7 @@ class _ReportButton extends StatelessWidget {
       context: ctx,
       backgroundColor: Colors.white,
       shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
+        borderRadius: BorderRadius.vertical(top: Radius.circular(AppRadius.lg)),
       ),
       builder: (sheetCtx) => SafeArea(
         child: Column(
@@ -413,9 +437,13 @@ class _ReportButton extends StatelessWidget {
             ),
             ListTile(
               leading: const Icon(Icons.flag_outlined, color: Colors.red),
-              title: const Text('신고하기',
-                  style: TextStyle(
-                      color: Colors.red, fontWeight: FontWeight.w500)),
+              title: const Text(
+                '신고하기',
+                style: TextStyle(
+                  color: Colors.red,
+                  fontWeight: FontWeight.w500,
+                ),
+              ),
               onTap: () {
                 Navigator.pop(sheetCtx);
                 WidgetsBinding.instance.addPostFrameCallback((_) {
@@ -425,8 +453,9 @@ class _ReportButton extends StatelessWidget {
                     isScrollControlled: true,
                     backgroundColor: Colors.white,
                     shape: const RoundedRectangleBorder(
-                      borderRadius:
-                          BorderRadius.vertical(top: Radius.circular(20)),
+                      borderRadius: BorderRadius.vertical(
+                        top: Radius.circular(AppRadius.xl),
+                      ),
                     ),
                     builder: (innerCtx) => _ReportSheet(
                       type: type,
@@ -458,10 +487,12 @@ class _EditInkSheet extends ConsumerStatefulWidget {
 }
 
 class _EditInkSheetState extends ConsumerState<_EditInkSheet> {
-  late final TextEditingController _brandCtrl =
-      TextEditingController(text: widget.ink.brand);
-  late final TextEditingController _nameCtrl =
-      TextEditingController(text: widget.ink.name);
+  late final TextEditingController _brandCtrl = TextEditingController(
+    text: widget.ink.brand,
+  );
+  late final TextEditingController _nameCtrl = TextEditingController(
+    text: widget.ink.name,
+  );
   late String _inkType = widget.ink.inkType;
   late Color _color = widget.ink.inkColor;
   bool _isSaving = false;
@@ -489,7 +520,9 @@ class _EditInkSheetState extends ConsumerState<_EditInkSheet> {
 
     setState(() => _isSaving = true);
     try {
-      await ref.read(archiveRepoProvider).updateInk(
+      await ref
+          .read(archiveRepoProvider)
+          .updateInk(
             inkId: widget.ink.id,
             brand: _brandCtrl.text.trim(),
             name: _nameCtrl.text.trim(),
@@ -500,11 +533,20 @@ class _EditInkSheetState extends ConsumerState<_EditInkSheet> {
       ref.invalidate(archiveProvider);
       if (mounted) {
         Navigator.pop(context);
-        showCenterToast(context, message: '잉크 정보를 수정했어요.', icon: Icons.check_circle);
+        showCenterToast(
+          context,
+          message: '잉크 정보를 수정했어요.',
+          icon: Icons.check_circle,
+        );
       }
     } catch (e) {
       if (mounted) {
-        showCenterToast(context, message: '수정 실패: $e', icon: Icons.error_outline, iconColor: AppColors.error);
+        showCenterToast(
+          context,
+          message: '수정 실패: $e',
+          icon: Icons.error_outline,
+          iconColor: AppColors.error,
+        );
       }
     } finally {
       if (mounted) setState(() => _isSaving = false);
@@ -520,7 +562,9 @@ class _EditInkSheetState extends ConsumerState<_EditInkSheet> {
       child: Container(
         decoration: const BoxDecoration(
           color: Colors.white,
-          borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+          borderRadius: BorderRadius.vertical(
+            top: Radius.circular(AppRadius.xl),
+          ),
         ),
         child: Padding(
           padding: EdgeInsets.only(top: 16, bottom: bottom),
@@ -545,8 +589,13 @@ class _EditInkSheetState extends ConsumerState<_EditInkSheet> {
                       onPressed: () => Navigator.pop(context),
                     ),
                     const Expanded(
-                      child: Text('잉크 정보 수정',
-                          style: TextStyle(fontSize: 17, fontWeight: FontWeight.w700)),
+                      child: Text(
+                        '잉크 정보 수정',
+                        style: TextStyle(
+                          fontSize: 17,
+                          fontWeight: FontWeight.w700,
+                        ),
+                      ),
                     ),
                   ],
                 ),
@@ -571,26 +620,31 @@ class _EditInkSheetState extends ConsumerState<_EditInkSheet> {
                       Wrap(
                         spacing: 8,
                         runSpacing: 8,
-                        children: List.generate(_kEditInkTypeLabels.length, (i) {
+                        children: List.generate(_kEditInkTypeLabels.length, (
+                          i,
+                        ) {
                           final selected = _inkType == _kEditInkTypeValues[i];
                           return GestureDetector(
-                            onTap: () =>
-                                setState(() => _inkType = _kEditInkTypeValues[i]),
+                            onTap: () => setState(
+                              () => _inkType = _kEditInkTypeValues[i],
+                            ),
                             child: AnimatedContainer(
                               duration: const Duration(milliseconds: 120),
                               padding: const EdgeInsets.symmetric(
-                                  horizontal: 12, vertical: 7),
+                                horizontal: 12,
+                                vertical: 7,
+                              ),
                               decoration: BoxDecoration(
                                 color: selected
                                     ? AppColors.primary
                                     : AppColors.chipBackground,
-                                borderRadius: BorderRadius.circular(20),
+                                borderRadius: BorderRadius.circular(
+                                  AppRadius.xl,
+                                ),
                               ),
                               child: Text(
                                 _kEditInkTypeLabels[i],
-                                style: TextStyle(
-                                  fontSize: 13,
-                                  fontWeight: FontWeight.w500,
+                                style: AppTextStyles.labelMedium.copyWith(
                                   color: selected
                                       ? Colors.white
                                       : AppColors.textSecondary,
@@ -623,18 +677,26 @@ class _EditInkSheetState extends ConsumerState<_EditInkSheet> {
                       foregroundColor: Colors.white,
                       disabledBackgroundColor: AppColors.chipBackground,
                       padding: const EdgeInsets.symmetric(vertical: 14),
-                      shape:
-                          RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(AppRadius.md),
+                      ),
                     ),
                     child: _isSaving
                         ? const SizedBox(
                             width: 20,
                             height: 20,
                             child: CircularProgressIndicator(
-                                strokeWidth: 2, color: Colors.white),
+                              strokeWidth: 2,
+                              color: Colors.white,
+                            ),
                           )
-                        : const Text('수정 완료',
-                            style: TextStyle(fontSize: 15, fontWeight: FontWeight.w600)),
+                        : const Text(
+                            '수정 완료',
+                            style: TextStyle(
+                              fontSize: 15,
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
                   ),
                 ),
               ),
@@ -646,25 +708,29 @@ class _EditInkSheetState extends ConsumerState<_EditInkSheet> {
   }
 
   Widget _editLabel(String text) => Text(
-        text,
-        style: const TextStyle(
-            fontSize: 13, fontWeight: FontWeight.w600, color: AppColors.textSecondary),
-      );
+    text,
+    style: AppTextStyles.labelMedium.copyWith(fontWeight: FontWeight.w600),
+  );
 
   Widget _editTextField(TextEditingController ctrl, String hint) => TextField(
-        controller: ctrl,
-        style: const TextStyle(fontSize: 14),
-        onChanged: (_) => setState(() {}),
-        decoration: InputDecoration(
-          hintText: hint,
-          hintStyle: const TextStyle(fontSize: 13, color: AppColors.textTertiary),
-          filled: true,
-          fillColor: AppColors.chipBackground,
-          border: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(10), borderSide: BorderSide.none),
-          contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
-        ),
-      );
+    controller: ctrl,
+    style: const TextStyle(fontSize: 14),
+    onChanged: (_) => setState(() {}),
+    decoration: InputDecoration(
+      hintText: hint,
+      hintStyle: AppTextStyles.labelMedium.copyWith(
+        color: AppColors.textTertiary,
+        fontWeight: FontWeight.w400,
+      ),
+      filled: true,
+      fillColor: AppColors.chipBackground,
+      border: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(10),
+        borderSide: BorderSide.none,
+      ),
+      contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+    ),
+  );
 }
 
 // ── 신고 시트 ──────────────────────────────────────────────────────────────
@@ -701,7 +767,9 @@ class _ReportSheetState extends ConsumerState<_ReportSheet> {
 
     setState(() => _isSubmitting = true);
     try {
-      await ref.read(archiveRepoProvider).reportProduct(
+      await ref
+          .read(archiveRepoProvider)
+          .reportProduct(
             targetType: widget.type,
             targetId: widget.productId,
             targetName: widget.targetName,
@@ -719,7 +787,12 @@ class _ReportSheetState extends ConsumerState<_ReportSheet> {
       }
     } catch (e) {
       if (mounted) {
-        showCenterToast(context, message: '신고 실패: $e', icon: Icons.error_outline, iconColor: AppColors.error);
+        showCenterToast(
+          context,
+          message: '신고 실패: $e',
+          icon: Icons.error_outline,
+          iconColor: AppColors.error,
+        );
       }
     } finally {
       if (mounted) setState(() => _isSubmitting = false);
@@ -750,9 +823,10 @@ class _ReportSheetState extends ConsumerState<_ReportSheet> {
             ),
             const Padding(
               padding: EdgeInsets.fromLTRB(20, 12, 20, 14),
-              child: Text('신고 사유',
-                  style:
-                      TextStyle(fontSize: 17, fontWeight: FontWeight.w700)),
+              child: Text(
+                '신고 사유',
+                style: TextStyle(fontSize: 17, fontWeight: FontWeight.w700),
+              ),
             ),
             const Divider(height: 1),
             Padding(
@@ -760,11 +834,12 @@ class _ReportSheetState extends ConsumerState<_ReportSheet> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  const Text('신고 유형 *',
-                      style: TextStyle(
-                          fontSize: 13,
-                          fontWeight: FontWeight.w600,
-                          color: AppColors.textSecondary)),
+                  Text(
+                    '신고 유형 *',
+                    style: AppTextStyles.labelMedium.copyWith(
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
                   const SizedBox(height: 10),
                   Wrap(
                     spacing: 8,
@@ -776,31 +851,34 @@ class _ReportSheetState extends ConsumerState<_ReportSheet> {
                         child: AnimatedContainer(
                           duration: const Duration(milliseconds: 120),
                           padding: const EdgeInsets.symmetric(
-                              horizontal: 12, vertical: 7),
+                            horizontal: 12,
+                            vertical: 7,
+                          ),
                           decoration: BoxDecoration(
                             color: selected
                                 ? AppColors.primary
                                 : AppColors.chipBackground,
-                            borderRadius: BorderRadius.circular(20),
+                            borderRadius: BorderRadius.circular(AppRadius.xl),
                           ),
-                          child: Text(r,
-                              style: TextStyle(
-                                fontSize: 13,
-                                fontWeight: FontWeight.w500,
-                                color: selected
-                                    ? Colors.white
-                                    : AppColors.textSecondary,
-                              )),
+                          child: Text(
+                            r,
+                            style: AppTextStyles.labelMedium.copyWith(
+                              color: selected
+                                  ? Colors.white
+                                  : AppColors.textSecondary,
+                            ),
+                          ),
                         ),
                       );
                     }).toList(),
                   ),
                   const SizedBox(height: 16),
-                  const Text('상세 사유 (선택)',
-                      style: TextStyle(
-                          fontSize: 13,
-                          fontWeight: FontWeight.w600,
-                          color: AppColors.textSecondary)),
+                  Text(
+                    '상세 사유 (선택)',
+                    style: AppTextStyles.labelMedium.copyWith(
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
                   const SizedBox(height: 8),
                   TextField(
                     controller: _detailCtrl,
@@ -808,8 +886,10 @@ class _ReportSheetState extends ConsumerState<_ReportSheet> {
                     style: const TextStyle(fontSize: 14),
                     decoration: InputDecoration(
                       hintText: '추가적인 사유가 있으면 입력해주세요',
-                      hintStyle: const TextStyle(
-                          fontSize: 13, color: AppColors.textTertiary),
+                      hintStyle: AppTextStyles.labelMedium.copyWith(
+                        color: AppColors.textTertiary,
+                        fontWeight: FontWeight.w400,
+                      ),
                       filled: true,
                       fillColor: AppColors.chipBackground,
                       border: OutlineInputBorder(
@@ -823,25 +903,34 @@ class _ReportSheetState extends ConsumerState<_ReportSheet> {
                   SizedBox(
                     width: double.infinity,
                     child: ElevatedButton(
-                      onPressed:
-                          _selectedReason != null && !_isSubmitting ? _submit : null,
+                      onPressed: _selectedReason != null && !_isSubmitting
+                          ? _submit
+                          : null,
                       style: ElevatedButton.styleFrom(
                         backgroundColor: Colors.red,
                         foregroundColor: Colors.white,
                         disabledBackgroundColor: AppColors.chipBackground,
                         padding: const EdgeInsets.symmetric(vertical: 14),
                         shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(12)),
+                          borderRadius: BorderRadius.circular(AppRadius.md),
+                        ),
                       ),
                       child: _isSubmitting
                           ? const SizedBox(
                               width: 20,
                               height: 20,
                               child: CircularProgressIndicator(
-                                  strokeWidth: 2, color: Colors.white))
-                          : const Text('신고 제출',
+                                strokeWidth: 2,
+                                color: Colors.white,
+                              ),
+                            )
+                          : const Text(
+                              '신고 제출',
                               style: TextStyle(
-                                  fontSize: 15, fontWeight: FontWeight.w600)),
+                                fontSize: 15,
+                                fontWeight: FontWeight.w600,
+                              ),
+                            ),
                     ),
                   ),
                   const SizedBox(height: 8),
@@ -854,4 +943,3 @@ class _ReportSheetState extends ConsumerState<_ReportSheet> {
     );
   }
 }
-

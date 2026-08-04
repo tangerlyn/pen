@@ -90,7 +90,7 @@ class _NotebookCard extends ConsumerWidget {
     showModalBottomSheet(
       context: context,
       shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+        borderRadius: BorderRadius.vertical(top: Radius.circular(AppRadius.xl)),
       ),
       builder: (_) => _BookOptionsSheet(book: book, uid: uid),
     );
@@ -116,17 +116,16 @@ class _NewBookCell extends StatelessWidget {
             strokeAlign: BorderSide.strokeAlignInside,
           ),
         ),
-        child: const Column(
+        child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(Icons.add, size: 32, color: Color(0xFFB8A98A)),
-            SizedBox(height: 8),
+            const Icon(Icons.add, size: 32, color: Color(0xFFB8A98A)),
+            const SizedBox(height: 8),
             Text(
               '새 공책 만들기',
-              style: TextStyle(
-                fontSize: 13,
+              style: AppTextStyles.labelMedium.copyWith(
                 fontWeight: FontWeight.w600,
-                color: Color(0xFF8B7355),
+                color: const Color(0xFF8B7355),
               ),
             ),
           ],
@@ -140,7 +139,7 @@ class _NewBookCell extends StatelessWidget {
       context: context,
       isScrollControlled: true,
       shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+        borderRadius: BorderRadius.vertical(top: Radius.circular(AppRadius.xl)),
       ),
       builder: (_) => _CreateBookSheet(uid: uid),
     );
@@ -182,8 +181,12 @@ class _CreateBookSheetState extends ConsumerState<_CreateBookSheet> {
     } catch (e) {
       setState(() => _saving = false);
       if (mounted) {
-        showCenterToast(context,
-            message: '저장 실패: $e', icon: Icons.error_outline, iconColor: AppColors.error);
+        showCenterToast(
+          context,
+          message: '저장 실패: $e',
+          icon: Icons.error_outline,
+          iconColor: AppColors.error,
+        );
       }
     }
   }
@@ -199,7 +202,8 @@ class _CreateBookSheetState extends ConsumerState<_CreateBookSheet> {
         children: [
           Center(
             child: Container(
-              width: 36, height: 4,
+              width: 36,
+              height: 4,
               decoration: BoxDecoration(
                 color: const Color(0xFFD4C5A9),
                 borderRadius: BorderRadius.circular(2),
@@ -207,8 +211,10 @@ class _CreateBookSheetState extends ConsumerState<_CreateBookSheet> {
             ),
           ),
           const SizedBox(height: 20),
-          const Text('새 공책 만들기',
-              style: TextStyle(fontSize: 17, fontWeight: FontWeight.w700)),
+          const Text(
+            '새 공책 만들기',
+            style: TextStyle(fontSize: 17, fontWeight: FontWeight.w700),
+          ),
           const SizedBox(height: 16),
           TextField(
             controller: _nameCtrl,
@@ -218,25 +224,33 @@ class _CreateBookSheetState extends ConsumerState<_CreateBookSheet> {
               filled: true,
               fillColor: const Color(0xFFFFFDF7),
               border: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(12),
+                borderRadius: BorderRadius.circular(AppRadius.md),
                 borderSide: const BorderSide(color: Color(0xFFD4C5A9)),
               ),
               enabledBorder: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(12),
+                borderRadius: BorderRadius.circular(AppRadius.md),
                 borderSide: const BorderSide(color: Color(0xFFD4C5A9)),
               ),
               focusedBorder: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(12),
-                borderSide: const BorderSide(color: AppColors.primary, width: 1.5),
+                borderRadius: BorderRadius.circular(AppRadius.md),
+                borderSide: const BorderSide(
+                  color: AppColors.primary,
+                  width: 1.5,
+                ),
               ),
-              contentPadding:
-                  const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+              contentPadding: const EdgeInsets.symmetric(
+                horizontal: 14,
+                vertical: 12,
+              ),
             ),
           ),
           const SizedBox(height: 16),
-          const Text('표지 색상',
-              style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600,
-                  color: AppColors.textSecondary)),
+          Text(
+            '표지 색상',
+            style: AppTextStyles.labelMedium.copyWith(
+              fontWeight: FontWeight.w600,
+            ),
+          ),
           const SizedBox(height: 10),
           Wrap(
             spacing: 10,
@@ -259,7 +273,12 @@ class _CreateBookSheetState extends ConsumerState<_CreateBookSheet> {
                       width: 2.5,
                     ),
                     boxShadow: selected
-                        ? [BoxShadow(color: color.withValues(alpha: 0.5), blurRadius: 6)]
+                        ? [
+                            BoxShadow(
+                              color: color.withValues(alpha: 0.5),
+                              blurRadius: 6,
+                            ),
+                          ]
                         : null,
                   ),
                   child: selected
@@ -279,15 +298,25 @@ class _CreateBookSheetState extends ConsumerState<_CreateBookSheet> {
                 foregroundColor: Colors.white,
                 padding: const EdgeInsets.symmetric(vertical: 14),
                 shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(12)),
+                  borderRadius: BorderRadius.circular(AppRadius.md),
+                ),
               ),
               child: _saving
                   ? const SizedBox(
-                      width: 20, height: 20,
+                      width: 20,
+                      height: 20,
                       child: CircularProgressIndicator(
-                          strokeWidth: 2, color: Colors.white))
-                  : const Text('만들기',
-                      style: TextStyle(fontSize: 15, fontWeight: FontWeight.w700)),
+                        strokeWidth: 2,
+                        color: Colors.white,
+                      ),
+                    )
+                  : const Text(
+                      '만들기',
+                      style: TextStyle(
+                        fontSize: 15,
+                        fontWeight: FontWeight.w700,
+                      ),
+                    ),
             ),
           ),
         ],
@@ -327,7 +356,9 @@ class _BookOptionsSheetState extends ConsumerState<_BookOptionsSheet> {
     final name = _nameCtrl.text.trim();
     if (name.isEmpty) return;
     setState(() => _saving = true);
-    await ref.read(inkBookRepoProvider).updateBook(widget.uid, widget.book.id, name: name);
+    await ref
+        .read(inkBookRepoProvider)
+        .updateBook(widget.uid, widget.book.id, name: name);
     if (mounted) Navigator.pop(context);
   }
 
@@ -337,7 +368,9 @@ class _BookOptionsSheetState extends ConsumerState<_BookOptionsSheet> {
       context: context,
       builder: (_) => AlertDialog(
         title: const Text('공책 삭제'),
-        content: Text('"${widget.book.name}" 공책을 삭제할까요?\n안에 있는 잉크 기록도 모두 삭제됩니다.'),
+        content: Text(
+          '"${widget.book.name}" 공책을 삭제할까요?\n안에 있는 잉크 기록도 모두 삭제됩니다.',
+        ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context, false),
@@ -375,7 +408,8 @@ class _BookOptionsSheetState extends ConsumerState<_BookOptionsSheet> {
         children: [
           Center(
             child: Container(
-              width: 36, height: 4,
+              width: 36,
+              height: 4,
               decoration: BoxDecoration(
                 color: const Color(0xFFD4C5A9),
                 borderRadius: BorderRadius.circular(2),
@@ -391,16 +425,24 @@ class _BookOptionsSheetState extends ConsumerState<_BookOptionsSheet> {
                 hintText: '공책 이름',
                 filled: true,
                 fillColor: const Color(0xFFFFFDF7),
-                border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(AppRadius.md),
+                ),
                 enabledBorder: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(12),
+                  borderRadius: BorderRadius.circular(AppRadius.md),
                   borderSide: const BorderSide(color: Color(0xFFD4C5A9)),
                 ),
                 focusedBorder: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(12),
-                  borderSide: const BorderSide(color: AppColors.primary, width: 1.5),
+                  borderRadius: BorderRadius.circular(AppRadius.md),
+                  borderSide: const BorderSide(
+                    color: AppColors.primary,
+                    width: 1.5,
+                  ),
                 ),
-                contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+                contentPadding: const EdgeInsets.symmetric(
+                  horizontal: 14,
+                  vertical: 12,
+                ),
               ),
             ),
             const SizedBox(height: 12),
@@ -418,8 +460,13 @@ class _BookOptionsSheetState extends ConsumerState<_BookOptionsSheet> {
                     onPressed: _saving ? null : _save,
                     child: _saving
                         ? const SizedBox(
-                            width: 18, height: 18,
-                            child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white))
+                            width: 18,
+                            height: 18,
+                            child: CircularProgressIndicator(
+                              strokeWidth: 2,
+                              color: Colors.white,
+                            ),
+                          )
                         : const Text('저장'),
                   ),
                 ),
@@ -457,29 +504,36 @@ class _EmptyState extends StatelessWidget {
         mainAxisSize: MainAxisSize.min,
         children: [
           Container(
-            width: 88, height: 88,
+            width: 88,
+            height: 88,
             decoration: const BoxDecoration(
               color: Color(0xFFEDE7D6),
               shape: BoxShape.circle,
             ),
-            child: const Icon(Icons.photo_album_outlined,
-                size: 44, color: Color(0xFFB8A98A)),
+            child: const Icon(
+              Icons.photo_album_outlined,
+              size: 44,
+              color: Color(0xFFB8A98A),
+            ),
           ),
           const SizedBox(height: 20),
-          const Text('공책이 없어요',
-              style: TextStyle(
-                  fontSize: 18, fontWeight: FontWeight.w700,
-                  color: AppColors.textPrimary)),
+          const Text('공책이 없어요', style: AppTextStyles.titleLarge),
           const SizedBox(height: 8),
-          const Text('잉크 스와치를 담을 공책을 만들어보세요',
-              style: TextStyle(fontSize: 14, color: AppColors.textSecondary)),
+          Text(
+            '잉크 스와치를 담을 공책을 만들어보세요',
+            style: AppTextStyles.bodyMedium.copyWith(
+              color: AppColors.textSecondary,
+            ),
+          ),
           const SizedBox(height: 28),
           ElevatedButton.icon(
             onPressed: () => showModalBottomSheet(
               context: context,
               isScrollControlled: true,
               shape: const RoundedRectangleBorder(
-                borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+                borderRadius: BorderRadius.vertical(
+                  top: Radius.circular(AppRadius.xl),
+                ),
               ),
               builder: (_) => _CreateBookSheet(uid: uid),
             ),

@@ -60,16 +60,15 @@ class _ScrapToastState extends State<_ScrapToast>
               color: AppColors.primary.withValues(alpha: 0.88),
               borderRadius: BorderRadius.circular(24),
             ),
-            child: const Row(
+            child: Row(
               mainAxisSize: MainAxisSize.min,
               children: [
-                Icon(Icons.bookmark, size: 16, color: Colors.white),
-                SizedBox(width: 6),
+                const Icon(Icons.bookmark, size: 16, color: Colors.white),
+                const SizedBox(width: 6),
                 Text(
                   '스크랩되었습니다',
-                  style: TextStyle(
+                  style: AppTextStyles.bodyMedium.copyWith(
                     color: Colors.white,
-                    fontSize: 14,
                     fontWeight: FontWeight.w500,
                     decoration: TextDecoration.none,
                   ),

@@ -31,7 +31,7 @@ void showAddProductSheet(
     isScrollControlled: true,
     backgroundColor: Colors.transparent,
     shape: const RoundedRectangleBorder(
-      borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      borderRadius: BorderRadius.vertical(top: Radius.circular(AppRadius.xl)),
     ),
     builder: (_) => AddProductBottomSheet(
       initialType: initialType,
@@ -290,7 +290,9 @@ class _AddProductBottomSheetState extends ConsumerState<AddProductBottomSheet> {
       child: Container(
         decoration: const BoxDecoration(
           color: Colors.white,
-          borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+          borderRadius: BorderRadius.vertical(
+            top: Radius.circular(AppRadius.xl),
+          ),
         ),
         child: Padding(
           padding: EdgeInsets.only(top: 16, bottom: bottom),
@@ -381,9 +383,7 @@ class _AddProductBottomSheetState extends ConsumerState<AddProductBottomSheet> {
                   alignment: Alignment.center,
                   child: Text(
                     t.$2,
-                    style: TextStyle(
-                      fontSize: 14,
-                      fontWeight: FontWeight.w600,
+                    style: AppTextStyles.titleSmall.copyWith(
                       color: selected ? Colors.white : AppColors.textSecondary,
                     ),
                   ),
@@ -408,7 +408,7 @@ class _AddProductBottomSheetState extends ConsumerState<AddProductBottomSheet> {
           disabledBackgroundColor: AppColors.chipBackground,
           padding: const EdgeInsets.symmetric(vertical: 14),
           shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(12),
+            borderRadius: BorderRadius.circular(AppRadius.md),
           ),
         ),
         child: _isSaving
@@ -464,9 +464,9 @@ class _AddProductBottomSheetState extends ConsumerState<AddProductBottomSheet> {
       ),
       const SizedBox(height: 16),
       _sectionLabel('대표 색상 *'),
-      const Text(
+      Text(
         '실제 잉크 색상과 최대한 비슷하게 선택해주세요',
-        style: TextStyle(fontSize: 12, color: AppColors.textTertiary),
+        style: AppTextStyles.bodySmall.copyWith(color: AppColors.textTertiary),
       ),
       const SizedBox(height: 12),
       InkColorPicker(
@@ -522,11 +522,7 @@ class _AddProductBottomSheetState extends ConsumerState<AddProductBottomSheet> {
     padding: const EdgeInsets.only(bottom: 8),
     child: Text(
       text,
-      style: const TextStyle(
-        fontSize: 13,
-        fontWeight: FontWeight.w600,
-        color: AppColors.textSecondary,
-      ),
+      style: AppTextStyles.labelMedium.copyWith(fontWeight: FontWeight.w600),
     ),
   );
 
@@ -542,11 +538,7 @@ class _AddProductBottomSheetState extends ConsumerState<AddProductBottomSheet> {
     children: [
       Text(
         label,
-        style: const TextStyle(
-          fontSize: 13,
-          fontWeight: FontWeight.w600,
-          color: AppColors.textSecondary,
-        ),
+        style: AppTextStyles.labelMedium.copyWith(fontWeight: FontWeight.w600),
       ),
       const SizedBox(height: 6),
       TextField(
@@ -560,9 +552,9 @@ class _AddProductBottomSheetState extends ConsumerState<AddProductBottomSheet> {
         },
         decoration: InputDecoration(
           hintText: hint,
-          hintStyle: const TextStyle(
-            fontSize: 13,
+          hintStyle: AppTextStyles.labelMedium.copyWith(
             color: AppColors.textTertiary,
+            fontWeight: FontWeight.w400,
           ),
           filled: true,
           fillColor: AppColors.chipBackground,
@@ -656,13 +648,11 @@ class _AddProductBottomSheetState extends ConsumerState<AddProductBottomSheet> {
           padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 7),
           decoration: BoxDecoration(
             color: isSelected ? AppColors.primary : AppColors.chipBackground,
-            borderRadius: BorderRadius.circular(20),
+            borderRadius: BorderRadius.circular(AppRadius.xl),
           ),
           child: Text(
             item,
-            style: TextStyle(
-              fontSize: 13,
-              fontWeight: FontWeight.w500,
+            style: AppTextStyles.labelMedium.copyWith(
               color: isSelected ? Colors.white : AppColors.textSecondary,
             ),
           ),
@@ -687,13 +677,11 @@ class _AddProductBottomSheetState extends ConsumerState<AddProductBottomSheet> {
           padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 7),
           decoration: BoxDecoration(
             color: isSelected ? AppColors.primary : AppColors.chipBackground,
-            borderRadius: BorderRadius.circular(20),
+            borderRadius: BorderRadius.circular(AppRadius.xl),
           ),
           child: Text(
             item,
-            style: TextStyle(
-              fontSize: 13,
-              fontWeight: FontWeight.w500,
+            style: AppTextStyles.labelMedium.copyWith(
               color: isSelected ? Colors.white : AppColors.textSecondary,
             ),
           ),
@@ -706,7 +694,11 @@ class _AddProductBottomSheetState extends ConsumerState<AddProductBottomSheet> {
 // ── 잉크 색상 피커 ────────────────────────────────────────────────────────────
 
 class InkColorPicker extends StatefulWidget {
-  const InkColorPicker({super.key, required this.color, required this.onChanged});
+  const InkColorPicker({
+    super.key,
+    required this.color,
+    required this.onChanged,
+  });
   final Color color;
   final ValueChanged<Color> onChanged;
 
@@ -755,7 +747,7 @@ class _InkColorPickerState extends State<InkColorPicker> {
               onPanUpdate: (d) => _updateSV(d.localPosition, w, h),
               onTapDown: (d) => _updateSV(d.localPosition, w, h),
               child: ClipRRect(
-                borderRadius: BorderRadius.circular(12),
+                borderRadius: BorderRadius.circular(AppRadius.md),
                 child: CustomPaint(
                   size: Size(w, h),
                   painter: _SvPainter(
@@ -791,7 +783,7 @@ class _InkColorPickerState extends State<InkColorPicker> {
           height: 72,
           decoration: BoxDecoration(
             color: previewColor,
-            borderRadius: BorderRadius.circular(12),
+            borderRadius: BorderRadius.circular(AppRadius.md),
           ),
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
@@ -801,8 +793,7 @@ class _InkColorPickerState extends State<InkColorPicker> {
                         '${previewColor.green.toRadixString(16).padLeft(2, '0')}'
                         '${previewColor.blue.toRadixString(16).padLeft(2, '0')}'
                     .toUpperCase(),
-                style: TextStyle(
-                  fontSize: 16,
+                style: AppTextStyles.titleMedium.copyWith(
                   fontWeight: FontWeight.w700,
                   color: onPreview,
                 ),
@@ -810,8 +801,7 @@ class _InkColorPickerState extends State<InkColorPicker> {
               const SizedBox(height: 2),
               Text(
                 '선택된 색상',
-                style: TextStyle(
-                  fontSize: 11,
+                style: AppTextStyles.labelSmall.copyWith(
                   color: onPreview.withValues(alpha: 0.7),
                 ),
               ),
@@ -890,7 +880,10 @@ class _HuePainter extends CustomPainter {
   @override
   void paint(Canvas canvas, Size size) {
     final rect = Offset.zero & size;
-    final rr = RRect.fromRectAndRadius(rect, const Radius.circular(8));
+    final rr = RRect.fromRectAndRadius(
+      rect,
+      const Radius.circular(AppRadius.sm),
+    );
 
     // 레인보우 그라디언트
     canvas.drawRRect(

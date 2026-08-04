@@ -7,8 +7,10 @@ import '../../../core/theme/app_theme.dart';
 import '../../../core/utils/post_date_format.dart';
 import '../../providers/providers.dart';
 import '../../../features/community/providers/community_provider.dart';
+import '../icon_count.dart';
 import '../level_badge.dart';
 import '../tap_scale.dart';
+import '../user_avatar.dart';
 
 final _postCardAuthorProvider = StreamProvider.family<UserModel?, String>((
   ref,
@@ -115,39 +117,19 @@ class PostCard extends ConsumerWidget {
                       Row(
                         mainAxisSize: MainAxisSize.min,
                         children: [
-                          Row(
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              Icon(
-                                isLiked
-                                    ? Icons.favorite
-                                    : Icons.favorite_border,
-                                size: 14,
-                                color: isLiked
-                                    ? AppColors.error
-                                    : AppColors.textTertiary,
-                              ),
-                              const SizedBox(width: 3),
-                              Text(
-                                '${post.likeCount}',
-                                style: AppTextStyles.bodySmall.copyWith(
-                                  color: AppColors.textTertiary,
-                                ),
-                              ),
-                            ],
+                          IconCount(
+                            icon: isLiked
+                                ? Icons.favorite
+                                : Icons.favorite_border,
+                            count: post.likeCount,
+                            iconColor: isLiked
+                                ? AppColors.error
+                                : AppColors.textTertiary,
                           ),
                           const SizedBox(width: 10),
-                          const Icon(
-                            Icons.chat_bubble_outline,
-                            size: 14,
-                            color: AppColors.textTertiary,
-                          ),
-                          const SizedBox(width: 3),
-                          Text(
-                            '${post.commentCount}',
-                            style: AppTextStyles.bodySmall.copyWith(
-                              color: AppColors.textTertiary,
-                            ),
+                          IconCount(
+                            icon: Icons.chat_bubble_outline,
+                            count: post.commentCount,
                           ),
                         ],
                       ),
@@ -203,12 +185,11 @@ class _CategoryBadge extends StatelessWidget {
       ),
       decoration: BoxDecoration(
         color: bg,
-        borderRadius: BorderRadius.circular(4),
+        borderRadius: BorderRadius.circular(AppRadius.xs),
       ),
       child: Text(
         category,
-        style: TextStyle(
-          fontSize: 11,
+        style: AppTextStyles.labelSmall.copyWith(
           fontWeight: FontWeight.w600,
           color: color,
         ),
@@ -236,20 +217,7 @@ class _AuthorRow extends ConsumerWidget {
     return Row(
       mainAxisSize: MainAxisSize.min,
       children: [
-        CircleAvatar(
-          radius: 11,
-          backgroundColor: AppColors.chipBackground,
-          backgroundImage: user?.profileImageUrl != null
-              ? CachedNetworkImageProvider(user!.profileImageUrl!)
-              : null,
-          child: user?.profileImageUrl == null
-              ? const Icon(
-                  Icons.person,
-                  size: 13,
-                  color: AppColors.textTertiary,
-                )
-              : null,
-        ),
+        UserAvatar(imageUrl: user?.profileImageUrl, radius: 11, iconSize: 13),
         const SizedBox(width: 5),
         Flexible(
           child: Text(

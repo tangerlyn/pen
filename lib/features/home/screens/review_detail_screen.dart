@@ -11,6 +11,7 @@ import '../../../core/utils/profile_navigation.dart';
 import '../../../core/utils/post_date_format.dart';
 import '../../../core/utils/toast_utils.dart';
 import '../../../shared/widgets/image_viewer_screen.dart';
+import '../../../shared/widgets/user_avatar.dart';
 import '../../../data/models/review_model.dart';
 import '../../../data/models/reply_model.dart';
 import '../../../shared/providers/providers.dart';
@@ -27,7 +28,10 @@ import '../../../shared/widgets/common/skeletons.dart';
 import '../../../shared/widgets/level_badge.dart';
 import '../../../shared/widgets/linkified_text.dart';
 
-final _reviewAuthorProvider = StreamProvider.family<UserModel?, String>((ref, uid) {
+final _reviewAuthorProvider = StreamProvider.family<UserModel?, String>((
+  ref,
+  uid,
+) {
   return ref.watch(userRepoProvider).watchUser(uid);
 });
 
@@ -81,19 +85,25 @@ class _ReviewDetailScreenState extends ConsumerState<ReviewDetailScreen> {
       if (_replyTargetCommentId != null) {
         final user = ref.read(currentUserProvider).value;
         if (user == null) return;
-        await withRetry(() => ref.read(reviewRepoProvider).addReply(
-              widget.reviewId,
-              _replyTargetCommentId!,
-              ReplyModel(
-                id: '',
-                authorId: user.uid,
-                authorNickname: user.nickname,
-                authorLevel: user.level,
-                body: text,
-                createdAt: DateTime.now(),
+        await withRetry(
+          () => ref
+              .read(reviewRepoProvider)
+              .addReply(
+                widget.reviewId,
+                _replyTargetCommentId!,
+                ReplyModel(
+                  id: '',
+                  authorId: user.uid,
+                  authorNickname: user.nickname,
+                  authorLevel: user.level,
+                  body: text,
+                  createdAt: DateTime.now(),
+                ),
               ),
-            ));
-        ref.read(reviewDetailProvider(widget.reviewId).notifier).updateCommentCount(1);
+        );
+        ref
+            .read(reviewDetailProvider(widget.reviewId).notifier)
+            .updateCommentCount(1);
         setState(() {
           _replyTargetCommentId = null;
           _replyTargetNickname = null;
@@ -126,7 +136,8 @@ class _ReviewDetailScreenState extends ConsumerState<ReviewDetailScreen> {
       backgroundColor: AppColors.surface,
       resizeToAvoidBottomInset: true,
       body: state.when(
-        loading: () => const SingleChildScrollView(child: ReviewDetailSkeleton()),
+        loading: () =>
+            const SingleChildScrollView(child: ReviewDetailSkeleton()),
         error: (e, _) => Center(child: Text('오류가 발생했습니다: $e')),
         data: (review) => review == null
             ? const Center(child: Text('삭제된 리뷰입니다.'))
@@ -145,66 +156,89 @@ class _ReviewDetailScreenState extends ConsumerState<ReviewDetailScreen> {
       if (block['type'] == 'text') {
         final text = block['content'] as String? ?? '';
         if (text.isNotEmpty) {
-          widgets.add(Padding(
-            padding: const EdgeInsets.only(bottom: 12),
-            child: LinkifiedText(text, style: const TextStyle(fontSize: 15, height: 1.75)),
-          ));
+          widgets.add(
+            Padding(
+              padding: const EdgeInsets.only(bottom: 12),
+              child: LinkifiedText(
+                text,
+                style: const TextStyle(fontSize: 15, height: 1.75),
+              ),
+            ),
+          );
         }
       } else if (block['type'] == 'image') {
         final url = block['url'] as String? ?? '';
         if (url.isNotEmpty) {
           final imgIndex = allImageUrls.indexOf(url);
-          widgets.add(Padding(
-            padding: const EdgeInsets.only(bottom: 12),
-            child: GestureDetector(
-              onTap: () => Navigator.push(
-                context,
-                MaterialPageRoute(
-                  builder: (_) => ImageViewerScreen(
-                    imageUrls: allImageUrls.isNotEmpty ? allImageUrls : [url],
-                    initialIndex: imgIndex >= 0 ? imgIndex : 0,
+          widgets.add(
+            Padding(
+              padding: const EdgeInsets.only(bottom: 12),
+              child: GestureDetector(
+                onTap: () => Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (_) => ImageViewerScreen(
+                      imageUrls: allImageUrls.isNotEmpty ? allImageUrls : [url],
+                      initialIndex: imgIndex >= 0 ? imgIndex : 0,
+                    ),
+                  ),
+                ),
+                child: ClipRRect(
+                  borderRadius: BorderRadius.circular(10),
+                  child: CachedNetworkImage(
+                    imageUrl: url,
+                    width: double.infinity,
+                    fit: BoxFit.cover,
                   ),
                 ),
               ),
-              child: ClipRRect(
-                borderRadius: BorderRadius.circular(10),
-                child: CachedNetworkImage(
-                  imageUrl: url,
-                  width: double.infinity,
-                  fit: BoxFit.cover,
-                ),
-              ),
             ),
-          ));
+          );
         }
       }
     }
     return widgets;
   }
 
-  List<Widget> _buildLegacyImages(BuildContext context, List<String> imageUrls) {
-    return imageUrls.asMap().entries.map((e) => Padding(
-      padding: const EdgeInsets.only(bottom: 12),
-      child: GestureDetector(
-        onTap: () => Navigator.push(
-          context,
-          MaterialPageRoute(
-            builder: (_) => ImageViewerScreen(imageUrls: imageUrls, initialIndex: e.key),
+  List<Widget> _buildLegacyImages(
+    BuildContext context,
+    List<String> imageUrls,
+  ) {
+    return imageUrls
+        .asMap()
+        .entries
+        .map(
+          (e) => Padding(
+            padding: const EdgeInsets.only(bottom: 12),
+            child: GestureDetector(
+              onTap: () => Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (_) => ImageViewerScreen(
+                    imageUrls: imageUrls,
+                    initialIndex: e.key,
+                  ),
+                ),
+              ),
+              child: ClipRRect(
+                borderRadius: BorderRadius.circular(10),
+                child: CachedNetworkImage(
+                  imageUrl: e.value,
+                  width: double.infinity,
+                  fit: BoxFit.cover,
+                ),
+              ),
+            ),
           ),
-        ),
-        child: ClipRRect(
-          borderRadius: BorderRadius.circular(10),
-          child: CachedNetworkImage(
-            imageUrl: e.value,
-            width: double.infinity,
-            fit: BoxFit.cover,
-          ),
-        ),
-      ),
-    )).toList();
+        )
+        .toList();
   }
 
-  Widget _buildContent(BuildContext context, ReviewModel review, String? currentUid) {
+  Widget _buildContent(
+    BuildContext context,
+    ReviewModel review,
+    String? currentUid,
+  ) {
     final isOwner = review.authorId == currentUid;
 
     return Column(
@@ -233,7 +267,7 @@ class _ReviewDetailScreenState extends ConsumerState<ReviewDetailScreen> {
                 //           : '';
                 //       final box = btnContext.findRenderObject() as RenderBox?;
                 //       Share.share(
-                //         '$title\n$body\n\n문어다방 - 만년필 잉크 커뮤니티',
+                //         '$title\n$body\n\n펜귄 - 만년필 잉크 커뮤니티',
                 //         sharePositionOrigin:
                 //             box != null ? box.localToGlobal(Offset.zero) & box.size : null,
                 //       );
@@ -243,14 +277,18 @@ class _ReviewDetailScreenState extends ConsumerState<ReviewDetailScreen> {
                 if (currentUid != null)
                   IconButton(
                     icon: Icon(
-                      review.isScrapped ? Icons.bookmark : Icons.bookmark_border,
+                      review.isScrapped
+                          ? Icons.bookmark
+                          : Icons.bookmark_border,
                       color: review.isScrapped ? AppColors.primary : null,
                     ),
                     onPressed: () async {
                       final willScrap = !review.isScrapped;
                       try {
                         await ref
-                            .read(reviewDetailProvider(widget.reviewId).notifier)
+                            .read(
+                              reviewDetailProvider(widget.reviewId).notifier,
+                            )
                             .toggleScrap();
                         if (willScrap && context.mounted) {
                           showScrapToast(context);
@@ -280,142 +318,152 @@ class _ReviewDetailScreenState extends ConsumerState<ReviewDetailScreen> {
             onTap: () => FocusScope.of(context).unfocus(),
             behavior: HitTestBehavior.translucent,
             child: CustomScrollView(
-            slivers: [
-              // ── LAYOUT A: 블로그 형식 (커뮤니티 상세와 동일한 배치: 제목 → 작성자/날짜) ──
-              // 제목
-              if (review.title.isNotEmpty)
-                SliverToBoxAdapter(
-                  child: Padding(
-                    padding: const EdgeInsets.fromLTRB(16, 16, 16, 0),
-                    child: Text(
-                      review.title,
-                      style: const TextStyle(
-                        fontSize: 22,
-                        fontWeight: FontWeight.w800,
-                        height: 1.35,
-                        letterSpacing: -0.3,
+              slivers: [
+                // ── LAYOUT A: 블로그 형식 (커뮤니티 상세와 동일한 배치: 제목 → 작성자/날짜) ──
+                // 제목
+                if (review.title.isNotEmpty)
+                  SliverToBoxAdapter(
+                    child: Padding(
+                      padding: const EdgeInsets.fromLTRB(16, 16, 16, 0),
+                      child: Text(
+                        review.title,
+                        style: const TextStyle(
+                          fontSize: 22,
+                          fontWeight: FontWeight.w800,
+                          height: 1.35,
+                          letterSpacing: -0.3,
+                        ),
                       ),
                     ),
                   ),
+                // 작성자 + 날짜
+                SliverToBoxAdapter(
+                  child: _ProfileRow(review: review, currentUid: currentUid),
                 ),
-              // 작성자 + 날짜
-              SliverToBoxAdapter(
-                child: _ProfileRow(review: review, currentUid: currentUid),
-              ),
-              // 장비 카드
-              SliverToBoxAdapter(child: _GearCard(review: review)),
-              // 별점 시스템 비활성화 — 재활성화 시 주석 해제
-              // SliverToBoxAdapter(
-              //   child: Padding(
-              //     padding: const EdgeInsets.fromLTRB(16, 0, 16, 0),
-              //     child: StarRatingDisplay(rating: review.rating),
-              //   ),
-              // ),
-              const SliverToBoxAdapter(child: SizedBox(height: 12)),
-              // 블로그 본문 (contentBlocks 또는 기존 body+imageUrls 폴백)
-              SliverToBoxAdapter(
-                child: Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 16),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      if (review.contentBlocks != null && review.contentBlocks!.isNotEmpty)
-                        ..._buildReviewContentBlocks(context, review.contentBlocks!, review.imageUrls)
-                      else ...[
-                        if (review.imageUrls.isNotEmpty)
-                          ..._buildLegacyImages(context, review.imageUrls),
-                        if (review.body.isNotEmpty) ...[
-                          LinkifiedText(
-                            review.body,
-                            style: const TextStyle(fontSize: 15, height: 1.75),
-                          ),
-                          const SizedBox(height: 12),
+                // 장비 카드
+                SliverToBoxAdapter(child: _GearCard(review: review)),
+                // 별점 시스템 비활성화 — 재활성화 시 주석 해제
+                // SliverToBoxAdapter(
+                //   child: Padding(
+                //     padding: const EdgeInsets.fromLTRB(16, 0, 16, 0),
+                //     child: StarRatingDisplay(rating: review.rating),
+                //   ),
+                // ),
+                const SliverToBoxAdapter(child: SizedBox(height: 12)),
+                // 블로그 본문 (contentBlocks 또는 기존 body+imageUrls 폴백)
+                SliverToBoxAdapter(
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 16),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        if (review.contentBlocks != null &&
+                            review.contentBlocks!.isNotEmpty)
+                          ..._buildReviewContentBlocks(
+                            context,
+                            review.contentBlocks!,
+                            review.imageUrls,
+                          )
+                        else ...[
+                          if (review.imageUrls.isNotEmpty)
+                            ..._buildLegacyImages(context, review.imageUrls),
+                          if (review.body.isNotEmpty) ...[
+                            LinkifiedText(
+                              review.body,
+                              style: const TextStyle(
+                                fontSize: 15,
+                                height: 1.75,
+                              ),
+                            ),
+                            const SizedBox(height: 12),
+                          ],
                         ],
+                        const SizedBox(height: 8),
                       ],
-                      const SizedBox(height: 8),
-                    ],
+                    ),
                   ),
                 ),
-              ),
-              // ── LAYOUT B: 기존 형식 (사진 슬라이더 상단) ─────
-              // SliverToBoxAdapter(
-              //   child: _PhotoSlider(review: review, controller: _pageController),
-              // ),
-              // SliverToBoxAdapter(
-              //   child: _ProfileRow(review: review, currentUid: currentUid),
-              // ),
-              // if (review.title.isNotEmpty)
-              //   SliverToBoxAdapter(
-              //     child: Padding(
-              //       padding: const EdgeInsets.fromLTRB(16, 4, 16, 0),
-              //       child: Text(review.title,
-              //           style: const TextStyle(fontSize: 20, fontWeight: FontWeight.w700, height: 1.3)),
-              //     ),
-              //   ),
-              // SliverToBoxAdapter(child: _GearCard(review: review)),
-              // SliverToBoxAdapter(
-              //   child: Padding(
-              //     padding: const EdgeInsets.symmetric(horizontal: 16),
-              //     child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-              //       StarRatingDisplay(rating: review.rating),
-              //       const SizedBox(height: 12),
-              //       if (review.body.isNotEmpty) ...[
-              //         Text(review.body, style: const TextStyle(fontSize: 15, height: 1.6)),
-              //         const SizedBox(height: 12),
-              //       ],
-              //       Row(children: [
-              //         Text(timeago.format(review.createdAt, locale: 'ko'),
-              //             style: const TextStyle(color: AppColors.textTertiary, fontSize: 12)),
-              //         if (review.updatedAt != null) ...[
-              //           const SizedBox(width: 6),
-              //           const Text('· 수정됨', style: TextStyle(color: AppColors.textTertiary, fontSize: 12)),
-              //         ],
-              //       ]),
-              //       const SizedBox(height: 8),
-              //     ]),
-              //   ),
-              // ),
-              // 액션 바
-              SliverToBoxAdapter(
-                child: _ActionBar(
-                  review: review,
-                  currentUid: currentUid,
-                  onLike: () async {
-                    try {
-                      await ref
-                          .read(reviewDetailProvider(widget.reviewId).notifier)
-                          .toggleLike();
-                    } catch (_) {
-                      if (!context.mounted) return;
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(
-                          content: Text('인터넷 연결을 확인해주세요'),
-                          duration: Duration(seconds: 3),
-                        ),
-                      );
-                    }
-                  },
+                // ── LAYOUT B: 기존 형식 (사진 슬라이더 상단) ─────
+                // SliverToBoxAdapter(
+                //   child: _PhotoSlider(review: review, controller: _pageController),
+                // ),
+                // SliverToBoxAdapter(
+                //   child: _ProfileRow(review: review, currentUid: currentUid),
+                // ),
+                // if (review.title.isNotEmpty)
+                //   SliverToBoxAdapter(
+                //     child: Padding(
+                //       padding: const EdgeInsets.fromLTRB(16, 4, 16, 0),
+                //       child: Text(review.title,
+                //           style: const TextStyle(fontSize: 20, fontWeight: FontWeight.w700, height: 1.3)),
+                //     ),
+                //   ),
+                // SliverToBoxAdapter(child: _GearCard(review: review)),
+                // SliverToBoxAdapter(
+                //   child: Padding(
+                //     padding: const EdgeInsets.symmetric(horizontal: 16),
+                //     child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+                //       StarRatingDisplay(rating: review.rating),
+                //       const SizedBox(height: 12),
+                //       if (review.body.isNotEmpty) ...[
+                //         Text(review.body, style: const TextStyle(fontSize: 15, height: 1.6)),
+                //         const SizedBox(height: 12),
+                //       ],
+                //       Row(children: [
+                //         Text(timeago.format(review.createdAt, locale: 'ko'),
+                //             style: const TextStyle(color: AppColors.textTertiary, fontSize: 12)),
+                //         if (review.updatedAt != null) ...[
+                //           const SizedBox(width: 6),
+                //           const Text('· 수정됨', style: TextStyle(color: AppColors.textTertiary, fontSize: 12)),
+                //         ],
+                //       ]),
+                //       const SizedBox(height: 8),
+                //     ]),
+                //   ),
+                // ),
+                // 액션 바
+                SliverToBoxAdapter(
+                  child: _ActionBar(
+                    review: review,
+                    currentUid: currentUid,
+                    onLike: () async {
+                      try {
+                        await ref
+                            .read(
+                              reviewDetailProvider(widget.reviewId).notifier,
+                            )
+                            .toggleLike();
+                      } catch (_) {
+                        if (!context.mounted) return;
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          const SnackBar(
+                            content: Text('인터넷 연결을 확인해주세요'),
+                            duration: Duration(seconds: 3),
+                          ),
+                        );
+                      }
+                    },
+                  ),
                 ),
-              ),
 
-              const SliverToBoxAdapter(child: Divider()),
-              // 댓글
-              _CommentList(
-                reviewId: widget.reviewId,
-                reviewAuthorId: review.authorId,
-                currentUid: currentUid,
-                onReplyTap: _startReply,
-                onCommentDeleted: () =>
-                    ref.invalidate(reviewDetailProvider(widget.reviewId)),
-                onReplyDeleted: () => ref
-                    .read(reviewDetailProvider(widget.reviewId).notifier)
-                    .updateCommentCount(-1),
-                onEditStart: () => setState(() => _hasActiveEdit = true),
-                onEditEnd: () => setState(() => _hasActiveEdit = false),
-              ),
-              const SliverToBoxAdapter(child: SizedBox(height: 80)),
-            ],
-          ),
+                const SliverToBoxAdapter(child: Divider()),
+                // 댓글
+                _CommentList(
+                  reviewId: widget.reviewId,
+                  reviewAuthorId: review.authorId,
+                  currentUid: currentUid,
+                  onReplyTap: _startReply,
+                  onCommentDeleted: () =>
+                      ref.invalidate(reviewDetailProvider(widget.reviewId)),
+                  onReplyDeleted: () => ref
+                      .read(reviewDetailProvider(widget.reviewId).notifier)
+                      .updateCommentCount(-1),
+                  onEditStart: () => setState(() => _hasActiveEdit = true),
+                  onEditEnd: () => setState(() => _hasActiveEdit = false),
+                ),
+                const SliverToBoxAdapter(child: SizedBox(height: 80)),
+              ],
+            ),
           ),
         ),
         // ── 댓글 입력창 ───────────────────────────────────
@@ -434,11 +482,15 @@ class _ReviewDetailScreenState extends ConsumerState<ReviewDetailScreen> {
     );
   }
 
-  void _showMoreOptions(BuildContext context, ReviewModel review, bool isOwner) {
+  void _showMoreOptions(
+    BuildContext context,
+    ReviewModel review,
+    bool isOwner,
+  ) {
     showModalBottomSheet(
       context: context,
       shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
+        borderRadius: BorderRadius.vertical(top: Radius.circular(AppRadius.lg)),
       ),
       builder: (_) => SafeArea(
         child: Column(
@@ -468,8 +520,14 @@ class _ReviewDetailScreenState extends ConsumerState<ReviewDetailScreen> {
                 },
               ),
               ListTile(
-                leading: const Icon(Icons.delete_outline, color: AppColors.error),
-                title: const Text('삭제', style: TextStyle(color: AppColors.error)),
+                leading: const Icon(
+                  Icons.delete_outline,
+                  color: AppColors.error,
+                ),
+                title: const Text(
+                  '삭제',
+                  style: TextStyle(color: AppColors.error),
+                ),
                 onTap: () {
                   Navigator.pop(context);
                   _confirmDelete(context, review);
@@ -481,8 +539,9 @@ class _ReviewDetailScreenState extends ConsumerState<ReviewDetailScreen> {
                 title: const Text('사용자 차단하기'),
                 onTap: () async {
                   Navigator.pop(context);
-                  final authorAsync =
-                      ref.read(_reviewAuthorProvider(review.authorId));
+                  final authorAsync = ref.read(
+                    _reviewAuthorProvider(review.authorId),
+                  );
                   final nickname =
                       authorAsync.value?.nickname ?? review.authorId;
                   await showBlockDialog(
@@ -494,9 +553,14 @@ class _ReviewDetailScreenState extends ConsumerState<ReviewDetailScreen> {
                 },
               ),
               ListTile(
-                leading: const Icon(Icons.flag_outlined, color: AppColors.error),
-                title: const Text('신고하기',
-                    style: TextStyle(color: AppColors.error)),
+                leading: const Icon(
+                  Icons.flag_outlined,
+                  color: AppColors.error,
+                ),
+                title: const Text(
+                  '신고하기',
+                  style: TextStyle(color: AppColors.error),
+                ),
                 onTap: () {
                   Navigator.pop(context);
                   showReportSheet(
@@ -534,7 +598,9 @@ class _ReviewDetailScreenState extends ConsumerState<ReviewDetailScreen> {
               for (final url in review.imageUrls) {
                 await storage.deleteByUrl(url);
               }
-              await ref.read(reviewRepoProvider).deleteReview(review.id, review);
+              await ref
+                  .read(reviewRepoProvider)
+                  .deleteReview(review.id, review);
               ref.invalidate(feedProvider);
               if (mounted) Navigator.pop(context);
             },
@@ -621,9 +687,9 @@ class _ProfileRow extends ConsumerWidget {
     final isDeletedUser = authorAsync.valueOrNull == null;
     final isFollowing = (!isOwnPost && currentUid != null && !isDeletedUser)
         ? ref
-                .watch(followStatusProvider((currentUid!, review.authorId)))
-                .valueOrNull ??
-            false
+                  .watch(followStatusProvider((currentUid!, review.authorId)))
+                  .valueOrNull ??
+              false
         : false;
     final timeStr = formatPostDate(review.createdAt);
 
@@ -634,25 +700,13 @@ class _ProfileRow extends ConsumerWidget {
           GestureDetector(
             onTap: () => navigateToProfile(context, ref, review.authorId),
             child: authorAsync.when(
-              data: (user) => CircleAvatar(
-                radius: 16,
-                backgroundColor: AppColors.chipBackground,
-                backgroundImage: user?.profileImageUrl != null
-                    ? CachedNetworkImageProvider(user!.profileImageUrl!)
-                    : null,
-                child: user?.profileImageUrl == null
-                    ? const Icon(Icons.person, size: 16, color: AppColors.textTertiary)
-                    : null,
-              ),
+              data: (user) =>
+                  UserAvatar(imageUrl: user?.profileImageUrl, radius: 16),
               loading: () => const CircleAvatar(
                 radius: 16,
                 backgroundColor: AppColors.chipBackground,
               ),
-              error: (_, __) => const CircleAvatar(
-                radius: 16,
-                backgroundColor: AppColors.chipBackground,
-                child: Icon(Icons.person, size: 16, color: AppColors.textTertiary),
-              ),
+              error: (_, __) => const UserAvatar(radius: 16),
             ),
           ),
           const SizedBox(width: 8),
@@ -669,10 +723,10 @@ class _ProfileRow extends ConsumerWidget {
                       children: [
                         Text(
                           user == null ? '(알 수 없음) (탈퇴)' : user.nickname,
-                          style: const TextStyle(
-                              fontSize: 13,
-                              fontWeight: FontWeight.w600,
-                              color: AppColors.textPrimary),
+                          style: AppTextStyles.labelMedium.copyWith(
+                            fontWeight: FontWeight.w600,
+                            color: AppColors.textPrimary,
+                          ),
                         ),
                         if (user != null) ...[
                           const SizedBox(width: 6),
@@ -682,14 +736,10 @@ class _ProfileRow extends ConsumerWidget {
                     ),
                     Row(
                       children: [
-                        Text(
-                          timeStr,
-                          style: const TextStyle(fontSize: 11, color: AppColors.textTertiary),
-                        ),
+                        Text(timeStr, style: AppTextStyles.labelSmall),
                         if (review.updatedAt != null) ...[
                           const SizedBox(width: 4),
-                          const Text('· 수정됨',
-                              style: TextStyle(fontSize: 11, color: AppColors.textTertiary)),
+                          const Text('· 수정됨', style: AppTextStyles.labelSmall),
                         ],
                       ],
                     ),
@@ -700,7 +750,7 @@ class _ProfileRow extends ConsumerWidget {
                   width: 80,
                   decoration: BoxDecoration(
                     color: AppColors.chipBackground,
-                    borderRadius: BorderRadius.circular(4),
+                    borderRadius: BorderRadius.circular(AppRadius.xs),
                   ),
                 ),
                 error: (_, __) => Text(
@@ -713,8 +763,9 @@ class _ProfileRow extends ConsumerWidget {
           if (!isOwnPost && currentUid != null && !isDeletedUser)
             isFollowing
                 ? ElevatedButton(
-                    onPressed: () =>
-                        ref.read(userRepoProvider).unfollow(currentUid!, review.authorId),
+                    onPressed: () => ref
+                        .read(userRepoProvider)
+                        .unfollow(currentUid!, review.authorId),
                     style: ElevatedButton.styleFrom(
                       minimumSize: const Size(72, 32),
                       padding: const EdgeInsets.symmetric(horizontal: 16),
@@ -726,8 +777,9 @@ class _ProfileRow extends ConsumerWidget {
                     child: const Text('팔로잉'),
                   )
                 : OutlinedButton(
-                    onPressed: () =>
-                        ref.read(userRepoProvider).follow(currentUid!, review.authorId),
+                    onPressed: () => ref
+                        .read(userRepoProvider)
+                        .follow(currentUid!, review.authorId),
                     style: OutlinedButton.styleFrom(
                       minimumSize: const Size(72, 32),
                       padding: const EdgeInsets.symmetric(horizontal: 16),
@@ -759,22 +811,26 @@ class _GearCard extends StatelessWidget {
         scrollDirection: Axis.horizontal,
         child: Row(
           children: [
-            ...review.inkIds.map((id) => Padding(
-                  padding: const EdgeInsets.only(right: 8),
-                  child: _GearChip(
-                    type: 'ink',
-                    id: id,
-                    onTap: () => context.push('/archive/ink/$id'),
-                  ),
-                )),
-            ...review.penIds.map((id) => Padding(
-                  padding: const EdgeInsets.only(right: 8),
-                  child: _GearChip(
-                    type: 'pen',
-                    id: id,
-                    onTap: () => context.push('/archive/pen/$id'),
-                  ),
-                )),
+            ...review.inkIds.map(
+              (id) => Padding(
+                padding: const EdgeInsets.only(right: 8),
+                child: _GearChip(
+                  type: 'ink',
+                  id: id,
+                  onTap: () => context.push('/archive/ink/$id'),
+                ),
+              ),
+            ),
+            ...review.penIds.map(
+              (id) => Padding(
+                padding: const EdgeInsets.only(right: 8),
+                child: _GearChip(
+                  type: 'pen',
+                  id: id,
+                  onTap: () => context.push('/archive/pen/$id'),
+                ),
+              ),
+            ),
           ],
         ),
       ),
@@ -788,22 +844,26 @@ class _GearChip extends ConsumerWidget {
   final String id;
   final VoidCallback onTap;
 
-  static const _inkBg     = Color(0xFFE3F2FD);
+  static const _inkBg = Color(0xFFE3F2FD);
   static const _inkBorder = Color(0xFF90CAF9);
-  static const _inkFg     = Color(0xFF1565C0);
-  static const _penBg     = Color(0xFFF3E5F5);
+  static const _inkFg = Color(0xFF1565C0);
+  static const _penBg = Color(0xFFF3E5F5);
   static const _penBorder = Color(0xFFCE93D8);
-  static const _penFg     = Color(0xFF6A1B9A);
+  static const _penFg = Color(0xFF6A1B9A);
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final isInk = type == 'ink';
-    final dataState = ref.watch(archiveDetailProvider((type: type, productId: id)));
+    final dataState = ref.watch(
+      archiveDetailProvider((type: type, productId: id)),
+    );
 
     final label = dataState.when(
       data: (data) {
         if (data == null) return isInk ? '잉크' : '만년필';
-        return isInk ? '${data.brand} ${data.name}' : '${data.brand} ${data.modelName}';
+        return isInk
+            ? '${data.brand} ${data.name}'
+            : '${data.brand} ${data.modelName}';
       },
       loading: () => '로딩중...',
       error: (_, __) => isInk ? '잉크' : '만년필',
@@ -815,7 +875,7 @@ class _GearChip extends ConsumerWidget {
         padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
         decoration: BoxDecoration(
           color: isInk ? _inkBg : _penBg,
-          borderRadius: BorderRadius.circular(20),
+          borderRadius: BorderRadius.circular(AppRadius.xl),
           border: Border.all(color: isInk ? _inkBorder : _penBorder),
         ),
         child: Row(
@@ -829,7 +889,9 @@ class _GearChip extends ConsumerWidget {
             const SizedBox(width: 4),
             Text(
               label,
-              style: TextStyle(fontSize: 12, color: isInk ? _inkFg : _penFg),
+              style: AppTextStyles.bodySmall.copyWith(
+                color: isInk ? _inkFg : _penFg,
+              ),
             ),
           ],
         ),
@@ -874,11 +936,12 @@ class _ActionBar extends StatelessWidget {
 }
 
 class _ActionButton extends StatelessWidget {
-  const _ActionButton(
-      {required this.icon,
-      required this.label,
-      this.color,
-      required this.onTap});
+  const _ActionButton({
+    required this.icon,
+    required this.label,
+    this.color,
+    required this.onTap,
+  });
   final IconData icon;
   final String label;
   final Color? color;
@@ -892,9 +955,12 @@ class _ActionButton extends StatelessWidget {
         children: [
           Icon(icon, size: 22, color: color ?? AppColors.textSecondary),
           const SizedBox(width: 4),
-          Text(label,
-              style: const TextStyle(
-                  fontSize: 13, color: AppColors.textSecondary)),
+          Text(
+            label,
+            style: AppTextStyles.labelMedium.copyWith(
+              fontWeight: FontWeight.w400,
+            ),
+          ),
         ],
       ),
     );
@@ -974,14 +1040,18 @@ class _CommentInput extends StatelessWidget {
             color: AppColors.chipBackground,
             child: Row(
               children: [
-                Text('@$replyTargetNickname 에게 답글',
-                    style: const TextStyle(
-                        fontSize: 12, color: AppColors.textSecondary)),
+                Text(
+                  '@$replyTargetNickname 에게 답글',
+                  style: AppTextStyles.bodySmall,
+                ),
                 const Spacer(),
                 GestureDetector(
                   onTap: onCancelReply,
-                  child: const Icon(Icons.close,
-                      size: 16, color: AppColors.textTertiary),
+                  child: const Icon(
+                    Icons.close,
+                    size: 16,
+                    color: AppColors.textTertiary,
+                  ),
                 ),
               ],
             ),
@@ -1002,10 +1072,11 @@ class _CommentInput extends StatelessWidget {
                     hintText: replyTargetNickname != null
                         ? '답글을 입력하세요...'
                         : '댓글을 입력하세요...',
-                    contentPadding:
-                        const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
-                    counterStyle: const TextStyle(
-                        fontSize: 11, color: AppColors.textTertiary),
+                    contentPadding: const EdgeInsets.symmetric(
+                      horizontal: 16,
+                      vertical: 10,
+                    ),
+                    counterStyle: AppTextStyles.labelSmall,
                   ),
                   maxLines: null,
                   maxLength: replyTargetNickname != null

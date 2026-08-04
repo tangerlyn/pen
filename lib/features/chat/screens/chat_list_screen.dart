@@ -27,9 +27,16 @@ class ChatListScreen extends ConsumerWidget {
                 child: Column(
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    Icon(Icons.chat_bubble_outline, size: 64, color: AppColors.textTertiary),
+                    Icon(
+                      Icons.chat_bubble_outline,
+                      size: 64,
+                      color: AppColors.textTertiary,
+                    ),
                     SizedBox(height: 16),
-                    Text('채팅 내역이 없습니다.', style: TextStyle(color: AppColors.textSecondary)),
+                    Text(
+                      '채팅 내역이 없습니다.',
+                      style: TextStyle(color: AppColors.textSecondary),
+                    ),
                   ],
                 ),
               )
@@ -55,13 +62,16 @@ class _ChatRoomTile extends StatelessWidget {
 
     return ListTile(
       onTap: () => context.push('/chat/${room.id}'),
-      leading: const CircleAvatar(radius: 24, backgroundColor: AppColors.chipBackground),
+      leading: const CircleAvatar(
+        radius: 24,
+        backgroundColor: AppColors.chipBackground,
+      ),
       title: Text(other, style: const TextStyle(fontWeight: FontWeight.w600)),
       subtitle: Text(
         room.lastMessage,
         maxLines: 1,
         overflow: TextOverflow.ellipsis,
-        style: const TextStyle(color: AppColors.textSecondary, fontSize: 13),
+        style: AppTextStyles.labelMedium.copyWith(fontWeight: FontWeight.w400),
       ),
       trailing: Column(
         mainAxisAlignment: MainAxisAlignment.center,
@@ -70,7 +80,7 @@ class _ChatRoomTile extends StatelessWidget {
           if (room.lastMessageAt != null)
             Text(
               timeago.format(room.lastMessageAt!, locale: 'ko'),
-              style: const TextStyle(fontSize: 11, color: AppColors.textTertiary),
+              style: AppTextStyles.labelSmall,
             ),
           if (unread > 0) ...[
             const SizedBox(height: 4),
@@ -82,7 +92,10 @@ class _ChatRoomTile extends StatelessWidget {
               ),
               child: Text(
                 unread > 99 ? '99+' : '$unread',
-                style: const TextStyle(color: Colors.white, fontSize: 11, fontWeight: FontWeight.w700),
+                style: AppTextStyles.labelSmall.copyWith(
+                  color: Colors.white,
+                  fontWeight: FontWeight.w700,
+                ),
               ),
             ),
           ],

@@ -11,6 +11,7 @@ import '../../../shared/providers/providers.dart';
 import '../../../shared/providers/ink_book_providers.dart';
 import '../../../shared/widgets/tap_scale.dart';
 import '../../../shared/widgets/center_toast.dart';
+import '../../../shared/widgets/confirm_discard_dialog.dart';
 import '../../../shared/widgets/editor/blog_body_editor.dart';
 import '../providers/ink_shape_provider.dart';
 import '../widgets/ink_add_success_overlay.dart';
@@ -80,27 +81,12 @@ class _InkChartAddScreenState extends ConsumerState<InkChartAddScreen> {
 
   Future<bool> _confirmDiscard() async {
     if (!_hasContent()) return true;
-    return await showDialog<bool>(
-          context: context,
-          builder: (ctx) => AlertDialog(
-            title: const Text('작성 중인 내용이 있어요'),
-            content: Text(_isEditing ? '지금 나가면 수정한 내용이 저장되지 않습니다.' : '지금 나가면 작성한 내용이 모두 삭제됩니다.'),
-            actions: [
-              TextButton(
-                onPressed: () => Navigator.pop(ctx, false),
-                child: const Text('계속 작성'),
-              ),
-              TextButton(
-                onPressed: () => Navigator.pop(ctx, true),
-                child: Text(
-                  '나가기',
-                  style: TextStyle(color: Theme.of(context).colorScheme.error),
-                ),
-              ),
-            ],
-          ),
-        ) ??
-        false;
+    return confirmDiscardDialog(
+      context,
+      content: _isEditing
+          ? '지금 나가면 수정한 내용이 저장되지 않습니다.'
+          : '지금 나가면 작성한 내용이 모두 삭제됩니다.',
+    );
   }
 
   // ── 사진 선택 ──────────────────────────────────────────────────
@@ -108,7 +94,7 @@ class _InkChartAddScreenState extends ConsumerState<InkChartAddScreen> {
     showModalBottomSheet(
       context: context,
       shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+        borderRadius: BorderRadius.vertical(top: Radius.circular(AppRadius.xl)),
       ),
       builder: (_) => SafeArea(
         child: Column(
@@ -192,7 +178,9 @@ class _InkChartAddScreenState extends ConsumerState<InkChartAddScreen> {
       // 1. 발색 사진 업로드 (새로 고른 사진이 있을 때만, 아니면 기존 사진 유지)
       final oldPhotoUrl = _initialPhotoUrl;
       final photoUrl = _photo != null
-          ? await ref.read(storageServiceProvider).uploadInkChartPhoto(_photo!, uid)
+          ? await ref
+                .read(storageServiceProvider)
+                .uploadInkChartPhoto(_photo!, uid)
           : oldPhotoUrl!;
 
       // 2. 메모 블록(텍스트 + 추가 사진) 빌드
@@ -200,10 +188,9 @@ class _InkChartAddScreenState extends ConsumerState<InkChartAddScreen> {
       var memoBlocks = <Map<String, dynamic>>[];
       if (editorState != null) {
         memoBlocks = await editorState.buildContentBlocks(
-          uploadImage: (file) => ref.read(storageServiceProvider).uploadImage(
-            file: file,
-            folder: 'inkChart/$uid',
-          ),
+          uploadImage: (file) => ref
+              .read(storageServiceProvider)
+              .uploadImage(file: file, folder: 'inkChart/$uid'),
         );
       }
       final memoText = memoBlocks
@@ -222,7 +209,9 @@ class _InkChartAddScreenState extends ConsumerState<InkChartAddScreen> {
       );
 
       if (_isEditing) {
-        await ref.read(inkBookRepoProvider).updateEntry(uid, widget.bookId, entry);
+        await ref
+            .read(inkBookRepoProvider)
+            .updateEntry(uid, widget.bookId, entry);
         // 사진을 새로 바꿨으면 예전 스토리지 파일은 정리
         if (_photo != null && oldPhotoUrl != null && oldPhotoUrl != photoUrl) {
           try {
@@ -234,7 +223,11 @@ class _InkChartAddScreenState extends ConsumerState<InkChartAddScreen> {
           // showCenterToast는 자체적으로 다이얼로그 라우트를 push함 — pop()을
           // 바로 이어 부르면 이 화면이 아니라 방금 띄운 토스트 라우트가 닫혀버려서
           // 반드시 await로 토스트가 완전히 끝난 뒤에 pop 해야 함
-          await showCenterToast(context, message: '수정했어요', icon: Icons.check_circle);
+          await showCenterToast(
+            context,
+            message: '수정했어요',
+            icon: Icons.check_circle,
+          );
           if (mounted) {
             // 이 화면은 go_router 라우트가 아니라 Navigator.push로 연 화면이라
             // context.pop()(go_router용)이 아니라 일반 Navigator pop을 써야 함
@@ -303,9 +296,10 @@ class _InkChartAddScreenState extends ConsumerState<InkChartAddScreen> {
                     : const Text(
                         '저장',
                         style: TextStyle(
-                            fontWeight: FontWeight.w700,
-                            color: AppColors.primary,
-                            fontSize: 15),
+                          fontWeight: FontWeight.w700,
+                          color: AppColors.primary,
+                          fontSize: 15,
+                        ),
                       ),
               ),
             ),
@@ -367,7 +361,8 @@ class _InkChartAddScreenState extends ConsumerState<InkChartAddScreen> {
                   key: _editorKey,
                   hintText: '발색 느낌, 특성, 사용한 종이 등을 자유롭게 기록하세요',
                   initialBlocks: _initialEditorBlocks,
-                  onFocusChanged: (hasFocus) => setState(() => _showEditorToolbar = hasFocus),
+                  onFocusChanged: (hasFocus) =>
+                      setState(() => _showEditorToolbar = hasFocus),
                 ),
                 const SizedBox(height: 12),
 
@@ -380,18 +375,21 @@ class _InkChartAddScreenState extends ConsumerState<InkChartAddScreen> {
                       color: AppColors.chipBackground,
                       borderRadius: BorderRadius.circular(10),
                     ),
-                    child: const Row(
+                    child: Row(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Icon(Icons.info_outline, size: 14, color: AppColors.primary),
-                        SizedBox(width: 6),
+                        const Icon(
+                          Icons.info_outline,
+                          size: 14,
+                          color: AppColors.primary,
+                        ),
+                        const SizedBox(width: 6),
                         Expanded(
                           child: Text(
                             '직접 발색한 종이를 밝은 곳에서 사진 찍으면\n더 정확한 색감을 기록할 수 있어요',
-                            style: TextStyle(
-                                fontSize: 12,
-                                color: AppColors.textSecondary,
-                                height: 1.5),
+                            style: AppTextStyles.bodySmall.copyWith(
+                              height: 1.5,
+                            ),
                           ),
                         ),
                       ],
@@ -404,7 +402,9 @@ class _InkChartAddScreenState extends ConsumerState<InkChartAddScreen> {
         ),
         bottomNavigationBar: _showEditorToolbar
             ? Padding(
-                padding: EdgeInsets.only(bottom: MediaQuery.of(context).viewInsets.bottom),
+                padding: EdgeInsets.only(
+                  bottom: MediaQuery.of(context).viewInsets.bottom,
+                ),
                 child: BlogEditorToolbar(editorKey: _editorKey),
               )
             : null,
@@ -437,7 +437,7 @@ class _PhotoPicker extends StatelessWidget {
         child: Container(
           decoration: BoxDecoration(
             color: Colors.white,
-            borderRadius: BorderRadius.circular(16),
+            borderRadius: BorderRadius.circular(AppRadius.lg),
             border: Border.all(
               color: hasPhoto ? AppColors.primary : AppColors.divider,
               width: 1.5,
@@ -463,7 +463,10 @@ class _PhotoPicker extends StatelessWidget {
                           shape: shape,
                           child: photo != null
                               ? Image.file(photo!, fit: BoxFit.cover)
-                              : CachedNetworkImage(imageUrl: photoUrl!, fit: BoxFit.cover),
+                              : CachedNetworkImage(
+                                  imageUrl: photoUrl!,
+                                  fit: BoxFit.cover,
+                                ),
                         ),
                       ),
                     ),
@@ -473,45 +476,58 @@ class _PhotoPicker extends StatelessWidget {
                       bottom: 10,
                       child: Container(
                         padding: const EdgeInsets.symmetric(
-                            horizontal: 10, vertical: 6),
+                          horizontal: 10,
+                          vertical: 6,
+                        ),
                         decoration: BoxDecoration(
                           color: Colors.black54,
-                          borderRadius: BorderRadius.circular(20),
+                          borderRadius: BorderRadius.circular(AppRadius.xl),
                         ),
-                        child: const Row(
+                        child: Row(
                           mainAxisSize: MainAxisSize.min,
                           children: [
-                            Icon(Icons.edit_outlined,
-                                size: 12, color: Colors.white),
-                            SizedBox(width: 4),
-                            Text('사진 변경',
-                                style: TextStyle(
-                                    fontSize: 11, color: Colors.white)),
+                            const Icon(
+                              Icons.edit_outlined,
+                              size: 12,
+                              color: Colors.white,
+                            ),
+                            const SizedBox(width: 4),
+                            Text(
+                              '사진 변경',
+                              style: AppTextStyles.labelSmall.copyWith(
+                                color: Colors.white,
+                              ),
+                            ),
                           ],
                         ),
                       ),
                     ),
                   ],
                 )
-              : const Center(
+              : Center(
                   child: Column(
                     mainAxisSize: MainAxisSize.min,
                     children: [
-                      Icon(Icons.camera_alt_outlined,
-                          size: 44, color: AppColors.primary),
-                      SizedBox(height: 10),
-                      Text(
+                      const Icon(
+                        Icons.camera_alt_outlined,
+                        size: 44,
+                        color: AppColors.primary,
+                      ),
+                      const SizedBox(height: 10),
+                      const Text(
                         '발색 사진 추가',
                         style: TextStyle(
-                            fontSize: 15,
-                            fontWeight: FontWeight.w600,
-                            color: AppColors.primary),
+                          fontSize: 15,
+                          fontWeight: FontWeight.w600,
+                          color: AppColors.primary,
+                        ),
                       ),
-                      SizedBox(height: 4),
+                      const SizedBox(height: 4),
                       Text(
                         '카메라 또는 갤러리에서 선택',
-                        style: TextStyle(
-                            fontSize: 12, color: AppColors.textTertiary),
+                        style: AppTextStyles.bodySmall.copyWith(
+                          color: AppColors.textTertiary,
+                        ),
                       ),
                     ],
                   ),
@@ -531,11 +547,10 @@ class _Label extends StatelessWidget {
   Widget build(BuildContext context) {
     return Text(
       text,
-      style: const TextStyle(
-          fontSize: 13,
-          fontWeight: FontWeight.w600,
-          color: AppColors.textSecondary,
-          letterSpacing: 0.3),
+      style: AppTextStyles.labelMedium.copyWith(
+        fontWeight: FontWeight.w600,
+        letterSpacing: 0.3,
+      ),
     );
   }
 }
@@ -555,27 +570,31 @@ class _Field extends StatelessWidget {
     return TextField(
       controller: controller,
       textCapitalization: textCapitalization,
-      style: const TextStyle(fontSize: 14, color: AppColors.textPrimary),
+      style: AppTextStyles.bodyMedium,
       decoration: InputDecoration(
         hintText: hint,
-        hintStyle: const TextStyle(
-            fontSize: 13, color: AppColors.textTertiary),
+        hintStyle: AppTextStyles.labelMedium.copyWith(
+          color: AppColors.textTertiary,
+          fontWeight: FontWeight.w400,
+        ),
         filled: true,
         fillColor: Colors.white,
         border: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(12),
+          borderRadius: BorderRadius.circular(AppRadius.md),
           borderSide: const BorderSide(color: AppColors.divider),
         ),
         enabledBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(12),
+          borderRadius: BorderRadius.circular(AppRadius.md),
           borderSide: const BorderSide(color: AppColors.divider),
         ),
         focusedBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(12),
+          borderRadius: BorderRadius.circular(AppRadius.md),
           borderSide: const BorderSide(color: AppColors.primary, width: 1.5),
         ),
-        contentPadding:
-            const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+        contentPadding: const EdgeInsets.symmetric(
+          horizontal: 14,
+          vertical: 12,
+        ),
       ),
     );
   }

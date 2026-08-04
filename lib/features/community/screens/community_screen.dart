@@ -8,7 +8,9 @@ import '../../../data/models/user_model.dart';
 import '../../../shared/providers/providers.dart';
 import '../../../shared/widgets/community/post_card.dart';
 import '../../../shared/widgets/common/skeletons.dart';
+import '../../../shared/widgets/icon_count.dart';
 import '../../../shared/widgets/tap_scale.dart';
+import '../../../shared/widgets/user_avatar.dart';
 
 final _popularCardAuthorProvider = StreamProvider.family<UserModel?, String>((
   ref,
@@ -239,12 +241,11 @@ class _CategoryFilterBar extends StatelessWidget {
         alignment: Alignment.center,
         decoration: BoxDecoration(
           color: isSelected ? AppColors.primary : AppColors.chipBackground,
-          borderRadius: BorderRadius.circular(20),
+          borderRadius: BorderRadius.circular(AppRadius.xl),
         ),
         child: Text(
           label,
-          style: TextStyle(
-            fontSize: 13,
+          style: AppTextStyles.labelMedium.copyWith(
             fontWeight: isSelected ? FontWeight.w600 : FontWeight.w400,
             color: isSelected ? Colors.white : AppColors.textSecondary,
           ),
@@ -342,10 +343,8 @@ class _PopularSectionState extends State<_PopularSection> {
             padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
             child: Text(
               '전체 게시글',
-              style: TextStyle(
-                fontSize: 13,
+              style: AppTextStyles.labelMedium.copyWith(
                 fontWeight: FontWeight.w600,
-                color: AppColors.textSecondary,
               ),
             ),
           ),
@@ -395,10 +394,8 @@ class _PopularCard extends ConsumerWidget {
                     children: [
                       Text(
                         post.title as String,
-                        style: const TextStyle(
-                          fontSize: 14,
+                        style: AppTextStyles.titleSmall.copyWith(
                           fontWeight: FontWeight.w700,
-                          color: AppColors.textPrimary,
                         ),
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
@@ -406,11 +403,7 @@ class _PopularCard extends ConsumerWidget {
                       const SizedBox(height: 6),
                       Text(
                         post.body as String,
-                        style: const TextStyle(
-                          fontSize: 12,
-                          color: AppColors.textSecondary,
-                          height: 1.4,
-                        ),
+                        style: AppTextStyles.bodySmall.copyWith(height: 1.4),
                         maxLines: 2,
                         overflow: TextOverflow.ellipsis,
                       ),
@@ -423,21 +416,10 @@ class _PopularCard extends ConsumerWidget {
                         child: Row(
                           mainAxisSize: MainAxisSize.min,
                           children: [
-                            CircleAvatar(
+                            UserAvatar(
+                              imageUrl: user?.profileImageUrl,
                               radius: 10,
-                              backgroundColor: AppColors.chipBackground,
-                              backgroundImage: user?.profileImageUrl != null
-                                  ? CachedNetworkImageProvider(
-                                      user!.profileImageUrl!,
-                                    )
-                                  : null,
-                              child: user?.profileImageUrl == null
-                                  ? const Icon(
-                                      Icons.person,
-                                      size: 11,
-                                      color: AppColors.textTertiary,
-                                    )
-                                  : null,
+                              iconSize: 11,
                             ),
                             const SizedBox(width: 5),
                             Flexible(
@@ -445,10 +427,7 @@ class _PopularCard extends ConsumerWidget {
                                 user?.nickname ?? post.authorNickname as String,
                                 maxLines: 1,
                                 overflow: TextOverflow.ellipsis,
-                                style: const TextStyle(
-                                  fontSize: 11,
-                                  color: AppColors.textTertiary,
-                                ),
+                                style: AppTextStyles.labelSmall,
                               ),
                             ),
                             const SizedBox(width: 8),
@@ -458,32 +437,20 @@ class _PopularCard extends ConsumerWidget {
                       Row(
                         mainAxisSize: MainAxisSize.min,
                         children: [
-                          const Icon(
-                            Icons.favorite_border,
-                            size: 11,
-                            color: AppColors.textTertiary,
-                          ),
-                          const SizedBox(width: 2),
-                          Text(
-                            '${post.likeCount}',
-                            style: const TextStyle(
-                              fontSize: 11,
-                              color: AppColors.textTertiary,
-                            ),
+                          IconCount(
+                            icon: Icons.favorite_border,
+                            count: post.likeCount,
+                            iconSize: 11,
+                            fontSize: 11,
+                            spacing: 2,
                           ),
                           const SizedBox(width: 8),
-                          const Icon(
-                            Icons.chat_bubble_outline,
-                            size: 11,
-                            color: AppColors.textTertiary,
-                          ),
-                          const SizedBox(width: 2),
-                          Text(
-                            '${post.commentCount}',
-                            style: const TextStyle(
-                              fontSize: 11,
-                              color: AppColors.textTertiary,
-                            ),
+                          IconCount(
+                            icon: Icons.chat_bubble_outline,
+                            count: post.commentCount,
+                            iconSize: 11,
+                            fontSize: 11,
+                            spacing: 2,
                           ),
                         ],
                       ),
@@ -495,7 +462,7 @@ class _PopularCard extends ConsumerWidget {
             if (hasThumbnail) ...[
               const SizedBox(width: 12),
               ClipRRect(
-                borderRadius: BorderRadius.circular(8),
+                borderRadius: BorderRadius.circular(AppRadius.sm),
                 child: CachedNetworkImage(
                   imageUrl: (post.imageUrls as List).first as String,
                   width: 72,

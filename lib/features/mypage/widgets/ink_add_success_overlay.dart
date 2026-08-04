@@ -52,11 +52,26 @@ class _InkAddSuccessOverlayState extends State<_InkAddSuccessOverlay>
   @override
   void initState() {
     super.initState();
-    _bgCtrl = AnimationController(vsync: this, duration: const Duration(milliseconds: 250));
-    _swatchCtrl = AnimationController(vsync: this, duration: const Duration(milliseconds: 900));
-    _rippleCtrl = AnimationController(vsync: this, duration: const Duration(milliseconds: 1000));
-    _textCtrl = AnimationController(vsync: this, duration: const Duration(milliseconds: 420));
-    _exitCtrl = AnimationController(vsync: this, duration: const Duration(milliseconds: 320));
+    _bgCtrl = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 250),
+    );
+    _swatchCtrl = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 900),
+    );
+    _rippleCtrl = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 1000),
+    );
+    _textCtrl = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 420),
+    );
+    _exitCtrl = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 320),
+    );
     _runSequence();
   }
 
@@ -103,19 +118,39 @@ class _InkAddSuccessOverlayState extends State<_InkAddSuccessOverlay>
   @override
   Widget build(BuildContext context) {
     return AnimatedBuilder(
-      animation: Listenable.merge([_bgCtrl, _swatchCtrl, _rippleCtrl, _textCtrl, _exitCtrl]),
+      animation: Listenable.merge([
+        _bgCtrl,
+        _swatchCtrl,
+        _rippleCtrl,
+        _textCtrl,
+        _exitCtrl,
+      ]),
       builder: (context, _) {
-        final bgAlpha = CurvedAnimation(parent: _bgCtrl, curve: Curves.easeOut).value;
-        final swatchScale = CurvedAnimation(parent: _swatchCtrl, curve: Curves.elasticOut).value;
+        final bgAlpha = CurvedAnimation(
+          parent: _bgCtrl,
+          curve: Curves.easeOut,
+        ).value;
+        final swatchScale = CurvedAnimation(
+          parent: _swatchCtrl,
+          curve: Curves.elasticOut,
+        ).value;
         final swatchRotate = Tween<double>(begin: -0.06, end: 0.0).evaluate(
           CurvedAnimation(parent: _swatchCtrl, curve: Curves.easeOutCubic),
         );
-        final ripple = CurvedAnimation(parent: _rippleCtrl, curve: Curves.easeOut).value;
+        final ripple = CurvedAnimation(
+          parent: _rippleCtrl,
+          curve: Curves.easeOut,
+        ).value;
         final textDy = Tween<double>(begin: 20.0, end: 0.0).evaluate(
           CurvedAnimation(parent: _textCtrl, curve: Curves.easeOutCubic),
         );
-        final textAlpha = CurvedAnimation(parent: _textCtrl, curve: Curves.easeOut).value;
-        final exitAlpha = 1.0 - CurvedAnimation(parent: _exitCtrl, curve: Curves.easeIn).value;
+        final textAlpha = CurvedAnimation(
+          parent: _textCtrl,
+          curve: Curves.easeOut,
+        ).value;
+        final exitAlpha =
+            1.0 -
+            CurvedAnimation(parent: _exitCtrl, curve: Curves.easeIn).value;
 
         return Opacity(
           opacity: exitAlpha,
@@ -145,7 +180,9 @@ class _InkAddSuccessOverlayState extends State<_InkAddSuccessOverlay>
                                 decoration: BoxDecoration(
                                   boxShadow: [
                                     BoxShadow(
-                                      color: AppColors.primary.withValues(alpha: 0.12),
+                                      color: AppColors.primary.withValues(
+                                        alpha: 0.12,
+                                      ),
                                       blurRadius: 32,
                                       offset: const Offset(0, 8),
                                     ),
@@ -153,7 +190,10 @@ class _InkAddSuccessOverlayState extends State<_InkAddSuccessOverlay>
                                 ),
                                 child: InkShapeClip(
                                   shape: widget.shape,
-                                  child: Image.file(widget.photo, fit: BoxFit.cover),
+                                  child: Image.file(
+                                    widget.photo,
+                                    fit: BoxFit.cover,
+                                  ),
                                 ),
                               ),
                             ),
@@ -170,10 +210,7 @@ class _InkAddSuccessOverlayState extends State<_InkAddSuccessOverlay>
                           children: [
                             Text(
                               widget.brand,
-                              style: const TextStyle(
-                                fontSize: 13,
-                                fontWeight: FontWeight.w500,
-                                color: AppColors.textSecondary,
+                              style: AppTextStyles.labelMedium.copyWith(
                                 fontFamily: 'Pretendard',
                               ),
                             ),
@@ -189,11 +226,11 @@ class _InkAddSuccessOverlayState extends State<_InkAddSuccessOverlay>
                               ),
                             ),
                             const SizedBox(height: 8),
-                            const Text(
+                            Text(
                               '차트에 기록됐어요',
-                              style: TextStyle(
-                                fontSize: 13,
+                              style: AppTextStyles.labelMedium.copyWith(
                                 color: AppColors.textTertiary,
+                                fontWeight: FontWeight.w400,
                                 fontFamily: 'Pretendard',
                               ),
                             ),

@@ -74,14 +74,20 @@ class _MainShellState extends ConsumerState<MainShell> {
                     width: double.infinity,
                     color: Colors.grey[800],
                     padding: const EdgeInsets.symmetric(vertical: 6),
-                    child: const Row(
+                    child: Row(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
-                        Icon(Icons.wifi_off, size: 14, color: Colors.white),
-                        SizedBox(width: 6),
+                        const Icon(
+                          Icons.wifi_off,
+                          size: 14,
+                          color: Colors.white,
+                        ),
+                        const SizedBox(width: 6),
                         Text(
                           '인터넷 연결이 없어요',
-                          style: TextStyle(color: Colors.white, fontSize: 12),
+                          style: AppTextStyles.bodySmall.copyWith(
+                            color: Colors.white,
+                          ),
                         ),
                       ],
                     ),
@@ -112,11 +118,41 @@ class _BottomNav extends StatelessWidget {
           height: 56,
           child: Row(
             children: [
-              _NavItem(icon: Icons.home_outlined, activeIcon: Icons.home, label: '홈', index: 0, shell: shell),
-              _NavItem(icon: Icons.grid_view_outlined, activeIcon: Icons.grid_view, label: '리뷰', index: 1, shell: shell),
-              _NavItem(icon: Icons.forum_outlined, activeIcon: Icons.forum, label: '커뮤니티', index: 2, shell: shell),
-              _NavItem(icon: Icons.book_outlined, activeIcon: Icons.book, label: '아카이브', index: 3, shell: shell),
-              _NavItem(icon: Icons.person_outline, activeIcon: Icons.person, label: '마이', index: 4, shell: shell),
+              _NavItem(
+                icon: Icons.home_outlined,
+                activeIcon: Icons.home,
+                label: '홈',
+                index: 0,
+                shell: shell,
+              ),
+              _NavItem(
+                icon: Icons.grid_view_outlined,
+                activeIcon: Icons.grid_view,
+                label: '리뷰',
+                index: 1,
+                shell: shell,
+              ),
+              _NavItem(
+                icon: Icons.forum_outlined,
+                activeIcon: Icons.forum,
+                label: '커뮤니티',
+                index: 2,
+                shell: shell,
+              ),
+              _NavItem(
+                icon: Icons.book_outlined,
+                activeIcon: Icons.book,
+                label: '아카이브',
+                index: 3,
+                shell: shell,
+              ),
+              _NavItem(
+                icon: Icons.person_outline,
+                activeIcon: Icons.person,
+                label: '마이',
+                index: 4,
+                shell: shell,
+              ),
             ],
           ),
         ),
@@ -134,7 +170,13 @@ class _NavItem extends StatelessWidget {
     required this.shell,
   });
 
-  static const _rootPaths = ['/', '/review', '/community', '/archive', '/mypage'];
+  static const _rootPaths = [
+    '/',
+    '/review',
+    '/community',
+    '/archive',
+    '/mypage',
+  ];
 
   final IconData icon;
   final IconData activeIcon;
@@ -174,7 +216,9 @@ class _NavItem extends StatelessWidget {
                   child: Icon(
                     isActive ? activeIcon : icon,
                     key: ValueKey(isActive),
-                    color: isActive ? AppColors.primary : AppColors.textTertiary,
+                    color: isActive
+                        ? AppColors.primary
+                        : AppColors.textTertiary,
                     size: 22,
                   ),
                 ),

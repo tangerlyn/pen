@@ -29,7 +29,8 @@ class InkBookReadonlyScreen extends ConsumerStatefulWidget {
   final String? bookName;
 
   @override
-  ConsumerState<InkBookReadonlyScreen> createState() => _InkBookReadonlyScreenState();
+  ConsumerState<InkBookReadonlyScreen> createState() =>
+      _InkBookReadonlyScreenState();
 }
 
 class _InkBookReadonlyScreenState extends ConsumerState<InkBookReadonlyScreen> {
@@ -37,8 +38,12 @@ class _InkBookReadonlyScreenState extends ConsumerState<InkBookReadonlyScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final chartAsync = ref.watch(inkChartReadonlyProvider((widget.uid, widget.bookId)));
-    final book = ref.watch(singleInkBookProvider((widget.uid, widget.bookId))).valueOrNull;
+    final chartAsync = ref.watch(
+      inkChartReadonlyProvider((widget.uid, widget.bookId)),
+    );
+    final book = ref
+        .watch(singleInkBookProvider((widget.uid, widget.bookId)))
+        .valueOrNull;
     final owner = ref.watch(profileUserProvider(widget.uid)).valueOrNull;
 
     final pageStyle = notebookPageStyleFromString(book?.pageStyle ?? 'lines');
@@ -71,62 +76,74 @@ class _InkBookReadonlyScreenState extends ConsumerState<InkBookReadonlyScreen> {
 
           final pageCount = (entries.length / NotebookPage.itemsPerPage).ceil();
 
-          return Builder(builder: (ctx) {
-            final mq = MediaQuery.of(ctx);
-            const pageIndicatorH = 40.0;
-            final pageViewHeight = mq.size.height -
-                mq.padding.top -
-                mq.padding.bottom -
-                kToolbarHeight -
-                pageIndicatorH -
-                16.0;
+          return Builder(
+            builder: (ctx) {
+              final mq = MediaQuery.of(ctx);
+              const pageIndicatorH = 40.0;
+              final pageViewHeight =
+                  mq.size.height -
+                  mq.padding.top -
+                  mq.padding.bottom -
+                  kToolbarHeight -
+                  pageIndicatorH -
+                  16.0;
 
-            return Column(
-              children: [
-                Expanded(
-                  child: Align(
-                    alignment: const Alignment(0, -0.4),
-                    child: Column(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        SizedBox(
-                          height: pageViewHeight - 60,
-                          child: PageView.builder(
-                            scrollDirection: isScroll ? Axis.vertical : Axis.horizontal,
-                            itemCount: pageCount,
-                            onPageChanged: (p) => setState(() => _currentPage = p),
-                            itemBuilder: (_, pageIdx) {
-                              final start = pageIdx * NotebookPage.itemsPerPage;
-                              final end =
-                                  math.min(start + NotebookPage.itemsPerPage, entries.length);
-                              final pageEntries = entries.sublist(start, end);
-                              return NotebookPage(
-                                pageEntries: pageEntries,
-                                pageStyle: pageStyle,
-                                itemBuilder: (c, entry, i) => _ReadonlySwatchCard(
-                                  entry: entry,
-                                  shape: shape,
-                                  allEntries: entries,
-                                  absoluteIndex: start + i,
-                                ),
-                              );
-                            },
+              return Column(
+                children: [
+                  Expanded(
+                    child: Align(
+                      alignment: const Alignment(0, -0.4),
+                      child: Column(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          SizedBox(
+                            height: pageViewHeight - 60,
+                            child: PageView.builder(
+                              scrollDirection: isScroll
+                                  ? Axis.vertical
+                                  : Axis.horizontal,
+                              itemCount: pageCount,
+                              onPageChanged: (p) =>
+                                  setState(() => _currentPage = p),
+                              itemBuilder: (_, pageIdx) {
+                                final start =
+                                    pageIdx * NotebookPage.itemsPerPage;
+                                final end = math.min(
+                                  start + NotebookPage.itemsPerPage,
+                                  entries.length,
+                                );
+                                final pageEntries = entries.sublist(start, end);
+                                return NotebookPage(
+                                  pageEntries: pageEntries,
+                                  pageStyle: pageStyle,
+                                  itemBuilder: (c, entry, i) =>
+                                      _ReadonlySwatchCard(
+                                        entry: entry,
+                                        shape: shape,
+                                        allEntries: entries,
+                                        absoluteIndex: start + i,
+                                      ),
+                                );
+                              },
+                            ),
                           ),
-                        ),
-                        const SizedBox(height: 8),
-                        if (pageCount > 1)
-                          Text(
-                            '${_currentPage + 1} / $pageCount',
-                            style:
-                                const TextStyle(fontSize: 13, color: AppColors.textTertiary),
-                          ),
-                      ],
+                          const SizedBox(height: 8),
+                          if (pageCount > 1)
+                            Text(
+                              '${_currentPage + 1} / $pageCount',
+                              style: AppTextStyles.labelMedium.copyWith(
+                                color: AppColors.textTertiary,
+                                fontWeight: FontWeight.w400,
+                              ),
+                            ),
+                        ],
+                      ),
                     ),
                   ),
-                ),
-              ],
-            );
-          });
+                ],
+              );
+            },
+          );
         },
       ),
     );
@@ -159,11 +176,15 @@ class _ReadonlySwatchCard extends StatelessWidget {
               child: CachedNetworkImage(
                 imageUrl: entry.photoUrl,
                 fit: BoxFit.cover,
-                placeholder: (_, _) => Container(color: const Color(0xFFD4C5A9)),
+                placeholder: (_, _) =>
+                    Container(color: const Color(0xFFD4C5A9)),
                 errorWidget: (_, _, _) => Container(
                   color: const Color(0xFFD4C5A9),
-                  child: const Icon(Icons.broken_image_outlined,
-                      color: AppColors.textTertiary, size: 18),
+                  child: const Icon(
+                    Icons.broken_image_outlined,
+                    color: AppColors.textTertiary,
+                    size: 18,
+                  ),
                 ),
               ),
             ),
@@ -175,7 +196,9 @@ class _ReadonlySwatchCard extends StatelessWidget {
               children: [
                 Text(
                   entry.brand,
-                  style: const TextStyle(fontSize: 13, color: AppColors.textSecondary),
+                  style: AppTextStyles.labelMedium.copyWith(
+                    fontWeight: FontWeight.w400,
+                  ),
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
                   textAlign: TextAlign.center,
@@ -183,7 +206,10 @@ class _ReadonlySwatchCard extends StatelessWidget {
                 Text(
                   entry.inkName,
                   style: const TextStyle(
-                      fontSize: 15, fontWeight: FontWeight.w600, color: AppColors.textPrimary),
+                    fontSize: 15,
+                    fontWeight: FontWeight.w600,
+                    color: AppColors.textPrimary,
+                  ),
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
                   textAlign: TextAlign.center,
@@ -207,7 +233,8 @@ class _ReadonlySwatchCard extends StatelessWidget {
         child: InkDetailCarousel(
           itemCount: allEntries.length,
           initialIndex: absoluteIndex,
-          pageBuilder: (c, i) => _ReadonlyDetailPage(entry: allEntries[i], shape: shape),
+          pageBuilder: (c, i) =>
+              _ReadonlyDetailPage(entry: allEntries[i], shape: shape),
         ),
       ),
     );
@@ -241,11 +268,14 @@ class _ReadonlyDetailPage extends StatelessWidget {
                   child: CachedNetworkImage(
                     imageUrl: entry.photoUrl,
                     fit: BoxFit.cover,
-                    placeholder: (_, _) => Container(color: AppColors.chipBackground),
+                    placeholder: (_, _) =>
+                        Container(color: AppColors.chipBackground),
                     errorWidget: (_, _, _) => Container(
                       color: AppColors.chipBackground,
-                      child: const Icon(Icons.broken_image_outlined,
-                          color: AppColors.textTertiary),
+                      child: const Icon(
+                        Icons.broken_image_outlined,
+                        color: AppColors.textTertiary,
+                      ),
                     ),
                   ),
                 ),
@@ -260,22 +290,41 @@ class _ReadonlyDetailPage extends StatelessWidget {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text(entry.brand,
-                  style: const TextStyle(
-                      fontSize: 13, color: AppColors.textSecondary, letterSpacing: 0.5)),
+              Text(
+                entry.brand,
+                style: AppTextStyles.labelMedium.copyWith(
+                  fontWeight: FontWeight.w400,
+                  letterSpacing: 0.5,
+                ),
+              ),
               const SizedBox(height: 4),
-              Text(entry.inkName,
-                  style: const TextStyle(
-                      fontSize: 22, fontWeight: FontWeight.w700, color: AppColors.textPrimary)),
+              Text(
+                entry.inkName,
+                style: const TextStyle(
+                  fontSize: 22,
+                  fontWeight: FontWeight.w700,
+                  color: AppColors.textPrimary,
+                ),
+              ),
               const SizedBox(height: 16),
-              Row(children: [
-                const Icon(Icons.calendar_today_outlined,
-                    size: 13, color: AppColors.textTertiary),
-                const SizedBox(width: 5),
-                Text(dateStr,
-                    style: const TextStyle(fontSize: 12, color: AppColors.textTertiary)),
-              ]),
-              if (entry.memo.isNotEmpty || (entry.contentBlocks?.isNotEmpty ?? false)) ...[
+              Row(
+                children: [
+                  const Icon(
+                    Icons.calendar_today_outlined,
+                    size: 13,
+                    color: AppColors.textTertiary,
+                  ),
+                  const SizedBox(width: 5),
+                  Text(
+                    dateStr,
+                    style: AppTextStyles.bodySmall.copyWith(
+                      color: AppColors.textTertiary,
+                    ),
+                  ),
+                ],
+              ),
+              if (entry.memo.isNotEmpty ||
+                  (entry.contentBlocks?.isNotEmpty ?? false)) ...[
                 const SizedBox(height: 20),
                 Container(
                   width: double.infinity,
@@ -287,12 +336,13 @@ class _ReadonlyDetailPage extends StatelessWidget {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      const Text('메모',
-                          style: TextStyle(
-                              fontSize: 11,
-                              fontWeight: FontWeight.w600,
-                              color: AppColors.textTertiary,
-                              letterSpacing: 0.5)),
+                      Text(
+                        '메모',
+                        style: AppTextStyles.labelSmall.copyWith(
+                          fontWeight: FontWeight.w600,
+                          letterSpacing: 0.5,
+                        ),
+                      ),
                       const SizedBox(height: 6),
                       InkMemoContent(entry: entry),
                     ],

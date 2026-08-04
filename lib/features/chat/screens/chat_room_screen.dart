@@ -50,7 +50,9 @@ class _ChatRoomScreenState extends ConsumerState<ChatRoomScreen> {
 
     final receiverId = uid == room.buyerId ? room.sellerId : room.buyerId;
     _controller.clear();
-    await ref.read(chatRepoProvider).sendMessage(
+    await ref
+        .read(chatRepoProvider)
+        .sendMessage(
           chatId: widget.chatId,
           senderId: uid,
           receiverId: receiverId,
@@ -68,13 +70,14 @@ class _ChatRoomScreenState extends ConsumerState<ChatRoomScreen> {
     final xfile = await picker.pickImage(source: ImageSource.gallery);
     if (xfile == null) return;
 
-    final url = await ref.read(storageServiceProvider).uploadChatImage(
-          File(xfile.path),
-          widget.chatId,
-        );
+    final url = await ref
+        .read(storageServiceProvider)
+        .uploadChatImage(File(xfile.path), widget.chatId);
 
     final receiverId = uid == room.buyerId ? room.sellerId : room.buyerId;
-    await ref.read(chatRepoProvider).sendMessage(
+    await ref
+        .read(chatRepoProvider)
+        .sendMessage(
           chatId: widget.chatId,
           senderId: uid,
           receiverId: receiverId,
@@ -126,12 +129,18 @@ class _ChatRoomScreenState extends ConsumerState<ChatRoomScreen> {
               color: AppColors.warning.withValues(alpha: 0.1),
               child: Row(
                 children: [
-                  const Icon(Icons.warning_amber, color: AppColors.warning, size: 18),
+                  const Icon(
+                    Icons.warning_amber,
+                    color: AppColors.warning,
+                    size: 18,
+                  ),
                   const SizedBox(width: 8),
-                  const Expanded(
+                  Expanded(
                     child: Text(
                       '채팅창 외부에서 계좌번호나 전화번호를 주고받는 것은 사기 위험이 있습니다.',
-                      style: TextStyle(fontSize: 12, color: AppColors.warning),
+                      style: AppTextStyles.bodySmall.copyWith(
+                        color: AppColors.warning,
+                      ),
                     ),
                   ),
                   IconButton(
@@ -161,7 +170,12 @@ class _ChatRoomScreenState extends ConsumerState<ChatRoomScreen> {
           ),
           // 입력창
           Container(
-            padding: EdgeInsets.fromLTRB(8, 8, 8, MediaQuery.of(context).viewInsets.bottom + 8),
+            padding: EdgeInsets.fromLTRB(
+              8,
+              8,
+              8,
+              MediaQuery.of(context).viewInsets.bottom + 8,
+            ),
             decoration: const BoxDecoration(
               color: AppColors.surface,
               border: Border(top: BorderSide(color: AppColors.divider)),
@@ -170,7 +184,10 @@ class _ChatRoomScreenState extends ConsumerState<ChatRoomScreen> {
               children: [
                 IconButton(
                   onPressed: _sendImage,
-                  icon: const Icon(Icons.image_outlined, color: AppColors.textSecondary),
+                  icon: const Icon(
+                    Icons.image_outlined,
+                    color: AppColors.textSecondary,
+                  ),
                 ),
                 Expanded(
                   child: TextField(
@@ -178,7 +195,10 @@ class _ChatRoomScreenState extends ConsumerState<ChatRoomScreen> {
                     maxLines: null,
                     decoration: const InputDecoration(
                       hintText: '메시지를 입력하세요...',
-                      contentPadding: EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+                      contentPadding: EdgeInsets.symmetric(
+                        horizontal: 12,
+                        vertical: 10,
+                      ),
                     ),
                   ),
                 ),
@@ -205,28 +225,35 @@ class _MessageBubble extends StatelessWidget {
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 4),
       child: Row(
-        mainAxisAlignment: isMe ? MainAxisAlignment.end : MainAxisAlignment.start,
+        mainAxisAlignment: isMe
+            ? MainAxisAlignment.end
+            : MainAxisAlignment.start,
         crossAxisAlignment: CrossAxisAlignment.end,
         children: [
           if (!isMe) ...[
-            const CircleAvatar(radius: 16, backgroundColor: AppColors.chipBackground),
+            const CircleAvatar(
+              radius: 16,
+              backgroundColor: AppColors.chipBackground,
+            ),
             const SizedBox(width: 8),
           ],
           Flexible(
             child: Container(
-              padding: message.isImage ? EdgeInsets.zero : const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+              padding: message.isImage
+                  ? EdgeInsets.zero
+                  : const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
               decoration: BoxDecoration(
                 color: isMe ? AppColors.primary : AppColors.chipBackground,
                 borderRadius: BorderRadius.only(
-                  topLeft: const Radius.circular(16),
-                  topRight: const Radius.circular(16),
+                  topLeft: const Radius.circular(AppRadius.lg),
+                  topRight: const Radius.circular(AppRadius.lg),
                   bottomLeft: Radius.circular(isMe ? 16 : 4),
                   bottomRight: Radius.circular(isMe ? 4 : 16),
                 ),
               ),
               child: message.isImage
                   ? ClipRRect(
-                      borderRadius: BorderRadius.circular(12),
+                      borderRadius: BorderRadius.circular(AppRadius.md),
                       child: CachedNetworkImage(
                         imageUrl: message.content,
                         width: 200,

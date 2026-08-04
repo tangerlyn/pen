@@ -29,10 +29,8 @@ class FeedFilterBar extends StatelessWidget {
               child: FilterChip(
                 label: Text(cat),
                 selected: isSelected,
-                labelStyle: TextStyle(
+                labelStyle: AppTextStyles.labelMedium.copyWith(
                   color: isSelected ? Colors.white : AppColors.textPrimary,
-                  fontSize: 13,
-                  fontWeight: FontWeight.w500,
                 ),
                 selectedColor: AppColors.primary,
                 backgroundColor: AppColors.chipBackground,
@@ -43,7 +41,6 @@ class FeedFilterBar extends StatelessWidget {
               ),
             );
           }),
-
         ],
       ),
     );

@@ -1,15 +1,14 @@
 import 'dart:math' as math;
 import 'package:flutter/material.dart';
+import '../../../core/theme/app_theme.dart';
 import '../../../data/models/ink_chart_model.dart';
 
 /// 공책 페이지 배경 스타일. Firestore의 InkBookModel.pageStyle과 1:1 대응.
 enum NotebookPageStyle { lines, grid, plain }
 
-NotebookPageStyle notebookPageStyleFromString(String value) =>
-    NotebookPageStyle.values.firstWhere(
-      (v) => v.name == value,
-      orElse: () => NotebookPageStyle.lines,
-    );
+NotebookPageStyle notebookPageStyleFromString(String value) => NotebookPageStyle
+    .values
+    .firstWhere((v) => v.name == value, orElse: () => NotebookPageStyle.lines);
 
 /// 공책 한 페이지(3×3 그리드 + 종이 배경)를 렌더링하는 공용 위젯.
 /// 소유자의 편집 화면과 다른 유저용 읽기 전용 화면이 동일한 코드로
@@ -25,7 +24,12 @@ class NotebookPage extends StatelessWidget {
   /// 이 페이지에 들어갈 항목(최대 [itemsPerPage]개). 부족한 칸은 빈 슬롯으로 채워진다.
   final List<InkChartModel> pageEntries;
   final NotebookPageStyle pageStyle;
-  final Widget Function(BuildContext context, InkChartModel entry, int indexInPage) itemBuilder;
+  final Widget Function(
+    BuildContext context,
+    InkChartModel entry,
+    int indexInPage,
+  )
+  itemBuilder;
 
   static const itemsPerPage = 9;
 
@@ -36,9 +40,13 @@ class NotebookPage extends StatelessWidget {
       child: Container(
         decoration: BoxDecoration(
           color: const Color(0xFFFFFCF5),
-          borderRadius: BorderRadius.circular(4),
+          borderRadius: BorderRadius.circular(AppRadius.xs),
           boxShadow: const [
-            BoxShadow(color: Color(0x30000000), blurRadius: 10, offset: Offset(3, 4)),
+            BoxShadow(
+              color: Color(0x30000000),
+              blurRadius: 10,
+              offset: Offset(3, 4),
+            ),
           ],
         ),
         child: CustomPaint(

@@ -59,8 +59,7 @@ class _FeedScreenState extends State<FeedScreen>
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('피드',
-            style: TextStyle(fontWeight: FontWeight.w700)),
+        title: const Text('피드', style: TextStyle(fontWeight: FontWeight.w700)),
         actions: [
           IconButton(
             icon: const Icon(Icons.search),
@@ -74,9 +73,14 @@ class _FeedScreenState extends State<FeedScreen>
           indicatorColor: AppColors.primary,
           indicatorWeight: 2,
           dividerColor: AppColors.divider,
-          labelStyle: const TextStyle(fontWeight: FontWeight.w600, fontSize: 14),
-          unselectedLabelStyle:
-              const TextStyle(fontWeight: FontWeight.w400, fontSize: 14),
+          labelStyle: const TextStyle(
+            fontWeight: FontWeight.w600,
+            fontSize: 14,
+          ),
+          unselectedLabelStyle: const TextStyle(
+            fontWeight: FontWeight.w400,
+            fontSize: 14,
+          ),
           tabs: const [
             Tab(text: '전체'),
             Tab(text: '리뷰'),
@@ -105,8 +109,7 @@ class _AllFeedTab extends ConsumerWidget {
     final reviewsAsync = ref.watch(homeLatestReviewsProvider);
     final postsAsync = ref.watch(filteredPostsProvider);
 
-    final isLoading =
-        reviewsAsync.isLoading && postsAsync.isLoading;
+    final isLoading = reviewsAsync.isLoading && postsAsync.isLoading;
 
     if (isLoading) {
       return const Center(child: CircularProgressIndicator());
@@ -122,8 +125,10 @@ class _AllFeedTab extends ConsumerWidget {
 
     if (entries.isEmpty) {
       return const Center(
-        child: Text('아직 게시물이 없어요.',
-            style: TextStyle(color: AppColors.textSecondary)),
+        child: Text(
+          '아직 게시물이 없어요.',
+          style: TextStyle(color: AppColors.textSecondary),
+        ),
       );
     }
 
@@ -154,7 +159,11 @@ class _ReviewListItem extends StatelessWidget {
       onTap: () => context.push('/review/${review.id}'),
       child: Padding(
         padding: const EdgeInsets.fromLTRB(
-            AppSpacing.lg, AppSpacing.md, AppSpacing.lg, AppSpacing.sm),
+          AppSpacing.lg,
+          AppSpacing.md,
+          AppSpacing.lg,
+          AppSpacing.sm,
+        ),
         child: Row(
           crossAxisAlignment: CrossAxisAlignment.end,
           children: [
@@ -172,7 +181,9 @@ class _ReviewListItem extends StatelessWidget {
                         child: Text(
                           review.title.isNotEmpty ? review.title : '(제목 없음)',
                           style: AppTextStyles.titleSmall.copyWith(
-                              fontSize: 15, color: AppColors.textPrimary),
+                            fontSize: 15,
+                            color: AppColors.textPrimary,
+                          ),
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
                         ),
@@ -217,23 +228,36 @@ class _ReviewListItem extends StatelessWidget {
                     children: [
                       Text(
                         timeago.format(review.createdAt, locale: 'ko'),
-                        style: AppTextStyles.bodySmall
-                            .copyWith(color: AppColors.textTertiary),
+                        style: AppTextStyles.bodySmall.copyWith(
+                          color: AppColors.textTertiary,
+                        ),
                       ),
                       const Spacer(),
-                      const Icon(Icons.favorite_border,
-                          size: 14, color: AppColors.textTertiary),
+                      const Icon(
+                        Icons.favorite_border,
+                        size: 14,
+                        color: AppColors.textTertiary,
+                      ),
                       const SizedBox(width: 3),
-                      Text('${review.likeCount}',
-                          style: AppTextStyles.bodySmall
-                              .copyWith(color: AppColors.textTertiary)),
+                      Text(
+                        '${review.likeCount}',
+                        style: AppTextStyles.bodySmall.copyWith(
+                          color: AppColors.textTertiary,
+                        ),
+                      ),
                       const SizedBox(width: 10),
-                      const Icon(Icons.chat_bubble_outline,
-                          size: 14, color: AppColors.textTertiary),
+                      const Icon(
+                        Icons.chat_bubble_outline,
+                        size: 14,
+                        color: AppColors.textTertiary,
+                      ),
                       const SizedBox(width: 3),
-                      Text('${review.commentCount}',
-                          style: AppTextStyles.bodySmall
-                              .copyWith(color: AppColors.textTertiary)),
+                      Text(
+                        '${review.commentCount}',
+                        style: AppTextStyles.bodySmall.copyWith(
+                          color: AppColors.textTertiary,
+                        ),
+                      ),
                     ],
                   ),
                 ],
@@ -275,7 +299,11 @@ class _PostListItem extends StatelessWidget {
       onTap: () => context.push('/community/${post.id}'),
       child: Padding(
         padding: const EdgeInsets.fromLTRB(
-            AppSpacing.lg, AppSpacing.md, AppSpacing.lg, AppSpacing.sm),
+          AppSpacing.lg,
+          AppSpacing.md,
+          AppSpacing.lg,
+          AppSpacing.sm,
+        ),
         child: Row(
           crossAxisAlignment: CrossAxisAlignment.end,
           children: [
@@ -293,7 +321,9 @@ class _PostListItem extends StatelessWidget {
                         child: Text(
                           post.title,
                           style: AppTextStyles.titleSmall.copyWith(
-                              fontSize: 15, color: AppColors.textPrimary),
+                            fontSize: 15,
+                            color: AppColors.textPrimary,
+                          ),
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
                         ),
@@ -314,8 +344,9 @@ class _PostListItem extends StatelessWidget {
                         child: Text(
                           post.authorNickname,
                           style: AppTextStyles.bodySmall.copyWith(
-                              color: AppColors.primary,
-                              fontWeight: FontWeight.w600),
+                            color: AppColors.primary,
+                            fontWeight: FontWeight.w600,
+                          ),
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
                         ),
@@ -323,23 +354,36 @@ class _PostListItem extends StatelessWidget {
                       const SizedBox(width: AppSpacing.sm),
                       Text(
                         timeago.format(post.createdAt, locale: 'ko'),
-                        style: AppTextStyles.bodySmall
-                            .copyWith(color: AppColors.textTertiary),
+                        style: AppTextStyles.bodySmall.copyWith(
+                          color: AppColors.textTertiary,
+                        ),
                       ),
                       const Spacer(),
-                      const Icon(Icons.chat_bubble_outline,
-                          size: 14, color: AppColors.textTertiary),
+                      const Icon(
+                        Icons.chat_bubble_outline,
+                        size: 14,
+                        color: AppColors.textTertiary,
+                      ),
                       const SizedBox(width: 3),
-                      Text('${post.commentCount}',
-                          style: AppTextStyles.bodySmall
-                              .copyWith(color: AppColors.textTertiary)),
+                      Text(
+                        '${post.commentCount}',
+                        style: AppTextStyles.bodySmall.copyWith(
+                          color: AppColors.textTertiary,
+                        ),
+                      ),
                       const SizedBox(width: 10),
-                      const Icon(Icons.favorite_border,
-                          size: 14, color: AppColors.textTertiary),
+                      const Icon(
+                        Icons.favorite_border,
+                        size: 14,
+                        color: AppColors.textTertiary,
+                      ),
                       const SizedBox(width: 3),
-                      Text('${post.likeCount}',
-                          style: AppTextStyles.bodySmall
-                              .copyWith(color: AppColors.textTertiary)),
+                      Text(
+                        '${post.likeCount}',
+                        style: AppTextStyles.bodySmall.copyWith(
+                          color: AppColors.textTertiary,
+                        ),
+                      ),
                     ],
                   ),
                 ],
@@ -370,7 +414,11 @@ class _PostListItem extends StatelessWidget {
 
 // ── 타입 배지 ─────────────────────────────────────────────────────────────
 class _TypeBadge extends StatelessWidget {
-  const _TypeBadge._({required this.label, required this.color, required this.bg});
+  const _TypeBadge._({
+    required this.label,
+    required this.color,
+    required this.bg,
+  });
   final String label;
   final Color color;
   final Color bg;
@@ -389,15 +437,17 @@ class _TypeBadge extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: AppSpacing.sm, vertical: 3),
+      padding: const EdgeInsets.symmetric(
+        horizontal: AppSpacing.sm,
+        vertical: 3,
+      ),
       decoration: BoxDecoration(
         color: bg,
-        borderRadius: BorderRadius.circular(4),
+        borderRadius: BorderRadius.circular(AppRadius.xs),
       ),
       child: Text(
         label,
-        style: TextStyle(
-          fontSize: 11,
+        style: AppTextStyles.labelSmall.copyWith(
           fontWeight: FontWeight.w600,
           color: color,
         ),
