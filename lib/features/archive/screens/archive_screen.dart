@@ -48,18 +48,6 @@ class _ArchiveScreenState extends ConsumerState<ArchiveScreen>
   final _scrollKey = GlobalKey<NestedScrollViewState>();
   bool _showScrollTop = false;
 
-  final _inkScrollCtrl = ScrollController();
-  final _penScrollCtrl = ScrollController();
-
-  ScrollController get _activeScrollCtrl {
-    switch (_tabController.index) {
-      case 1:
-        return _penScrollCtrl;
-      default:
-        return _inkScrollCtrl;
-    }
-  }
-
   @override
   void initState() {
     super.initState();
@@ -74,22 +62,21 @@ class _ArchiveScreenState extends ConsumerState<ArchiveScreen>
   @override
   void dispose() {
     _tabController.dispose();
-    _inkScrollCtrl.dispose();
-    _penScrollCtrl.dispose();
     super.dispose();
   }
 
   void _scrollToTop() {
     final ns = _scrollKey.currentState;
-    if (ns?.outerController.hasClients == true) {
-      ns!.outerController.animateTo(
+    if (ns == null) return;
+    if (ns.innerController.hasClients) {
+      ns.innerController.animateTo(
         0,
         duration: const Duration(milliseconds: 300),
         curve: Curves.easeOut,
       );
     }
-    if (_activeScrollCtrl.hasClients) {
-      _activeScrollCtrl.animateTo(
+    if (ns.outerController.hasClients) {
+      ns.outerController.animateTo(
         0,
         duration: const Duration(milliseconds: 300),
         curve: Curves.easeOut,
@@ -118,42 +105,54 @@ class _ArchiveScreenState extends ConsumerState<ArchiveScreen>
             },
             child: NestedScrollView(
               key: _scrollKey,
-              headerSliverBuilder: (context, _) => [
-                SliverAppBar(
-                  pinned: true,
-                  title: const Text('아카이브'),
-                  actions: [
-                    IconButton(
-                      icon: const Icon(Icons.search),
-                      onPressed: () => context.push('/archive/search'),
-                    ),
+              headerSliverBuilder: (context, _) {
+                final tabBar = TabBar(
+                  controller: _tabController,
+                  tabs: const [
+                    Tab(text: '잉크'),
+                    Tab(text: '만년필'),
                   ],
-                ),
-                // 잉크/만년필 탭 — 스크롤 시 같이 올라감
-                SliverToBoxAdapter(
-                  child: ColoredBox(
-                    color: Theme.of(context).scaffoldBackgroundColor,
-                    child: TabBar(
-                      controller: _tabController,
-                      tabs: const [
-                        Tab(text: '잉크'),
-                        Tab(text: '만년필'),
-                      ],
-                      labelStyle: const TextStyle(fontWeight: FontWeight.w600),
-                      indicatorColor: AppColors.primary,
-                      labelColor: AppColors.primary,
-                      unselectedLabelColor: AppColors.textSecondary,
+                  labelStyle: const TextStyle(fontWeight: FontWeight.w600),
+                  indicatorColor: AppColors.primary,
+                  labelColor: AppColors.primary,
+                  unselectedLabelColor: AppColors.textSecondary,
+                );
+                return [
+                  SliverAppBar(
+                    floating: true,
+                    snap: true,
+                    pinned: false,
+                    title: const Text('아카이브'),
+                    actions: [
+                      IconButton(
+                        icon: const Icon(Icons.search),
+                        onPressed: () => context.push('/archive/search'),
+                      ),
+                    ],
+                    bottom: PreferredSize(
+                      preferredSize: Size.fromHeight(
+                        tabBar.preferredSize.height + 44,
+                      ),
+                      child: Column(
+                        children: [
+                          // 잉크/만년필 탭 — 앱바와 함께 스크롤 시 접힘
+                          ColoredBox(
+                            color: Theme.of(context).scaffoldBackgroundColor,
+                            child: tabBar,
+                          ),
+                          // 필터 버튼 — 앱바와 함께 스크롤 시 접힘
+                          _FilterRow(tabIndex: state.tabIndex),
+                        ],
+                      ),
                     ),
                   ),
-                ),
-                // 필터 버튼 — 스크롤 시 같이 올라감
-                SliverToBoxAdapter(child: _FilterRow(tabIndex: state.tabIndex)),
-              ],
+                ];
+              },
               body: TabBarView(
                 controller: _tabController,
                 children: [
-                  _InkList(state: state, scrollController: _inkScrollCtrl),
-                  _PenList(state: state, scrollController: _penScrollCtrl),
+                  _InkList(state: state),
+                  _PenList(state: state),
                 ],
               ),
             ),
@@ -204,11 +203,7 @@ class _FilterRowState extends ConsumerState<_FilterRow>
 
   _ExpandedFilter? _expanded;
   OverlayEntry? _overlayEntry;
-  late final AnimationController _animController = AnimationController(
-    vsync: this,
-    duration: const Duration(milliseconds: 260),
-    reverseDuration: const Duration(milliseconds: 200),
-  );
+  late final AnimationController _animController;
   final _colorLink = LayerLink();
   final _typeLink = LayerLink();
   final _brandLink = LayerLink();
@@ -227,6 +222,18 @@ class _FilterRowState extends ConsumerState<_FilterRow>
   List<String> _pendingColorFamilies = [];
   List<String> _pendingInkTypes = [];
   List<String> _pendingBrands = [];
+
+  @override
+  void initState() {
+    super.initState();
+    // late final을 dispose()에서 처음 접근하면(드롭다운을 한 번도 안 열었을 때)
+    // 이미 deactivate된 element로 vsync를 만들려다 크래시 나므로, 여기서 즉시 생성해둔다.
+    _animController = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 260),
+      reverseDuration: const Duration(milliseconds: 200),
+    );
+  }
 
   @override
   void dispose() {
@@ -935,15 +942,14 @@ class _FilterChipItem extends StatelessWidget {
 }
 
 class _InkList extends ConsumerWidget {
-  const _InkList({required this.state, required this.scrollController});
+  const _InkList({required this.state});
   final ArchiveState state;
-  final ScrollController scrollController;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     // 항상 CustomScrollView를 반환 — 타입 변화로 인한 semantics assertion 방지
     return CustomScrollView(
-      controller: scrollController,
+      key: const PageStorageKey('archive_ink_list'),
       slivers: [
         if (state.isLoading)
           SliverPadding(
@@ -1034,15 +1040,14 @@ class _InkList extends ConsumerWidget {
 }
 
 class _PenList extends ConsumerWidget {
-  const _PenList({required this.state, required this.scrollController});
+  const _PenList({required this.state});
   final ArchiveState state;
-  final ScrollController scrollController;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     // 항상 CustomScrollView를 반환 — 타입 변화로 인한 semantics assertion 방지
     return CustomScrollView(
-      controller: scrollController,
+      key: const PageStorageKey('archive_pen_list'),
       slivers: [
         if (state.isLoading)
           SliverList(

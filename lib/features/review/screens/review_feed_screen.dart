@@ -47,12 +47,18 @@ class _ReviewFeedScreenState extends ConsumerState<ReviewFeedScreen> {
     final ns = _scrollKey.currentState;
     if (ns == null) return;
     if (ns.innerController.hasClients) {
-      ns.innerController.animateTo(0,
-          duration: const Duration(milliseconds: 300), curve: Curves.easeOut);
+      ns.innerController.animateTo(
+        0,
+        duration: const Duration(milliseconds: 300),
+        curve: Curves.easeOut,
+      );
     }
     if (ns.outerController.hasClients) {
-      ns.outerController.animateTo(0,
-          duration: const Duration(milliseconds: 300), curve: Curves.easeOut);
+      ns.outerController.animateTo(
+        0,
+        duration: const Duration(milliseconds: 300),
+        curve: Curves.easeOut,
+      );
     }
   }
 
@@ -77,79 +83,91 @@ class _ReviewFeedScreenState extends ConsumerState<ReviewFeedScreen> {
                     ? ns!.innerController.offset
                     : 0.0;
                 final show = outer + inner > 100;
-                if (show != _showScrollTop) setState(() => _showScrollTop = show);
+                if (show != _showScrollTop)
+                  setState(() => _showScrollTop = show);
               }
               return false;
             },
             child: NestedScrollView(
               key: _scrollKey,
               headerSliverBuilder: (context, _) => [
-                if (widget.showAppBar)
-                  SliverAppBar(
-                    pinned: true,
-                    title: const Text('리뷰',
-                        style: TextStyle(fontWeight: FontWeight.w700)),
-                    actions: [
-                      IconButton(
-                          icon: const Icon(Icons.search),
-                          onPressed: () => context.push('/search?type=review')),
-                    ],
-                  ),
-                SliverToBoxAdapter(
-                  child: ColoredBox(
-                    color: AppColors.surface,
-                    child: Row(
-                      children: [
-                        Expanded(
-                          child: FeedFilterBar(
-                            filter: state.filter,
-                            onFilterChanged: (f) =>
-                                ref.read(feedProvider.notifier).setFilter(f),
+                SliverAppBar(
+                  floating: true,
+                  snap: true,
+                  pinned: false,
+                  toolbarHeight: widget.showAppBar ? kToolbarHeight : 0,
+                  title: widget.showAppBar
+                      ? const Text(
+                          '리뷰',
+                          style: TextStyle(fontWeight: FontWeight.w700),
+                        )
+                      : null,
+                  actions: widget.showAppBar
+                      ? [
+                          IconButton(
+                            icon: const Icon(Icons.search),
+                            onPressed: () =>
+                                context.push('/search?type=review'),
                           ),
-                        ),
-                        Padding(
-                          padding: const EdgeInsets.only(right: 8),
-                          child: IconButton(
-                            icon: Icon(
-                              _isGridView ? Icons.view_list : Icons.grid_view,
-                              size: 22,
+                        ]
+                      : null,
+                  bottom: PreferredSize(
+                    preferredSize: const Size.fromHeight(44),
+                    child: ColoredBox(
+                      color: AppColors.surface,
+                      child: Row(
+                        children: [
+                          Expanded(
+                            child: FeedFilterBar(
+                              filter: state.filter,
+                              onFilterChanged: (f) =>
+                                  ref.read(feedProvider.notifier).setFilter(f),
                             ),
-                            onPressed: _toggleViewMode,
-                            padding: EdgeInsets.zero,
-                            constraints: const BoxConstraints(),
                           ),
-                        ),
-                      ],
+                          Padding(
+                            padding: const EdgeInsets.only(right: 8),
+                            child: IconButton(
+                              icon: Icon(
+                                _isGridView ? Icons.view_list : Icons.grid_view,
+                                size: 22,
+                              ),
+                              onPressed: _toggleViewMode,
+                              padding: EdgeInsets.zero,
+                              constraints: const BoxConstraints(),
+                            ),
+                          ),
+                        ],
+                      ),
                     ),
                   ),
                 ),
               ],
               body: state.isLoading
                   ? _isGridView
-                      ? GridView.builder(
-                          physics: const NeverScrollableScrollPhysics(),
-                          padding: EdgeInsets.zero,
-                          gridDelegate:
-                              const SliverGridDelegateWithFixedCrossAxisCount(
-                            crossAxisCount: 2,
-                            crossAxisSpacing: 1,
-                            mainAxisSpacing: 1,
-                            childAspectRatio: 0.85,
-                          ),
-                          itemCount: 6,
-                          itemBuilder: (_, _) => const ReviewGridSkeleton(),
-                        )
-                      : ListView.builder(
-                          physics: const NeverScrollableScrollPhysics(),
-                          itemCount: 5,
-                          itemBuilder: (_, _) => const Column(
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              ReviewListTileSkeleton(),
-                              Divider(height: 1),
-                            ],
-                          ),
-                        )
+                        ? GridView.builder(
+                            physics: const NeverScrollableScrollPhysics(),
+                            padding: EdgeInsets.zero,
+                            gridDelegate:
+                                const SliverGridDelegateWithFixedCrossAxisCount(
+                                  crossAxisCount: 2,
+                                  crossAxisSpacing: 1,
+                                  mainAxisSpacing: 1,
+                                  childAspectRatio: 0.85,
+                                ),
+                            itemCount: 6,
+                            itemBuilder: (_, _) => const ReviewGridSkeleton(),
+                          )
+                        : ListView.builder(
+                            physics: const NeverScrollableScrollPhysics(),
+                            itemCount: 5,
+                            itemBuilder: (_, _) => const Column(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                ReviewListTileSkeleton(),
+                                Divider(height: 1),
+                              ],
+                            ),
+                          )
                   : NotificationListener<ScrollNotification>(
                       onNotification: (notification) {
                         if (notification is ScrollEndNotification &&
@@ -162,71 +180,84 @@ class _ReviewFeedScreenState extends ConsumerState<ReviewFeedScreen> {
                         onRefresh: () => ref
                             .read(feedProvider.notifier)
                             .loadFeed(refresh: true),
-                        child: Builder(builder: (context) {
-                          // 팔로잉 최근 게시글 + 전체 피드를 하나로 이어붙여
-                          // 섹션 구분 없이 자연스럽게 이어지는 하나의 피드로 렌더링
-                          final combined = [...state.followingRecent, ...state.reviews];
-                          return CustomScrollView(
-                            slivers: [
-                              _isGridView
-                                  ? SliverPadding(
-                                      padding: EdgeInsets.zero,
-                                      sliver: SliverGrid(
-                                        gridDelegate:
-                                            const SliverGridDelegateWithFixedCrossAxisCount(
-                                          crossAxisCount: 2,
-                                          crossAxisSpacing: 1,
-                                          mainAxisSpacing: 1,
-                                          childAspectRatio: 0.85,
+                        child: Builder(
+                          builder: (context) {
+                            // 팔로잉 최근 게시글 + 전체 피드를 하나로 이어붙여
+                            // 섹션 구분 없이 자연스럽게 이어지는 하나의 피드로 렌더링
+                            final combined = [
+                              ...state.followingRecent,
+                              ...state.reviews,
+                            ];
+                            return CustomScrollView(
+                              slivers: [
+                                _isGridView
+                                    ? SliverPadding(
+                                        padding: EdgeInsets.zero,
+                                        sliver: SliverGrid(
+                                          gridDelegate:
+                                              const SliverGridDelegateWithFixedCrossAxisCount(
+                                                crossAxisCount: 2,
+                                                crossAxisSpacing: 1,
+                                                mainAxisSpacing: 1,
+                                                childAspectRatio: 0.85,
+                                              ),
+                                          delegate: SliverChildBuilderDelegate(
+                                            (context, index) {
+                                              if (index >= combined.length) {
+                                                return const ReviewGridSkeleton();
+                                              }
+                                              final review = combined[index];
+                                              return ReviewFeedCard(
+                                                review: review,
+                                                onTap: () => context.push(
+                                                  '/review/${review.id}',
+                                                ),
+                                              );
+                                            },
+                                            childCount:
+                                                combined.length +
+                                                (state.isLoadingMore ? 2 : 0),
+                                          ),
                                         ),
+                                      )
+                                    : SliverList(
                                         delegate: SliverChildBuilderDelegate(
                                           (context, index) {
                                             if (index >= combined.length) {
-                                              return const ReviewGridSkeleton();
+                                              return const SizedBox(
+                                                height: 60,
+                                                child: Center(
+                                                  child:
+                                                      CircularProgressIndicator(),
+                                                ),
+                                              );
                                             }
                                             final review = combined[index];
-                                            return ReviewFeedCard(
-                                              review: review,
-                                              onTap: () =>
-                                                  context.push('/review/${review.id}'),
+                                            return Column(
+                                              mainAxisSize: MainAxisSize.min,
+                                              children: [
+                                                ReviewListTile(
+                                                  review: review,
+                                                  onTap: () => context.push(
+                                                    '/review/${review.id}',
+                                                  ),
+                                                ),
+                                                const Divider(height: 1),
+                                              ],
                                             );
                                           },
-                                          childCount: combined.length +
-                                              (state.isLoadingMore ? 2 : 0),
+                                          childCount:
+                                              combined.length +
+                                              (state.isLoadingMore ? 1 : 0),
                                         ),
                                       ),
-                                    )
-                                  : SliverList(
-                                      delegate: SliverChildBuilderDelegate(
-                                        (context, index) {
-                                          if (index >= combined.length) {
-                                            return const SizedBox(
-                                              height: 60,
-                                              child: Center(
-                                                  child: CircularProgressIndicator()),
-                                            );
-                                          }
-                                          final review = combined[index];
-                                          return Column(
-                                            mainAxisSize: MainAxisSize.min,
-                                            children: [
-                                              ReviewListTile(
-                                                review: review,
-                                                onTap: () =>
-                                                    context.push('/review/${review.id}'),
-                                              ),
-                                              const Divider(height: 1),
-                                            ],
-                                          );
-                                        },
-                                        childCount: combined.length +
-                                            (state.isLoadingMore ? 1 : 0),
-                                      ),
-                                    ),
-                              const SliverToBoxAdapter(child: SizedBox(height: 16)),
-                            ],
-                          );
-                        }),
+                                const SliverToBoxAdapter(
+                                  child: SizedBox(height: 16),
+                                ),
+                              ],
+                            );
+                          },
+                        ),
                       ),
                     ),
             ),

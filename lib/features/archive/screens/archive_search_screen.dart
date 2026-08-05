@@ -7,6 +7,7 @@ import '../../../data/models/ink_model.dart';
 import '../../../data/models/pen_model.dart';
 import '../../../shared/providers/providers.dart';
 import '../../../shared/widgets/archive/add_product_bottom_sheet.dart';
+import '../../../shared/widgets/ink_drop_circle.dart';
 import '../../search/providers/suggestion_provider.dart';
 import '../widgets/pen_list_tile.dart';
 
@@ -408,22 +409,7 @@ class _InkResults extends StatelessWidget {
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              Container(
-                width: 56,
-                height: 56,
-                decoration: BoxDecoration(
-                  color: ink.inkColor,
-                  shape: BoxShape.circle,
-                  border: Border.all(color: AppColors.divider),
-                  boxShadow: [
-                    BoxShadow(
-                      color: ink.inkColor.withValues(alpha: 0.4),
-                      blurRadius: 6,
-                      offset: const Offset(0, 2),
-                    ),
-                  ],
-                ),
-              ),
+              InkDropCircle(color: ink.inkColor, size: 56),
               const SizedBox(height: 6),
               Text(
                 ink.name,
