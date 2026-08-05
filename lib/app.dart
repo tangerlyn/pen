@@ -10,7 +10,7 @@ class NibpenApp extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final router = ref.watch(routerProvider);
     return MaterialApp.router(
-      title: '문어다방',
+      title: '펜귄',
       theme: AppTheme.light,
       routerConfig: router,
       debugShowCheckedModeBanner: false,
