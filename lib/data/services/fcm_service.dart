@@ -62,18 +62,6 @@ class FcmService {
     }
   }
 
-  Future<void> deleteToken(String uid) async {
-    try {
-      await FirebaseFirestore.instance
-          .collection('users')
-          .doc(uid)
-          .update({'fcmToken': FieldValue.delete()});
-      await FirebaseMessaging.instance.deleteToken();
-    } catch (e) {
-      debugPrint('[FCM] 토큰 삭제 실패: $e');
-    }
-  }
-
   Future<void> _requestPermission() async {
     await FirebaseMessaging.instance.requestPermission(
       alert: true,
@@ -148,6 +136,9 @@ class FcmService {
       case 'follow':
         final id = data['fromUid'] as String?;
         return id != null ? '/profile/$id' : null;
+      case 'inquiry_answered':
+        final id = data['inquiryId'] as String?;
+        return id != null ? '/mypage/settings/inquiries/$id' : null;
       default:
         return null;
     }

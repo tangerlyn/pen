@@ -39,6 +39,8 @@ class NotificationScreen extends ConsumerWidget {
   void _navigate(BuildContext context, WidgetRef ref, NotificationItem item) {
     if (item.type == 'follow') {
       navigateToProfile(context, ref, item.fromUid);
+    } else if (item.type == 'inquiry_answered') {
+      context.push('/mypage/settings/inquiries/${item.targetId}');
     } else if (item.targetType == 'review') {
       context.push('/review/${item.targetId}');
     } else if (item.targetType == 'post') {
@@ -123,6 +125,7 @@ class _NotificationTile extends StatelessWidget {
       'like' => Icons.favorite,
       'comment' => Icons.chat_bubble,
       'follow' => Icons.person_add,
+      'inquiry_answered' => Icons.mail,
       _ => Icons.notifications,
     };
   }
@@ -132,6 +135,7 @@ class _NotificationTile extends StatelessWidget {
       'like' => AppColors.error,
       'comment' => AppColors.primary,
       'follow' => const Color(0xFF43A047),
+      'inquiry_answered' => const Color(0xFFFB8C00),
       _ => AppColors.textTertiary,
     };
   }
