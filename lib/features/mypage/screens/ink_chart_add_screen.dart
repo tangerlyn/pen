@@ -36,6 +36,9 @@ class _InkChartAddScreenState extends ConsumerState<InkChartAddScreen> {
   bool _isSaving = false;
   bool _showEditorToolbar = false;
 
+  List<String> _brandSuggestions = [];
+  List<String> _nameSuggestions = [];
+
   bool get _isEditing => widget.entryToEdit != null;
   String? get _initialPhotoUrl => widget.entryToEdit?.photoUrl;
 
@@ -150,6 +153,58 @@ class _InkChartAddScreenState extends ConsumerState<InkChartAddScreen> {
     if (cropped != null) {
       setState(() => _photo = cropped);
     }
+  }
+
+  // ── 브랜드/잉크 이름 자동완성 (필드별로 각자 목록만 보여줌) ──────────
+  Future<void> _searchBrand(String query) async {
+    final trimmed = query.trim();
+    if (trimmed.isEmpty) {
+      setState(() => _brandSuggestions = []);
+      return;
+    }
+    final results = await ref.read(archiveRepoProvider).searchInks(trimmed);
+    if (!mounted) return;
+    final lower = trimmed.toLowerCase();
+    final brands = results
+        .map((i) => i.brand)
+        .where((b) => b.toLowerCase().contains(lower))
+        .toSet()
+        .take(8)
+        .toList();
+    setState(() => _brandSuggestions = brands);
+  }
+
+  Future<void> _searchName(String query) async {
+    final trimmed = query.trim();
+    if (trimmed.isEmpty) {
+      setState(() => _nameSuggestions = []);
+      return;
+    }
+    final results = await ref.read(archiveRepoProvider).searchInks(trimmed);
+    if (!mounted) return;
+    final lower = trimmed.toLowerCase();
+    final names = results
+        .map((i) => i.name)
+        .where((n) => n.toLowerCase().contains(lower))
+        .toSet()
+        .take(8)
+        .toList();
+    setState(() => _nameSuggestions = names);
+  }
+
+  void _selectBrand(String brand) {
+    _brandCtrl
+      ..text = brand
+      ..selection = TextSelection.collapsed(offset: brand.length);
+    setState(() => _brandSuggestions = []);
+  }
+
+  void _selectName(String name) {
+    _inkNameCtrl
+      ..text = name
+      ..selection = TextSelection.collapsed(offset: name.length);
+    setState(() => _nameSuggestions = []);
+    FocusScope.of(context).unfocus();
   }
 
   // ── 저장 ────────────────────────────────────────────────────────
@@ -336,7 +391,13 @@ class _InkChartAddScreenState extends ConsumerState<InkChartAddScreen> {
                         controller: _brandCtrl,
                         hint: '예) Pilot, Diamine, Sailor',
                         textCapitalization: TextCapitalization.words,
+                        onChanged: _searchBrand,
                       ),
+                      if (_brandSuggestions.isNotEmpty)
+                        _SuggestionList(
+                          items: _brandSuggestions,
+                          onTap: _selectBrand,
+                        ),
                       const SizedBox(height: 16),
                       const _Label('잉크 이름'),
                       const SizedBox(height: 8),
@@ -344,7 +405,13 @@ class _InkChartAddScreenState extends ConsumerState<InkChartAddScreen> {
                         controller: _inkNameCtrl,
                         hint: '예) Iroshizuku Tsuyugusa',
                         textCapitalization: TextCapitalization.words,
+                        onChanged: _searchName,
                       ),
+                      if (_nameSuggestions.isNotEmpty)
+                        _SuggestionList(
+                          items: _nameSuggestions,
+                          onTap: _selectName,
+                        ),
                     ],
                   ),
                 ),
@@ -560,16 +627,19 @@ class _Field extends StatelessWidget {
     required this.controller,
     required this.hint,
     this.textCapitalization = TextCapitalization.none,
+    this.onChanged,
   });
   final TextEditingController controller;
   final String hint;
   final TextCapitalization textCapitalization;
+  final ValueChanged<String>? onChanged;
 
   @override
   Widget build(BuildContext context) {
     return TextField(
       controller: controller,
       textCapitalization: textCapitalization,
+      onChanged: onChanged,
       style: AppTextStyles.bodyMedium,
       decoration: InputDecoration(
         hintText: hint,
@@ -595,6 +665,45 @@ class _Field extends StatelessWidget {
           horizontal: 14,
           vertical: 12,
         ),
+      ),
+    );
+  }
+}
+
+// 브랜드/잉크 이름 자동완성 목록 — 브랜드 필드는 브랜드 이름만,
+// 잉크 이름 필드는 잉크 이름만 각자 따로 보여준다 (서로 섞이지 않음)
+class _SuggestionList extends StatelessWidget {
+  const _SuggestionList({required this.items, required this.onTap});
+  final List<String> items;
+  final ValueChanged<String> onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      margin: const EdgeInsets.only(top: 6),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(AppRadius.md),
+        border: Border.all(color: AppColors.divider),
+      ),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: items
+            .map(
+              (name) => ListTile(
+                dense: true,
+                contentPadding: const EdgeInsets.symmetric(horizontal: 12),
+                title: Text(
+                  name,
+                  style: const TextStyle(
+                    fontWeight: FontWeight.w600,
+                    fontSize: 13,
+                  ),
+                ),
+                onTap: () => onTap(name),
+              ),
+            )
+            .toList(),
       ),
     );
   }

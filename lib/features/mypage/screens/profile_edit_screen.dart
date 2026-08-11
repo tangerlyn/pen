@@ -9,6 +9,8 @@ import '../../../shared/providers/providers.dart';
 import '../../../shared/widgets/confirm_discard_dialog.dart';
 import '../../../shared/widgets/tap_scale.dart';
 import '../../../shared/widgets/user_avatar.dart';
+import '../widgets/ink_swatch_shape.dart';
+import 'ink_crop_screen.dart';
 
 class ProfileEditScreen extends ConsumerStatefulWidget {
   const ProfileEditScreen({super.key});
@@ -120,7 +122,16 @@ class _ProfileEditScreenState extends ConsumerState<ProfileEditScreen> {
       source: ImageSource.gallery,
       imageQuality: 85,
     );
-    if (xfile != null) setState(() => _newImage = File(xfile.path));
+    if (xfile == null || !mounted) return;
+    final cropped = await Navigator.of(context).push<File>(
+      MaterialPageRoute(
+        builder: (_) => InkCropScreen(
+          imageFile: File(xfile.path),
+          shape: InkSwatchShape.circle,
+        ),
+      ),
+    );
+    if (cropped != null) setState(() => _newImage = cropped);
   }
 
   bool get _hasChanges =>

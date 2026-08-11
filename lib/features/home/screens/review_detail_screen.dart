@@ -722,7 +722,7 @@ class _ProfileRow extends ConsumerWidget {
                       mainAxisSize: MainAxisSize.min,
                       children: [
                         Text(
-                          user == null ? '(알 수 없음) (탈퇴)' : user.nickname,
+                          user == null ? '알수없음(탈퇴)' : user.nickname,
                           style: AppTextStyles.labelMedium.copyWith(
                             fontWeight: FontWeight.w600,
                             color: AppColors.textPrimary,

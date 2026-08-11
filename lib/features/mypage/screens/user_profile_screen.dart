@@ -68,6 +68,15 @@ class _UserProfileScreenState extends ConsumerState<UserProfileScreen>
     final currentUid = ref.watch(currentUidProvider);
     final userAsync = ref.watch(profileUserProvider(widget.uid));
 
+    // 알림 딥링크 등으로 navigateToProfile()의 탈퇴 체크를 거치지 않고
+    // 곧장 진입한 경우를 대비 — 탈퇴한 사용자면 빈 화면 대신 안내만 표시
+    if (userAsync.hasValue && userAsync.value == null) {
+      return Scaffold(
+        appBar: AppBar(scrolledUnderElevation: 0, elevation: 0),
+        body: const Center(child: Text('탈퇴한 사용자입니다.')),
+      );
+    }
+
     // 공개 잉크북 여부 감지 → 탭 개수 동적 조정 (팔로우 여부 반영)
     final publicBooksAsync = ref.watch(
       userVisibleBooksProvider((widget.uid, currentUid)),

@@ -1,7 +1,9 @@
 const { onDocumentCreated, onDocumentUpdated } = require("firebase-functions/v2/firestore");
+const functionsV1 = require("firebase-functions/v1");
 const { initializeApp } = require("firebase-admin/app");
-const { getFirestore } = require("firebase-admin/firestore");
+const { getFirestore, FieldValue } = require("firebase-admin/firestore");
 const { getMessaging } = require("firebase-admin/messaging");
+const { getStorage } = require("firebase-admin/storage");
 
 initializeApp();
 const db = getFirestore();
@@ -373,3 +375,184 @@ exports.onInquiryAnswered = onDocumentUpdated(
     ]);
   }
 );
+
+// 계정 탈퇴 후 처리 — 클라이언트는 auth.user().delete()만 성공시키면 되고,
+// 나머지는 Admin 권한으로 서버에서 처리한다. 리뷰/커뮤니티 글/댓글/대댓글은
+// 지우지 않고 작성자 닉네임만 "알 수 없음"으로 바꿔서 콘텐츠는 그대로
+// 남긴다. users 문서는 통째로 지우는데, 이러면 (1) 프로필을 눌렀을 때
+// 기존 navigateToProfile()의 "탈퇴한 계정" 처리와 review/comment 위젯의
+// 작성자 null 처리(아바타 기본값, 라이브 닉네임 조회 실패 시 denormalized
+// 값 사용)가 별도 클라이언트 수정 없이 그대로 맞물리고, (2) 닉네임 중복
+// 확인 쿼리가 이 유저를 더 이상 찾지 못해 같은 닉네임을 새 사용자가
+// 충돌 없이 다시 쓸 수 있게 된다.
+const ANONYMOUS_NICKNAME = "알 수 없음";
+
+async function anonymizeAuthor(query) {
+  const snap = await query.get();
+  if (snap.empty) return;
+  let batch = db.batch();
+  let count = 0;
+  const commits = [];
+  for (const doc of snap.docs) {
+    batch.update(doc.ref, { authorNickname: ANONYMOUS_NICKNAME });
+    count++;
+    if (count === 450) {
+      commits.push(batch.commit());
+      batch = db.batch();
+      count = 0;
+    }
+  }
+  if (count > 0) commits.push(batch.commit());
+  await Promise.all(commits);
+}
+
+async function deleteQueryBatch(query) {
+  const snap = await query.get();
+  if (snap.empty) return;
+  await Promise.all(snap.docs.map((doc) => doc.ref.delete()));
+}
+
+exports.onUserDeleted = functionsV1.auth.user().onDelete(async (user) => {
+  const uid = user.uid;
+
+  await Promise.all([
+    anonymizeAuthor(db.collection("reviews").where("authorId", "==", uid)),
+    anonymizeAuthor(db.collection("posts").where("authorId", "==", uid)),
+    anonymizeAuthor(
+      db.collectionGroup("comments").where("authorId", "==", uid)
+    ),
+    anonymizeAuthor(
+      db.collectionGroup("replies").where("authorId", "==", uid)
+    ),
+  ]).catch((e) => console.error("[onUserDeleted] 작성자 표시 실패:", e));
+
+  // 팔로우 관계는 콘텐츠가 아니라서 그대로 삭제하고, 상대방의
+  // followerCount/followingCount도 같이 줄여준다. 안 그러면 예를 들어
+  // "팔로워 4명"인데 실제 목록엔 1명이 탈퇴해서 3명만 보이는 식으로
+  // 숫자와 목록이 어긋나게 된다.
+  try {
+    const [asFollower, asFollowee] = await Promise.all([
+      db.collection("follows").where("followerId", "==", uid).get(),
+      db.collection("follows").where("followeeId", "==", uid).get(),
+    ]);
+
+    // 같은 문서(otherUid)에 batch 안에서 update()를 두 번 하면 안 되므로,
+    // 델타를 한 번에 모아서 유저당 update 한 번만 실행한다.
+    const counterDeltas = {};
+    const bump = (targetUid, field) => {
+      counterDeltas[targetUid] = counterDeltas[targetUid] || {};
+      counterDeltas[targetUid][field] =
+        (counterDeltas[targetUid][field] || 0) - 1;
+    };
+
+    let batch = db.batch();
+    let ops = 0;
+    const commits = [];
+    const flush = () => {
+      if (ops > 0) commits.push(batch.commit());
+      batch = db.batch();
+      ops = 0;
+    };
+
+    for (const doc of asFollower.docs) {
+      // uid가 팔로우하던 상대 → 그 사람의 followerCount 감소
+      const { followeeId } = doc.data();
+      batch.delete(doc.ref);
+      ops++;
+      if (followeeId) bump(followeeId, "followerCount");
+      if (ops >= 450) flush();
+    }
+    for (const doc of asFollowee.docs) {
+      // uid를 팔로우하던 상대 → 그 사람의 followingCount 감소
+      const { followerId } = doc.data();
+      batch.delete(doc.ref);
+      ops++;
+      if (followerId) bump(followerId, "followingCount");
+      if (ops >= 450) flush();
+    }
+    for (const [targetUid, deltas] of Object.entries(counterDeltas)) {
+      const update = {};
+      if (deltas.followerCount) {
+        update.followerCount = FieldValue.increment(deltas.followerCount);
+      }
+      if (deltas.followingCount) {
+        update.followingCount = FieldValue.increment(deltas.followingCount);
+      }
+      batch.update(db.collection("users").doc(targetUid), update);
+      ops++;
+      if (ops >= 450) flush();
+    }
+    flush();
+    await Promise.all(commits);
+  } catch (e) {
+    console.error("[onUserDeleted] follows 정리 실패:", e);
+  }
+
+  // 탈퇴 사용자가 다른 사람 리뷰/글에 남긴 좋아요·스크랩도 정리하고
+  // (문서 ID = uid), 해당 글의 likeCount/scrapCount를 같이 줄인다.
+  // likes/scraps는 review/post마다 서브컬렉션이라 "이 uid의 좋아요 전체"를
+  // 바로 조회할 방법이 없어, collection group 전체를 훑어 문서 ID로 걸러낸다.
+  try {
+    const [likeDocs, scrapDocs] = await Promise.all([
+      db.collectionGroup("likes").get(),
+      db.collectionGroup("scraps").get(),
+    ]);
+
+    let batch = db.batch();
+    let ops = 0;
+    const commits = [];
+    const flush = () => {
+      if (ops > 0) commits.push(batch.commit());
+      batch = db.batch();
+      ops = 0;
+    };
+
+    for (const doc of likeDocs.docs) {
+      if (doc.id !== uid) continue;
+      const parent = doc.ref.parent.parent; // reviews/{id} or posts/{id}
+      batch.delete(doc.ref);
+      ops++;
+      if (parent) {
+        batch.update(parent, { likeCount: FieldValue.increment(-1) });
+        ops++;
+      }
+      if (ops >= 450) flush();
+    }
+    for (const doc of scrapDocs.docs) {
+      if (doc.id !== uid) continue;
+      const parent = doc.ref.parent.parent;
+      batch.delete(doc.ref);
+      ops++;
+      if (parent) {
+        batch.update(parent, { scrapCount: FieldValue.increment(-1) });
+        ops++;
+      }
+      if (ops >= 450) flush();
+    }
+    flush();
+    await Promise.all(commits);
+  } catch (e) {
+    console.error("[onUserDeleted] 좋아요/스크랩 정리 실패:", e);
+  }
+
+  // users 문서(잉크북/잉크차트 포함) 및 알림함 재귀 삭제
+  try {
+    await db.recursiveDelete(db.collection("users").doc(uid));
+  } catch (e) {
+    console.error("[onUserDeleted] users 문서 재귀 삭제 실패:", e);
+  }
+  try {
+    await db.recursiveDelete(db.collection("notifications").doc(uid));
+  } catch (e) {
+    console.error("[onUserDeleted] notifications 재귀 삭제 실패:", e);
+  }
+
+  // Storage 파일 정리
+  try {
+    const bucket = getStorage().bucket();
+    await bucket.deleteFiles({ prefix: `profiles/${uid}/` });
+    await bucket.deleteFiles({ prefix: `inkChart/${uid}/` });
+  } catch (e) {
+    console.error("[onUserDeleted] Storage 정리 실패:", e);
+  }
+});

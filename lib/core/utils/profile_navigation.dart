@@ -14,7 +14,7 @@ Future<void> navigateToProfile(
     showDialog(
       context: context,
       builder: (_) => AlertDialog(
-        content: const Text('탈퇴한 계정입니다.'),
+        content: const Text('탈퇴한 사용자입니다.'),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),

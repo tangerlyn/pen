@@ -1,3 +1,4 @@
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -102,23 +103,85 @@ class SettingsScreen extends ConsumerWidget {
   void _showDeleteAccountDialog(BuildContext context, WidgetRef ref) {
     showDialog(
       context: context,
-      builder: (_) => AlertDialog(
-        title: const Text('회원 탈퇴'),
-        content: const Text('탈퇴하면 모든 데이터가 삭제됩니다.\n정말 탈퇴하시겠습니까?'),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: const Text('취소'),
-          ),
-          TextButton(
-            onPressed: () async {
-              Navigator.pop(context);
-              await ref.read(authServiceProvider).deleteAccount();
-            },
-            child: const Text('탈퇴', style: TextStyle(color: AppColors.error)),
-          ),
+      barrierDismissible: false,
+      builder: (_) => _DeleteAccountDialog(ref: ref),
+    );
+  }
+}
+
+class _DeleteAccountDialog extends StatefulWidget {
+  const _DeleteAccountDialog({required this.ref});
+  final WidgetRef ref;
+
+  @override
+  State<_DeleteAccountDialog> createState() => _DeleteAccountDialogState();
+}
+
+class _DeleteAccountDialogState extends State<_DeleteAccountDialog> {
+  bool _isDeleting = false;
+  String? _error;
+
+  Future<void> _delete() async {
+    setState(() {
+      _isDeleting = true;
+      _error = null;
+    });
+    try {
+      await widget.ref.read(authServiceProvider).deleteAccount();
+      if (!mounted) return;
+      // pop 이후엔 이 State의 context가 곧바로 deactivate될 수 있어,
+      // 라우터 참조를 미리 잡아둔다.
+      final router = GoRouter.of(context);
+      Navigator.of(context).pop();
+      // 라우터의 redirect가 auth 상태 변화에 반응해 자동으로 /login으로
+      // 보내주는 걸 기다리지 않고, 삭제 성공이 확정된 시점에 명시적으로
+      // 이동시켜 타이밍에 좌우되지 않게 한다.
+      router.go('/login');
+    } catch (e) {
+      if (!mounted) return;
+      setState(() {
+        _isDeleting = false;
+        _error = e is FirebaseAuthException && e.code == 'requires-recent-login'
+            ? '보안을 위해 재인증이 필요해요. 다시 시도해주세요.'
+            : '탈퇴에 실패했어요. 잠시 후 다시 시도해주세요.';
+      });
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return AlertDialog(
+      title: const Text('회원 탈퇴'),
+      content: Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const Text('탈퇴하면 모든 데이터가 삭제됩니다.\n정말 탈퇴하시겠습니까?'),
+          if (_error != null) ...[
+            const SizedBox(height: 12),
+            Text(
+              _error!,
+              style: const TextStyle(color: AppColors.error, fontSize: 13),
+            ),
+          ],
         ],
       ),
+      actions: [
+        TextButton(
+          onPressed: _isDeleting ? null : () => Navigator.pop(context),
+          child: const Text('취소'),
+        ),
+        TextButton(
+          onPressed: _isDeleting ? null : _delete,
+          child: _isDeleting
+              ? const SizedBox(
+                  width: 16,
+                  height: 16,
+                  child: CircularProgressIndicator(strokeWidth: 2),
+                )
+              : const Text('탈퇴', style: TextStyle(color: AppColors.error)),
+        ),
+      ],
     );
   }
 }

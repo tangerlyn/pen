@@ -47,7 +47,8 @@ class AuthState {
 }
 
 class AuthNotifier extends StateNotifier<AuthState> {
-  AuthNotifier(this._authService, this._storageService) : super(const AuthState());
+  AuthNotifier(this._authService, this._storageService)
+    : super(const AuthState());
 
   final AuthService _authService;
   final StorageService _storageService;
@@ -84,14 +85,19 @@ class AuthNotifier extends StateNotifier<AuthState> {
       }
     } catch (e, stack) {
       debugPrint('[Auth] 로그인 에러: $e\n$stack');
-      final msg = e.toString().contains('canceled') ? null : '로그인에 실패했어요. 다시 시도해주세요.';
+      final msg = e.toString().contains('canceled')
+          ? null
+          : '로그인에 실패했어요. 다시 시도해주세요.';
       state = state.copyWith(isLoading: false, error: msg);
     }
   }
 
-  void setNickname(String nickname) => state = state.copyWith(nickname: nickname);
-  void setProfileImagePath(String path) => state = state.copyWith(profileImagePath: path);
-  void setInterests(List<String> interests) => state = state.copyWith(interests: interests);
+  void setNickname(String nickname) =>
+      state = state.copyWith(nickname: nickname);
+  void setProfileImagePath(String path) =>
+      state = state.copyWith(profileImagePath: path);
+  void setInterests(List<String> interests) =>
+      state = state.copyWith(interests: interests);
 
   Future<bool> checkNickname(String nickname) =>
       _authService.isNicknameAvailable(nickname);
@@ -126,9 +132,12 @@ class AuthNotifier extends StateNotifier<AuthState> {
       );
 
       state = const AuthState();
-      if (context.mounted) context.go('/');
+      if (context.mounted) context.go('/onboarding');
     } catch (e) {
-      state = state.copyWith(isLoading: false, error: '회원가입에 실패했어요. 다시 시도해주세요.');
+      state = state.copyWith(
+        isLoading: false,
+        error: '회원가입에 실패했어요. 다시 시도해주세요.',
+      );
     }
   }
 

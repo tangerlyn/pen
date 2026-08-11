@@ -10,11 +10,17 @@ import '../../core/constants/app_constants.dart';
 
 class ArchiveRepository {
   ArchiveRepository(this._reviewRepo) {
-    debugPrint('ArchiveRepo Constructor - Firestore app name: ${_firestore.app.name}');
-    debugPrint('ArchiveRepo Constructor - Firestore project ID: ${_firestore.app.options.projectId}');
+    debugPrint(
+      'ArchiveRepo Constructor - Firestore app name: ${_firestore.app.name}',
+    );
+    debugPrint(
+      'ArchiveRepo Constructor - Firestore project ID: ${_firestore.app.options.projectId}',
+    );
   }
   final ReviewRepository _reviewRepo;
-  final FirebaseFirestore _firestore = FirebaseFirestore.instanceFor(app: Firebase.app());
+  final FirebaseFirestore _firestore = FirebaseFirestore.instanceFor(
+    app: Firebase.app(),
+  );
 
   CollectionReference get _inks => _firestore.collection(AppConstants.inksCol);
   CollectionReference get _pens => _firestore.collection(AppConstants.pensCol);
@@ -32,87 +38,125 @@ class ArchiveRepository {
       debugPrint('기존 잉크 ${existingInkDocs.docs.length}개 삭제 완료');
 
       var batch = _firestore.batch();
-    final inksCsv = await rootBundle.loadString('assets/info_csv/inks.csv');
-    final normalizedCsv = inksCsv.replaceAll('\r\n', '\n').replaceAll('\r', '\n');
-    final inksRows = const CsvToListConverter(eol: '\n').convert(normalizedCsv);
-    debugPrint('Inks CSV rows: ${inksRows.length}개');
-    if (inksRows.isNotEmpty) {
-      final headers = inksRows[0].map((e) => e.toString().replaceAll(RegExp(r'^\xEF\xBB\xBF'), '').trim()).toList();
-      final idIdx = headers.indexOf('id');
-      final brandIdx = headers.indexOf('brand');
-      final nameIdx = headers.indexOf('name');
-      final inkTypeIdx = headers.indexOf('inkType');
-      final hexColorIdx = headers.indexOf('hexColor');
-      final capacityIdx = headers.indexOf('capacityMl');
+      final inksCsv = await rootBundle.loadString('assets/info_csv/inks.csv');
+      final normalizedCsv = inksCsv
+          .replaceAll('\r\n', '\n')
+          .replaceAll('\r', '\n');
+      final inksRows = const CsvToListConverter(
+        eol: '\n',
+      ).convert(normalizedCsv);
+      debugPrint('Inks CSV rows: ${inksRows.length}개');
+      if (inksRows.isNotEmpty) {
+        final headers = inksRows[0]
+            .map(
+              (e) =>
+                  e.toString().replaceAll(RegExp(r'^\xEF\xBB\xBF'), '').trim(),
+            )
+            .toList();
+        final idIdx = headers.indexOf('id');
+        final brandIdx = headers.indexOf('brand');
+        final nameIdx = headers.indexOf('name');
+        final inkTypeIdx = headers.indexOf('inkType');
+        final hexColorIdx = headers.indexOf('hexColor');
+        final capacityIdx = headers.indexOf('capacityMl');
 
-      for (var i = 1; i < inksRows.length; i++) {
-        final row = inksRows[i];
-        if (row.isEmpty || idIdx == -1 || row.length <= idIdx) continue;
-        final id = row[idIdx].toString().trim();
-        if (id.isEmpty || id == 'id') continue;
+        for (var i = 1; i < inksRows.length; i++) {
+          final row = inksRows[i];
+          if (row.isEmpty || idIdx == -1 || row.length <= idIdx) continue;
+          final id = row[idIdx].toString().trim();
+          if (id.isEmpty || id == 'id') continue;
 
-        final data = <String, dynamic>{};
-        if (brandIdx != -1 && row.length > brandIdx) data['brand'] = row[brandIdx].toString().trim();
-        if (nameIdx != -1 && row.length > nameIdx) data['name'] = row[nameIdx].toString().trim();
-        if (inkTypeIdx != -1 && row.length > inkTypeIdx) data['inkType'] = row[inkTypeIdx].toString().trim();
-        if (hexColorIdx != -1 && row.length > hexColorIdx) data['hexColor'] = row[hexColorIdx].toString().trim();
-        if (capacityIdx != -1 && row.length > capacityIdx) data['capacityMl'] = int.tryParse(row[capacityIdx].toString().trim()) ?? 0;
+          final data = <String, dynamic>{};
+          if (brandIdx != -1 && row.length > brandIdx)
+            data['brand'] = row[brandIdx].toString().trim();
+          if (nameIdx != -1 && row.length > nameIdx)
+            data['name'] = row[nameIdx].toString().trim();
+          if (inkTypeIdx != -1 && row.length > inkTypeIdx)
+            data['inkType'] = row[inkTypeIdx].toString().trim();
+          if (hexColorIdx != -1 && row.length > hexColorIdx)
+            data['hexColor'] = row[hexColorIdx].toString().trim();
+          if (capacityIdx != -1 && row.length > capacityIdx)
+            data['capacityMl'] =
+                int.tryParse(row[capacityIdx].toString().trim()) ?? 0;
 
-        batch.set(_inks.doc(id), data);
-      }
-      await batch.commit();
-      debugPrint('Inks batch commit success');
-      final testSnap = await _inks.get();
-      debugPrint('Inks uploaded: ${testSnap.docs.length}개');
-    }
-
-    // 2. Pens
-    var batchPens = _firestore.batch();
-    final pensCsv = await rootBundle.loadString('assets/info_csv/pens.csv');
-    final pensRows = const CsvToListConverter().convert(pensCsv);
-    if (pensRows.isNotEmpty) {
-      final headers = pensRows[0].map((e) => e.toString().replaceAll(RegExp(r'^\xEF\xBB\xBF'), '').trim()).toList();
-      debugPrint('Pens CSV Headers: $headers');
-      final idIdx = headers.indexOf('id');
-      final brandIdx = headers.indexOf('brand');
-      final modelNameIdx = headers.indexOf('modelName');
-      final nibMaterialIdx = headers.indexOf('nibMaterial');
-      final nibSizesIdx = headers.indexOf('nibSizes');
-      final fillTypeIdx = headers.indexOf('fillType');
-      final lineupIdx = headers.indexOf('lineup');
-      final priceRangeIdx = headers.indexOf('priceRange');
-
-      for (var i = 1; i < pensRows.length; i++) {
-        final row = pensRows[i];
-        if (row.isEmpty || idIdx == -1 || row.length <= idIdx) continue;
-        final id = row[idIdx].toString().trim();
-        if (id.isEmpty || id == 'id') continue;
-
-        final data = <String, dynamic>{
-          'lineup': lineupIdx != -1 && row.length > lineupIdx ? row[lineupIdx].toString().trim() : '',
-        };
-        if (brandIdx != -1 && row.length > brandIdx) data['brand'] = row[brandIdx].toString().trim();
-        if (modelNameIdx != -1 && row.length > modelNameIdx) data['modelName'] = row[modelNameIdx].toString().trim();
-        if (nibMaterialIdx != -1 && row.length > nibMaterialIdx) data['nibMaterial'] = row[nibMaterialIdx].toString().trim();
-        if (nibSizesIdx != -1 && row.length > nibSizesIdx) {
-          final sizesStr = row[nibSizesIdx].toString().trim();
-          data['nibSizes'] = sizesStr.isEmpty ? [] : sizesStr.split('|').map((e) => e.trim()).where((e) => e.isNotEmpty).toList();
+          batch.set(_inks.doc(id), data);
         }
-        if (fillTypeIdx != -1 && row.length > fillTypeIdx) data['fillType'] = row[fillTypeIdx].toString().trim();
-        if (priceRangeIdx != -1 && row.length > priceRangeIdx) data['priceRange'] = row[priceRangeIdx].toString().trim();
-
-        batchPens.set(_pens.doc(id), data, SetOptions(merge: true));
+        await batch.commit();
+        debugPrint('Inks batch commit success');
+        final testSnap = await _inks.get();
+        debugPrint('Inks uploaded: ${testSnap.docs.length}개');
       }
-      debugPrint('Before Pens batch commit - Firestore app name: ${_firestore.app.name}');
-      debugPrint('Before Pens batch commit - Firestore project ID: ${_firestore.app.options.projectId}');
-      await batchPens.commit();
-      debugPrint('Pens batch commit success');
-    }
 
-    // -- 테스트: DB 쓰기 직후 정상적으로 저장되었는지 확인
-    final testSnapshot = await _pens.get();
-    debugPrint('Test query after init: pens collection size = ${testSnapshot.docs.length}');
+      // 2. Pens
+      var batchPens = _firestore.batch();
+      final pensCsv = await rootBundle.loadString('assets/info_csv/pens.csv');
+      final pensRows = const CsvToListConverter().convert(pensCsv);
+      if (pensRows.isNotEmpty) {
+        final headers = pensRows[0]
+            .map(
+              (e) =>
+                  e.toString().replaceAll(RegExp(r'^\xEF\xBB\xBF'), '').trim(),
+            )
+            .toList();
+        debugPrint('Pens CSV Headers: $headers');
+        final idIdx = headers.indexOf('id');
+        final brandIdx = headers.indexOf('brand');
+        final modelNameIdx = headers.indexOf('modelName');
+        final nibMaterialIdx = headers.indexOf('nibMaterial');
+        final nibSizesIdx = headers.indexOf('nibSizes');
+        final fillTypeIdx = headers.indexOf('fillType');
+        final lineupIdx = headers.indexOf('lineup');
+        final priceRangeIdx = headers.indexOf('priceRange');
 
+        for (var i = 1; i < pensRows.length; i++) {
+          final row = pensRows[i];
+          if (row.isEmpty || idIdx == -1 || row.length <= idIdx) continue;
+          final id = row[idIdx].toString().trim();
+          if (id.isEmpty || id == 'id') continue;
+
+          final data = <String, dynamic>{
+            'lineup': lineupIdx != -1 && row.length > lineupIdx
+                ? row[lineupIdx].toString().trim()
+                : '',
+          };
+          if (brandIdx != -1 && row.length > brandIdx)
+            data['brand'] = row[brandIdx].toString().trim();
+          if (modelNameIdx != -1 && row.length > modelNameIdx)
+            data['modelName'] = row[modelNameIdx].toString().trim();
+          if (nibMaterialIdx != -1 && row.length > nibMaterialIdx)
+            data['nibMaterial'] = row[nibMaterialIdx].toString().trim();
+          if (nibSizesIdx != -1 && row.length > nibSizesIdx) {
+            final sizesStr = row[nibSizesIdx].toString().trim();
+            data['nibSizes'] = sizesStr.isEmpty
+                ? []
+                : sizesStr
+                      .split('|')
+                      .map((e) => e.trim())
+                      .where((e) => e.isNotEmpty)
+                      .toList();
+          }
+          if (fillTypeIdx != -1 && row.length > fillTypeIdx)
+            data['fillType'] = row[fillTypeIdx].toString().trim();
+          if (priceRangeIdx != -1 && row.length > priceRangeIdx)
+            data['priceRange'] = row[priceRangeIdx].toString().trim();
+
+          batchPens.set(_pens.doc(id), data, SetOptions(merge: true));
+        }
+        debugPrint(
+          'Before Pens batch commit - Firestore app name: ${_firestore.app.name}',
+        );
+        debugPrint(
+          'Before Pens batch commit - Firestore project ID: ${_firestore.app.options.projectId}',
+        );
+        await batchPens.commit();
+        debugPrint('Pens batch commit success');
+      }
+
+      // -- 테스트: DB 쓰기 직후 정상적으로 저장되었는지 확인
+      final testSnapshot = await _pens.get();
+      debugPrint(
+        'Test query after init: pens collection size = ${testSnapshot.docs.length}',
+      );
     } catch (e, st) {
       debugPrint('batch commit error: $e');
       debugPrint('$st');
@@ -134,11 +178,24 @@ class ArchiveRepository {
     if (inkTypes != null && inkTypes.isNotEmpty) {
       query = query.where('inkType', whereIn: inkTypes);
     }
-    query = query.limit(limit);
+    // search/brands/colorFamilies는 Firestore where절이 아니라 아래에서
+    // 클라이언트 쪽으로 필터링한다 — 그 필터들이 있는데 여기서 먼저
+    // limit을 걸면, 컬렉션 앞쪽 일부 문서만 가져온 뒤 그 안에서만 걸러서
+    // 검색어와 일치하는 잉크가 있어도 limit 밖에 있으면 못 찾는 버그가
+    // 생긴다. 그런 필터가 없을 때만(=단순 목록 조회) 미리 limit을 건다.
+    final hasClientFilter =
+        (search != null && search.isNotEmpty) ||
+        (brands != null && brands.isNotEmpty) ||
+        (colorFamilies != null && colorFamilies.isNotEmpty);
+    if (!hasClientFilter) {
+      query = query.limit(limit);
+    }
 
     final snapshot = await query.get();
     var results = snapshot.docs
-        .map((doc) => InkModel.fromMap(doc.data() as Map<String, dynamic>, doc.id))
+        .map(
+          (doc) => InkModel.fromMap(doc.data() as Map<String, dynamic>, doc.id),
+        )
         .where((i) => i.brand.isNotEmpty && i.name.isNotEmpty)
         .toList();
 
@@ -147,21 +204,29 @@ class ArchiveRepository {
     }
 
     if (colorFamilies != null && colorFamilies.isNotEmpty) {
-      results = results.where((i) => colorFamilies.contains(i.autoColorFamily)).toList();
+      results = results
+          .where((i) => colorFamilies.contains(i.autoColorFamily))
+          .toList();
     }
 
     if (search != null && search.isNotEmpty) {
       final lower = search.toLowerCase();
-      results = results.where((i) =>
-          i.brand.toLowerCase().contains(lower) ||
-          i.name.toLowerCase().contains(lower) ||
-          i.nameEn.toLowerCase().contains(lower)).toList();
+      results = results
+          .where(
+            (i) =>
+                i.brand.toLowerCase().contains(lower) ||
+                i.name.toLowerCase().contains(lower) ||
+                i.nameEn.toLowerCase().contains(lower),
+          )
+          .toList();
     }
 
-    results = await Future.wait(results.map((i) async {
-      final stats = await _reviewRepo.getProductStats('ink', i.id);
-      return i.copyWith(reviewCount: stats.$1, avgRating: stats.$2);
-    }));
+    results = await Future.wait(
+      results.map((i) async {
+        final stats = await _reviewRepo.getProductStats('ink', i.id);
+        return i.copyWith(reviewCount: stats.$1, avgRating: stats.$2);
+      }),
+    );
 
     return results;
   }
@@ -178,11 +243,15 @@ class ArchiveRepository {
     final snapshot = await _inks.get();
     final lower = query.toLowerCase();
     return snapshot.docs
-        .map((doc) => InkModel.fromMap(doc.data() as Map<String, dynamic>, doc.id))
-        .where((i) =>
-            i.brand.toLowerCase().contains(lower) ||
-            i.name.toLowerCase().contains(lower) ||
-            i.nameEn.toLowerCase().contains(lower))
+        .map(
+          (doc) => InkModel.fromMap(doc.data() as Map<String, dynamic>, doc.id),
+        )
+        .where(
+          (i) =>
+              i.brand.toLowerCase().contains(lower) ||
+              i.name.toLowerCase().contains(lower) ||
+              i.nameEn.toLowerCase().contains(lower),
+        )
         .toList();
   }
 
@@ -197,7 +266,8 @@ class ArchiveRepository {
   }
 
   // 잉크 등록 자동완성용 — 기존 브랜드/이름 목록 반환
-  Future<({List<String> brands, List<String> names})> getInkFieldSuggestions() async {
+  Future<({List<String> brands, List<String> names})>
+  getInkFieldSuggestions() async {
     final snap = await _inks.limit(800).get();
     final brands = <String>{};
     final names = <String>{};
@@ -208,10 +278,7 @@ class ArchiveRepository {
       if (b.isNotEmpty) brands.add(b);
       if (n.isNotEmpty) names.add(n);
     }
-    return (
-      brands: (brands.toList()..sort()),
-      names: (names.toList()..sort()),
-    );
+    return (brands: (brands.toList()..sort()), names: (names.toList()..sort()));
   }
 
   // 만년필 브랜드 필터용 — 현재 등록된 만년필들의 브랜드 목록(중복 제거)
@@ -227,20 +294,35 @@ class ArchiveRepository {
 
   // ── 만년필 ──────────────────────────────────────────────────
   Future<List<PenModel>> getPens({
-    List<String>? brands, String? nibSize, String? nibMaterial,
-    String? fillType, String? search, Object? lastDoc, int limit = 500,
+    List<String>? brands,
+    String? nibSize,
+    String? nibMaterial,
+    String? fillType,
+    String? search,
+    Object? lastDoc,
+    int limit = 500,
   }) async {
-    debugPrint('getPens - collection path: ${_pens.path}');
     Query query = _pens;
-    if (nibMaterial != null) query = query.where('nibMaterial', isEqualTo: nibMaterial);
+    if (nibMaterial != null)
+      query = query.where('nibMaterial', isEqualTo: nibMaterial);
     if (fillType != null) query = query.where('fillType', isEqualTo: fillType);
-    if (nibSize != null) query = query.where('nibSizes', arrayContains: nibSize);
+    if (nibSize != null)
+      query = query.where('nibSizes', arrayContains: nibSize);
 
-    query = query.limit(limit);
+    // search/brands는 클라이언트 쪽 필터라, 있을 때 미리 limit을 걸면
+    // 검색어와 일치하는 만년필이 있어도 앞쪽 일부 문서 밖에 있으면 못
+    // 찾는 버그가 생긴다 (getInks와 동일한 이유).
+    final hasClientFilter =
+        (search != null && search.isNotEmpty) ||
+        (brands != null && brands.isNotEmpty);
+    if (!hasClientFilter) {
+      query = query.limit(limit);
+    }
     final snapshot = await query.get();
-    debugPrint('getPens snapshot size: ${snapshot.docs.length}');
     var results = snapshot.docs
-        .map((doc) => PenModel.fromMap(doc.data() as Map<String, dynamic>, doc.id))
+        .map(
+          (doc) => PenModel.fromMap(doc.data() as Map<String, dynamic>, doc.id),
+        )
         .where((p) => p.brand.isNotEmpty && p.modelName.isNotEmpty)
         .toList();
 
@@ -250,13 +332,21 @@ class ArchiveRepository {
 
     if (search != null && search.isNotEmpty) {
       final lower = search.toLowerCase();
-      results = results.where((p) => p.brand.toLowerCase().contains(lower) || p.modelName.toLowerCase().contains(lower)).toList();
+      results = results
+          .where(
+            (p) =>
+                p.brand.toLowerCase().contains(lower) ||
+                p.modelName.toLowerCase().contains(lower),
+          )
+          .toList();
     }
 
-    results = await Future.wait(results.map((p) async {
-      final stats = await _reviewRepo.getProductStats('pen', p.id);
-      return p.copyWith(reviewCount: stats.$1, avgRating: stats.$2);
-    }));
+    results = await Future.wait(
+      results.map((p) async {
+        final stats = await _reviewRepo.getProductStats('pen', p.id);
+        return p.copyWith(reviewCount: stats.$1, avgRating: stats.$2);
+      }),
+    );
 
     return results;
   }
@@ -273,8 +363,14 @@ class ArchiveRepository {
     final snapshot = await _pens.get();
     final lower = query.toLowerCase();
     return snapshot.docs
-        .map((doc) => PenModel.fromMap(doc.data() as Map<String, dynamic>, doc.id))
-        .where((p) => p.brand.toLowerCase().contains(lower) || p.modelName.toLowerCase().contains(lower))
+        .map(
+          (doc) => PenModel.fromMap(doc.data() as Map<String, dynamic>, doc.id),
+        )
+        .where(
+          (p) =>
+              p.brand.toLowerCase().contains(lower) ||
+              p.modelName.toLowerCase().contains(lower),
+        )
         .toList();
   }
 
@@ -374,7 +470,8 @@ class ArchiveRepository {
       }
     }
     if (counts.isEmpty) return [];
-    final sorted = counts.entries.toList()..sort((a, b) => b.value.compareTo(a.value));
+    final sorted = counts.entries.toList()
+      ..sort((a, b) => b.value.compareTo(a.value));
     final ids = sorted.take(topN).map((e) => e.key).toList();
     final inks = await Future.wait(ids.map(getInk));
     return inks.whereType<InkModel>().toList();

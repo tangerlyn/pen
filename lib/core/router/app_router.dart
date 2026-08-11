@@ -3,8 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../../features/auth/screens/login_screen.dart';
 import '../../features/auth/screens/signup_nickname_screen.dart';
-import '../../features/auth/screens/signup_profile_screen.dart';
-import '../../features/auth/screens/signup_interests_screen.dart';
+import '../../features/auth/screens/onboarding_screen.dart';
 import '../../features/home/screens/home_screen.dart';
 import '../../features/home/screens/review_detail_screen.dart';
 import '../../features/review/screens/review_feed_screen.dart';
@@ -92,8 +91,7 @@ final routerProvider = Provider<GoRouter>((ref) {
       // 인증 화면
       GoRoute(path: '/login', pageBuilder: (_, state) => _fadePage(state, const LoginScreen())),
       GoRoute(path: '/signup/nickname', pageBuilder: (_, state) => _fadePage(state, const SignupNicknameScreen())),
-      GoRoute(path: '/signup/profile', pageBuilder: (_, state) => _fadePage(state, const SignupProfileScreen())),
-      GoRoute(path: '/signup/interests', pageBuilder: (_, state) => _fadePage(state, const SignupInterestsScreen())),
+      GoRoute(path: '/onboarding', pageBuilder: (_, state) => _fadePage(state, const OnboardingScreen())),
 
       // 메인 탭 Shell
       StatefulShellRoute.indexedStack(

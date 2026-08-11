@@ -10,7 +10,6 @@ import 'package:kakao_flutter_sdk_user/kakao_flutter_sdk_user.dart' as kakao;
 import 'package:sign_in_with_apple/sign_in_with_apple.dart';
 
 import '../../core/constants/app_secrets.dart';
-import 'storage_service.dart';
 
 const _kAuthSalt = AppSecrets.authSalt;
 
@@ -66,11 +65,16 @@ class AuthService {
         debugPrint('[Kakao] 신규 유저 문서 생성 중...');
         await _initUserDoc(uid, 'kakao', email);
       }
-      
+
       final hasProfile = await _checkProfile(uid);
       debugPrint('[Kakao] 로그인 완료 (신규여부: $isNew, 프로필완성: $hasProfile)');
 
-      return AuthResult(uid: uid, isNewUser: isNew, hasProfile: hasProfile, provider: 'kakao');
+      return AuthResult(
+        uid: uid,
+        isNewUser: isNew,
+        hasProfile: hasProfile,
+        provider: 'kakao',
+      );
     } catch (e, stack) {
       debugPrint('[Kakao] 에러 발생: $e\n$stack');
       rethrow;
@@ -80,7 +84,9 @@ class AuthService {
   // ── Naver ────────────────────────────────────────────────────────────
   Future<AuthResult> signInWithNaver() async {
     // 이전 세션 초기화
-    try { await FlutterNaverLogin.logOut(); } catch (_) {}
+    try {
+      await FlutterNaverLogin.logOut();
+    } catch (_) {}
 
     final result = await FlutterNaverLogin.logIn().timeout(
       const Duration(seconds: 20),
@@ -106,7 +112,12 @@ class AuthService {
     if (isNew) await _initUserDoc(uid, 'naver', email);
     final hasProfile = await _checkProfile(uid);
 
-    return AuthResult(uid: uid, isNewUser: isNew, hasProfile: hasProfile, provider: 'naver');
+    return AuthResult(
+      uid: uid,
+      isNewUser: isNew,
+      hasProfile: hasProfile,
+      provider: 'naver',
+    );
   }
 
   // ── Apple ─────────────────────────────────────────────────────────────
@@ -132,7 +143,12 @@ class AuthService {
     }
     final hasProfile = await _checkProfile(user.uid);
 
-    return AuthResult(uid: user.uid, isNewUser: isNew, hasProfile: hasProfile, provider: 'apple');
+    return AuthResult(
+      uid: user.uid,
+      isNewUser: isNew,
+      hasProfile: hasProfile,
+      provider: 'apple',
+    );
   }
 
   // ── 회원가입 완료 (닉네임·프로필 저장) ─────────────────────────────
@@ -156,7 +172,12 @@ class AuthService {
       'followerCount': 0,
       'followingCount': 0,
       'exp': 0,
-      'notificationSettings': {'likes': true, 'comments': true, 'follows': true},
+      'notificationSettings': {
+        'likes': true,
+        'comments': true,
+        'follows': true,
+      },
+      'termsAgreedAt': FieldValue.serverTimestamp(),
       'createdAt': FieldValue.serverTimestamp(),
     }, SetOptions(merge: true));
   }
@@ -176,83 +197,138 @@ class AuthService {
     try {
       final uid = _auth.currentUser?.uid;
       if (uid != null) {
-        await _db.collection('users').doc(uid)
+        await _db
+            .collection('users')
+            .doc(uid)
             .update({'fcmToken': FieldValue.delete()})
             .timeout(const Duration(seconds: 3));
         await FirebaseMessaging.instance.deleteToken();
       }
     } catch (_) {}
-    try { await FlutterNaverLogin.logOut(); } catch (_) {}
-    try { await kakao.UserApi.instance.logout(); } catch (_) {}
+    try {
+      await FlutterNaverLogin.logOut();
+    } catch (_) {}
+    try {
+      await kakao.UserApi.instance.logout();
+    } catch (_) {}
     await _auth.signOut();
   }
 
+  // 탈퇴 후처리(리뷰/글/댓글/대댓글 작성자를 "알 수 없음"으로 표시,
+  // 잉크북/팔로우/알림/스토리지 정리)는 Cloud Functions의 onUserDeleted
+  // 트리거가 Admin 권한으로 서버에서 처리한다 — 콘텐츠 자체는 지우지
+  // 않는다. 클라이언트가 먼저 Firestore 데이터를 지우고 마지막에 계정을
+  // 삭제하면, 계정 삭제가 (requires-recent-login 등으로) 실패했을 때
+  // "로그인은 되는데 데이터는 사라진" 유령 계정 상태가 생길 수 있어
+  // 클라이언트는 재인증 후 계정 삭제만 성공시키는 방식으로 바꿨다.
   Future<void> deleteAccount() async {
     final user = _auth.currentUser;
     if (user == null) return;
     final uid = user.uid;
 
-    try { await FlutterNaverLogin.logOut(); } catch (_) {}
-    try { await kakao.UserApi.instance.unlink(); } catch (_) {}
+    final doc = await _db.collection('users').doc(uid).get();
+    final loginProvider = (doc.data()?['loginProvider'] as String?) ?? '';
+    await _reauthenticate(loginProvider);
 
-    // inkBooks 서브컬렉션 및 각 book의 inkChart 삭제
     try {
-      final booksSnap = await _db
-          .collection('users').doc(uid).collection('inkBooks').get();
-      for (final book in booksSnap.docs) {
-        final chartSnap = await book.reference.collection('inkChart').get();
-        for (final chart in chartSnap.docs) {
-          await chart.reference.delete();
-        }
-        await book.reference.delete();
-      }
+      await FlutterNaverLogin.logOut();
+    } catch (_) {}
+    try {
+      await kakao.UserApi.instance.unlink();
     } catch (_) {}
 
-    // users/{uid}/inkChart 서브컬렉션 삭제
-    try {
-      final inkChartSnap = await _db
-          .collection('users').doc(uid).collection('inkChart').get();
-      for (final doc in inkChartSnap.docs) {
-        await doc.reference.delete();
-      }
-    } catch (_) {}
-
-    // follows 루트 컬렉션에서 해당 유저 관련 문서 삭제
-    try {
-      final followingSnap = await _db
-          .collection('follows').where('followerId', isEqualTo: uid).get();
-      for (final doc in followingSnap.docs) {
-        await doc.reference.delete();
-      }
-      final followerSnap = await _db
-          .collection('follows').where('followeeId', isEqualTo: uid).get();
-      for (final doc in followerSnap.docs) {
-        await doc.reference.delete();
-      }
-    } catch (_) {}
-
-    // Storage 삭제
-    final storage = StorageService();
-    await storage.deleteFolder('profiles/$uid');
-    await storage.deleteFolder('inkChart/$uid');
-
-    // users 문서 및 Firebase Auth 계정 삭제
-    await _db.collection('users').doc(uid).delete();
     await user.delete();
+  }
+
+  // ── 탈퇴 전 재인증 ───────────────────────────────────────────────
+  Future<void> _reauthenticate(String provider) async {
+    final user = _auth.currentUser;
+    if (user == null) return;
+
+    switch (provider) {
+      case 'kakao':
+        kakao.OAuthToken token;
+        if (await kakao.isKakaoTalkInstalled()) {
+          token = await kakao.UserApi.instance.loginWithKakaoTalk();
+        } else {
+          token = await kakao.UserApi.instance.loginWithKakaoAccount();
+        }
+        debugPrint('[Reauth] 카카오 토큰 갱신: ${token.accessToken}');
+        final kakaoUser = await kakao.UserApi.instance.me();
+        final id = kakaoUser.id.toString();
+        await user.reauthenticateWithCredential(
+          EmailAuthProvider.credential(
+            email: 'kakao_$id@nibpen.login',
+            password: _hash(id),
+          ),
+        );
+        break;
+
+      case 'naver':
+        try {
+          await FlutterNaverLogin.logOut();
+        } catch (_) {}
+        final result = await FlutterNaverLogin.logIn().timeout(
+          const Duration(seconds: 20),
+          onTimeout: () => throw Exception('네이버 재인증 시간 초과'),
+        );
+        if (result.status != NaverLoginStatus.loggedIn) {
+          throw Exception('네이버 재인증 실패: ${result.errorMessage}');
+        }
+        final account = result.account;
+        final id = account?.id ?? '';
+        final naverEmail = account?.email ?? '';
+        final email = naverEmail.isNotEmpty
+            ? naverEmail
+            : 'naver_$id@nibpen.login';
+        await user.reauthenticateWithCredential(
+          EmailAuthProvider.credential(email: email, password: _hash(id)),
+        );
+        break;
+
+      case 'apple':
+        final appleCredential = await SignInWithApple.getAppleIDCredential(
+          scopes: [
+            AppleIDAuthorizationScopes.email,
+            AppleIDAuthorizationScopes.fullName,
+          ],
+        );
+        await user.reauthenticateWithCredential(
+          OAuthProvider('apple.com').credential(
+            idToken: appleCredential.identityToken,
+            accessToken: appleCredential.authorizationCode,
+          ),
+        );
+        break;
+
+      default:
+        // loginProvider를 알 수 없으면(예: 유령 계정) 재인증을 생략하고
+        // 기존 세션으로 진행 — 실패하면 user.delete()에서 자연스럽게 에러가 난다.
+        break;
+    }
   }
 
   // ── Private helpers ───────────────────────────────────────────────
   String _hash(String id) =>
       sha256.convert(utf8.encode(id + _kAuthSalt)).toString().substring(0, 20);
 
-  Future<UserCredential> _firebaseEmailAuth(String email, String password) async {
+  Future<UserCredential> _firebaseEmailAuth(
+    String email,
+    String password,
+  ) async {
     try {
-      return await _auth.signInWithEmailAndPassword(email: email, password: password);
+      return await _auth.signInWithEmailAndPassword(
+        email: email,
+        password: password,
+      );
     } on FirebaseAuthException catch (e) {
       if (e.code == 'user-not-found' ||
           e.code == 'invalid-credential' ||
           e.code == 'wrong-password') {
-        return await _auth.createUserWithEmailAndPassword(email: email, password: password);
+        return await _auth.createUserWithEmailAndPassword(
+          email: email,
+          password: password,
+        );
       }
       rethrow;
     }
@@ -260,12 +336,16 @@ class AuthService {
 
   Future<void> _initUserDoc(String uid, String provider, String email) async {
     try {
-      await _db.collection('users').doc(uid).set({
-        'uid': uid,
-        'email': email,
-        'loginProvider': provider,
-        'createdAt': FieldValue.serverTimestamp(),
-      }, SetOptions(merge: true)).timeout(const Duration(seconds: 5));
+      await _db
+          .collection('users')
+          .doc(uid)
+          .set({
+            'uid': uid,
+            'email': email,
+            'loginProvider': provider,
+            'createdAt': FieldValue.serverTimestamp(),
+          }, SetOptions(merge: true))
+          .timeout(const Duration(seconds: 5));
     } catch (e) {
       debugPrint('[Auth] Initial user doc failed: $e');
     }

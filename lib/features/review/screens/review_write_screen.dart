@@ -11,6 +11,8 @@ import '../../../shared/widgets/archive/add_product_bottom_sheet.dart';
 // import '../../../shared/widgets/common/star_rating.dart'; // 별점 시스템 비활성화
 import '../../../shared/widgets/center_toast.dart';
 import '../../../shared/widgets/confirm_discard_dialog.dart';
+import '../../../shared/widgets/ink_drop_circle.dart';
+import '../../../data/models/ink_model.dart';
 import '../../../data/models/review_model.dart';
 
 class ReviewWriteScreen extends ConsumerStatefulWidget {
@@ -636,6 +638,31 @@ class _ProductSearchSheetState extends ConsumerState<_ProductSearchSheet> {
                     itemCount: _results.length,
                     itemBuilder: (_, i) {
                       final item = _results[i];
+                      if (item is InkModel) {
+                        return ListTile(
+                          contentPadding: const EdgeInsets.symmetric(
+                            horizontal: 16,
+                            vertical: 4,
+                          ),
+                          leading: InkDropCircle(
+                            color: item.inkColor,
+                            size: 40,
+                          ),
+                          title: Text(
+                            item.name,
+                            style: const TextStyle(
+                              fontWeight: FontWeight.w600,
+                              fontSize: 14,
+                            ),
+                          ),
+                          subtitle: Text(
+                            item.brand,
+                            style: AppTextStyles.bodySmall,
+                          ),
+                          onTap: () =>
+                              widget.onSelected(item.id, item.displayName),
+                        );
+                      }
                       return ListTile(
                         title: Text(item.displayName),
                         onTap: () =>
