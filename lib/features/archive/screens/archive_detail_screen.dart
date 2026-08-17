@@ -767,16 +767,31 @@ class _ReportSheetState extends ConsumerState<_ReportSheet> {
 
     setState(() => _isSubmitting = true);
     try {
-      await ref
-          .read(archiveRepoProvider)
-          .reportProduct(
-            targetType: widget.type,
-            targetId: widget.productId,
-            targetName: widget.targetName,
-            reporterId: uid,
-            reason: _selectedReason!,
-            detail: _detailCtrl.text.trim(),
+      final repo = ref.read(archiveRepoProvider);
+      final alreadyReported = await repo.hasReportedProduct(
+        targetType: widget.type,
+        targetId: widget.productId,
+        reporterId: uid,
+      );
+      if (alreadyReported) {
+        if (mounted) {
+          Navigator.pop(context);
+          showCenterToast(
+            context,
+            message: '이미 신고한 제품이에요.',
+            icon: Icons.info_outline,
           );
+        }
+        return;
+      }
+      await repo.reportProduct(
+        targetType: widget.type,
+        targetId: widget.productId,
+        targetName: widget.targetName,
+        reporterId: uid,
+        reason: _selectedReason!,
+        detail: _detailCtrl.text.trim(),
+      );
       if (mounted) {
         Navigator.pop(context);
         showCenterToast(

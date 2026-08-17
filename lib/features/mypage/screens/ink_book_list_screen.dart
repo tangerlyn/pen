@@ -417,7 +417,18 @@ class _BookOptionsSheetState extends ConsumerState<_BookOptionsSheet> {
             ),
           ),
           const SizedBox(height: 16),
+          // _isEditing 전환 시 이 위치의 위젯 타입이 통째로 바뀌는데(ListTile ↔
+          // TextField/Row), 서로 다른 branch에 고유 Key를 주지 않으면 Flutter가
+          // 이전 위젯의 semantics 노드를 재사용하려다 parentData가 어긋나서
+          // "!semantics.parentDataDirty" 크래시가 난다 (archive_screen.dart의
+          // CustomScrollView 고정 패턴과 동일한 종류의 이슈). Column에 각각
+          // 다른 Key를 줘서 완전히 새 서브트리로 교체되게 한다.
           if (_isEditing) ...[
+            Column(
+              key: const ValueKey('book_options_editing'),
+              crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisSize: MainAxisSize.min,
+              children: [
             TextField(
               controller: _nameCtrl,
               autofocus: true,
@@ -472,18 +483,32 @@ class _BookOptionsSheetState extends ConsumerState<_BookOptionsSheet> {
                 ),
               ],
             ),
-          ] else ...[
-            ListTile(
-              contentPadding: EdgeInsets.zero,
-              leading: const Icon(Icons.edit_outlined),
-              title: const Text('이름 변경'),
-              onTap: () => setState(() => _isEditing = true),
+              ],
             ),
-            ListTile(
-              contentPadding: EdgeInsets.zero,
-              leading: const Icon(Icons.delete_outline, color: AppColors.error),
-              title: const Text('삭제', style: TextStyle(color: AppColors.error)),
-              onTap: _delete,
+          ] else ...[
+            Column(
+              key: const ValueKey('book_options_default'),
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                ListTile(
+                  contentPadding: EdgeInsets.zero,
+                  leading: const Icon(Icons.edit_outlined),
+                  title: const Text('이름 변경'),
+                  onTap: () => setState(() => _isEditing = true),
+                ),
+                ListTile(
+                  contentPadding: EdgeInsets.zero,
+                  leading: const Icon(
+                    Icons.delete_outline,
+                    color: AppColors.error,
+                  ),
+                  title: const Text(
+                    '삭제',
+                    style: TextStyle(color: AppColors.error),
+                  ),
+                  onTap: _delete,
+                ),
+              ],
             ),
           ],
         ],

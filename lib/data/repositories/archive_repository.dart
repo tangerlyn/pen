@@ -165,34 +165,48 @@ class ArchiveRepository {
   }
 
   // ── 잉크 ───────────────────────────────────────────────────
-  Future<List<InkModel>> getInks({
+  Future<({List<InkModel> items, DocumentSnapshot? lastDoc, bool hasMore})>
+  getInks({
     List<String>? brands,
     List<String>? colorFamilies,
     List<String>? inkTypes,
     String? capacityRange,
     String? search,
-    Object? lastDoc,
-    int limit = 200,
+    DocumentSnapshot? lastDoc,
+    int pageSize = 40,
   }) async {
     Query query = _inks;
     if (inkTypes != null && inkTypes.isNotEmpty) {
       query = query.where('inkType', whereIn: inkTypes);
     }
     // search/brands/colorFamilies는 Firestore where절이 아니라 아래에서
-    // 클라이언트 쪽으로 필터링한다 — 그 필터들이 있는데 여기서 먼저
-    // limit을 걸면, 컬렉션 앞쪽 일부 문서만 가져온 뒤 그 안에서만 걸러서
-    // 검색어와 일치하는 잉크가 있어도 limit 밖에 있으면 못 찾는 버그가
-    // 생긴다. 그런 필터가 없을 때만(=단순 목록 조회) 미리 limit을 건다.
+    // 클라이언트 쪽으로 필터링한다 — 그 필터들이 있으면 컬렉션 전체를 가져와야
+    // 검색어와 일치하는 잉크가 뒤쪽에 있어도 놓치지 않는다. 그런 필터가 없을
+    // 때만(=단순 목록 조회) 커서 기반 페이지네이션을 적용한다 — 정렬은
+    // ArchiveNotifier가 누적된 전체 목록을 매번 다시 정렬하는 방식이라(클라이언트
+    // 정렬), 여기서는 안정적인 순회 순서만 보장하면 되므로 문서 ID로 정렬한다.
     final hasClientFilter =
         (search != null && search.isNotEmpty) ||
         (brands != null && brands.isNotEmpty) ||
         (colorFamilies != null && colorFamilies.isNotEmpty);
     if (!hasClientFilter) {
-      query = query.limit(limit);
+      query = query.orderBy(FieldPath.documentId).limit(pageSize + 1);
+      if (lastDoc != null) {
+        query = query.startAfterDocument(lastDoc);
+      }
     }
 
     final snapshot = await query.get();
-    var results = snapshot.docs
+    var docs = snapshot.docs;
+    DocumentSnapshot? nextCursor;
+    var hasMore = false;
+    if (!hasClientFilter) {
+      hasMore = docs.length > pageSize;
+      if (hasMore) docs = docs.sublist(0, pageSize);
+      nextCursor = docs.isNotEmpty ? docs.last : null;
+    }
+
+    var results = docs
         .map(
           (doc) => InkModel.fromMap(doc.data() as Map<String, dynamic>, doc.id),
         )
@@ -228,7 +242,7 @@ class ArchiveRepository {
       }),
     );
 
-    return results;
+    return (items: results, lastDoc: nextCursor, hasMore: hasMore);
   }
 
   Future<InkModel?> getInk(String inkId) async {
@@ -293,14 +307,15 @@ class ArchiveRepository {
   }
 
   // ── 만년필 ──────────────────────────────────────────────────
-  Future<List<PenModel>> getPens({
+  Future<({List<PenModel> items, DocumentSnapshot? lastDoc, bool hasMore})>
+  getPens({
     List<String>? brands,
     String? nibSize,
     String? nibMaterial,
     String? fillType,
     String? search,
-    Object? lastDoc,
-    int limit = 500,
+    DocumentSnapshot? lastDoc,
+    int pageSize = 40,
   }) async {
     Query query = _pens;
     if (nibMaterial != null)
@@ -309,17 +324,29 @@ class ArchiveRepository {
     if (nibSize != null)
       query = query.where('nibSizes', arrayContains: nibSize);
 
-    // search/brands는 클라이언트 쪽 필터라, 있을 때 미리 limit을 걸면
-    // 검색어와 일치하는 만년필이 있어도 앞쪽 일부 문서 밖에 있으면 못
-    // 찾는 버그가 생긴다 (getInks와 동일한 이유).
+    // search/brands는 클라이언트 쪽 필터라, 있으면 컬렉션 전체를 가져와야
+    // 검색어와 일치하는 만년필을 놓치지 않는다 (getInks와 동일한 이유).
+    // 필터가 없을 때만 커서 기반 페이지네이션 적용.
     final hasClientFilter =
         (search != null && search.isNotEmpty) ||
         (brands != null && brands.isNotEmpty);
     if (!hasClientFilter) {
-      query = query.limit(limit);
+      query = query.orderBy(FieldPath.documentId).limit(pageSize + 1);
+      if (lastDoc != null) {
+        query = query.startAfterDocument(lastDoc);
+      }
     }
     final snapshot = await query.get();
-    var results = snapshot.docs
+    var docs = snapshot.docs;
+    DocumentSnapshot? nextCursor;
+    var hasMore = false;
+    if (!hasClientFilter) {
+      hasMore = docs.length > pageSize;
+      if (hasMore) docs = docs.sublist(0, pageSize);
+      nextCursor = docs.isNotEmpty ? docs.last : null;
+    }
+
+    var results = docs
         .map(
           (doc) => PenModel.fromMap(doc.data() as Map<String, dynamic>, doc.id),
         )
@@ -348,7 +375,7 @@ class ArchiveRepository {
       }),
     );
 
-    return results;
+    return (items: results, lastDoc: nextCursor, hasMore: hasMore);
   }
 
   Future<PenModel?> getPen(String penId) async {
@@ -441,6 +468,19 @@ class ArchiveRepository {
   }
 
   // ── 제품 신고 ────────────────────────────────────────────────────
+  Future<bool> hasReportedProduct({
+    required String targetType,
+    required String targetId,
+    required String reporterId,
+  }) async {
+    final reportId = '${targetType}_${targetId}_$reporterId';
+    final doc = await _firestore
+        .collection(AppConstants.reportsCol)
+        .doc(reportId)
+        .get();
+    return doc.exists;
+  }
+
   Future<void> reportProduct({
     required String targetType,
     required String targetId,
@@ -449,7 +489,10 @@ class ArchiveRepository {
     required String reason,
     String detail = '',
   }) async {
-    await _firestore.collection(AppConstants.reportsCol).add({
+    // 문서 ID를 결정적으로 고정 — user_repository.report()와 동일한 이유로
+    // 같은 유저의 반복 신고가 새 문서로 쌓이지 않게 덮어쓴다.
+    final reportId = '${targetType}_${targetId}_$reporterId';
+    await _firestore.collection(AppConstants.reportsCol).doc(reportId).set({
       'targetType': targetType,
       'targetId': targetId,
       'targetName': targetName,
@@ -457,7 +500,7 @@ class ArchiveRepository {
       'reason': reason,
       'detail': detail,
       'createdAt': FieldValue.serverTimestamp(),
-    });
+    }, SetOptions(merge: true));
   }
 
   // ── 궁합 추천 ────────────────────────────────────────────────────

@@ -27,6 +27,7 @@ class MypageScreen extends ConsumerStatefulWidget {
 class _MypageScreenState extends ConsumerState<MypageScreen>
     with SingleTickerProviderStateMixin {
   late final TabController _tabController;
+  final _scrollKey = GlobalKey<NestedScrollViewState>();
 
   @override
   void initState() {
@@ -40,9 +41,35 @@ class _MypageScreenState extends ConsumerState<MypageScreen>
     super.dispose();
   }
 
+  void _scrollToTop() {
+    final ns = _scrollKey.currentState;
+    if (ns == null) return;
+    if (ns.innerController.hasClients) {
+      ns.innerController.animateTo(
+        0,
+        duration: const Duration(milliseconds: 300),
+        curve: Curves.easeOut,
+      );
+    }
+    if (ns.outerController.hasClients) {
+      ns.outerController.animateTo(
+        0,
+        duration: const Duration(milliseconds: 300),
+        curve: Curves.easeOut,
+      );
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final user = ref.watch(currentUserProvider).value;
+
+    ref.listen<int?>(scrollToTopTabProvider, (_, next) {
+      if (next == 4) {
+        _scrollToTop();
+        ref.read(scrollToTopTabProvider.notifier).state = null;
+      }
+    });
 
     return Scaffold(
       appBar: AppBar(
@@ -55,6 +82,7 @@ class _MypageScreenState extends ConsumerState<MypageScreen>
         ],
       ),
       body: NestedScrollView(
+        key: _scrollKey,
         headerSliverBuilder: (context, _) => [
           SliverToBoxAdapter(
             child: Padding(

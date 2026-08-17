@@ -126,3 +126,6 @@ flutter run
 | [search.md](docs/search.md) | 통합 검색 |
 | [chat.md](docs/chat.md) | 1:1 채팅 |
 | [qa_checklist.md](docs/qa_checklist.md) | 기능 QA 체크리스트 (버튼별 기대 동작) |
+| [feature_ideas.md](docs/feature_ideas.md) | 검토 중인 기능 아이디어 + 알려진 이슈/기술 부채 |
+
+> [privacy_policy.md](docs/privacy_policy.md)는 앱 내 개인정보처리방침 화면과 동일한 내용을 마크다운으로 옮겨둔 것 — 스토어 심사용 공개 URL(노션 등) 게시용.

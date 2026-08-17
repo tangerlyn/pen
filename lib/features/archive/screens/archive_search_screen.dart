@@ -105,12 +105,12 @@ class _ArchiveSearchScreenState extends ConsumerState<ArchiveSearchScreen>
     });
     try {
       final repo = ref.read(archiveRepoProvider);
-      final inks = await repo.getInks(search: query, limit: 100);
-      final pens = await repo.getPens(search: query, limit: 100);
+      final inks = await repo.getInks(search: query);
+      final pens = await repo.getPens(search: query);
       if (mounted && gen == _searchGen) {
         setState(() {
-          _inks = inks;
-          _pens = pens;
+          _inks = inks.items;
+          _pens = pens.items;
           _isLoading = false;
         });
       }

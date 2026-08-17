@@ -376,6 +376,88 @@ exports.onInquiryAnswered = onDocumentUpdated(
   }
 );
 
+// ── 신고 처리 ───────────────────────────────────────────────────────────────
+// 신고가 쌓이기만 하고 아무도 조치하지 않던 문제 대응. 리뷰/게시글처럼
+// 삭제 방법이 명확한 콘텐츠는 신고 5건(서로 다른 신고자 — reports 문서 ID가
+// `targetType_targetId_reporterId`로 고정돼있어 한 사람의 중복 신고는 카운트 안 됨)
+// 누적 시 자동 삭제하고, 관리자(개발자 본인) 계정으로 평소 알림과 동일한
+// FCM 푸시 + 인앱 알림을 보내 무슨 일이 있었는지 알 수 있게 한다.
+// 댓글/답글/제품(잉크·만년필) 신고는 신고 문서만으로 부모 문서 경로를 알 수
+// 없거나(댓글·답글) 삭제 리스크가 커서(카탈로그 제품) 자동 삭제 대상에서
+// 제외 — 임계값 도달 시 알림만 보내 수동 검토를 유도한다.
+const REPORT_AUTO_DELETE_THRESHOLD = 5;
+// TODO: 본인의 Firebase Auth UID로 교체할 것 (Firebase 콘솔 → Authentication
+// 에서 확인, 또는 Firestore users 컬렉션에서 본인 문서 ID 확인). 채우기
+// 전까지는 자동 삭제는 정상 동작하지만 관리자 알림은 전송되지 않는다.
+const ADMIN_UID = "";
+
+const REPORT_DELETABLE_COLLECTIONS = {
+  review: "reviews",
+  post: "posts",
+};
+
+exports.onReportCreated = onDocumentCreated(
+  "reports/{reportId}",
+  async (event) => {
+    const report = event.data?.data();
+    if (!report) return;
+    const { targetType, targetId } = report;
+    if (!targetType || !targetId) return;
+
+    const countSnap = await db
+      .collection("reports")
+      .where("targetType", "==", targetType)
+      .where("targetId", "==", targetId)
+      .count()
+      .get();
+    const reportCount = countSnap.data().count;
+
+    let action = "watching";
+    const targetCollection = REPORT_DELETABLE_COLLECTIONS[targetType];
+    if (reportCount >= REPORT_AUTO_DELETE_THRESHOLD && targetCollection) {
+      const targetRef = db.collection(targetCollection).doc(targetId);
+      const targetSnap = await targetRef.get();
+      if (targetSnap.exists) {
+        // 댓글/좋아요/스크랩 서브컬렉션까지 정리 — 클라이언트의 단순
+        // delete()와 달리 관리자 권한 자동 삭제이므로 고아 데이터 없이
+        // 통째로 지운다 (onUserDeleted에서 쓰는 것과 동일한 방식).
+        await db.recursiveDelete(targetRef);
+        action = "deleted";
+      } else {
+        action = "already_deleted";
+      }
+    }
+
+    // 임계값을 이번 신고로 막 넘긴 시점에만 1회 알림 (그 전후 신고마다
+    // 매번 알리면 스팸이 되므로, 정확히 같아지는 순간만 잡는다)
+    if (reportCount === REPORT_AUTO_DELETE_THRESHOLD && ADMIN_UID) {
+      const msg =
+        action === "deleted"
+          ? `신고 ${reportCount}건이 누적돼 ${targetType} 콘텐츠를 자동 삭제했어요 (ID: ${targetId})`
+          : `${targetType}(ID: ${targetId})에 신고가 ${reportCount}건 누적됐어요. 확인해주세요.`;
+
+      const { fcmToken } = await getUserFcmData(ADMIN_UID);
+      await Promise.all([
+        sendNotification({
+          token: fcmToken,
+          body: msg,
+          data: { type: "admin_report_alert", targetType, targetId, action },
+        }),
+        saveNotification({
+          targetUid: ADMIN_UID,
+          type: "admin_report_alert",
+          targetId,
+          targetType,
+          fromUid: "system",
+          fromNickname: "펜귄",
+          message: msg,
+          docId: `report_alert_${targetType}_${targetId}`,
+        }),
+      ]);
+    }
+  }
+);
+
 // 계정 탈퇴 후 처리 — 클라이언트는 auth.user().delete()만 성공시키면 되고,
 // 나머지는 Admin 권한으로 서버에서 처리한다. 리뷰/커뮤니티 글/댓글/대댓글은
 // 지우지 않고 작성자 닉네임만 "알 수 없음"으로 바꿔서 콘텐츠는 그대로

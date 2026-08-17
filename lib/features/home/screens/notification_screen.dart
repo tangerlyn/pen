@@ -126,6 +126,7 @@ class _NotificationTile extends StatelessWidget {
       'comment' => Icons.chat_bubble,
       'follow' => Icons.person_add,
       'inquiry_answered' => Icons.mail,
+      'admin_report_alert' => Icons.shield_outlined,
       _ => Icons.notifications,
     };
   }
@@ -136,6 +137,7 @@ class _NotificationTile extends StatelessWidget {
       'comment' => AppColors.primary,
       'follow' => const Color(0xFF43A047),
       'inquiry_answered' => const Color(0xFFFB8C00),
+      'admin_report_alert' => AppColors.error,
       _ => AppColors.textTertiary,
     };
   }

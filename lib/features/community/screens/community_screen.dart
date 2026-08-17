@@ -58,6 +58,13 @@ class _CommunityScreenState extends ConsumerState<CommunityScreen> {
     // Popular section is hidden when a category filter is active
     final hasPopular = popular.isNotEmpty && feedState.selectedCategory == null;
 
+    ref.listen<int?>(scrollToTopTabProvider, (_, next) {
+      if (next == 2) {
+        _scrollToTop();
+        ref.read(scrollToTopTabProvider.notifier).state = null;
+      }
+    });
+
     return Scaffold(
       backgroundColor: AppColors.background,
       body: Stack(

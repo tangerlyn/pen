@@ -65,4 +65,5 @@
 
 | 항목 | 설명 | 난이도 | 상태 |
 |---|---|---|---|
-| 아카이브 목록 limit·페이지네이션 | 검색은 전체를 뒤지도록 고쳤지만(2026-08), 검색 없이 그냥 브라우징할 땐 여전히 `getInks`/`getPens`에 limit(잉크 200 / 펜 500)이 걸려있고 무한 스크롤(페이지네이션)은 구현 안 됨. `lastDoc` 파라미터는 있는데 실제로 안 쓰임. 지금은 등록된 개수가 limit보다 적어서 안 드러나지만, 카탈로그가 그 이상으로 늘면 뒤쪽 항목이 조용히 안 보이게 됨. limit을 넉넉히 올리거나 진짜 페이지네이션 구현 필요 | 보통 | - |
+| ~~아카이브 목록 limit·페이지네이션~~ | ~~검색 없이 브라우징할 때 `getInks`/`getPens`에 하드 limit(잉크 200/펜 500)이 걸려있고 무한 스크롤 미구현~~ → 2026-08 해결: 무필터 브라우징에 문서 ID 커서 기반 실제 페이지네이션 적용(`archive_repository.dart` `getInks`/`getPens`, pageSize 40). 스크롤 하단 300px 이내 도달 시 `archiveProvider.loadMore()` 자동 호출(`archive_screen.dart`). 검색/브랜드/색상 필터가 걸린 경우는 기존처럼 전체를 한 번에 가져옴(정확도 우선, 기존 설계 유지) | 보통 | ✅ |
+| ~~신고 처리 파이프라인 부재~~ | ~~`reports` 컬렉션에 쌓이기만 하고 아무도 조치하지 않음~~ → 2026-08 해결: `functions/index.js`의 `onReportCreated`가 신고 문서 생성 시마다 같은 대상(targetType+targetId) 신고 수를 세서, 리뷰/게시글은 5건 누적 시 `db.recursiveDelete()`로 자동 삭제(댓글/좋아요/스크랩 서브컬렉션까지 정리). 댓글·답글·잉크·만년필 신고는 부모 문서 경로를 알 수 없거나(댓글/답글) 삭제 리스크가 커서(카탈로그 제품) 자동 삭제 대상에서 제외 — 5건 도달 시 알림만 발송. 클라이언트 쪽 신고 문서 ID도 `targetType_targetId_reporterId`로 고정해(`user_repository.dart`/`archive_repository.dart`) 한 사람이 같은 대상을 반복 신고해 임계값을 혼자 채우는 걸 방지. **관리자(개발자 본인) 알림을 받으려면 `functions/index.js`의 `ADMIN_UID` 상수를 본인 Firebase UID로 채워야 함 — 비워두면 자동 삭제는 동작하지만 알림은 안 감** | 보통 | ✅ (ADMIN_UID 설정 필요) |

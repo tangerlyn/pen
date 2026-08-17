@@ -19,6 +19,7 @@ class NotebookPage extends StatelessWidget {
     required this.pageEntries,
     required this.pageStyle,
     required this.itemBuilder,
+    this.showEmptySlotPlaceholder = true,
   });
 
   /// 이 페이지에 들어갈 항목(최대 [itemsPerPage]개). 부족한 칸은 빈 슬롯으로 채워진다.
@@ -30,6 +31,10 @@ class NotebookPage extends StatelessWidget {
     int indexInPage,
   )
   itemBuilder;
+
+  /// 빈 칸에 점선 원을 그릴지 여부. 앨범 저장용 캡처 시 false로 넘기면
+  /// 채워진 칸만 보이고 나머지는 빈 종이처럼 아무 표시 없이 비워둔다.
+  final bool showEmptySlotPlaceholder;
 
   static const itemsPerPage = 9;
 
@@ -75,7 +80,9 @@ class NotebookPage extends StatelessWidget {
                     if (i < pageEntries.length) {
                       return itemBuilder(ctx, pageEntries[i], i);
                     }
-                    return const _EmptySlot();
+                    return showEmptySlotPlaceholder
+                        ? const _EmptySlot()
+                        : const SizedBox.shrink();
                   },
                 ),
               ),

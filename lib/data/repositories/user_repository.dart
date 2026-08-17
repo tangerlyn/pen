@@ -147,19 +147,35 @@ class UserRepository {
     return items.where((item) => !blocked.contains(authorId(item))).toList();
   }
 
+  // 신고 문서 ID가 결정적(targetType_targetId_reporterId)이라, 이미 있는지만
+  // 확인하면 "이미 신고했는지" 바로 알 수 있다.
+  Future<bool> hasReported({
+    required String targetType,
+    required String targetId,
+    required String reporterId,
+  }) async {
+    final reportId = '${targetType}_${targetId}_$reporterId';
+    final doc = await _db.collection(AppConstants.reportsCol).doc(reportId).get();
+    return doc.exists;
+  }
+
   Future<void> report({
     required String targetType,
     required String targetId,
     required String reporterId,
     required String reason,
   }) async {
-    await _db.collection(AppConstants.reportsCol).add({
+    // 문서 ID를 결정적으로 고정 — 같은 유저가 같은 대상을 여러 번 신고해도
+    // 새 문서가 쌓이지 않고 덮어써서, 자동 조치 임계값(서버 onReportCreated)이
+    // 한 사람의 반복 신고로 인위적으로 채워지는 걸 막는다.
+    final reportId = '${targetType}_${targetId}_$reporterId';
+    await _db.collection(AppConstants.reportsCol).doc(reportId).set({
       'targetType': targetType,
       'targetId': targetId,
       'reporterId': reporterId,
       'reason': reason,
       'createdAt': FieldValue.serverTimestamp(),
-    });
+    }, SetOptions(merge: true));
   }
 
   // ── 잉크 차트 (스와치 다이어리) ────────────────────────────────────

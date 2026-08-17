@@ -8,6 +8,7 @@ import '../../../shared/widgets/review/review_feed_card.dart';
 import '../../../shared/widgets/review/review_list_tile.dart';
 import '../../home/widgets/feed_filter_bar.dart';
 import '../../../shared/widgets/common/skeletons.dart';
+import '../../../shared/providers/providers.dart';
 
 class ReviewFeedScreen extends ConsumerStatefulWidget {
   const ReviewFeedScreen({super.key, this.showAppBar = true});
@@ -65,6 +66,13 @@ class _ReviewFeedScreenState extends ConsumerState<ReviewFeedScreen> {
   @override
   Widget build(BuildContext context) {
     final state = ref.watch(feedProvider);
+
+    ref.listen<int?>(scrollToTopTabProvider, (_, next) {
+      if (next == 1) {
+        _scrollToTop();
+        ref.read(scrollToTopTabProvider.notifier).state = null;
+      }
+    });
 
     return Scaffold(
       backgroundColor: AppColors.background,

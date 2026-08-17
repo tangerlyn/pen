@@ -161,7 +161,7 @@ class _BottomNav extends StatelessWidget {
   }
 }
 
-class _NavItem extends StatelessWidget {
+class _NavItem extends ConsumerWidget {
   const _NavItem({
     required this.icon,
     required this.activeIcon,
@@ -185,7 +185,7 @@ class _NavItem extends StatelessWidget {
   final StatefulNavigationShell shell;
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final isActive = shell.currentIndex == index;
     return Expanded(
       child: TapScale(
@@ -194,6 +194,10 @@ class _NavItem extends StatelessWidget {
             // 같은 탭 재탭: context.go()로 스택 강제 리셋
             // goBranch(initialLocation: true)는 현재 브랜치에서 no-op 처리되는 버그가 있음
             context.go(_rootPaths[index]);
+            // 스크롤이 이미 맨 위여도(=탭 스택 리셋만 필요한 경우) 계속 같은 값을
+            // 넣으면 ref.listen이 이전값과 같아 감지를 못하므로, 화면 쪽에서
+            // 소비 후 null로 되돌리는 패턴과 짝을 맞춰 매번 새 신호로 취급한다.
+            ref.read(scrollToTopTabProvider.notifier).state = index;
           } else {
             shell.goBranch(index);
           }

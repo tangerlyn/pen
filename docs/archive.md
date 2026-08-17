@@ -136,7 +136,7 @@
 
 | Provider | 종류 | 역할 |
 |---|---|---|
-| `archiveProvider` | StateNotifierProvider | 탭·필터·목록 상태 |
+| `archiveProvider` | StateNotifierProvider | 탭·필터·목록·페이지네이션 상태 (`loadMore()`로 다음 페이지 이어붙임, 검색/필터가 걸려있을 땐 이미 전체를 가져온 상태라 무동작) |
 | `archiveDetailProvider` | FutureProvider.family | 제품 상세 + 리뷰 통계 |
 | `wishlistProvider` | StreamProvider.family | 위시리스트 실시간 목록 |
 | `wishlistStatusProvider` | StreamProvider.family | 특정 제품 위시리스트 여부 |

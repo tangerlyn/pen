@@ -22,14 +22,22 @@ final connectivityProvider = StreamProvider<bool>((ref) {
 
 // ── 서비스 ─────────────────────────────────────────────────
 final authServiceProvider = Provider<AuthService>((ref) => AuthService());
-final storageServiceProvider = Provider<StorageService>((ref) => StorageService());
+final storageServiceProvider = Provider<StorageService>(
+  (ref) => StorageService(),
+);
 
 // ── 레포지토리 ──────────────────────────────────────────────
 final userRepoProvider = Provider<UserRepository>((ref) => UserRepository());
-final reviewRepoProvider = Provider<ReviewRepository>((ref) => ReviewRepository());
-final archiveRepoProvider = Provider<ArchiveRepository>((ref) => ArchiveRepository(ref.read(reviewRepoProvider)));
+final reviewRepoProvider = Provider<ReviewRepository>(
+  (ref) => ReviewRepository(),
+);
+final archiveRepoProvider = Provider<ArchiveRepository>(
+  (ref) => ArchiveRepository(ref.read(reviewRepoProvider)),
+);
 final chatRepoProvider = Provider<ChatRepository>((ref) => ChatRepository());
-final inquiryRepoProvider = Provider<InquiryRepository>((ref) => InquiryRepository());
+final inquiryRepoProvider = Provider<InquiryRepository>(
+  (ref) => InquiryRepository(),
+);
 
 // ── 현재 유저 ────────────────────────────────────────────��──
 final authUserProvider = StreamProvider<String?>((ref) {
@@ -54,6 +62,10 @@ final levelUpProvider = StateProvider<LevelUpInfo?>((ref) => null);
 /// 알림 탭 시 이동할 경로 — MainShell에서 감지하여 navigate
 final pendingRouteProvider = StateProvider<String?>((ref) => null);
 
+/// 하단 탭을 재탭(이미 선택된 탭을 다시 탭)했을 때 신호로 쓰는 탭 인덱스 —
+/// 각 탭 화면이 자기 인덱스와 일치하면 맨 위로 스크롤한다
+final scrollToTopTabProvider = StateProvider<int?>((ref) => null);
+
 /// FCM 서비스 — 앱 시작 시 initialize() 호출됨
 final fcmServiceProvider = Provider<FcmService>((ref) {
   final service = FcmService(
@@ -65,7 +77,8 @@ final fcmServiceProvider = Provider<FcmService>((ref) {
         FirebaseFirestore.instance
             .collection('users')
             .doc(uid)
-            .update({'fcmToken': token}).catchError((_) {});
+            .update({'fcmToken': token})
+            .catchError((_) {});
       }
     },
   );
@@ -80,4 +93,3 @@ final fcmServiceProvider = Provider<FcmService>((ref) {
 
   return service;
 });
-

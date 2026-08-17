@@ -1,3 +1,4 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter/foundation.dart';
 import '../../../data/models/ink_model.dart';
@@ -80,6 +81,12 @@ class ArchiveState {
     this.penFilter = const PenFilter(),
     this.inkSort = ArchiveSortOption.defaultOrder,
     this.penSort = ArchiveSortOption.defaultOrder,
+    this.inkLastDoc,
+    this.penLastDoc,
+    this.inkHasMore = false,
+    this.penHasMore = false,
+    this.isLoadingMoreInks = false,
+    this.isLoadingMorePens = false,
   });
 
   final int tabIndex;
@@ -93,6 +100,14 @@ class ArchiveState {
   final PenFilter penFilter;
   final ArchiveSortOption inkSort;
   final ArchiveSortOption penSort;
+  // 무필터 브라우징 시 다음 페이지를 이어 불러오기 위한 커서 — 검색/브랜드/
+  // 색상계열 필터가 있을 때는 리포지토리가 전체를 한 번에 가져오므로 null
+  final DocumentSnapshot? inkLastDoc;
+  final DocumentSnapshot? penLastDoc;
+  final bool inkHasMore;
+  final bool penHasMore;
+  final bool isLoadingMoreInks;
+  final bool isLoadingMorePens;
 
   ArchiveState copyWith({
     int? tabIndex,
@@ -106,6 +121,16 @@ class ArchiveState {
     PenFilter? penFilter,
     ArchiveSortOption? inkSort,
     ArchiveSortOption? penSort,
+    // DocumentSnapshot?는 "다음 페이지 없음"을 나타내는 null도 유효한 값이라,
+    // 일반적인 `?? this.field` 패턴으로는 "안 넘김"과 "명시적으로 null로
+    // 리셋"을 구분할 수 없다. _unset 센티널로 "이 파라미터를 아예 안 넘겼을
+    // 때만" 기존 값을 유지하도록 구분한다.
+    Object? inkLastDoc = _unset,
+    Object? penLastDoc = _unset,
+    bool? inkHasMore,
+    bool? penHasMore,
+    bool? isLoadingMoreInks,
+    bool? isLoadingMorePens,
   }) {
     return ArchiveState(
       tabIndex: tabIndex ?? this.tabIndex,
@@ -119,9 +144,21 @@ class ArchiveState {
       penFilter: penFilter ?? this.penFilter,
       inkSort: inkSort ?? this.inkSort,
       penSort: penSort ?? this.penSort,
+      inkLastDoc: identical(inkLastDoc, _unset)
+          ? this.inkLastDoc
+          : inkLastDoc as DocumentSnapshot?,
+      penLastDoc: identical(penLastDoc, _unset)
+          ? this.penLastDoc
+          : penLastDoc as DocumentSnapshot?,
+      inkHasMore: inkHasMore ?? this.inkHasMore,
+      penHasMore: penHasMore ?? this.penHasMore,
+      isLoadingMoreInks: isLoadingMoreInks ?? this.isLoadingMoreInks,
+      isLoadingMorePens: isLoadingMorePens ?? this.isLoadingMorePens,
     );
   }
 }
+
+const _unset = Object();
 
 class ArchiveNotifier extends StateNotifier<ArchiveState> {
   ArchiveNotifier(this._ref) : super(const ArchiveState()) {
@@ -138,27 +175,101 @@ class ArchiveNotifier extends StateNotifier<ArchiveState> {
       final repo = _ref.read(archiveRepoProvider);
       switch (state.tabIndex) {
         case 0:
-          final raw = await repo.getInks(
+          final result = await repo.getInks(
             brands: state.inkFilter.brands.isNotEmpty ? state.inkFilter.brands : null,
             colorFamilies: state.inkFilter.colorFamilies.isNotEmpty ? state.inkFilter.colorFamilies : null,
             inkTypes: state.inkFilter.inkTypes.isNotEmpty ? state.inkFilter.inkTypes : null,
             search: state.search.isNotEmpty ? state.search : null,
           );
-          state = state.copyWith(rawInks: raw, inks: _sortInks(raw, state.inkSort), isLoading: false);
+          state = state.copyWith(
+            rawInks: result.items,
+            inks: _sortInks(result.items, state.inkSort),
+            isLoading: false,
+            inkLastDoc: result.lastDoc,
+            inkHasMore: result.hasMore,
+          );
         case 1:
-          final raw = await repo.getPens(
+          final result = await repo.getPens(
             brands: state.penFilter.brands.isNotEmpty ? state.penFilter.brands : null,
             nibSize: state.penFilter.nibSize,
             nibMaterial: state.penFilter.nibMaterial,
             fillType: state.penFilter.fillType,
             search: state.search.isNotEmpty ? state.search : null,
           );
-          state = state.copyWith(rawPens: raw, pens: _sortPens(raw, state.penSort), isLoading: false);
+          state = state.copyWith(
+            rawPens: result.items,
+            pens: _sortPens(result.items, state.penSort),
+            isLoading: false,
+            penLastDoc: result.lastDoc,
+            penHasMore: result.hasMore,
+          );
       }
     } catch (e, st) {
       debugPrint('ArchiveNotifier._load error: $e');
       debugPrint('$st');
       state = state.copyWith(isLoading: false);
+    }
+  }
+
+  /// 무필터 브라우징 중 스크롤이 끝에 닿으면 다음 페이지를 이어붙인다.
+  /// 검색/브랜드/색상계열 필터가 걸려있을 땐 첫 로드에서 이미 전체를
+  /// 가져온 상태라(hasMore=false) 아무 것도 하지 않는다.
+  Future<void> loadMore() async {
+    final repo = _ref.read(archiveRepoProvider);
+    switch (state.tabIndex) {
+      case 0:
+        if (!state.inkHasMore || state.isLoadingMoreInks || state.isLoading) {
+          return;
+        }
+        state = state.copyWith(isLoadingMoreInks: true);
+        try {
+          final result = await repo.getInks(
+            brands: state.inkFilter.brands.isNotEmpty ? state.inkFilter.brands : null,
+            colorFamilies: state.inkFilter.colorFamilies.isNotEmpty ? state.inkFilter.colorFamilies : null,
+            inkTypes: state.inkFilter.inkTypes.isNotEmpty ? state.inkFilter.inkTypes : null,
+            search: state.search.isNotEmpty ? state.search : null,
+            lastDoc: state.inkLastDoc,
+          );
+          final merged = [...state.rawInks, ...result.items];
+          state = state.copyWith(
+            rawInks: merged,
+            inks: _sortInks(merged, state.inkSort),
+            inkLastDoc: result.lastDoc,
+            inkHasMore: result.hasMore,
+            isLoadingMoreInks: false,
+          );
+        } catch (e, st) {
+          debugPrint('ArchiveNotifier.loadMore(ink) error: $e');
+          debugPrint('$st');
+          state = state.copyWith(isLoadingMoreInks: false);
+        }
+      case 1:
+        if (!state.penHasMore || state.isLoadingMorePens || state.isLoading) {
+          return;
+        }
+        state = state.copyWith(isLoadingMorePens: true);
+        try {
+          final result = await repo.getPens(
+            brands: state.penFilter.brands.isNotEmpty ? state.penFilter.brands : null,
+            nibSize: state.penFilter.nibSize,
+            nibMaterial: state.penFilter.nibMaterial,
+            fillType: state.penFilter.fillType,
+            search: state.search.isNotEmpty ? state.search : null,
+            lastDoc: state.penLastDoc,
+          );
+          final merged = [...state.rawPens, ...result.items];
+          state = state.copyWith(
+            rawPens: merged,
+            pens: _sortPens(merged, state.penSort),
+            penLastDoc: result.lastDoc,
+            penHasMore: result.hasMore,
+            isLoadingMorePens: false,
+          );
+        } catch (e, st) {
+          debugPrint('ArchiveNotifier.loadMore(pen) error: $e');
+          debugPrint('$st');
+          state = state.copyWith(isLoadingMorePens: false);
+        }
     }
   }
 

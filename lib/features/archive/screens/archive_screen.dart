@@ -9,6 +9,7 @@ import '../widgets/pen_list_tile.dart';
 import '../../../shared/widgets/common/skeletons.dart';
 import '../../../shared/widgets/ink_drop_circle.dart';
 import '../../../shared/widgets/tap_scale.dart';
+import '../../../shared/providers/providers.dart';
 
 // 색상 계열 목록 — 이름 → 칩에 보여줄 대표 색상
 const _colorFamilySwatches = {
@@ -87,6 +88,13 @@ class _ArchiveScreenState extends ConsumerState<ArchiveScreen>
   @override
   Widget build(BuildContext context) {
     final state = ref.watch(archiveProvider);
+
+    ref.listen<int?>(scrollToTopTabProvider, (_, next) {
+      if (next == 3) {
+        _scrollToTop();
+        ref.read(scrollToTopTabProvider.notifier).state = null;
+      }
+    });
 
     return Scaffold(
       body: Stack(
@@ -948,7 +956,14 @@ class _InkList extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     // 항상 CustomScrollView를 반환 — 타입 변화로 인한 semantics assertion 방지
-    return CustomScrollView(
+    return NotificationListener<ScrollNotification>(
+      onNotification: (n) {
+        if (n is ScrollEndNotification && n.metrics.extentAfter < 300) {
+          ref.read(archiveProvider.notifier).loadMore();
+        }
+        return false;
+      },
+      child: CustomScrollView(
       key: const PageStorageKey('archive_ink_list'),
       slivers: [
         if (state.isLoading)
@@ -1030,11 +1045,25 @@ class _InkList extends ConsumerWidget {
               ),
             ),
           ),
+          if (state.isLoadingMoreInks)
+            const SliverToBoxAdapter(
+              child: Padding(
+                padding: EdgeInsets.symmetric(vertical: 20),
+                child: Center(
+                  child: SizedBox(
+                    width: 22,
+                    height: 22,
+                    child: CircularProgressIndicator(strokeWidth: 2.5),
+                  ),
+                ),
+              ),
+            ),
           const SliverToBoxAdapter(
             child: _ProductRequestFooter(tabLabel: '잉크'),
           ),
         ],
-      ],
+        ],
+      ),
     );
   }
 }
@@ -1046,7 +1075,14 @@ class _PenList extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     // 항상 CustomScrollView를 반환 — 타입 변화로 인한 semantics assertion 방지
-    return CustomScrollView(
+    return NotificationListener<ScrollNotification>(
+      onNotification: (n) {
+        if (n is ScrollEndNotification && n.metrics.extentAfter < 300) {
+          ref.read(archiveProvider.notifier).loadMore();
+        }
+        return false;
+      },
+      child: CustomScrollView(
       key: const PageStorageKey('archive_pen_list'),
       slivers: [
         if (state.isLoading)
@@ -1088,11 +1124,25 @@ class _PenList extends ConsumerWidget {
               childCount: state.pens.length,
             ),
           ),
+          if (state.isLoadingMorePens)
+            const SliverToBoxAdapter(
+              child: Padding(
+                padding: EdgeInsets.symmetric(vertical: 20),
+                child: Center(
+                  child: SizedBox(
+                    width: 22,
+                    height: 22,
+                    child: CircularProgressIndicator(strokeWidth: 2.5),
+                  ),
+                ),
+              ),
+            ),
           const SliverToBoxAdapter(
             child: _ProductRequestFooter(tabLabel: '만년필'),
           ),
         ],
-      ],
+        ],
+      ),
     );
   }
 }

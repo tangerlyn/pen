@@ -413,15 +413,23 @@ class _InkBookDetailScreenState extends ConsumerState<InkBookDetailScreen> {
 
   // ── Menu ─────────────────────────────────────────────────────────────────
 
-  void _showMenuSheet(
+  Future<void> _showMenuSheet(
     BuildContext context,
     List<InkChartModel> entries,
     String uid,
     String bookName,
-  ) {
+  ) async {
     final shape = ref.read(inkSwatchShapeProvider);
 
-    showModalBottomSheet(
+    // 이 메뉴의 각 항목은 원래 Navigator.pop(context) 직후 같은 프레임에서
+    // 바로 다음 showModalBottomSheet를 여는 방식이었는데, 이렇게 하면 닫히는
+    // 시트의 퇴장 애니메이션과 새로 열리는 시트의 등장 애니메이션이 동시에
+    // Overlay에 떠 있는 순간이 생겨서 Flutter의 BottomSheet 크기 감지 렌더
+    // 오브젝트(_RenderBottomSheetLayoutWithSizeListener)가 "BoxConstraints
+    // forces an infinite width"로 죽는 경우가 있다. 대신 이 시트를 결과값과
+    // 함께 pop하고, showModalBottomSheet가 반환하는 Future(퇴장 애니메이션이
+    // 완전히 끝난 뒤에만 resolve됨)를 기다렸다가 그 다음에 다음 시트를 연다.
+    final action = await showModalBottomSheet<String>(
       context: context,
       isScrollControlled: true,
       shape: const RoundedRectangleBorder(
@@ -447,10 +455,7 @@ class _InkBookDetailScreenState extends ConsumerState<InkBookDetailScreen> {
                   size: 18,
                   color: AppColors.textTertiary,
                 ),
-                onTap: () {
-                  Navigator.pop(context);
-                  _showSortSubSheet(context, entries);
-                },
+                onTap: () => Navigator.pop(context, 'sort'),
               ),
               ListTile(
                 leading: const Icon(Icons.grid_on_outlined),
@@ -466,10 +471,7 @@ class _InkBookDetailScreenState extends ConsumerState<InkBookDetailScreen> {
                   size: 18,
                   color: AppColors.textTertiary,
                 ),
-                onTap: () {
-                  Navigator.pop(context);
-                  _showStyleSubSheet(context);
-                },
+                onTap: () => Navigator.pop(context, 'style'),
               ),
               ListTile(
                 leading: const Icon(Icons.view_agenda_outlined),
@@ -485,10 +487,7 @@ class _InkBookDetailScreenState extends ConsumerState<InkBookDetailScreen> {
                   size: 18,
                   color: AppColors.textTertiary,
                 ),
-                onTap: () {
-                  Navigator.pop(context);
-                  _showViewSubSheet(context);
-                },
+                onTap: () => Navigator.pop(context, 'view'),
               ),
               ListTile(
                 leading: SizedBox(
@@ -519,10 +518,7 @@ class _InkBookDetailScreenState extends ConsumerState<InkBookDetailScreen> {
                   size: 18,
                   color: AppColors.textTertiary,
                 ),
-                onTap: () {
-                  Navigator.pop(context);
-                  _showShapeSubSheet(context);
-                },
+                onTap: () => Navigator.pop(context, 'shape'),
               ),
               const Divider(height: 1),
               ListTile(
@@ -538,10 +534,7 @@ class _InkBookDetailScreenState extends ConsumerState<InkBookDetailScreen> {
               ListTile(
                 leading: const Icon(Icons.edit_outlined),
                 title: const Text('공책 이름 변경'),
-                onTap: () {
-                  Navigator.pop(context);
-                  _renameBook(context, uid, bookName);
-                },
+                onTap: () => Navigator.pop(context, 'rename'),
               ),
               ListTile(
                 leading: const Icon(
@@ -563,6 +556,20 @@ class _InkBookDetailScreenState extends ConsumerState<InkBookDetailScreen> {
         ),
       ),
     );
+
+    if (!context.mounted) return;
+    switch (action) {
+      case 'sort':
+        _showSortSubSheet(context, entries);
+      case 'style':
+        _showStyleSubSheet(context);
+      case 'view':
+        _showViewSubSheet(context);
+      case 'shape':
+        _showShapeSubSheet(context);
+      case 'rename':
+        _renameBook(context, uid, bookName);
+    }
   }
 
   void _showSortSubSheet(BuildContext context, List<InkChartModel> entries) {
@@ -1191,6 +1198,16 @@ class _InkBookDetailScreenState extends ConsumerState<InkBookDetailScreen> {
                                                   notebookPageStyleFromString(
                                                     _pageStyle.name,
                                                   ),
+                                              // 앨범 저장 중(_savingPages)엔
+                                              // 빈 칸의 점선 원을 숨겨서, 캡처된
+                                              // 이미지엔 실제로 채운 잉크만
+                                              // 보이고 나머지는 빈 페이지처럼
+                                              // 나오게 한다. 저장 중엔 화면
+                                              // 전체가 딤 처리 오버레이로 덮여
+                                              // 있어서 이 변화가 사용자 눈에
+                                              // 보이지 않는다.
+                                              showEmptySlotPlaceholder:
+                                                  !_savingPages,
                                               itemBuilder: (ctx, entry, i) =>
                                                   _SwatchCard(
                                                     entry: entry,
@@ -1898,18 +1915,32 @@ class _RenameBottomSheetState extends State<_RenameBottomSheet> {
 
   @override
   Widget build(BuildContext context) {
-    return Padding(
-      padding: EdgeInsets.only(
-        bottom: MediaQuery.of(context).viewInsets.bottom,
-      ),
-      child: SafeArea(
-        child: Padding(
-          padding: const EdgeInsets.fromLTRB(20, 16, 20, 20),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Center(child: _sheetHandle()),
+    // autofocus TextField 때문에 시트가 올라오는 애니메이션과 키보드가 뜨는
+    // 애니메이션이 동시에 진행되면서, showModalBottomSheet 내부의 크기
+    // 감지용 렌더 오브젝트(_RenderBottomSheetLayoutWithSizeListener)가
+    // 특정 프레임에 폭 제약을 무한대로 내려보내 ElevatedButton이
+    // "BoxConstraints forces an infinite width"로 크래시하는 경우가 있다.
+    // LayoutBuilder로 실제 가용 폭을 재서, 폭 제약이 무한(비정상)이면
+    // 화면 폭으로 대체해 항상 유한한 폭을 자식에게 내려주도록 방어한다.
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final width = constraints.maxWidth.isFinite
+            ? constraints.maxWidth
+            : MediaQuery.of(context).size.width;
+        return SizedBox(
+          width: width,
+          child: Padding(
+            padding: EdgeInsets.only(
+              bottom: MediaQuery.of(context).viewInsets.bottom,
+            ),
+            child: SafeArea(
+              child: Padding(
+                padding: const EdgeInsets.fromLTRB(20, 16, 20, 20),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Center(child: _sheetHandle()),
               const SizedBox(height: 16),
               const Text(
                 '공책 이름 변경',
@@ -1951,24 +1982,38 @@ class _RenameBottomSheetState extends State<_RenameBottomSheet> {
               ),
               const SizedBox(height: 16),
               Row(
-                mainAxisAlignment: MainAxisAlignment.end,
                 children: [
-                  TextButton(
-                    onPressed: () => Navigator.pop(context),
-                    child: const Text('취소'),
+                  // 전역 ElevatedButtonTheme의 minimumSize가
+                  // Size.fromHeight(52) = Size(double.infinity, 52)라서,
+                  // Expanded 없이 Row의 평범한 자식으로 두면 폭이 무한대를
+                  // 요구하게 된다. 평소엔 Row가 느슨하게(loose) 폭을 내려줘서
+                  // 문제 없어 보이지만, 이 화면처럼 바텀시트 크기 감지
+                  // 렌더러(_RenderBottomSheetLayoutWithSizeListener) 아래에서
+                  // 조상이 진짜 무제한 폭을 내려주는 경우와 만나면
+                  // "BoxConstraints forces an infinite width"로 크래시한다.
+                  // Expanded로 감싸면 Row가 항상 유한한 폭을 배분해줘서
+                  // 이 조합 자체가 발생하지 않는다 (ink_book_list_screen.dart의
+                  // 옵션 시트도 동일한 이유로 Expanded를 쓰고 있음).
+                  Expanded(
+                    child: TextButton(
+                      onPressed: () => Navigator.pop(context),
+                      child: const Text('취소'),
+                    ),
                   ),
                   const SizedBox(width: 8),
-                  ElevatedButton(
-                    onPressed: () {
-                      final name = _ctrl.text.trim();
-                      if (name.isEmpty) return;
-                      widget.onSave(name);
-                    },
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: AppColors.primary,
-                      foregroundColor: Colors.white,
+                  Expanded(
+                    child: ElevatedButton(
+                      onPressed: () {
+                        final name = _ctrl.text.trim();
+                        if (name.isEmpty) return;
+                        widget.onSave(name);
+                      },
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: AppColors.primary,
+                        foregroundColor: Colors.white,
+                      ),
+                      child: const Text('저장'),
                     ),
-                    child: const Text('저장'),
                   ),
                 ],
               ),
@@ -1976,6 +2021,9 @@ class _RenameBottomSheetState extends State<_RenameBottomSheet> {
           ),
         ),
       ),
+          ),
+        );
+      },
     );
   }
 }

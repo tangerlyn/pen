@@ -12,6 +12,7 @@ import '../../../data/models/pen_model.dart';
 import '../../../shared/widgets/common/skeletons.dart';
 import '../../../shared/widgets/ink_drop_circle.dart';
 import '../../../shared/widgets/tap_scale.dart';
+import '../../../shared/providers/providers.dart';
 
 class HomeScreen extends ConsumerStatefulWidget {
   const HomeScreen({super.key});
@@ -140,6 +141,12 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
 
   @override
   Widget build(BuildContext context) {
+    ref.listen<int?>(scrollToTopTabProvider, (_, next) {
+      if (next == 0) {
+        if (_scrollController.hasClients) _scrollToTop();
+        ref.read(scrollToTopTabProvider.notifier).state = null;
+      }
+    });
     return Scaffold(
       backgroundColor: AppColors.background,
       body: Stack(
