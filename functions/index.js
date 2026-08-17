@@ -386,10 +386,7 @@ exports.onInquiryAnswered = onDocumentUpdated(
 // 없거나(댓글·답글) 삭제 리스크가 커서(카탈로그 제품) 자동 삭제 대상에서
 // 제외 — 임계값 도달 시 알림만 보내 수동 검토를 유도한다.
 const REPORT_AUTO_DELETE_THRESHOLD = 5;
-// TODO: 본인의 Firebase Auth UID로 교체할 것 (Firebase 콘솔 → Authentication
-// 에서 확인, 또는 Firestore users 컬렉션에서 본인 문서 ID 확인). 채우기
-// 전까지는 자동 삭제는 정상 동작하지만 관리자 알림은 전송되지 않는다.
-const ADMIN_UID = "";
+const ADMIN_UID = "Bmx2P20QFgO3CQsqXIXt8GDUj3f1";
 
 const REPORT_DELETABLE_COLLECTIONS = {
   review: "reviews",
