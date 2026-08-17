@@ -26,7 +26,6 @@
 | **커뮤니티** | 질문·정보공유·필사·그림 게시판. 카테고리 필터, 인기글, 이미지 첨부 |
 | **잉크 차트** | 직접 찍은 스와치 사진으로 개인 잉크 차트 제작·공유·저장 |
 | **검색** | 리뷰·커뮤니티 통합 검색. 검색 기록·자동완성·무한 스크롤 |
-| **채팅** | 1:1 DM |
 | **팔로우** | 유저 팔로우, 팔로잉 피드 필터 |
 
 ---
@@ -87,7 +86,6 @@ lib/
 │   ├── community/      커뮤니티 게시판
 │   ├── archive/        제품 아카이브
 │   ├── mypage/         마이페이지·잉크차트·설정
-│   ├── chat/           1:1 채팅
 │   └── search/         통합 검색
 └── shared/
     ├── providers/      전역 Provider (auth, user, archive repo 등)
@@ -124,7 +122,6 @@ flutter run
 | [archive.md](docs/archive.md) | 제품 아카이브 |
 | [mypage.md](docs/mypage.md) | 마이페이지·잉크차트·설정 |
 | [search.md](docs/search.md) | 통합 검색 |
-| [chat.md](docs/chat.md) | 1:1 채팅 |
 | [qa_checklist.md](docs/qa_checklist.md) | 기능 QA 체크리스트 (버튼별 기대 동작) |
 | [feature_ideas.md](docs/feature_ideas.md) | 검토 중인 기능 아이디어 + 알려진 이슈/기술 부채 |
 
