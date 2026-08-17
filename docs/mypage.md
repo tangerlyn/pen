@@ -18,9 +18,6 @@
 - 한 줄 소개
 - **팔로워 수** — 탭 → `/profile/:uid/followers?tab=0`
 - **팔로잉 수** — 탭 → `/profile/:uid/followers?tab=1`
-- **EXP 진행 바 카드**
-  - 현재 칭호 + EXP 현황(ex. "140 / 200") 표시
-  - 진행률 LinearProgressIndicator (네이비)
 - **내 잉크 차트 버튼** — 보유 차트 권수 표시. 탭 → `/ink-chart`
 - **위시리스트 버튼** — 위시리스트 개수 표시. 탭 → `/mypage/wishlist`
 

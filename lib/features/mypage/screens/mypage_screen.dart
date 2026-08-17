@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../../../core/theme/app_theme.dart';
-import '../../../data/models/user_model.dart';
 import '../../../data/models/review_model.dart';
 import '../../../data/models/post_model.dart';
 import '../../../shared/providers/providers.dart';
@@ -163,8 +162,6 @@ class _MypageScreenState extends ConsumerState<MypageScreen>
                       ),
                     ],
                   ),
-                  const SizedBox(height: AppSpacing.lg),
-                  if (user != null) _LevelProgressBar(user: user),
                   const SizedBox(height: AppSpacing.md),
                   // 잉크 컬렉션 미리보기
                   if (user != null) _InkChartCard(uid: user.uid),
@@ -383,58 +380,6 @@ class _StatItem extends StatelessWidget {
           ),
           const SizedBox(height: 2),
           Text(label, style: AppTextStyles.bodySmall),
-        ],
-      ),
-    );
-  }
-}
-
-class _LevelProgressBar extends StatelessWidget {
-  const _LevelProgressBar({required this.user});
-  final UserModel user;
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.symmetric(
-        horizontal: AppSpacing.lg,
-        vertical: 14,
-      ),
-      decoration: BoxDecoration(
-        color: AppColors.chipBackground,
-        borderRadius: BorderRadius.circular(AppRadius.md),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Text(
-                user.levelTitle,
-                style: AppTextStyles.titleSmall.copyWith(
-                  fontWeight: FontWeight.w700,
-                ),
-              ),
-              Text(
-                'EXP ${user.levelProgressLabel}',
-                style: AppTextStyles.bodySmall.copyWith(
-                  fontWeight: FontWeight.w600,
-                  color: AppColors.primary,
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: AppSpacing.sm),
-          ClipRRect(
-            borderRadius: BorderRadius.circular(AppRadius.xs),
-            child: LinearProgressIndicator(
-              value: user.levelProgress,
-              backgroundColor: AppColors.divider,
-              color: AppColors.primary,
-              minHeight: 8,
-            ),
-          ),
         ],
       ),
     );
