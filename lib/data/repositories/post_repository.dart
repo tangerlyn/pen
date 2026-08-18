@@ -232,9 +232,9 @@ class PostRepository {
         .update({'body': body, 'updatedAt': FieldValue.serverTimestamp()});
   }
 
-  Stream<List<PostModel>> watchScrappedPosts(String uid) {
+  Stream<List<PostModel>> watchLikedPosts(String uid) {
     return _db
-        .collectionGroup('scraps')
+        .collectionGroup('likes')
         .where('uid', isEqualTo: uid)
         .snapshots()
         .asyncMap((snap) async {
@@ -251,9 +251,9 @@ class PostRepository {
         });
   }
 
-  Future<List<PostModel>> getScrappedPosts(String uid) async {
+  Future<List<PostModel>> getLikedPosts(String uid) async {
     final querySnapshot = await _db
-        .collectionGroup('scraps')
+        .collectionGroup('likes')
         .where('uid', isEqualTo: uid)
         .get();
 
@@ -269,32 +269,6 @@ class PostRepository {
     return (await Future.wait(futures)).whereType<PostModel>().toList();
   }
 
-  Stream<bool> watchScrapStatus(String postId, String uid) {
-    return _db
-        .collection('posts')
-        .doc(postId)
-        .collection('scraps')
-        .doc(uid)
-        .snapshots()
-        .map((doc) => doc.exists);
-  }
-
-  Future<void> toggleScrap(String postId, String uid) async {
-    final scrapRef =
-        _db.collection('posts').doc(postId).collection('scraps').doc(uid);
-    final postRef = _db.collection('posts').doc(postId);
-    final doc = await scrapRef.get();
-    final batch = _db.batch();
-    if (doc.exists) {
-      batch.delete(scrapRef);
-      batch.update(postRef, {'scrapCount': FieldValue.increment(-1)});
-    } else {
-      batch.set(scrapRef, {'uid': uid, 'createdAt': FieldValue.serverTimestamp()});
-      batch.update(postRef, {'scrapCount': FieldValue.increment(1)});
-    }
-    await batch.commit();
-  }
-
   Stream<bool> watchLikeStatus(String postId, String uid) {
     return _db
         .collection('posts')
@@ -305,22 +279,45 @@ class PostRepository {
         .map((doc) => doc.exists);
   }
 
-  Future<void> toggleLike(String postId, String uid, String authorId) async {
+  // 배치(batch)는 "현재 상태를 읽고 반대로 뒤집는" 방식이라 바깥의 withRetry가
+  // 재시도할 때마다 매번 다시 뒤집혀서 좋아요 수가 드리프트하는 문제가 있었다
+  // (review_repository.dart와 달리 목표 상태를 안 받고 매번 현재 상태의 반대로
+  // 커밋해버림). 트랜잭션 + 명시적 목표 상태(isLiked)로 바꿔서, 같은 목표로
+  // 여러 번 재시도해도 안전하게 수렴하도록 review_repository.dart와 동일한
+  // 패턴으로 맞춘다.
+  Future<void> toggleLike(
+    String postId,
+    String uid,
+    String authorId,
+    bool isLiked,
+  ) async {
     final likeRef = _db.collection('posts').doc(postId).collection('likes').doc(uid);
-    final doc = await likeRef.get();
-    final batch = _db.batch();
-    if (doc.exists) {
-      batch.delete(likeRef);
-      batch.update(_db.collection('posts').doc(postId), {'likeCount': FieldValue.increment(-1)});
-    } else {
-      batch.set(likeRef, {'uid': uid, 'createdAt': FieldValue.serverTimestamp()});
-      batch.update(_db.collection('posts').doc(postId), {'likeCount': FieldValue.increment(1)});
-      // 작성자에게 좋아요 EXP 지급
-      batch.update(
-        _db.collection('users').doc(authorId),
-        {'exp': FieldValue.increment(LevelSystem.expLike)},
-      );
-    }
-    await batch.commit();
+    final postRef = _db.collection('posts').doc(postId);
+
+    await _db.runTransaction((transaction) async {
+      final postDoc = await transaction.get(postRef);
+      if (!postDoc.exists) throw Exception('Post not found');
+
+      final likeDoc = await transaction.get(likeRef);
+      final data = postDoc.data() as Map<String, dynamic>?;
+      final currentLikeCount = data?['likeCount'] as num? ?? 0;
+
+      if (isLiked) {
+        if (!likeDoc.exists) {
+          transaction.set(likeRef, {'uid': uid, 'createdAt': FieldValue.serverTimestamp()});
+          transaction.update(postRef, {'likeCount': currentLikeCount + 1});
+          // 작성자에게 좋아요 EXP 지급
+          transaction.update(
+            _db.collection('users').doc(authorId),
+            {'exp': FieldValue.increment(LevelSystem.expLike)},
+          );
+        }
+      } else {
+        if (likeDoc.exists) {
+          transaction.delete(likeRef);
+          transaction.update(postRef, {'likeCount': currentLikeCount > 0 ? currentLikeCount - 1 : 0});
+        }
+      }
+    });
   }
 }

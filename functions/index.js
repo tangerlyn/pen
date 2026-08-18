@@ -456,54 +456,130 @@ exports.onReportCreated = onDocumentCreated(
 );
 
 // 계정 탈퇴 후 처리 — 클라이언트는 auth.user().delete()만 성공시키면 되고,
-// 나머지는 Admin 권한으로 서버에서 처리한다. 리뷰/커뮤니티 글/댓글/대댓글은
-// 지우지 않고 작성자 닉네임만 "알 수 없음"으로 바꿔서 콘텐츠는 그대로
-// 남긴다. users 문서는 통째로 지우는데, 이러면 (1) 프로필을 눌렀을 때
-// 기존 navigateToProfile()의 "탈퇴한 계정" 처리와 review/comment 위젯의
-// 작성자 null 처리(아바타 기본값, 라이브 닉네임 조회 실패 시 denormalized
-// 값 사용)가 별도 클라이언트 수정 없이 그대로 맞물리고, (2) 닉네임 중복
-// 확인 쿼리가 이 유저를 더 이상 찾지 못해 같은 닉네임을 새 사용자가
-// 충돌 없이 다시 쓸 수 있게 된다.
-const ANONYMOUS_NICKNAME = "알 수 없음";
+// 나머지는 Admin 권한으로 서버에서 처리한다. 리뷰/커뮤니티 글/댓글/대댓글
+// 전부 통째로 삭제한다(예전엔 "알 수 없음"으로 닉네임만 바꿔 콘텐츠를
+// 남겼었는데, 탈퇴 유저 글에 좋아요를 누르면 작성자 exp 지급 트랜잭션이
+// 이미 없는 users/{authorId} 문서를 update()하려다 NOT_FOUND로 실패하는
+// 문제가 있어 완전 삭제로 전환함). users 문서는 통째로 지우는데, 이러면
+// 닉네임 중복 확인 쿼리가 이 유저를 더 이상 찾지 못해 같은 닉네임을 새
+// 사용자가 충돌 없이 다시 쓸 수 있게 된다.
 
-async function anonymizeAuthor(query) {
+// 본인이 쓴 리뷰/게시글은 통째로 삭제 — 댓글/좋아요/스크랩 서브컬렉션까지
+// recursiveDelete로 같이 정리해서 고아 데이터가 안 남게 한다.
+async function deleteOwnedContent(query) {
   const snap = await query.get();
   if (snap.empty) return;
+  await Promise.all(snap.docs.map((doc) => db.recursiveDelete(doc.ref)));
+}
+
+// 델타를 부모 문서 경로별로 모아뒀다가 한 번에 반영 — 같은 부모를 가리키는
+// 댓글/답글이 여러 개면 배치 안에서 같은 문서를 두 번 건드리게 되는데
+// Firestore 배치는 같은 문서에 대한 중복 쓰기를 허용하지 않는다.
+async function applyCommentCountDeltas(parentDeltas) {
   let batch = db.batch();
-  let count = 0;
+  let ops = 0;
   const commits = [];
-  for (const doc of snap.docs) {
-    batch.update(doc.ref, { authorNickname: ANONYMOUS_NICKNAME });
-    count++;
-    if (count === 450) {
-      commits.push(batch.commit());
-      batch = db.batch();
-      count = 0;
-    }
+  const flush = () => {
+    if (ops > 0) commits.push(batch.commit());
+    batch = db.batch();
+    ops = 0;
+  };
+  for (const { ref, delta } of parentDeltas.values()) {
+    batch.update(ref, { commentCount: FieldValue.increment(delta) });
+    ops++;
+    if (ops >= 450) flush();
   }
-  if (count > 0) commits.push(batch.commit());
+  flush();
   await Promise.all(commits);
 }
 
-async function deleteQueryBatch(query) {
+// 다른 사람 글에 남긴 댓글: 답글이 없으면 통째로 삭제, 답글이 있으면 기존
+// "댓글 삭제"(deleteComment)와 동일하게 소프트 삭제(내용만 비움)해서 다른
+// 사람이 남긴 답글 스레드는 보존한다. 부모 글의 commentCount는 항상 -1.
+async function deleteOwnedComments(query) {
   const snap = await query.get();
   if (snap.empty) return;
-  await Promise.all(snap.docs.map((doc) => doc.ref.delete()));
+
+  const parentDeltas = new Map();
+  const bump = (ref) => {
+    const key = ref.path;
+    if (!parentDeltas.has(key)) parentDeltas.set(key, { ref, delta: 0 });
+    parentDeltas.get(key).delta -= 1;
+  };
+
+  let batch = db.batch();
+  let ops = 0;
+  const commits = [];
+  const flush = () => {
+    if (ops > 0) commits.push(batch.commit());
+    batch = db.batch();
+    ops = 0;
+  };
+
+  for (const doc of snap.docs) {
+    const parentRef = doc.ref.parent.parent; // reviews/{id} or posts/{id}
+    const repliesSnap = await doc.ref.collection("replies").limit(1).get();
+    if (repliesSnap.empty) {
+      batch.delete(doc.ref);
+    } else {
+      batch.update(doc.ref, { isDeleted: true, body: FieldValue.delete() });
+    }
+    ops++;
+    if (parentRef) bump(parentRef);
+    if (ops >= 450) flush();
+  }
+  flush();
+  await Promise.all(commits);
+  await applyCommentCountDeltas(parentDeltas);
+}
+
+// 다른 사람 댓글에 남긴 답글: 통째로 삭제, 부모 글의 commentCount -1
+async function deleteOwnedReplies(query) {
+  const snap = await query.get();
+  if (snap.empty) return;
+
+  const parentDeltas = new Map();
+  const bump = (ref) => {
+    const key = ref.path;
+    if (!parentDeltas.has(key)) parentDeltas.set(key, { ref, delta: 0 });
+    parentDeltas.get(key).delta -= 1;
+  };
+
+  let batch = db.batch();
+  let ops = 0;
+  const commits = [];
+  const flush = () => {
+    if (ops > 0) commits.push(batch.commit());
+    batch = db.batch();
+    ops = 0;
+  };
+
+  for (const doc of snap.docs) {
+    // replies/{rid} → comments/{cid} → reviews|posts/{id}
+    const parentRef = doc.ref.parent.parent.parent.parent;
+    batch.delete(doc.ref);
+    ops++;
+    if (parentRef) bump(parentRef);
+    if (ops >= 450) flush();
+  }
+  flush();
+  await Promise.all(commits);
+  await applyCommentCountDeltas(parentDeltas);
 }
 
 exports.onUserDeleted = functionsV1.auth.user().onDelete(async (user) => {
   const uid = user.uid;
 
   await Promise.all([
-    anonymizeAuthor(db.collection("reviews").where("authorId", "==", uid)),
-    anonymizeAuthor(db.collection("posts").where("authorId", "==", uid)),
-    anonymizeAuthor(
+    deleteOwnedContent(db.collection("reviews").where("authorId", "==", uid)),
+    deleteOwnedContent(db.collection("posts").where("authorId", "==", uid)),
+    deleteOwnedComments(
       db.collectionGroup("comments").where("authorId", "==", uid)
     ),
-    anonymizeAuthor(
+    deleteOwnedReplies(
       db.collectionGroup("replies").where("authorId", "==", uid)
     ),
-  ]).catch((e) => console.error("[onUserDeleted] 작성자 표시 실패:", e));
+  ]).catch((e) => console.error("[onUserDeleted] 콘텐츠 삭제 실패:", e));
 
   // 팔로우 관계는 콘텐츠가 아니라서 그대로 삭제하고, 상대방의
   // followerCount/followingCount도 같이 줄여준다. 안 그러면 예를 들어

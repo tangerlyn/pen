@@ -15,12 +15,10 @@ class ReviewModel {
     this.inkIds = const [],
     this.penIds = const [],
     this.likeCount = 0,
-    this.scrapCount = 0,
     this.commentCount = 0,
     required this.createdAt,
     this.updatedAt,
     this.isLiked = false,
-    this.isScrapped = false,
   });
 
   final String id;
@@ -37,12 +35,10 @@ class ReviewModel {
   final List<String> inkIds;
   final List<String> penIds;
   final int likeCount;
-  final int scrapCount;
   final int commentCount;
   final DateTime createdAt;
   final DateTime? updatedAt;
   final bool isLiked;
-  final bool isScrapped;
 
   String get thumbnailUrl => imageUrls.isNotEmpty ? imageUrls.first : '';
 
@@ -63,7 +59,6 @@ class ReviewModel {
       inkIds: List<String>.from(data['inkIds'] as List? ?? []),
       penIds: List<String>.from(data['penIds'] as List? ?? []),
       likeCount: (data['likeCount'] as num?)?.toInt() ?? 0,
-      scrapCount: (data['scrapCount'] as num?)?.toInt() ?? 0,
       commentCount: (data['commentCount'] as num?)?.toInt() ?? 0,
       createdAt: data['createdAt'] is Timestamp
           ? (data['createdAt'] as Timestamp).toDate()
@@ -87,7 +82,6 @@ class ReviewModel {
         'inkIds': inkIds,
         'penIds': penIds,
         'likeCount': likeCount,
-        'scrapCount': scrapCount,
         'commentCount': commentCount,
         'createdAt': createdAt,
         if (updatedAt != null) 'updatedAt': updatedAt,
@@ -98,8 +92,8 @@ class ReviewModel {
     List<Map<String, dynamic>>? contentBlocks,
     String? title, String? body, double? rating,
     List<String>? inkIds, List<String>? penIds,
-    int? likeCount, int? scrapCount, int? commentCount,
-    DateTime? createdAt, DateTime? updatedAt, bool? isLiked, bool? isScrapped,
+    int? likeCount, int? commentCount,
+    DateTime? createdAt, DateTime? updatedAt, bool? isLiked,
   }) {
     return ReviewModel(
       id: id ?? this.id, authorId: authorId ?? this.authorId,
@@ -111,11 +105,10 @@ class ReviewModel {
       rating: rating ?? this.rating,
       inkIds: inkIds ?? this.inkIds, penIds: penIds ?? this.penIds,
       likeCount: likeCount ?? this.likeCount,
-      scrapCount: scrapCount ?? this.scrapCount, commentCount: commentCount ?? this.commentCount,
+      commentCount: commentCount ?? this.commentCount,
       createdAt: createdAt ?? this.createdAt,
       updatedAt: updatedAt ?? this.updatedAt,
       isLiked: isLiked ?? this.isLiked,
-      isScrapped: isScrapped ?? this.isScrapped,
     );
   }
 }

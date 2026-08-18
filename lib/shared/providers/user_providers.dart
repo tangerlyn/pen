@@ -10,13 +10,13 @@ final followStatusProvider =
   return ref.watch(userRepoProvider).watchFollowStatus(myUid, targetUid);
 });
 
-/// 스크랩 목록 — StreamProvider로 실시간 업데이트
-final scrappedReviewsProvider =
+/// 좋아요한 리뷰/게시글 목록 — StreamProvider로 실시간 업데이트
+final likedReviewsProvider =
     StreamProvider.family<List<ReviewModel>, String>((ref, uid) {
-  return ref.read(reviewRepoProvider).watchScrappedReviews(uid);
+  return ref.read(reviewRepoProvider).watchLikedReviews(uid);
 });
 
-final scrappedPostsProvider =
+final likedPostsProvider =
     StreamProvider.family<List<PostModel>, String>((ref, uid) {
-  return PostRepository().watchScrappedPosts(uid);
+  return PostRepository().watchLikedPosts(uid);
 });

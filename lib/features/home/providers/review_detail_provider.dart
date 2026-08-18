@@ -19,8 +19,7 @@ class ReviewDetailNotifier extends FamilyAsyncNotifier<ReviewModel?, String> {
     if (review == null || uid == null) return review;
 
     final isLiked = await ref.read(reviewRepoProvider).isLiked(arg, uid);
-    final isScrapped = await ref.read(reviewRepoProvider).isScrapped(arg, uid);
-    return review.copyWith(isLiked: isLiked, isScrapped: isScrapped);
+    return review.copyWith(isLiked: isLiked);
   }
 
   Future<void> toggleLike() async {
@@ -35,21 +34,10 @@ class ReviewDetailNotifier extends FamilyAsyncNotifier<ReviewModel?, String> {
       isLiked: !review.isLiked,
       likeCount: review.isLiked ? review.likeCount - 1 : review.likeCount + 1,
     ));
-  }
-
-  Future<void> toggleScrap() async {
-    final review = state.value;
-    final uid = ref.read(currentUidProvider);
-    if (review == null || uid == null) return;
-
-    await withRetry(
-      () => ref.read(reviewRepoProvider).toggleScrap(review.id, uid, !review.isScrapped),
-    );
-    state = AsyncData(review.copyWith(
-      isScrapped: !review.isScrapped,
-      scrapCount: review.isScrapped ? review.scrapCount - 1 : review.scrapCount + 1,
-    ));
-    ref.invalidate(scrappedReviewsProvider(uid));
+    // 마이페이지 좋아요 탭이 stream이라 이론상 자동 반영돼야 하지만, 이미
+    // 생성돼있던 provider 인스턴스가 즉시 안 갈아끼워지는 경우가 있어
+    // 명시적으로 무효화해서 뒤로가기 시 바로 목록에서 빠지도록 보장한다.
+    ref.invalidate(likedReviewsProvider(uid));
   }
 
   Future<void> addComment(String body) async {
@@ -90,4 +78,13 @@ final commentsProvider = StreamProviderFamily<List<CommentModel>, String>((ref, 
 final reviewRepliesProvider = StreamProviderFamily<List<ReplyModel>,
     ({String reviewId, String commentId})>((ref, args) {
   return ref.watch(reviewRepoProvider).watchReplies(args.reviewId, args.commentId);
+});
+
+/// 리뷰 목록(1열 리스트)에서 하트 채움 여부를 실시간으로 보여주기 위한
+/// 좋아요 상태 스트림 — community_provider.dart의 postLikeStatusProvider와
+/// 동일한 역할.
+final reviewLikeStatusProvider =
+    StreamProvider.family<bool, (String, String)>((ref, args) {
+  final (reviewId, uid) = args;
+  return ref.watch(reviewRepoProvider).watchLikeStatus(reviewId, uid);
 });

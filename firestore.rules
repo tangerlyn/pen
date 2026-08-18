@@ -39,9 +39,11 @@ service cloud.firestore {
     match /users/{uid} {
       allow read: if isLoggedIn();
       allow write: if isOwner(uid);
+      // exp: 다른 사람이 내 리뷰/게시글에 좋아요 눌렀을 때 작성자에게 EXP를
+      // 지급하는 트랜잭션이 본인이 아닌 유저의 문서를 건드려야 해서 필요
       allow update: if isOwner(uid)
         || (isLoggedIn() && request.resource.data.diff(resource.data).affectedKeys()
-            .hasOnly(['followerCount', 'followingCount']));
+            .hasOnly(['followerCount', 'followingCount', 'exp']));
 
       match /following/{targetUid} {
         allow read: if isLoggedIn();

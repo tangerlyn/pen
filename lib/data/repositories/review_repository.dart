@@ -94,6 +94,13 @@ class ReviewRepository {
     return ReviewModel.fromMap(doc.data() as Map<String, dynamic>, doc.id);
   }
 
+  Stream<ReviewModel?> watchReview(String reviewId) {
+    return _reviews.doc(reviewId).snapshots().map((doc) {
+      if (!doc.exists) return null;
+      return ReviewModel.fromMap(doc.data() as Map<String, dynamic>, doc.id);
+    });
+  }
+
   Future<String> createReview(ReviewModel review) async {
     // id가 빈 문자열이면 새로 생성, 지정되어 있으면 doc(id)로 생성
     final docRef = review.id.isNotEmpty ? _reviews.doc(review.id) : _reviews.doc();
@@ -140,7 +147,7 @@ class ReviewRepository {
 
       if (isLiked) {
         if (!likeDoc.exists) {
-          transaction.set(likeRef, {'createdAt': FieldValue.serverTimestamp()});
+          transaction.set(likeRef, {'uid': uid, 'createdAt': FieldValue.serverTimestamp()});
           transaction.update(reviewRef, {'likeCount': currentLikeCount + 1});
           // 작성자에게 좋아요 EXP 지급
           final authorId = data?['authorId'] as String?;
@@ -165,40 +172,18 @@ class ReviewRepository {
     return likeDoc.exists;
   }
 
-  Future<void> toggleScrap(String reviewId, String uid, bool isScrapped) async {
-    final scrapRef = _reviews.doc(reviewId).collection('scraps').doc(uid);
-    final reviewRef = _reviews.doc(reviewId);
-
-    await _firestore.runTransaction((transaction) async {
-      final reviewDoc = await transaction.get(reviewRef);
-      if (!reviewDoc.exists) throw Exception('Review not found');
-
-      final scrapDoc = await transaction.get(scrapRef);
-      final scrapData = reviewDoc.data() as Map<String, dynamic>?;
-      final currentScrapCount = scrapData?['scrapCount'] as num? ?? 0;
-
-      if (isScrapped) {
-        if (!scrapDoc.exists) {
-          transaction.set(scrapRef, {'uid': uid, 'createdAt': FieldValue.serverTimestamp()});
-          transaction.update(reviewRef, {'scrapCount': currentScrapCount + 1});
-        }
-      } else {
-        if (scrapDoc.exists) {
-          transaction.delete(scrapRef);
-          transaction.update(reviewRef, {'scrapCount': currentScrapCount > 0 ? currentScrapCount - 1 : 0});
-        }
-      }
-    });
+  Stream<bool> watchLikeStatus(String reviewId, String uid) {
+    return _reviews
+        .doc(reviewId)
+        .collection('likes')
+        .doc(uid)
+        .snapshots()
+        .map((doc) => doc.exists);
   }
 
-  Future<bool> isScrapped(String reviewId, String uid) async {
-    final scrapDoc = await _reviews.doc(reviewId).collection('scraps').doc(uid).get();
-    return scrapDoc.exists;
-  }
-
-  Future<List<ReviewModel>> getScrappedReviews(String uid) async {
+  Future<List<ReviewModel>> getLikedReviews(String uid) async {
     final querySnapshot = await _firestore
-        .collectionGroup('scraps')
+        .collectionGroup('likes')
         .where('uid', isEqualTo: uid)
         .get();
 
@@ -214,9 +199,9 @@ class ReviewRepository {
     return (await Future.wait(futures)).whereType<ReviewModel>().toList();
   }
 
-  Stream<List<ReviewModel>> watchScrappedReviews(String uid) {
+  Stream<List<ReviewModel>> watchLikedReviews(String uid) {
     return _firestore
-        .collectionGroup('scraps')
+        .collectionGroup('likes')
         .where('uid', isEqualTo: uid)
         .snapshots()
         .asyncMap((snap) async {

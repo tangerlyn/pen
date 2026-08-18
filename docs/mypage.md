@@ -21,12 +21,12 @@
 - **내 잉크 차트 버튼** — 보유 차트 권수 표시. 탭 → `/ink-chart`
 - **위시리스트 버튼** — 위시리스트 개수 표시. 탭 → `/mypage/wishlist`
 
-**화면 구성 — 탭 3개** (리뷰/커뮤니티/스크랩북 모두 `PostCard`/`ReviewListTile`의 제목 줄에 작성 날짜 표시)
+**화면 구성 — 탭 3개** (리뷰/커뮤니티/좋아요 모두 `PostCard`/`ReviewListTile`의 제목 줄에 작성 날짜 표시)
 - **리뷰 탭** — 내가 작성한 리뷰 목록 (`ReviewListTile`)
   - 탭 → `/review/:reviewId`
 - **커뮤니티 탭** — 내가 작성한 게시글 목록 (`PostCard`)
   - 탭 → `/community/:postId`
-- **스크랩북 탭** — 스크랩한 리뷰 + 게시글 혼합 (최신순)
+- **좋아요 탭** — 내가 좋아요한 리뷰 + 게시글 혼합 (최신순, `collectionGroup('likes')`를 uid로 조회)
   - 리뷰 항목 탭 → `/review/:reviewId`
   - 게시글 항목 탭 → `/community/:postId`
   - 당겨서 새로고침 지원
@@ -51,7 +51,7 @@
 - **공개 또는 팔로워 공개 잉크북이 있는 경우** (뷰어가 팔로우 중이면 팔로워 공개 잉크북도 포함): "잉크차트" 탭이 추가로 노출됨
   - 탭 안에서 `NotebookCard`(공책 모양 카드) 그리드로 표시 — 내 잉크 차트 목록과 동일한 UI
   - 카드 탭 → `/public-ink-books/:uid/:bookId` (읽기 전용 상세)
-- **탭 2~3개**: 리뷰 / 커뮤니티 / (조건부) 잉크차트 — 스크랩북 탭은 본인 마이페이지에만 있음 (리뷰/커뮤니티 탭 모두 본인 마이페이지와 동일하게 날짜 표시)
+- **탭 2~3개**: 리뷰 / 커뮤니티 / (조건부) 잉크차트 — 좋아요 탭은 본인 마이페이지에만 있음 (리뷰/커뮤니티 탭 모두 본인 마이페이지와 동일하게 날짜 표시)
 
 ---
 
@@ -170,7 +170,7 @@
   - 개인정보처리방침 → `/mypage/settings/privacy`
 - **로그아웃** — 확인 다이얼로그 후 `/login`으로 이동
 - **회원탈퇴** — 확인 다이얼로그(재인증 진행 중 로딩 표시, 실패 시 다이얼로그 안에 에러 문구) → 소셜 재인증(카카오/네이버/애플 재로그인) → Firebase 계정 삭제 성공 시 `/login`으로 명시적 이동
-  - 작성한 리뷰/글/댓글/대댓글은 삭제되지 않고 서버(`onUserDeleted`)가 작성자 닉네임만 "알 수 없음"으로 바꿔 남겨둠 — 자세한 내용은 [auth.md](auth.md#회원탈퇴) 참고
+  - 작성한 리뷰/글/댓글/대댓글은 서버(`onUserDeleted`)가 전부 삭제함 — 자세한 내용은 [auth.md](auth.md#회원탈퇴) 참고
 
 ### `blocked_users_screen.dart`
 **경로:** `/mypage/settings/blocked`
@@ -229,8 +229,8 @@ EXP 기반 Lv.1~10 시스템.
 | `currentUserProvider` | StreamProvider\<UserModel?\> | 현재 로그인 유저 실시간 |
 | `inkBookListProvider` | StreamProvider.family | 잉크 차트 목록 |
 | `wishlistProvider` | StreamProvider.family | 위시리스트 목록 |
-| `scrappedReviewsProvider` | StreamProvider.family | 스크랩 리뷰 목록 |
-| `scrappedPostsProvider` | StreamProvider.family | 스크랩 게시글 목록 |
+| `likedReviewsProvider` | StreamProvider.family | 내가 좋아요한 리뷰 목록 |
+| `likedPostsProvider` | StreamProvider.family | 내가 좋아요한 게시글 목록 |
 | `levelUpProvider` | StateProvider\<LevelUpInfo?\> | 레벨업 다이얼로그 트리거 |
 | `userVisibleBooksProvider` | FutureProvider.family\<(ownerUid, viewerUid)\> | 뷰어의 팔로우 여부를 반영한 가시적 잉크 차트 목록 (공개 + 팔로우 중이면 팔로워 공개 포함) |
 | `singleInkBookProvider` | FutureProvider.family\<(uid, bookId)\> | 단일 잉크북 조회 — 읽기 전용 화면에서 소유자의 pageStyle/viewMode 로드용 |

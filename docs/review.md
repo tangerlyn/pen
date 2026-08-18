@@ -33,7 +33,7 @@
   - 하단: 프사(CircleAvatar radius 11) + 닉네임(네이비, w600) + 레벨 뱃지 + 좋아요/댓글 수 — 여기가 이미 빡빡해서, 날짜는 위쪽 제목 줄 오른쪽 끝에 작게 배치
   - 닉네임이 길어도 오버플로우 없이 말줄임 처리 (좋아요/댓글 수 침범 시에만 잘림)
   - 탭 → `/review/:reviewId`
-  - 리뷰 탭 리스트 뷰뿐 아니라 **리뷰 검색 결과**(`type=review`)와 **마이페이지/유저 프로필의 리뷰 탭·스크랩북**에서도 동일하게 재사용됨 (예전에 별도로 있던 `ReviewListCard`는 이 위젯에 통합되어 삭제됨). `showDate`(기본 true) 파라미터로 제목 줄의 날짜 표시 여부를 제어할 수 있음 — 현재는 모든 사용처에서 기본값(표시)을 씀
+  - 리뷰 탭 리스트 뷰뿐 아니라 **리뷰 검색 결과**(`type=review`)와 **마이페이지/유저 프로필의 리뷰 탭, 마이페이지 좋아요 탭**에서도 동일하게 재사용됨 (예전에 별도로 있던 `ReviewListCard`는 이 위젯에 통합되어 삭제됨). `showDate`(기본 true) 파라미터로 제목 줄의 날짜 표시 여부를 제어할 수 있음 — 현재는 모든 사용처에서 기본값(표시)을 씀
 - 무한 스크롤: 스크롤 하단 200px 이내 진입 시 다음 페이지 자동 로드
 - 스켈레톤 로딩 UI (`ReviewGridSkeleton` / `ReviewListTileSkeleton`)
 - 스크롤 맨 위로 버튼 (우측 하단, 100px 이상 스크롤 시 표시)
@@ -83,11 +83,8 @@
 | imageUrls | List\<String\> | 이미지 URL 목록 |
 | likeCount | int | 좋아요 수 |
 | commentCount | int | 댓글+답글 수 |
-| scrapCount | int | 스크랩 수 |
 | createdAt | DateTime | 작성 시각 |
 | updatedAt | DateTime? | 수정 시각 |
-
-스크랩 서브컬렉션: `reviews/{reviewId}/scraps/{uid}`
 
 ---
 
@@ -96,11 +93,11 @@
 | Provider | 종류 | 역할 |
 |---|---|---|
 | `feedProvider` | StateNotifierProvider | 필터·커서·팔로잉 최근/전체 리뷰 목록 상태 |
-| `reviewDetailProvider` | StateNotifierProvider.family | 리뷰 상세 + 좋아요/스크랩 토글 |
+| `reviewDetailProvider` | StateNotifierProvider.family | 리뷰 상세 + 좋아요 토글 |
 | `reviewWriteProvider` | StateNotifierProvider | 작성 폼 상태 |
 | `commentsProvider` | StreamProvider.family | 댓글 목록 실시간 |
 | `reviewRepliesProvider` | StreamProvider.family | 답글 목록 실시간 |
-| `scrappedReviewsProvider` | StreamProvider.family | 내 스크랩 리뷰 목록 |
+| `likedReviewsProvider` | StreamProvider.family | 내가 좋아요한 리뷰 목록 (마이페이지 좋아요 탭) |
 
 ---
 
@@ -118,7 +115,6 @@
 - `lib/shared/widgets/review/review_list_tile.dart`
 - `lib/shared/widgets/review/comment_tile.dart`
 - `lib/shared/widgets/level_badge.dart`
-- `lib/core/utils/toast_utils.dart`
 - `lib/core/utils/post_date_format.dart`
 - `lib/shared/widgets/editor/blog_body_editor.dart`
 - `lib/shared/widgets/linkified_text.dart`

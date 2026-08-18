@@ -46,6 +46,19 @@ class FcmService {
       await Future.delayed(const Duration(milliseconds: 500));
       _handleTap(initial);
     }
+
+    // providers.dart의 fcmServiceProvider는 authUserProvider가 "로그아웃→로그인"
+    // 으로 전환되는 순간만 감지해서 토큰을 저장하는데, 그 리스너는 MainShell이
+    // 뜬 뒤에야 등록된다. 회원가입 직후 첫 세션처럼 MainShell이 처음 뜰 때 이미
+    // 로그인이 끝나있는 경우 그 전환 시점을 영영 놓쳐서 fcmToken이 저장되지
+    // 않는다 — 그래서 다른 기기(예전부터 토큰이 저장돼있던 개발자 폰)에서는
+    // 알림이 잘 오는데 새로 설치한 친구 폰에서는 안 오는 문제가 생겼을 가능성이
+    // 큼. 권한 요청·초기화가 끝난 시점에 현재 로그인된 uid가 있으면 무조건 한 번
+    // 더 저장해서 이 race를 없앤다.
+    final currentUid = FirebaseAuth.instance.currentUser?.uid;
+    if (currentUid != null) {
+      await saveToken(currentUid);
+    }
   }
 
   Future<void> saveToken(String uid) async {

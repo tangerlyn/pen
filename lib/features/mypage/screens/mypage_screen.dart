@@ -179,7 +179,7 @@ class _MypageScreenState extends ConsumerState<MypageScreen>
                 tabs: const [
                   Tab(text: '리뷰'),
                   Tab(text: '커뮤니티'),
-                  Tab(text: '스크랩북'),
+                  Tab(text: '좋아요'),
                 ],
                 labelStyle: const TextStyle(fontWeight: FontWeight.w600),
                 indicatorColor: AppColors.primary,
@@ -194,7 +194,7 @@ class _MypageScreenState extends ConsumerState<MypageScreen>
           children: const [
             _MyReviewGrid(),
             _MyCommunityList(),
-            _ScrapbookGrid(),
+            _LikedGrid(),
           ],
         ),
       ),
@@ -276,52 +276,52 @@ class _MyCommunityList extends ConsumerWidget {
   }
 }
 
-// ── 스크랩북 아이템 타입 ──────────────────────────────────────────────
-sealed class _ScrapItem {
+// ── 좋아요 목록 아이템 타입 ──────────────────────────────────────────────
+sealed class _LikedItem {
   DateTime get createdAt;
 }
 
-final class _ReviewScrap extends _ScrapItem {
-  _ReviewScrap(this.review);
+final class _LikedReview extends _LikedItem {
+  _LikedReview(this.review);
   final ReviewModel review;
   @override
   DateTime get createdAt => review.createdAt;
 }
 
-final class _PostScrap extends _ScrapItem {
-  _PostScrap(this.post);
+final class _LikedPost extends _LikedItem {
+  _LikedPost(this.post);
   final PostModel post;
   @override
   DateTime get createdAt => post.createdAt;
 }
 
-// ── 스크랩북 탭 (리뷰 + 커뮤니티 혼합) ──────────────────────────────────
-class _ScrapbookGrid extends ConsumerWidget {
-  const _ScrapbookGrid();
+// ── 좋아요 탭 (리뷰 + 커뮤니티 혼합) ──────────────────────────────────
+class _LikedGrid extends ConsumerWidget {
+  const _LikedGrid();
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final uid = ref.watch(currentUidProvider);
     if (uid == null) return const SizedBox.shrink();
 
-    final reviewsAsync = ref.watch(scrappedReviewsProvider(uid));
-    final postsAsync = ref.watch(scrappedPostsProvider(uid));
+    final reviewsAsync = ref.watch(likedReviewsProvider(uid));
+    final postsAsync = ref.watch(likedPostsProvider(uid));
 
     if (reviewsAsync.isLoading && postsAsync.isLoading) {
       return const Center(child: CircularProgressIndicator());
     }
 
     Future<void> refresh() async {
-      ref.invalidate(scrappedReviewsProvider(uid));
-      ref.invalidate(scrappedPostsProvider(uid));
+      ref.invalidate(likedReviewsProvider(uid));
+      ref.invalidate(likedPostsProvider(uid));
     }
 
     final reviews = reviewsAsync.valueOrNull ?? [];
     final posts = postsAsync.valueOrNull ?? [];
 
-    final items = <_ScrapItem>[
-      ...reviews.map(_ReviewScrap.new),
-      ...posts.map(_PostScrap.new),
+    final items = <_LikedItem>[
+      ...reviews.map(_LikedReview.new),
+      ...posts.map(_LikedPost.new),
     ]..sort((a, b) => b.createdAt.compareTo(a.createdAt));
 
     if (items.isEmpty) {
@@ -331,8 +331,8 @@ class _ScrapbookGrid extends ConsumerWidget {
           children: const [
             SizedBox(height: 120),
             EmptyStateWidget(
-              icon: Icons.bookmark_border,
-              message: '스크랩한 게시물이 없습니다',
+              icon: Icons.favorite_border,
+              message: '좋아요한 게시물이 없습니다',
             ),
           ],
         ),
@@ -347,11 +347,11 @@ class _ScrapbookGrid extends ConsumerWidget {
         itemBuilder: (_, i) {
           final item = items[i];
           return switch (item) {
-            _ReviewScrap(:final review) => ReviewListTile(
+            _LikedReview(:final review) => ReviewListTile(
               review: review,
               onTap: () => context.push('/review/${review.id}'),
             ),
-            _PostScrap(:final post) => PostCard(
+            _LikedPost(:final post) => PostCard(
               post: post,
               onTap: () => context.push('/community/${post.id}'),
             ),

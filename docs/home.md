@@ -34,11 +34,9 @@
 **화면 구성**
 - **커스텀 AppBar**
   - 좌측: 뒤로가기
-  - 우측: ~~공유 아이콘~~(당장 불필요해 주석 처리, 재활성화 가능) / 북마크(스크랩) 아이콘 / ⋮(더보기) 메뉴
-    - 북마크: 스크랩 상태 반영(채워진 아이콘 = 스크랩됨). 탭 시 스크랩 토글
-    - 스크랩 완료 시 화면 중앙에 "스크랩되었습니다" 토스트 표시
-    - ⋮ 본인 글: 수정 / 삭제
-    - ⋮ 타인 글: 차단 / 신고
+  - 우측: ~~공유 아이콘~~(당장 불필요해 주석 처리, 재활성화 가능) / ⋮(더보기) 메뉴
+    - 본인 글: 수정 / 삭제
+    - 타인 글: 차단 / 신고
 - **리뷰 제목** (굵게) — 커뮤니티 게시글 상세와 동일하게 맨 위에 표시
 - **작성자 행 (`_ProfileRow`)** — 제목 바로 아래, 커뮤니티 상세의 `_EditorialByline`과 동일한 배치
   - CircleAvatar(radius 16) + 닉네임 + 레벨 뱃지(작성자 현재 레벨 실시간 반영), 그 아래 줄에 작성 시간(`formatPostDate`, 3일 이내 상대 시간·4일 이상 "YYYY.MM.DD") / "수정됨" 표시
@@ -115,7 +113,7 @@
 | `homePopularPensProvider` | FutureProvider | 인기 만년필 목록 |
 | `filteredPostsProvider` | StreamProvider | 커뮤니티 최신글 (카테고리 필터 적용) |
 | `notificationProvider` | StreamProvider | 알림 목록 |
-| `reviewDetailProvider` | StateNotifierProvider.family | 리뷰 상세 + 좋아요/스크랩 |
+| `reviewDetailProvider` | StateNotifierProvider.family | 리뷰 상세 + 좋아요 |
 | `levelUpProvider` | StateProvider\<LevelUpInfo?\> | 레벨업 다이얼로그 트리거 |
 
 ---
@@ -132,7 +130,6 @@
 - `lib/features/feed/screens/feed_screen.dart` (미사용, 위 참고)
 - `lib/core/shell/main_shell.dart`
 - `lib/core/router/app_router.dart`
-- `lib/core/utils/toast_utils.dart`
 - `lib/core/utils/post_date_format.dart`
 - `lib/shared/widgets/level_up_dialog.dart`
 - `lib/shared/widgets/level_badge.dart`

@@ -16,7 +16,6 @@ import '../../../data/models/reply_model.dart';
 import '../../../shared/widgets/level_badge.dart';
 import '../../../shared/widgets/author_badge.dart';
 import '../../../data/models/user_model.dart';
-import '../../../core/utils/toast_utils.dart';
 import '../../../shared/widgets/content_moderation.dart';
 import '../../../shared/widgets/user_avatar.dart';
 import '../../../shared/widgets/image_viewer_screen.dart';
@@ -320,35 +319,12 @@ class _PostDetailScreenState extends ConsumerState<PostDetailScreen> {
                   .valueOrNull ??
               false
         : false;
-    final isScrapped = currentUid != null
-        ? ref
-                  .watch(postScrapStatusProvider((widget.postId, currentUid)))
-                  .valueOrNull ??
-              false
-        : false;
-
     return Scaffold(
       backgroundColor: AppColors.background,
       resizeToAvoidBottomInset: true,
       appBar: AppBar(
         title: const Text('게시글'),
         actions: [
-          if (currentUid != null)
-            IconButton(
-              icon: Icon(
-                isScrapped ? Icons.bookmark : Icons.bookmark_border,
-                color: isScrapped ? AppColors.primary : null,
-              ),
-              onPressed: () async {
-                final willScrap = !isScrapped;
-                await ref
-                    .read(postRepositoryProvider)
-                    .toggleScrap(widget.postId, currentUid);
-                if (willScrap && context.mounted) {
-                  showScrapToast(context);
-                }
-              },
-            ),
           postAsync.when(
             data: (post) {
               if (post == null) return const SizedBox.shrink();
@@ -552,7 +528,13 @@ class _PostDetailScreenState extends ConsumerState<PostDetailScreen> {
                                                     post.id,
                                                     currentUid,
                                                     post.authorId,
+                                                    !isLiked,
                                                   ),
+                                            );
+                                            // 마이페이지 좋아요 탭이 바로
+                                            // 반영되도록 명시적으로 무효화
+                                            ref.invalidate(
+                                              likedPostsProvider(currentUid),
                                             );
                                           } catch (_) {
                                             if (!context.mounted) return;

@@ -43,11 +43,9 @@
 **화면 구성**
 - **AppBar**
   - 좌측: 뒤로가기
-  - 우측: 북마크(스크랩) 아이콘 / ⋮(더보기) 메뉴
-    - 북마크: 스크랩 상태 반영. 탭 시 스크랩 토글
-    - 스크랩 완료 시 "스크랩되었습니다" 토스트 표시
-    - ⋮ 본인 글: 수정 → `PostWriteScreen(postToEdit:)` / 삭제
-    - ⋮ 타인 글: 차단 / 신고
+  - 우측: ⋮(더보기) 메뉴
+    - 본인 글: 수정 → `PostWriteScreen(postToEdit:)` / 삭제
+    - 타인 글: 차단 / 신고
 - **헤더 (`_EditorialByline`)**
   - 카테고리 뱃지 (네이비 톤 단색, `PostCard`와 달리 카테고리별 색 구분 없음)
   - 제목
@@ -129,8 +127,6 @@
 | body | String | 답글 본문 |
 | createdAt | DateTime | 작성 시각 |
 
-스크랩 서브컬렉션: `posts/{postId}/scraps/{uid}`
-
 ---
 
 ## 상태 관리
@@ -140,7 +136,6 @@
 | `communityFeedProvider` | StateNotifierProvider | 카테고리 필터·커서·게시글 목록 |
 | `popularPostsProvider` | Provider | 인기글 (최근 3일 이내 게시글만 필터 후 클라이언트 정렬) |
 | `postLikeStatusProvider` | StreamProvider.family | 좋아요 실시간 상태 |
-| `postScrapStatusProvider` | StreamProvider.family | 스크랩 실시간 상태 |
 
 ---
 

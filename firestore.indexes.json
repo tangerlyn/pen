@@ -91,7 +91,7 @@
   ],
   "fieldOverrides": [
     {
-      "collectionGroup": "scraps",
+      "collectionGroup": "likes",
       "fieldPath": "uid",
       "ttl": false,
       "indexes": [

@@ -6,6 +6,7 @@ import '../../../core/utils/post_date_format.dart';
 import '../../../data/models/review_model.dart';
 import '../../../data/models/user_model.dart';
 import '../../../features/archive/providers/archive_detail_provider.dart';
+import '../../../features/home/providers/review_detail_provider.dart';
 import '../../providers/providers.dart';
 import '../icon_count.dart';
 import '../level_badge.dart';
@@ -17,6 +18,16 @@ final _reviewTileAuthorProvider = StreamProvider.family<UserModel?, String>((
   uid,
 ) {
   return ref.watch(userRepoProvider).watchUser(uid);
+});
+
+// 목록은 한 번 불러온 뒤 실시간으로 안 갱신되는 스냅샷이라, 상세 화면에서
+// 좋아요/댓글을 누르고 돌아와도 숫자가 그대로였다. 문서를 실시간으로 watch해서
+// 좋아요/댓글 수만 최신값으로 덮어씌운다 (post_card.dart와 동일한 패턴).
+final _reviewTileLiveProvider = StreamProvider.family<ReviewModel?, String>((
+  ref,
+  reviewId,
+) {
+  return ref.watch(reviewRepoProvider).watchReview(reviewId);
 });
 
 /// 리뷰 탭 · 리뷰 검색 결과 · 마이페이지 리뷰 목록에서 공통으로 쓰는
@@ -38,6 +49,14 @@ class ReviewListTile extends ConsumerWidget {
     final hasThumbnail = review.thumbnailUrl.isNotEmpty;
     final authorAsync = ref.watch(_reviewTileAuthorProvider(review.authorId));
     final user = authorAsync.valueOrNull;
+    final live = ref.watch(_reviewTileLiveProvider(review.id)).valueOrNull;
+    final likeCount = live?.likeCount ?? review.likeCount;
+    final commentCount = live?.commentCount ?? review.commentCount;
+    final uid = ref.watch(currentUidProvider);
+    final isLiked = uid != null
+        ? ref.watch(reviewLikeStatusProvider((review.id, uid))).valueOrNull ??
+              false
+        : false;
     // 별점 시스템 비활성화
     // final stars = review.rating.toStringAsFixed(1);
 
@@ -163,14 +182,19 @@ class ReviewListTile extends ConsumerWidget {
                         mainAxisSize: MainAxisSize.min,
                         children: [
                           IconCount(
-                            icon: Icons.favorite_border,
-                            count: review.likeCount,
+                            icon: isLiked
+                                ? Icons.favorite
+                                : Icons.favorite_border,
+                            count: likeCount,
+                            iconColor: isLiked
+                                ? AppColors.error
+                                : AppColors.textTertiary,
                             spacing: 2,
                           ),
                           const SizedBox(width: 8),
                           IconCount(
                             icon: Icons.chat_bubble_outline,
-                            count: review.commentCount,
+                            count: commentCount,
                             spacing: 2,
                           ),
                         ],

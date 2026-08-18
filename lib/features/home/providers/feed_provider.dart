@@ -1,7 +1,6 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../data/models/review_model.dart';
 import '../../../shared/providers/providers.dart';
-import '../../../shared/providers/user_providers.dart';
 
 class FeedFilter {
   const FeedFilter({
@@ -165,27 +164,6 @@ class FeedNotifier extends StateNotifier<FeedState> {
       followingRecent: state.followingRecent.map(apply).toList(),
       reviews: state.reviews.map(apply).toList(),
     );
-  }
-
-  Future<void> toggleScrap(String reviewId, bool isScrapped) async {
-    final uid = _ref.read(currentUidProvider);
-    if (uid == null) return;
-    await _ref.read(reviewRepoProvider).toggleScrap(reviewId, uid, isScrapped);
-    if (!mounted) return;
-
-    ReviewModel apply(ReviewModel r) {
-      if (r.id != reviewId) return r;
-      return r.copyWith(
-        isScrapped: !isScrapped,
-        scrapCount: isScrapped ? r.scrapCount - 1 : r.scrapCount + 1,
-      );
-    }
-
-    state = state.copyWith(
-      followingRecent: state.followingRecent.map(apply).toList(),
-      reviews: state.reviews.map(apply).toList(),
-    );
-    _ref.invalidate(scrappedReviewsProvider(uid));
   }
 }
 

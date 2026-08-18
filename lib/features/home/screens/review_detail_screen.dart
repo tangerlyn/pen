@@ -9,7 +9,6 @@ import '../../../core/theme/app_theme.dart';
 import '../../../core/utils/network_utils.dart';
 import '../../../core/utils/profile_navigation.dart';
 import '../../../core/utils/post_date_format.dart';
-import '../../../core/utils/toast_utils.dart';
 import '../../../shared/widgets/image_viewer_screen.dart';
 import '../../../shared/widgets/user_avatar.dart';
 import '../../../data/models/review_model.dart';
@@ -274,36 +273,6 @@ class _ReviewDetailScreenState extends ConsumerState<ReviewDetailScreen> {
                 //     },
                 //   ),
                 // ),
-                if (currentUid != null)
-                  IconButton(
-                    icon: Icon(
-                      review.isScrapped
-                          ? Icons.bookmark
-                          : Icons.bookmark_border,
-                      color: review.isScrapped ? AppColors.primary : null,
-                    ),
-                    onPressed: () async {
-                      final willScrap = !review.isScrapped;
-                      try {
-                        await ref
-                            .read(
-                              reviewDetailProvider(widget.reviewId).notifier,
-                            )
-                            .toggleScrap();
-                        if (willScrap && context.mounted) {
-                          showScrapToast(context);
-                        }
-                      } catch (_) {
-                        if (!context.mounted) return;
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          const SnackBar(
-                            content: Text('인터넷 연결을 확인해주세요'),
-                            duration: Duration(seconds: 3),
-                          ),
-                        );
-                      }
-                    },
-                  ),
                 IconButton(
                   icon: const Icon(Icons.more_vert),
                   onPressed: () => _showMoreOptions(context, review, isOwner),

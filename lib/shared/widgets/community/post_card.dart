@@ -39,6 +39,12 @@ class PostCard extends ConsumerWidget {
     final isLiked = uid != null
         ? ref.watch(postLikeStatusProvider((post.id, uid))).valueOrNull ?? false
         : false;
+    // 목록은 한 번 불러온 뒤 실시간으로 안 갱신되는 스냅샷이라, 상세 화면에서
+    // 좋아요/댓글을 누르고 돌아와도 숫자가 그대로였다. 좋아요 여부(isLiked)처럼
+    // 문서를 실시간으로 watch해서 좋아요/댓글 수만 최신값으로 덮어씌운다.
+    final live = ref.watch(postDetailProvider(post.id)).valueOrNull;
+    final likeCount = live?.likeCount ?? post.likeCount;
+    final commentCount = live?.commentCount ?? post.commentCount;
 
     final hasImage = post.imageUrls.isNotEmpty;
     final showBadge = post.category != null;
@@ -121,7 +127,7 @@ class PostCard extends ConsumerWidget {
                             icon: isLiked
                                 ? Icons.favorite
                                 : Icons.favorite_border,
-                            count: post.likeCount,
+                            count: likeCount,
                             iconColor: isLiked
                                 ? AppColors.error
                                 : AppColors.textTertiary,
@@ -129,7 +135,7 @@ class PostCard extends ConsumerWidget {
                           const SizedBox(width: 10),
                           IconCount(
                             icon: Icons.chat_bubble_outline,
-                            count: post.commentCount,
+                            count: commentCount,
                           ),
                         ],
                       ),
