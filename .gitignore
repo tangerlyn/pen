@@ -47,5 +47,8 @@ scripts/serviceAccountKey.json
 scripts/node_modules/
 functions/node_modules/
 
+# Claude
+CLAUDE.md
+
 # Secrets
 lib/core/constants/app_secrets.dart
