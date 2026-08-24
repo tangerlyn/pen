@@ -14,8 +14,7 @@ class PenListTile extends StatelessWidget {
     return TapScale(
       onTap: onTap,
       child: ListTile(
-        leading: ClipRRect(
-          borderRadius: BorderRadius.circular(AppRadius.sm),
+        leading: ClipOval(
           child: Container(
             width: 44,
             height: 44,

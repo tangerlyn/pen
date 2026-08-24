@@ -361,6 +361,56 @@ class _ResultsView extends StatelessWidget {
   }
 }
 
+// 잉크 원 우측 하단에 리뷰 개수 뱃지 — 리뷰가 하나도 없으면 숨기고,
+// 100개 이상이면 뱃지가 너무 길어지지 않게 "99+"로 잘라서 보여준다.
+// (archive_screen.dart의 동일 위젯과 같은 모양 — private이라 공유 불가해 중복)
+class _InkDropCircleWithReviewBadge extends StatelessWidget {
+  const _InkDropCircleWithReviewBadge({
+    required this.color,
+    required this.reviewCount,
+  });
+  final Color color;
+  final int reviewCount;
+
+  @override
+  Widget build(BuildContext context) {
+    return SizedBox(
+      width: 56,
+      height: 56,
+      child: Stack(
+        clipBehavior: Clip.none,
+        children: [
+          InkDropCircle(color: color, size: 56),
+          if (reviewCount > 0)
+            Positioned(
+              right: -2,
+              bottom: -2,
+              child: Container(
+                padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 2),
+                constraints: const BoxConstraints(minWidth: 18),
+                decoration: BoxDecoration(
+                  color: AppColors.primary,
+                  borderRadius: BorderRadius.circular(AppRadius.xl),
+                  border: Border.all(color: Colors.white, width: 1.5),
+                ),
+                child: Text(
+                  reviewCount > 99 ? '99+' : '$reviewCount',
+                  textAlign: TextAlign.center,
+                  style: const TextStyle(
+                    fontSize: 8,
+                    fontWeight: FontWeight.w700,
+                    color: Colors.white,
+                    height: 1.0,
+                  ),
+                ),
+              ),
+            ),
+        ],
+      ),
+    );
+  }
+}
+
 class _InkResults extends StatelessWidget {
   const _InkResults({required this.inks, required this.query});
   final List<InkModel> inks;
@@ -412,7 +462,10 @@ class _InkResults extends StatelessWidget {
                 child: Column(
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    InkDropCircle(color: ink.inkColor, size: 56),
+                    _InkDropCircleWithReviewBadge(
+                      color: ink.inkColor,
+                      reviewCount: ink.reviewCount,
+                    ),
                     const SizedBox(height: 6),
                     Text(
                       ink.name,
