@@ -1,3 +1,4 @@
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import '../../../data/models/pen_model.dart';
 import '../../../core/theme/app_theme.dart';
@@ -13,14 +14,24 @@ class PenListTile extends StatelessWidget {
     return TapScale(
       onTap: onTap,
       child: ListTile(
-        leading: Container(
-          width: 44,
-          height: 44,
-          decoration: BoxDecoration(
+        leading: ClipRRect(
+          borderRadius: BorderRadius.circular(AppRadius.sm),
+          child: Container(
+            width: 44,
+            height: 44,
             color: AppColors.chipBackground,
-            borderRadius: BorderRadius.circular(AppRadius.sm),
+            alignment: Alignment.center,
+            child: (pen.photoUrl == null || pen.photoUrl!.isEmpty)
+                ? const Icon(Icons.edit, color: AppColors.textSecondary)
+                : CachedNetworkImage(
+                    imageUrl: pen.photoUrl!,
+                    width: 44,
+                    height: 44,
+                    fit: BoxFit.cover,
+                    errorWidget: (_, __, ___) =>
+                        const Icon(Icons.edit, color: AppColors.textSecondary),
+                  ),
           ),
-          child: const Icon(Icons.edit, color: AppColors.textSecondary),
         ),
         title: Text(
           pen.modelName,
