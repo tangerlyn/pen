@@ -26,7 +26,7 @@ class PenListTile extends StatelessWidget {
           pen.modelName,
           style: const TextStyle(fontWeight: FontWeight.w600),
         ),
-        subtitle: Text('${pen.brand} · ${pen.nibMaterial} · ${pen.fillType}'),
+        subtitle: Text('${pen.brand} · ${pen.fillType}'),
         // 별점 시스템 비활성화 — 평균 별점 표시 제거, 리뷰 개수만 표시
         // trailing: Column(
         //   mainAxisAlignment: MainAxisAlignment.center,

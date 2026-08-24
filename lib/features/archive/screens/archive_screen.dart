@@ -3,7 +3,6 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../../../core/theme/app_theme.dart';
 import '../../../shared/widgets/archive/add_product_bottom_sheet.dart';
-import '../../../shared/widgets/center_toast.dart';
 import '../providers/archive_provider.dart';
 import '../widgets/pen_list_tile.dart';
 import '../../../shared/widgets/common/skeletons.dart';
@@ -25,6 +24,9 @@ const _colorFamilySwatches = {
 // 특수 속성 목록 (레이블 → DB 값 매핑)
 const _inkTypeLabels = ['일반', '펄', '테'];
 const _inkTypeValues = ['normal', 'shimmer', 'sheen'];
+
+// 만년필 충전 방식 목록 — add_product_bottom_sheet.dart의 _kFillTypes와 동일
+const _fillTypeLabels = ['카트리지·컨버터', '피스톤필러', '아이드로퍼', '진공'];
 
 String _inkTypeLabelToValue(String label) {
   final idx = _inkTypeLabels.indexOf(label);
@@ -191,7 +193,7 @@ class _ArchiveScreenState extends ConsumerState<ArchiveScreen>
   }
 }
 
-enum _ExpandedFilter { color, type, brand, sort }
+enum _ExpandedFilter { color, type, brand, sort, fillType }
 
 class _FilterRow extends ConsumerStatefulWidget {
   const _FilterRow({required this.tabIndex});
@@ -216,10 +218,12 @@ class _FilterRowState extends ConsumerState<_FilterRow>
   final _typeLink = LayerLink();
   final _brandLink = LayerLink();
   final _sortLink = LayerLink();
+  final _fillTypeLink = LayerLink();
   final _colorChipKey = GlobalKey();
   final _typeChipKey = GlobalKey();
   final _brandChipKey = GlobalKey();
   final _sortChipKey = GlobalKey();
+  final _fillTypeChipKey = GlobalKey();
   final _chipScrollController = ScrollController();
   // 열려있는 드롭다운(헤더+패널) 박스의 실제 렌더 크기를 재기 위한 키
   final _dropdownBoxKey = GlobalKey();
@@ -230,6 +234,7 @@ class _FilterRowState extends ConsumerState<_FilterRow>
   List<String> _pendingColorFamilies = [];
   List<String> _pendingInkTypes = [];
   List<String> _pendingBrands = [];
+  List<String> _pendingFillTypes = [];
 
   @override
   void initState() {
@@ -267,6 +272,13 @@ class _FilterRowState extends ConsumerState<_FilterRow>
       }
       return;
     }
+    if (filter == _ExpandedFilter.fillType) {
+      final current = ref.read(archiveProvider).penFilter;
+      ref
+          .read(archiveProvider.notifier)
+          .setPenFilter(current.copyWith(fillTypes: _pendingFillTypes));
+      return;
+    }
     final current = ref.read(archiveProvider).inkFilter;
     if (filter == _ExpandedFilter.color) {
       ref
@@ -284,6 +296,7 @@ class _FilterRowState extends ConsumerState<_FilterRow>
       _ExpandedFilter.color => _pendingColorFamilies,
       _ExpandedFilter.type => _pendingInkTypes,
       _ExpandedFilter.brand => _pendingBrands,
+      _ExpandedFilter.fillType => _pendingFillTypes,
       _ExpandedFilter.sort => <String>[], // 정렬은 즉시 적용이라 호출되지 않음
     };
     if (list.contains(value)) {
@@ -307,6 +320,8 @@ class _FilterRowState extends ConsumerState<_FilterRow>
         _pendingInkTypes = [];
       case _ExpandedFilter.brand:
         _pendingBrands = [];
+      case _ExpandedFilter.fillType:
+        _pendingFillTypes = [];
       case _ExpandedFilter.sort:
         break; // 정렬은 즉시 적용이라 호출되지 않음
     }
@@ -344,6 +359,7 @@ class _FilterRowState extends ConsumerState<_FilterRow>
     _pendingBrands = List.from(
       widget.tabIndex == 0 ? inkCurrent.brands : penCurrent.brands,
     );
+    _pendingFillTypes = List.from(penCurrent.fillTypes);
     final currentSort = widget.tabIndex == 0
         ? ref.read(archiveProvider).inkSort
         : ref.read(archiveProvider).penSort;
@@ -353,12 +369,14 @@ class _FilterRowState extends ConsumerState<_FilterRow>
       _ExpandedFilter.type => _typeChipKey,
       _ExpandedFilter.brand => _brandChipKey,
       _ExpandedFilter.sort => _sortChipKey,
+      _ExpandedFilter.fillType => _fillTypeChipKey,
     };
     final link = switch (filter) {
       _ExpandedFilter.color => _colorLink,
       _ExpandedFilter.type => _typeLink,
       _ExpandedFilter.brand => _brandLink,
       _ExpandedFilter.sort => _sortLink,
+      _ExpandedFilter.fillType => _fillTypeLink,
     };
     final box = key.currentContext!.findRenderObject() as RenderBox;
     final chipSize = box.size;
@@ -379,6 +397,7 @@ class _FilterRowState extends ConsumerState<_FilterRow>
         pendingColorFamilies: _pendingColorFamilies,
         pendingInkTypes: _pendingInkTypes,
         pendingBrands: _pendingBrands,
+        pendingFillTypes: _pendingFillTypes,
         brandOptions: brandOptions,
         currentSort: currentSort,
         onToggle: (value) => _togglePending(filter, value),
@@ -463,11 +482,15 @@ class _FilterRowState extends ConsumerState<_FilterRow>
     );
 
     if (widget.tabIndex != 0) {
-      // 만년필: 브랜드 필터 칩 + 정렬 칩, 함께 좌우 스크롤
+      // 만년필: 브랜드 필터 칩 + 충전방식 필터 칩 + 정렬 칩, 함께 좌우 스크롤
       final penBrandSelected = state.penFilter.brands;
       final penBrandLabel = penBrandSelected.isEmpty
           ? '브랜드'
           : '브랜드 : ${penBrandSelected.join(', ')}';
+      final penFillTypeSelected = state.penFilter.fillTypes;
+      final penFillTypeLabel = penFillTypeSelected.isEmpty
+          ? '충전방식'
+          : '충전방식 : ${penFillTypeSelected.join(', ')}';
       return SizedBox(
         height: 44,
         child: ListView(
@@ -488,6 +511,19 @@ class _FilterRowState extends ConsumerState<_FilterRow>
                   _ExpandedFilter.brand,
                   brandOptions: brandOptions,
                 ),
+              ),
+            ),
+            const SizedBox(width: 8),
+            CompositedTransformTarget(
+              link: _fillTypeLink,
+              child: _FilterChipItem(
+                key: _fillTypeChipKey,
+                label: penFillTypeLabel,
+                isActive: penFillTypeSelected.isNotEmpty,
+                icon: _expanded == _ExpandedFilter.fillType
+                    ? Icons.keyboard_arrow_up
+                    : Icons.keyboard_arrow_down,
+                onTap: () => _toggleDropdown(_ExpandedFilter.fillType),
               ),
             ),
             const SizedBox(width: 8),
@@ -595,6 +631,7 @@ class _FilterDropdownOverlay extends StatelessWidget {
     required this.pendingColorFamilies,
     required this.pendingInkTypes,
     required this.pendingBrands,
+    required this.pendingFillTypes,
     required this.brandOptions,
     required this.currentSort,
     required this.onToggle,
@@ -611,6 +648,7 @@ class _FilterDropdownOverlay extends StatelessWidget {
   final List<String> pendingColorFamilies;
   final List<String> pendingInkTypes;
   final List<String> pendingBrands;
+  final List<String> pendingFillTypes;
   final List<String> brandOptions;
   final ArchiveSortOption currentSort;
   final ValueChanged<String> onToggle;
@@ -633,6 +671,7 @@ class _FilterDropdownOverlay extends StatelessWidget {
     final isType = filter == _ExpandedFilter.type;
     final isBrand = filter == _ExpandedFilter.brand;
     final isSort = filter == _ExpandedFilter.sort;
+    final isFillType = filter == _ExpandedFilter.fillType;
     // 완료/바깥 탭 전까지는 여기 담긴 값만 바뀌고, 실제 필터(뒤쪽 목록)에는
     // 반영되지 않음 — 고를 때마다 배경이 바뀌어 정신없던 문제 방지.
     // (정렬은 다중 선택이 아니라 탭하면 바로 적용되므로 pending 자체가 없음)
@@ -642,11 +681,15 @@ class _FilterDropdownOverlay extends StatelessWidget {
         ? pendingInkTypes
         : isBrand
         ? pendingBrands
+        : isFillType
+        ? pendingFillTypes
         : const <String>[];
     final selectedLabels = isType
         ? pending.map(_inkTypeValueToLabel).toList()
         : pending;
-    final filterLabel = isColor ? '색상 계열' : (isType ? '특수 속성' : '브랜드');
+    final filterLabel = isColor
+        ? '색상 계열'
+        : (isType ? '특수 속성' : (isFillType ? '충전방식' : '브랜드'));
     final headerText = isSort
         ? currentSort.label
         : (selectedLabels.isEmpty
@@ -802,6 +845,14 @@ class _FilterDropdownOverlay extends StatelessWidget {
                                           onTap: () => onToggle(
                                             _inkTypeLabelToValue(label),
                                           ),
+                                        ),
+                                      )
+                                    : isFillType
+                                    ? _fillTypeLabels.map(
+                                        (label) => _dropdownRow(
+                                          label: label,
+                                          isSelected: pending.contains(label),
+                                          onTap: () => onToggle(label),
                                         ),
                                       )
                                     : brandOptions.map(
@@ -1171,13 +1222,7 @@ class _ProductRequestFooter extends StatelessWidget {
         onPressed: () => showAddProductSheet(
           context,
           initialType: _type,
-          onAdded: (id, name) {
-            showCenterToast(
-              context,
-              message: '$name 이(가) 등록됐어요!',
-              icon: Icons.check_circle,
-            );
-          },
+          navigateToDetailOnSuccess: true,
         ),
       ),
     );

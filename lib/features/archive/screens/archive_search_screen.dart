@@ -387,43 +387,52 @@ class _InkResults extends StatelessWidget {
                 context,
                 initialType: 'ink',
                 initialName: query,
+                navigateToDetailOnSuccess: true,
               ),
             ),
           ],
         ),
       );
     }
-    return GridView.builder(
-      padding: const EdgeInsets.all(16),
-      gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-        crossAxisCount: 4,
-        mainAxisSpacing: 20,
-        crossAxisSpacing: 12,
-        childAspectRatio: 0.75,
-      ),
-      itemCount: inks.length,
-      itemBuilder: (_, i) {
-        final ink = inks[i];
-        return GestureDetector(
-          onTap: () => context.push('/archive/ink/${ink.id}'),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              InkDropCircle(color: ink.inkColor, size: 56),
-              const SizedBox(height: 6),
-              Text(
-                ink.name,
-                style: AppTextStyles.caption.copyWith(
-                  color: AppColors.textSecondary,
+    return CustomScrollView(
+      slivers: [
+        SliverPadding(
+          padding: const EdgeInsets.all(16),
+          sliver: SliverGrid(
+            gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+              crossAxisCount: 4,
+              mainAxisSpacing: 20,
+              crossAxisSpacing: 12,
+              childAspectRatio: 0.75,
+            ),
+            delegate: SliverChildBuilderDelegate((_, i) {
+              final ink = inks[i];
+              return GestureDetector(
+                onTap: () => context.push('/archive/ink/${ink.id}'),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    InkDropCircle(color: ink.inkColor, size: 56),
+                    const SizedBox(height: 6),
+                    Text(
+                      ink.name,
+                      style: AppTextStyles.caption.copyWith(
+                        color: AppColors.textSecondary,
+                      ),
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
+                      textAlign: TextAlign.center,
+                    ),
+                  ],
                 ),
-                maxLines: 2,
-                overflow: TextOverflow.ellipsis,
-                textAlign: TextAlign.center,
-              ),
-            ],
+              );
+            }, childCount: inks.length),
           ),
-        );
-      },
+        ),
+        SliverToBoxAdapter(
+          child: _SearchRegisterFooter(type: 'ink', query: query),
+        ),
+      ],
     );
   }
 }
@@ -454,18 +463,54 @@ class _PenResults extends StatelessWidget {
                 context,
                 initialType: 'pen',
                 initialName: query,
+                navigateToDetailOnSuccess: true,
               ),
             ),
           ],
         ),
       );
     }
-    return ListView.separated(
-      itemCount: pens.length,
-      separatorBuilder: (_, __) => const Divider(height: 1),
-      itemBuilder: (_, i) => PenListTile(
-        pen: pens[i],
-        onTap: () => context.push('/archive/pen/${pens[i].id}'),
+    return CustomScrollView(
+      slivers: [
+        SliverList.separated(
+          itemCount: pens.length,
+          separatorBuilder: (_, __) => const Divider(height: 1),
+          itemBuilder: (_, i) => PenListTile(
+            pen: pens[i],
+            onTap: () => context.push('/archive/pen/${pens[i].id}'),
+          ),
+        ),
+        SliverToBoxAdapter(
+          child: _SearchRegisterFooter(type: 'pen', query: query),
+        ),
+      ],
+    );
+  }
+}
+
+// ── 검색 결과 하단 "직접 등록하기" 버튼 — 검색 결과가 있어도, 찾는 제품이
+// 그 안에 없을 수 있으므로 결과 유무와 상관없이 항상 노출한다.
+class _SearchRegisterFooter extends StatelessWidget {
+  const _SearchRegisterFooter({required this.type, required this.query});
+  final String type;
+  final String query;
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 16),
+      child: Center(
+        child: TextButton.icon(
+          icon: const Icon(Icons.add_circle_outline),
+          label: Text('"$query" 직접 등록하기'),
+          onPressed: () =>
+              showAddProductSheet(
+                context,
+                initialType: type,
+                initialName: query,
+                navigateToDetailOnSuccess: true,
+              ),
+        ),
       ),
     );
   }

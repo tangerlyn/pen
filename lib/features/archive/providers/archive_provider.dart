@@ -46,24 +46,24 @@ class PenFilter {
     this.brands = const [],
     this.nibSize,
     this.nibMaterial,
-    this.fillType,
+    this.fillTypes = const [],
   });
   final List<String> brands;
   final String? nibSize;
   final String? nibMaterial;
-  final String? fillType;
+  final List<String> fillTypes;
 
   PenFilter copyWith({
     List<String>? brands,
     String? nibSize,
     String? nibMaterial,
-    String? fillType,
+    List<String>? fillTypes,
   }) {
     return PenFilter(
       brands: brands ?? this.brands,
       nibSize: nibSize ?? this.nibSize,
       nibMaterial: nibMaterial ?? this.nibMaterial,
-      fillType: fillType ?? this.fillType,
+      fillTypes: fillTypes ?? this.fillTypes,
     );
   }
 }
@@ -193,7 +193,7 @@ class ArchiveNotifier extends StateNotifier<ArchiveState> {
             brands: state.penFilter.brands.isNotEmpty ? state.penFilter.brands : null,
             nibSize: state.penFilter.nibSize,
             nibMaterial: state.penFilter.nibMaterial,
-            fillType: state.penFilter.fillType,
+            fillTypes: state.penFilter.fillTypes.isNotEmpty ? state.penFilter.fillTypes : null,
             search: state.search.isNotEmpty ? state.search : null,
           );
           state = state.copyWith(
@@ -253,7 +253,7 @@ class ArchiveNotifier extends StateNotifier<ArchiveState> {
             brands: state.penFilter.brands.isNotEmpty ? state.penFilter.brands : null,
             nibSize: state.penFilter.nibSize,
             nibMaterial: state.penFilter.nibMaterial,
-            fillType: state.penFilter.fillType,
+            fillTypes: state.penFilter.fillTypes.isNotEmpty ? state.penFilter.fillTypes : null,
             search: state.search.isNotEmpty ? state.search : null,
             lastDoc: state.penLastDoc,
           );
@@ -277,6 +277,11 @@ class ArchiveNotifier extends StateNotifier<ArchiveState> {
     state = state.copyWith(tabIndex: index);
     _load();
   }
+
+  // 새 제품 등록/수정 후 목록만 다시 불러옴 — ref.invalidate로 provider를
+  // 통째로 재생성하면 tabIndex/필터/정렬이 기본값(잉크 탭)으로 리셋돼서,
+  // 만년필 탭에서 등록했는데도 목록이 안 보이는 문제가 있었음.
+  void refresh() => _load();
 
   void setSearch(String search) {
     state = state.copyWith(search: search);

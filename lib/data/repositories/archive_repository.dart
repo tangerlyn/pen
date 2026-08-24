@@ -312,7 +312,7 @@ class ArchiveRepository {
     List<String>? brands,
     String? nibSize,
     String? nibMaterial,
-    String? fillType,
+    List<String>? fillTypes,
     String? search,
     DocumentSnapshot? lastDoc,
     int pageSize = 40,
@@ -320,16 +320,16 @@ class ArchiveRepository {
     Query query = _pens;
     if (nibMaterial != null)
       query = query.where('nibMaterial', isEqualTo: nibMaterial);
-    if (fillType != null) query = query.where('fillType', isEqualTo: fillType);
     if (nibSize != null)
       query = query.where('nibSizes', arrayContains: nibSize);
 
-    // search/brands는 클라이언트 쪽 필터라, 있으면 컬렉션 전체를 가져와야
-    // 검색어와 일치하는 만년필을 놓치지 않는다 (getInks와 동일한 이유).
+    // search/brands/fillTypes는 클라이언트 쪽 필터라, 있으면 컬렉션 전체를
+    // 가져와야 조건과 일치하는 만년필을 놓치지 않는다 (getInks와 동일한 이유).
     // 필터가 없을 때만 커서 기반 페이지네이션 적용.
     final hasClientFilter =
         (search != null && search.isNotEmpty) ||
-        (brands != null && brands.isNotEmpty);
+        (brands != null && brands.isNotEmpty) ||
+        (fillTypes != null && fillTypes.isNotEmpty);
     if (!hasClientFilter) {
       query = query.orderBy(FieldPath.documentId).limit(pageSize + 1);
       if (lastDoc != null) {
@@ -355,6 +355,10 @@ class ArchiveRepository {
 
     if (brands != null && brands.isNotEmpty) {
       results = results.where((p) => brands.contains(p.brand)).toList();
+    }
+
+    if (fillTypes != null && fillTypes.isNotEmpty) {
+      results = results.where((p) => fillTypes.contains(p.fillType)).toList();
     }
 
     if (search != null && search.isNotEmpty) {
@@ -445,11 +449,12 @@ class ArchiveRepository {
     required String uid,
     required String brand,
     required String modelName,
-    required String nibMaterial,
-    required List<String> nibSizes,
     required String fillType,
+    String nibMaterial = '스틸닙',
+    List<String> nibSizes = const [],
     String lineup = '',
     String priceRange = '',
+    String? photoUrl,
   }) async {
     final doc = _pens.doc();
     await doc.set({
@@ -460,6 +465,7 @@ class ArchiveRepository {
       'fillType': fillType,
       'lineup': lineup,
       'priceRange': priceRange,
+      if (photoUrl != null) 'photoUrl': photoUrl,
       'addedBy': uid,
       'isUserAdded': true,
       'createdAt': FieldValue.serverTimestamp(),

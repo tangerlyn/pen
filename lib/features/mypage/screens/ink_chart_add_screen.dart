@@ -295,12 +295,27 @@ class _InkChartAddScreenState extends ConsumerState<InkChartAddScreen> {
       await ref.read(inkBookRepoProvider).addEntry(uid, widget.bookId, entry);
 
       if (mounted) {
-        await showInkAddSuccess(
+        final shape = ref.read(inkSwatchShapeProvider);
+        await showAddSuccessOverlay(
           context,
-          photo: _photo!,
-          shape: ref.read(inkSwatchShapeProvider),
-          brand: brand,
-          inkName: inkName,
+          visual: Container(
+            decoration: BoxDecoration(
+              boxShadow: [
+                BoxShadow(
+                  color: AppColors.primary.withValues(alpha: 0.12),
+                  blurRadius: 32,
+                  offset: const Offset(0, 8),
+                ),
+              ],
+            ),
+            child: InkShapeClip(
+              shape: shape,
+              child: Image.file(_photo!, fit: BoxFit.cover),
+            ),
+          ),
+          title: brand,
+          subtitle: inkName,
+          caption: '차트에 기록됐어요',
         );
         if (mounted) context.pop();
       }

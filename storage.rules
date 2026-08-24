@@ -1,0 +1,27 @@
+rules_version = '2';
+service firebase.storage {
+  match /b/{bucket}/o {
+    match /reviews/{reviewId}/{allPaths=**} {
+      allow read: if request.auth != null;
+      allow write: if request.auth != null;
+      allow delete: if request.auth != null;
+    }
+    match /profiles/{uid}/{allPaths=**} {
+      allow read: if request.auth != null;
+      allow write: if request.auth.uid == uid;
+    }
+    match /posts/{postId}/{allPaths=**} {
+      allow read: if request.auth != null;
+      allow write: if request.auth != null;
+    }
+    // 이거 추가!
+    match /inkChart/{uid}/{allPaths=**} {
+      allow read: if request.auth != null;
+      allow write: if request.auth.uid == uid;
+    }
+    match /pens/{uid}/{allPaths=**} {
+      allow read: if request.auth != null;
+      allow write: if request.auth.uid == uid;
+    }
+  }
+}

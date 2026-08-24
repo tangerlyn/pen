@@ -50,6 +50,9 @@ class StorageService {
   Future<String> uploadInkChartPhoto(File file, String uid) =>
       uploadImage(file: file, folder: 'inkChart/$uid', quality: 85, maxWidth: 1080);
 
+  Future<String> uploadPenPhoto(File file, String uid) =>
+      uploadImage(file: file, folder: 'pens/$uid', quality: 85, maxWidth: 1080);
+
   Future<String?> uploadPostImage(String filePath) async {
     try {
       return await uploadImage(file: File(filePath), folder: 'posts');

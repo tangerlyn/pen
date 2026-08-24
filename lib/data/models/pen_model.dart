@@ -10,6 +10,7 @@ class PenModel {
     this.priceRange = '',
     this.reviewCount = 0,
     this.avgRating = 0.0,
+    this.photoUrl,
   });
 
   final String id;
@@ -22,6 +23,7 @@ class PenModel {
   final String priceRange;
   final int reviewCount;
   final double avgRating;
+  final String? photoUrl;
 
   String get displayName => '$brand $modelName';
 
@@ -37,6 +39,7 @@ class PenModel {
       priceRange: data['priceRange'] as String? ?? '',
       reviewCount: (data['reviewCount'] as num?)?.toInt() ?? 0,
       avgRating: (data['avgRating'] as num?)?.toDouble() ?? 0.0,
+      photoUrl: data['photoUrl'] as String?,
     );
   }
 
@@ -50,19 +53,20 @@ class PenModel {
         'priceRange': priceRange,
         'reviewCount': reviewCount,
         'avgRating': avgRating,
+        'photoUrl': photoUrl,
       };
 
   PenModel copyWith({
     String? id, String? brand, String? lineup, String? modelName,
     List<String>? nibSizes, String? nibMaterial, String? fillType,
-    String? priceRange, int? reviewCount, double? avgRating,
+    String? priceRange, int? reviewCount, double? avgRating, String? photoUrl,
   }) {
     return PenModel(
       id: id ?? this.id, brand: brand ?? this.brand, lineup: lineup ?? this.lineup,
       modelName: modelName ?? this.modelName, nibSizes: nibSizes ?? this.nibSizes,
       nibMaterial: nibMaterial ?? this.nibMaterial, fillType: fillType ?? this.fillType,
       priceRange: priceRange ?? this.priceRange, reviewCount: reviewCount ?? this.reviewCount,
-      avgRating: avgRating ?? this.avgRating,
+      avgRating: avgRating ?? this.avgRating, photoUrl: photoUrl ?? this.photoUrl,
     );
   }
 }

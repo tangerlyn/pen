@@ -1,3 +1,4 @@
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -8,6 +9,7 @@ import '../../../shared/providers/wishlist_providers.dart';
 import '../../../shared/widgets/wishlist_toast.dart';
 import '../../../shared/widgets/center_toast.dart';
 import '../../../data/models/ink_model.dart';
+import '../../../data/models/pen_model.dart';
 import '../../../shared/widgets/review/review_feed_card.dart';
 import '../../../shared/widgets/ink_drop_circle.dart';
 import '../../../shared/widgets/archive/add_product_bottom_sheet.dart'
@@ -99,7 +101,7 @@ class _DetailBody extends ConsumerWidget {
             // 색상 비교 버튼 — 구현 완료, 적용 보류 (ink_compare_screen.dart)
             child: type == 'ink'
                 ? _InkProfileHeader(data: data as InkModel)
-                : _InfoCard(data: data),
+                : _PenProfileHeader(data: data as PenModel),
           ),
           Padding(
             padding: const EdgeInsets.fromLTRB(16, 8, 16, 8),
@@ -294,61 +296,111 @@ class _InkProfileHeader extends StatelessWidget {
   }
 }
 
-// ── 정보 카드 ──────────────────────────────────────────────────────────────
-class _InfoCard extends StatelessWidget {
-  const _InfoCard({required this.data});
-  final dynamic data;
+// ── 만년필 프로필 헤더 (인스타 프로필 스타일: 좌측 원형 사진 + 우측 정보) ──────
+class _PenProfileHeader extends StatelessWidget {
+  const _PenProfileHeader({required this.data});
+  final PenModel data;
 
   @override
   Widget build(BuildContext context) {
-    final rows = <MapEntry<String, String>>[
-      MapEntry('브랜드', data.brand),
-      MapEntry('라인업', data.lineup),
-      MapEntry('닙 소재', data.nibMaterial),
-      MapEntry('충전 방식', data.fillType),
-      MapEntry('닙 사이즈', data.nibSizes.join(', ')),
-    ];
-
-    return Container(
-      decoration: BoxDecoration(
-        color: Colors.white.withValues(alpha: 0.82),
-        borderRadius: BorderRadius.circular(14),
-        border: Border.all(
-          color: Colors.white.withValues(alpha: 0.70),
-          width: 1.2,
-        ),
-        boxShadow: AppShadows.cardMd,
-      ),
-      child: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          children: rows
-              .map(
-                (e) => Padding(
-                  padding: const EdgeInsets.symmetric(vertical: 6),
-                  child: Row(
-                    children: [
-                      SizedBox(
-                        width: 80,
-                        child: Text(
-                          e.key,
-                          style: AppTextStyles.labelMedium.copyWith(
-                            fontWeight: FontWeight.w400,
-                          ),
-                        ),
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.center,
+      children: [
+        _PenPhotoCircle(photoUrl: data.photoUrl, size: 72),
+        const SizedBox(width: 16),
+        Expanded(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(data.brand, style: AppTextStyles.labelMedium),
+              const SizedBox(height: 2),
+              Row(
+                crossAxisAlignment: CrossAxisAlignment.center,
+                children: [
+                  Flexible(
+                    child: Text(
+                      data.modelName,
+                      style: AppTextStyles.headlineSmall.copyWith(
+                        fontWeight: FontWeight.w700,
                       ),
-                      Expanded(
-                        child: Text(
-                          e.value,
-                          style: const TextStyle(fontWeight: FontWeight.w500),
-                        ),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                  ),
+                  const SizedBox(width: 8),
+                  Container(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 10,
+                      vertical: 4,
+                    ),
+                    decoration: BoxDecoration(
+                      color: AppColors.chipBackground,
+                      borderRadius: BorderRadius.circular(AppRadius.xl),
+                    ),
+                    child: Text(
+                      data.fillType,
+                      style: AppTextStyles.bodySmall.copyWith(
+                        fontWeight: FontWeight.w600,
                       ),
-                    ],
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 6),
+              if (data.reviewCount > 0)
+                Text(
+                  '리뷰 ${data.reviewCount}개',
+                  style: AppTextStyles.labelMedium.copyWith(
+                    fontWeight: FontWeight.w400,
+                  ),
+                )
+              else
+                Text(
+                  '아직 리뷰가 없어요',
+                  style: AppTextStyles.labelMedium.copyWith(
+                    color: AppColors.textTertiary,
+                    fontWeight: FontWeight.w400,
                   ),
                 ),
-              )
-              .toList(),
+            ],
+          ),
         ),
+      ],
+    );
+  }
+}
+
+// 만년필 사진 원형 — 등록된 사진이 있으면 그대로, 없으면 아이콘 기본 이미지
+class _PenPhotoCircle extends StatelessWidget {
+  const _PenPhotoCircle({required this.photoUrl, this.size = 56});
+  final String? photoUrl;
+  final double size;
+
+  @override
+  Widget build(BuildContext context) {
+    return ClipOval(
+      child: Container(
+        width: size,
+        height: size,
+        color: AppColors.chipBackground,
+        alignment: Alignment.center,
+        child: (photoUrl == null || photoUrl!.isEmpty)
+            ? Icon(
+                Icons.edit,
+                color: AppColors.textSecondary,
+                size: size * 0.4,
+              )
+            : CachedNetworkImage(
+                imageUrl: photoUrl!,
+                width: size,
+                height: size,
+                fit: BoxFit.cover,
+                errorWidget: (_, __, ___) => Icon(
+                  Icons.edit,
+                  color: AppColors.textSecondary,
+                  size: size * 0.4,
+                ),
+              ),
       ),
     );
   }
@@ -530,7 +582,7 @@ class _EditInkSheetState extends ConsumerState<_EditInkSheet> {
             hexColor: _colorToHex(_color),
           );
       ref.invalidate(archiveDetailProvider);
-      ref.invalidate(archiveProvider);
+      ref.read(archiveProvider.notifier).refresh();
       if (mounted) {
         Navigator.pop(context);
         showCenterToast(

@@ -1,12 +1,19 @@
 import 'dart:async';
+import 'dart:io';
 
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
+import 'package:image_picker/image_picker.dart';
 import '../../../core/theme/app_theme.dart';
 import '../../../shared/providers/providers.dart';
 import '../../../features/archive/providers/archive_provider.dart';
+import '../../../features/mypage/screens/ink_crop_screen.dart';
+import '../../../features/mypage/widgets/ink_add_success_overlay.dart';
+import '../../../features/mypage/widgets/ink_swatch_shape.dart';
 import '../center_toast.dart';
+import '../ink_drop_circle.dart';
 import '../tap_scale.dart';
 
 // ── 상수 ─────────────────────────────────────────────────────────────────────
@@ -14,9 +21,7 @@ import '../tap_scale.dart';
 const _kInkTypeLabels = ['일반', '펄', '테'];
 const _kInkTypeValues = ['normal', 'shimmer', 'sheen'];
 
-const _kNibMaterials = ['금닙 14K', '금닙 18K', '금닙 21K', '스틸닙', '기타'];
-const _kNibSizes = ['EF', 'F', 'M', 'B', 'BB'];
-const _kFillTypes = ['카트리지·컨버터', '피스톤', '아이드로퍼', '진공'];
+const _kFillTypes = ['카트리지·컨버터', '피스톤필러', '아이드로퍼', '진공'];
 
 // ── 진입 함수 ─────────────────────────────────────────────────────────────────
 
@@ -25,6 +30,7 @@ void showAddProductSheet(
   String initialType = 'ink',
   String initialName = '',
   void Function(String id, String displayName)? onAdded,
+  bool navigateToDetailOnSuccess = false,
 }) {
   showModalBottomSheet(
     context: context,
@@ -37,6 +43,7 @@ void showAddProductSheet(
       initialType: initialType,
       initialName: initialName,
       onAdded: onAdded,
+      navigateToDetailOnSuccess: navigateToDetailOnSuccess,
     ),
   );
 }
@@ -49,11 +56,17 @@ class AddProductBottomSheet extends ConsumerStatefulWidget {
     this.initialType = 'ink',
     this.initialName = '',
     this.onAdded,
+    this.navigateToDetailOnSuccess = false,
   });
 
   final String initialType;
   final String initialName;
   final void Function(String id, String displayName)? onAdded;
+  // true면 등록 성공 시 잉크 스와치 등록과 동일한 성공 연출을 보여준 뒤
+  // 곧장 그 제품의 상세페이지로 이동한다(아카이브에서 등록할 때 사용).
+  // false면 기존처럼 그냥 시트만 닫고 onAdded 콜백에 맡긴다(리뷰 작성
+  // 화면에서 제품 검색 중 즉석 등록할 때처럼, 흐름을 방해하면 안 되는 경우).
+  final bool navigateToDetailOnSuccess;
 
   @override
   ConsumerState<AddProductBottomSheet> createState() =>
@@ -83,9 +96,8 @@ class _AddProductBottomSheetState extends ConsumerState<AddProductBottomSheet> {
 
   // 만년필
   final _penModelCtrl = TextEditingController();
-  String? _nibMaterial;
-  final Set<String> _nibSizes = {};
   String? _fillType;
+  File? _penPhoto;
 
   @override
   void initState() {
@@ -179,10 +191,7 @@ class _AddProductBottomSheetState extends ConsumerState<AddProductBottomSheet> {
       case 'ink':
         return _inkNameCtrl.text.trim().isNotEmpty && _inkTypeValue != null;
       case 'pen':
-        return _penModelCtrl.text.trim().isNotEmpty &&
-            _nibMaterial != null &&
-            _nibSizes.isNotEmpty &&
-            _fillType != null;
+        return _penModelCtrl.text.trim().isNotEmpty && _fillType != null;
     }
     return false;
   }
@@ -197,6 +206,7 @@ class _AddProductBottomSheetState extends ConsumerState<AddProductBottomSheet> {
       final repo = ref.read(archiveRepoProvider);
       String id;
       String displayName;
+      String productName;
       final brand = _brandCtrl.text.trim();
 
       switch (_type) {
@@ -218,26 +228,48 @@ class _AddProductBottomSheetState extends ConsumerState<AddProductBottomSheet> {
             hexColor: _colorToHex(_inkColor),
           );
           displayName = '$brand $name';
+          productName = name;
 
         case 'pen':
           final model = _penModelCtrl.text.trim();
+          String? photoUrl;
+          if (_penPhoto != null) {
+            photoUrl = await ref
+                .read(storageServiceProvider)
+                .uploadPenPhoto(_penPhoto!, uid);
+          }
           id = await repo.addPen(
             uid: uid,
             brand: brand,
             modelName: model,
-            nibMaterial: _nibMaterial!,
-            nibSizes: _nibSizes.toList(),
             fillType: _fillType!,
+            photoUrl: photoUrl,
           );
           displayName = '$brand $model';
+          productName = model;
 
         default:
           return;
       }
 
-      ref.invalidate(archiveProvider);
+      ref.read(archiveProvider.notifier).refresh();
+      if (!mounted) return;
 
-      if (mounted) {
+      if (widget.navigateToDetailOnSuccess) {
+        await showAddSuccessOverlay(
+          context,
+          visual: _type == 'ink'
+              ? InkDropCircle(color: _inkColor, size: 170)
+              : _penSuccessVisual(),
+          title: brand,
+          subtitle: productName,
+          caption: '아카이브에 등록됐어요',
+        );
+        if (mounted) {
+          Navigator.pop(context);
+          context.push('/archive/$_type/$id');
+        }
+      } else {
         Navigator.pop(context);
         widget.onAdded?.call(id, displayName);
       }
@@ -479,32 +511,33 @@ class _AddProductBottomSheetState extends ConsumerState<AddProductBottomSheet> {
 
   // ── 만년필 폼 ─────────────────────────────────────────────────────────────
 
+  Future<void> _pickPenPhoto() async {
+    final picker = ImagePicker();
+    final xFile = await picker.pickImage(
+      source: ImageSource.gallery,
+      maxWidth: 1080,
+      imageQuality: 88,
+    );
+    if (xFile == null || !mounted) return;
+    final cropped = await Navigator.of(context).push<File>(
+      MaterialPageRoute(
+        builder: (_) => InkCropScreen(
+          imageFile: File(xFile.path),
+          shape: InkSwatchShape.circle,
+        ),
+      ),
+    );
+    if (cropped != null) setState(() => _penPhoto = cropped);
+  }
+
   Widget _penForm() => Column(
     crossAxisAlignment: CrossAxisAlignment.start,
     children: [
+      Center(child: _penPhotoPicker()),
+      const SizedBox(height: 20),
       _field('브랜드명', _brandCtrl, '예: PILOT, LAMY, Pelikan'),
       const SizedBox(height: 14),
       _field('모델명', _penModelCtrl, '예: Custom 74, Safari'),
-      const SizedBox(height: 16),
-      _sectionLabel('닙 소재 *'),
-      _chipGroup(
-        items: _kNibMaterials,
-        selected: _nibMaterial,
-        onTap: (v) => setState(() => _nibMaterial = v),
-      ),
-      const SizedBox(height: 16),
-      _sectionLabel('닙 사이즈 * (복수 선택 가능)'),
-      _multiChipGroup(
-        items: _kNibSizes,
-        selected: _nibSizes,
-        onTap: (v) => setState(() {
-          if (_nibSizes.contains(v)) {
-            _nibSizes.remove(v);
-          } else {
-            _nibSizes.add(v);
-          }
-        }),
-      ),
       const SizedBox(height: 16),
       _sectionLabel('충전 방식 *'),
       _chipGroup(
@@ -514,6 +547,58 @@ class _AddProductBottomSheetState extends ConsumerState<AddProductBottomSheet> {
       ),
       const SizedBox(height: 8),
     ],
+  );
+
+  Widget _penSuccessVisual() => ClipOval(
+    child: Container(
+      width: 170,
+      height: 170,
+      color: AppColors.chipBackground,
+      alignment: Alignment.center,
+      child: _penPhoto != null
+          ? Image.file(_penPhoto!, fit: BoxFit.cover, width: 170, height: 170)
+          : const Icon(Icons.edit, color: AppColors.textSecondary, size: 64),
+    ),
+  );
+
+  Widget _penPhotoPicker() => TapScale(
+    onTap: _pickPenPhoto,
+    child: Stack(
+      alignment: Alignment.bottomRight,
+      children: [
+        ClipOval(
+          child: Container(
+            width: 88,
+            height: 88,
+            color: AppColors.chipBackground,
+            alignment: Alignment.center,
+            child: _penPhoto != null
+                ? Image.file(_penPhoto!, fit: BoxFit.cover, width: 88, height: 88)
+                : const Icon(
+                    Icons.edit,
+                    color: AppColors.textSecondary,
+                    size: 28,
+                  ),
+          ),
+        ),
+        Container(
+          width: 28,
+          height: 28,
+          decoration: const BoxDecoration(
+            color: AppColors.primary,
+            shape: BoxShape.circle,
+            border: Border.fromBorderSide(
+              BorderSide(color: Colors.white, width: 2),
+            ),
+          ),
+          child: const Icon(
+            Icons.camera_alt,
+            color: Colors.white,
+            size: 14,
+          ),
+        ),
+      ],
+    ),
   );
 
   // ── 공통 빌더 ─────────────────────────────────────────────────────────────
@@ -641,35 +726,6 @@ class _AddProductBottomSheetState extends ConsumerState<AddProductBottomSheet> {
     runSpacing: 8,
     children: items.map((item) {
       final isSelected = item == selected;
-      return TapScale(
-        onTap: () => onTap(item),
-        child: AnimatedContainer(
-          duration: const Duration(milliseconds: 120),
-          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 7),
-          decoration: BoxDecoration(
-            color: isSelected ? AppColors.primary : AppColors.chipBackground,
-            borderRadius: BorderRadius.circular(AppRadius.xl),
-          ),
-          child: Text(
-            item,
-            style: AppTextStyles.labelMedium.copyWith(
-              color: isSelected ? Colors.white : AppColors.textSecondary,
-            ),
-          ),
-        ),
-      );
-    }).toList(),
-  );
-
-  Widget _multiChipGroup({
-    required List<String> items,
-    required Set<String> selected,
-    required void Function(String) onTap,
-  }) => Wrap(
-    spacing: 8,
-    runSpacing: 8,
-    children: items.map((item) {
-      final isSelected = selected.contains(item);
       return TapScale(
         onTap: () => onTap(item),
         child: AnimatedContainer(

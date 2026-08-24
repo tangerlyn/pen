@@ -1,47 +1,49 @@
-import 'dart:io';
 import 'package:flutter/material.dart';
 import '../../../core/theme/app_theme.dart';
-import 'ink_swatch_shape.dart';
 
-Future<void> showInkAddSuccess(
+/// 등록 완료 연출 — 원래 잉크 스와치 등록(차트 기록) 전용이었던 걸 일반화해서
+/// 아카이브에 잉크/만년필을 새로 등록했을 때도 동일한 모션으로 재사용한다.
+/// [visual]은 상단에 뜨는 170x170 비주얼(사진/색상 원 등)로, 그림자 등 자체
+/// 스타일은 호출부에서 책임진다.
+Future<void> showAddSuccessOverlay(
   BuildContext context, {
-  required File photo,
-  required InkSwatchShape shape,
-  required String brand,
-  required String inkName,
+  required Widget visual,
+  required String title,
+  required String subtitle,
+  required String caption,
 }) {
   return showGeneralDialog<void>(
     context: context,
     barrierDismissible: false,
     barrierColor: Colors.transparent,
     transitionDuration: Duration.zero,
-    pageBuilder: (ctx, anim, secondAnim) => _InkAddSuccessOverlay(
-      photo: photo,
-      shape: shape,
-      brand: brand,
-      inkName: inkName,
+    pageBuilder: (ctx, anim, secondAnim) => _AddSuccessOverlay(
+      visual: visual,
+      title: title,
+      subtitle: subtitle,
+      caption: caption,
     ),
   );
 }
 
-class _InkAddSuccessOverlay extends StatefulWidget {
-  const _InkAddSuccessOverlay({
-    required this.photo,
-    required this.shape,
-    required this.brand,
-    required this.inkName,
+class _AddSuccessOverlay extends StatefulWidget {
+  const _AddSuccessOverlay({
+    required this.visual,
+    required this.title,
+    required this.subtitle,
+    required this.caption,
   });
 
-  final File photo;
-  final InkSwatchShape shape;
-  final String brand;
-  final String inkName;
+  final Widget visual;
+  final String title;
+  final String subtitle;
+  final String caption;
 
   @override
-  State<_InkAddSuccessOverlay> createState() => _InkAddSuccessOverlayState();
+  State<_AddSuccessOverlay> createState() => _AddSuccessOverlayState();
 }
 
-class _InkAddSuccessOverlayState extends State<_InkAddSuccessOverlay>
+class _AddSuccessOverlayState extends State<_AddSuccessOverlay>
     with TickerProviderStateMixin {
   late final AnimationController _bgCtrl;
   late final AnimationController _swatchCtrl;
@@ -174,27 +176,10 @@ class _InkAddSuccessOverlayState extends State<_InkAddSuccessOverlay>
                             angle: swatchRotate,
                             child: Transform.scale(
                               scale: swatchScale,
-                              child: Container(
+                              child: SizedBox(
                                 width: 170,
                                 height: 170,
-                                decoration: BoxDecoration(
-                                  boxShadow: [
-                                    BoxShadow(
-                                      color: AppColors.primary.withValues(
-                                        alpha: 0.12,
-                                      ),
-                                      blurRadius: 32,
-                                      offset: const Offset(0, 8),
-                                    ),
-                                  ],
-                                ),
-                                child: InkShapeClip(
-                                  shape: widget.shape,
-                                  child: Image.file(
-                                    widget.photo,
-                                    fit: BoxFit.cover,
-                                  ),
-                                ),
+                                child: widget.visual,
                               ),
                             ),
                           ),
@@ -209,14 +194,14 @@ class _InkAddSuccessOverlayState extends State<_InkAddSuccessOverlay>
                         child: Column(
                           children: [
                             Text(
-                              widget.brand,
+                              widget.title,
                               style: AppTextStyles.labelMedium.copyWith(
                                 fontFamily: 'Pretendard',
                               ),
                             ),
                             const SizedBox(height: 4),
                             Text(
-                              widget.inkName,
+                              widget.subtitle,
                               style: const TextStyle(
                                 fontSize: 22,
                                 fontWeight: FontWeight.w700,
@@ -227,7 +212,7 @@ class _InkAddSuccessOverlayState extends State<_InkAddSuccessOverlay>
                             ),
                             const SizedBox(height: 8),
                             Text(
-                              '차트에 기록됐어요',
+                              widget.caption,
                               style: AppTextStyles.labelMedium.copyWith(
                                 color: AppColors.textTertiary,
                                 fontWeight: FontWeight.w400,

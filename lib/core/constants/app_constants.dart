@@ -52,7 +52,7 @@ abstract class AppStrings {
   static const List<String> inkTypes = ['일반', '펄', '테', '형광'];
   static const List<String> nibSizes = ['EF', 'F', 'FM', 'M', 'B', 'BB', 'Stub', 'FA', 'Music'];
   static const List<String> nibMaterials = ['금닙 14K', '금닙 18K', '금닙 21K', '스틸닙'];
-  static const List<String> fillTypes = ['카트리지·컨버터', '피스톤', '아이드로퍼', '진공'];
+  static const List<String> fillTypes = ['카트리지·컨버터', '피스톤필러', '아이드로퍼', '진공'];
   static const List<String> rulingTypes = ['무지', '줄지', '모눈', '도트'];
   static const List<String> conditions = ['미개봉', 'S급', 'A급', 'B급', 'C급'];
   static const List<String> tradeTypes = ['택배', '직거래', '둘다'];
