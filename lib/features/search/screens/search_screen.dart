@@ -479,7 +479,7 @@ class _SortChipRow extends StatelessWidget {
               color: isActive
                   ? AppColors.chipSelected
                   : AppColors.chipBackground,
-              borderRadius: BorderRadius.circular(AppRadius.xl),
+              borderRadius: BorderRadius.circular(AppRadius.full),
             ),
             child: Row(
               mainAxisSize: MainAxisSize.min,

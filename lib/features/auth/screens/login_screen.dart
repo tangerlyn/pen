@@ -120,9 +120,7 @@ class _KakaoLoginButton extends StatelessWidget {
         style: ElevatedButton.styleFrom(
           backgroundColor: const Color(0xFFFEE500),
           foregroundColor: const Color(0xFF3A1D1D),
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(AppRadius.md),
-          ),
+          shape: const StadiumBorder(),
           elevation: 0,
         ),
         child: const Row(
@@ -155,9 +153,7 @@ class _NaverLoginButton extends StatelessWidget {
         style: ElevatedButton.styleFrom(
           backgroundColor: const Color(0xFF03C75A),
           foregroundColor: Colors.white,
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(AppRadius.md),
-          ),
+          shape: const StadiumBorder(),
           elevation: 0,
         ),
         child: const Row(
@@ -193,9 +189,7 @@ class _AppleLoginButton extends StatelessWidget {
         style: ElevatedButton.styleFrom(
           backgroundColor: Colors.black,
           foregroundColor: Colors.white,
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(AppRadius.md),
-          ),
+          shape: const StadiumBorder(),
           elevation: 0,
         ),
         child: const Row(

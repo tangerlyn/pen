@@ -103,7 +103,7 @@ class _InkCompareScreenState extends ConsumerState<InkCompareScreen> {
                   filled: true,
                   fillColor: AppColors.chipBackground,
                   border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(AppRadius.md),
+                    borderRadius: BorderRadius.circular(AppRadius.full),
                     borderSide: BorderSide.none,
                   ),
                   contentPadding: const EdgeInsets.symmetric(vertical: 10),

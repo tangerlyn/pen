@@ -6,6 +6,7 @@ import '../../../core/theme/app_theme.dart';
 import '../providers/community_provider.dart';
 import '../../../data/models/user_model.dart';
 import '../../../shared/providers/providers.dart';
+import '../../../shared/widgets/category_chip.dart';
 import '../../../shared/widgets/community/post_card.dart';
 import '../../../shared/widgets/common/skeletons.dart';
 import '../../../shared/widgets/icon_count.dart';
@@ -28,26 +29,22 @@ class CommunityScreen extends ConsumerStatefulWidget {
 }
 
 class _CommunityScreenState extends ConsumerState<CommunityScreen> {
-  final _scrollKey = GlobalKey<NestedScrollViewState>();
+  final _scrollController = ScrollController();
   bool _showScrollTop = false;
 
+  @override
+  void dispose() {
+    _scrollController.dispose();
+    super.dispose();
+  }
+
   void _scrollToTop() {
-    final ns = _scrollKey.currentState;
-    if (ns == null) return;
-    if (ns.innerController.hasClients) {
-      ns.innerController.animateTo(
-        0,
-        duration: const Duration(milliseconds: 300),
-        curve: Curves.easeOut,
-      );
-    }
-    if (ns.outerController.hasClients) {
-      ns.outerController.animateTo(
-        0,
-        duration: const Duration(milliseconds: 300),
-        curve: Curves.easeOut,
-      );
-    }
+    if (!_scrollController.hasClients) return;
+    _scrollController.animateTo(
+      0,
+      duration: const Duration(milliseconds: 300),
+      curve: Curves.easeOut,
+    );
   }
 
   @override
@@ -73,136 +70,122 @@ class _CommunityScreenState extends ConsumerState<CommunityScreen> {
             onNotification: (n) {
               if (n is ScrollStartNotification) {
                 if (_showScrollTop) setState(() => _showScrollTop = false);
-              } else if (n is ScrollEndNotification) {
-                final ns = _scrollKey.currentState;
-                final outer = ns?.outerController.hasClients == true
-                    ? ns!.outerController.offset
-                    : 0.0;
-                final inner = ns?.innerController.hasClients == true
-                    ? ns!.innerController.offset
-                    : 0.0;
-                final show = outer + inner > 100;
-                if (show != _showScrollTop)
+              } else if (n is ScrollUpdateNotification ||
+                  n is ScrollEndNotification) {
+                final show = n.metrics.pixels > 100;
+                if (show != _showScrollTop) {
                   setState(() => _showScrollTop = show);
+                }
+                if (n.metrics.extentAfter < 200) {
+                  ref.read(communityFeedProvider.notifier).loadMore();
+                }
               }
               return false;
             },
-            child: NestedScrollView(
-              key: _scrollKey,
-              headerSliverBuilder: (context, _) => [
-                SliverAppBar(
-                  floating: true,
-                  snap: true,
-                  pinned: false,
-                  toolbarHeight: widget.showAppBar ? kToolbarHeight : 0,
-                  title: widget.showAppBar
-                      ? const Text(
-                          '커뮤니티',
-                          style: TextStyle(fontWeight: FontWeight.w700),
-                        )
-                      : null,
-                  actions: widget.showAppBar
-                      ? [
-                          IconButton(
-                            icon: const Icon(Icons.search),
-                            onPressed: () =>
-                                context.push('/search?type=community'),
-                          ),
-                        ]
-                      : null,
-                  bottom: PreferredSize(
-                    preferredSize: const Size.fromHeight(45),
-                    child: Column(
-                      children: [
-                        _CategoryFilterBar(
+            child: RefreshIndicator(
+              onRefresh: () async {
+                ref.invalidate(filteredPostsProvider);
+                await ref
+                    .read(communityFeedProvider.notifier)
+                    .loadPosts(refresh: true);
+              },
+              child: CustomScrollView(
+                controller: _scrollController,
+                slivers: [
+                  SliverAppBar(
+                    floating: true,
+                    snap: true,
+                    pinned: false,
+                    toolbarHeight: widget.showAppBar ? kToolbarHeight : 0,
+                    title: widget.showAppBar
+                        ? const Text(
+                            '커뮤니티',
+                            style: TextStyle(fontWeight: FontWeight.w700),
+                          )
+                        : null,
+                    actions: widget.showAppBar
+                        ? [
+                            IconButton(
+                              icon: const Icon(Icons.search),
+                              onPressed: () =>
+                                  context.push('/search?type=community'),
+                            ),
+                          ]
+                        : null,
+                    bottom: PreferredSize(
+                      preferredSize: const Size.fromHeight(44),
+                      child: ColoredBox(
+                        color: AppColors.surface,
+                        child: _CategoryFilterBar(
                           selected: feedState.selectedCategory,
                           onSelected: (cat) => ref
                               .read(communityFeedProvider.notifier)
                               .setCategory(cat),
                         ),
-                        const Divider(height: 1),
-                      ],
+                      ),
                     ),
                   ),
-                ),
-              ],
-              body: feedState.isLoading
-                  ? ListView.builder(
-                      physics: const NeverScrollableScrollPhysics(),
-                      itemCount: 6,
-                      itemBuilder: (_, _) => const PostCardSkeleton(),
-                    )
-                  : posts.isEmpty
-                  ? Center(
-                      child: Column(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          const Icon(
-                            Icons.article_outlined,
-                            size: 64,
-                            color: AppColors.textTertiary,
-                          ),
-                          const SizedBox(height: 12),
-                          Text(
-                            feedState.selectedCategory != null
-                                ? '${feedState.selectedCategory} 게시글이 없어요.'
-                                : '첫 글을 작성해보세요!',
-                            style: const TextStyle(
-                              color: AppColors.textSecondary,
-                            ),
-                          ),
-                        ],
+                  if (feedState.isLoading)
+                    SliverList(
+                      delegate: SliverChildBuilderDelegate(
+                        (_, _) => const PostCardSkeleton(),
+                        childCount: 6,
                       ),
                     )
-                  : RefreshIndicator(
-                      onRefresh: () async {
-                        ref.invalidate(filteredPostsProvider);
-                        await ref
-                            .read(communityFeedProvider.notifier)
-                            .loadPosts(refresh: true);
-                      },
-                      child: NotificationListener<ScrollNotification>(
-                        onNotification: (notification) {
-                          if (notification is ScrollEndNotification &&
-                              notification.metrics.extentAfter < 200) {
-                            ref.read(communityFeedProvider.notifier).loadMore();
-                          }
-                          return false;
-                        },
-                        child: ListView.separated(
-                          itemCount:
-                              posts.length +
-                              (hasPopular ? 1 : 0) +
-                              (feedState.isLoadingMore ? 1 : 0),
-                          separatorBuilder: (_, i) => const Divider(height: 1),
-                          itemBuilder: (_, i) {
-                            final normalStart = hasPopular ? 1 : 0;
-                            final normalEnd = posts.length + normalStart;
-
-                            if (hasPopular && i == 0) {
-                              return _PopularSection(
-                                posts: popular,
-                                onTap: (id) => context.push('/community/$id'),
-                              );
-                            }
-                            if (feedState.isLoadingMore && i == normalEnd) {
-                              return const Padding(
-                                padding: EdgeInsets.all(16),
-                                child: Center(
-                                  child: CircularProgressIndicator(),
-                                ),
-                              );
-                            }
-                            final post = posts[i - normalStart];
-                            return PostCard(
-                              post: post,
-                              onTap: () =>
-                                  context.push('/community/${post.id}'),
-                            );
-                          },
+                  else if (posts.isEmpty)
+                    SliverFillRemaining(
+                      hasScrollBody: false,
+                      child: Center(
+                        child: Column(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            const Icon(
+                              Icons.article_outlined,
+                              size: 64,
+                              color: AppColors.textTertiary,
+                            ),
+                            const SizedBox(height: 12),
+                            Text(
+                              feedState.selectedCategory != null
+                                  ? '${feedState.selectedCategory} 게시글이 없어요.'
+                                  : '첫 글을 작성해보세요!',
+                              style: const TextStyle(
+                                color: AppColors.textSecondary,
+                              ),
+                            ),
+                          ],
                         ),
                       ),
+                    )
+                  else ...[
+                    if (hasPopular)
+                      SliverToBoxAdapter(
+                        child: _PopularSection(
+                          posts: popular,
+                          onTap: (id) => context.push('/community/$id'),
+                        ),
+                      ),
+                    SliverList.separated(
+                      itemCount: posts.length,
+                      separatorBuilder: (_, i) => const Divider(height: 1),
+                      itemBuilder: (_, i) {
+                        final post = posts[i];
+                        return PostCard(
+                          post: post,
+                          onTap: () => context.push('/community/${post.id}'),
+                        );
+                      },
                     ),
+                    if (feedState.isLoadingMore)
+                      const SliverToBoxAdapter(
+                        child: Padding(
+                          padding: EdgeInsets.all(16),
+                          child: Center(child: CircularProgressIndicator()),
+                        ),
+                      ),
+                  ],
+                ],
+              ),
             ),
           ),
           // 스크롤 탑 버튼 (글쓰기 FAB 위)
@@ -220,6 +203,7 @@ class _CommunityScreenState extends ConsumerState<CommunityScreen> {
                   backgroundColor: AppColors.surface,
                   foregroundColor: AppColors.textPrimary,
                   elevation: 3,
+                  shape: const StadiumBorder(),
                   child: const Icon(Icons.keyboard_arrow_up, size: 22),
                 ),
               ),
@@ -235,6 +219,7 @@ class _CommunityScreenState extends ConsumerState<CommunityScreen> {
               backgroundColor: AppColors.primary,
               foregroundColor: Colors.white,
               elevation: 4,
+              shape: const StadiumBorder(),
               label: const Text(
                 '글 쓰기',
                 style: TextStyle(fontWeight: FontWeight.w600),
@@ -269,24 +254,12 @@ class _CategoryFilterBar extends StatelessWidget {
 
   Widget _chip(String? value, String label) {
     final isSelected = selected == value;
-    return TapScale(
-      onTap: () => onSelected(isSelected ? null : value),
-      child: AnimatedContainer(
-        duration: const Duration(milliseconds: 150),
-        margin: const EdgeInsets.only(right: 8),
-        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 4),
-        alignment: Alignment.center,
-        decoration: BoxDecoration(
-          color: isSelected ? AppColors.primary : AppColors.chipBackground,
-          borderRadius: BorderRadius.circular(AppRadius.xl),
-        ),
-        child: Text(
-          label,
-          style: AppTextStyles.labelMedium.copyWith(
-            fontWeight: isSelected ? FontWeight.w600 : FontWeight.w400,
-            color: isSelected ? Colors.white : AppColors.textSecondary,
-          ),
-        ),
+    return Padding(
+      padding: const EdgeInsets.only(right: 8),
+      child: CategoryChip(
+        label: label,
+        selected: isSelected,
+        onTap: () => onSelected(isSelected ? null : value),
       ),
     );
   }

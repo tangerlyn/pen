@@ -439,9 +439,7 @@ class _AddProductBottomSheetState extends ConsumerState<AddProductBottomSheet> {
           foregroundColor: Colors.white,
           disabledBackgroundColor: AppColors.chipBackground,
           padding: const EdgeInsets.symmetric(vertical: 14),
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(AppRadius.md),
-          ),
+          shape: const StadiumBorder(),
         ),
         child: _isSaving
             ? const SizedBox(
@@ -644,7 +642,7 @@ class _AddProductBottomSheetState extends ConsumerState<AddProductBottomSheet> {
           filled: true,
           fillColor: AppColors.chipBackground,
           border: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(10),
+            borderRadius: BorderRadius.circular(AppRadius.full),
             borderSide: BorderSide.none,
           ),
           contentPadding: const EdgeInsets.symmetric(
@@ -733,7 +731,7 @@ class _AddProductBottomSheetState extends ConsumerState<AddProductBottomSheet> {
           padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 7),
           decoration: BoxDecoration(
             color: isSelected ? AppColors.primary : AppColors.chipBackground,
-            borderRadius: BorderRadius.circular(AppRadius.xl),
+            borderRadius: BorderRadius.circular(AppRadius.full),
           ),
           child: Text(
             item,

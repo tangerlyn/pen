@@ -115,6 +115,7 @@ class _ArchiveScreenState extends ConsumerState<ArchiveScreen>
             },
             child: NestedScrollView(
               key: _scrollKey,
+              floatHeaderSlivers: true,
               headerSliverBuilder: (context, _) {
                 final tabBar = TabBar(
                   controller: _tabController,
@@ -151,7 +152,10 @@ class _ArchiveScreenState extends ConsumerState<ArchiveScreen>
                             child: tabBar,
                           ),
                           // 필터 버튼 — 앱바와 함께 스크롤 시 접힘
-                          _FilterRow(tabIndex: state.tabIndex),
+                          ColoredBox(
+                            color: AppColors.surface,
+                            child: _FilterRow(tabIndex: state.tabIndex),
+                          ),
                         ],
                       ),
                     ),
@@ -182,6 +186,7 @@ class _ArchiveScreenState extends ConsumerState<ArchiveScreen>
                   backgroundColor: AppColors.surface,
                   foregroundColor: AppColors.textPrimary,
                   elevation: 3,
+                  shape: const StadiumBorder(),
                   child: const Icon(Icons.keyboard_arrow_up, size: 22),
                 ),
               ),
@@ -879,11 +884,7 @@ class _FilterDropdownOverlay extends StatelessWidget {
                                       onPressed: onClose,
                                       style: ElevatedButton.styleFrom(
                                         padding: EdgeInsets.zero,
-                                        shape: RoundedRectangleBorder(
-                                          borderRadius: BorderRadius.circular(
-                                            10,
-                                          ),
-                                        ),
+                                        shape: const StadiumBorder(),
                                       ),
                                       child: const Text(
                                         '완료',
@@ -972,11 +973,11 @@ class _FilterChipItem extends StatelessWidget {
     return TapScale(
       onTap: onTap,
       child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+        alignment: Alignment.center,
         decoration: BoxDecoration(
-          // 조건을 선택했을 때만 배경을 채워 강조 — 선택 없으면 글씨만 보임
-          color: isActive ? AppColors.primary : Colors.transparent,
-          borderRadius: BorderRadius.circular(AppRadius.xl),
+          color: isActive ? AppColors.primary : AppColors.chipBackground,
+          borderRadius: BorderRadius.circular(AppRadius.full),
         ),
         child: Row(
           mainAxisSize: MainAxisSize.min,

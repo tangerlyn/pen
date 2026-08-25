@@ -244,7 +244,6 @@ class _PostWriteScreenState extends ConsumerState<PostWriteScreen> {
                   maxLength: AppConstants.maxPostTitle,
                 ),
               ),
-              const Divider(height: 1),
               const SizedBox(height: 4),
               // 블로그 에디터 (본문 + 인라인 이미지)
               BlogBodyEditor(

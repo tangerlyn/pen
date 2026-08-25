@@ -119,9 +119,7 @@ class _DetailBody extends ConsumerWidget {
                   style: OutlinedButton.styleFrom(
                     foregroundColor: AppColors.primary,
                     side: const BorderSide(color: AppColors.primary),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(AppRadius.xl),
-                    ),
+                    shape: const StadiumBorder(),
                     padding: const EdgeInsets.symmetric(
                       horizontal: 14,
                       vertical: 6,
@@ -237,7 +235,7 @@ class _InkProfileHeader extends StatelessWidget {
                     ),
                     decoration: BoxDecoration(
                       color: AppColors.chipBackground,
-                      borderRadius: BorderRadius.circular(AppRadius.xl),
+                      borderRadius: BorderRadius.circular(AppRadius.full),
                     ),
                     child: Text(
                       data.inkTypeLabel,
@@ -335,7 +333,7 @@ class _PenProfileHeader extends StatelessWidget {
                     ),
                     decoration: BoxDecoration(
                       color: AppColors.chipBackground,
-                      borderRadius: BorderRadius.circular(AppRadius.xl),
+                      borderRadius: BorderRadius.circular(AppRadius.full),
                     ),
                     child: Text(
                       data.fillType,
@@ -729,9 +727,7 @@ class _EditInkSheetState extends ConsumerState<_EditInkSheet> {
                       foregroundColor: Colors.white,
                       disabledBackgroundColor: AppColors.chipBackground,
                       padding: const EdgeInsets.symmetric(vertical: 14),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(AppRadius.md),
-                      ),
+                      shape: const StadiumBorder(),
                     ),
                     child: _isSaving
                         ? const SizedBox(
@@ -777,7 +773,7 @@ class _EditInkSheetState extends ConsumerState<_EditInkSheet> {
       filled: true,
       fillColor: AppColors.chipBackground,
       border: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(10),
+        borderRadius: BorderRadius.circular(AppRadius.full),
         borderSide: BorderSide.none,
       ),
       contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
@@ -925,7 +921,7 @@ class _ReportSheetState extends ConsumerState<_ReportSheet> {
                             color: selected
                                 ? AppColors.primary
                                 : AppColors.chipBackground,
-                            borderRadius: BorderRadius.circular(AppRadius.xl),
+                            borderRadius: BorderRadius.circular(AppRadius.full),
                           ),
                           child: Text(
                             r,
@@ -960,7 +956,7 @@ class _ReportSheetState extends ConsumerState<_ReportSheet> {
                       filled: true,
                       fillColor: AppColors.chipBackground,
                       border: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(10),
+                        borderRadius: BorderRadius.circular(AppRadius.full),
                         borderSide: BorderSide.none,
                       ),
                       contentPadding: const EdgeInsets.all(12),
@@ -978,9 +974,7 @@ class _ReportSheetState extends ConsumerState<_ReportSheet> {
                         foregroundColor: Colors.white,
                         disabledBackgroundColor: AppColors.chipBackground,
                         padding: const EdgeInsets.symmetric(vertical: 14),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(AppRadius.md),
-                        ),
+                        shape: const StadiumBorder(),
                       ),
                       child: _isSubmitting
                           ? const SizedBox(

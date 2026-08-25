@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
-import '../../../core/theme/app_theme.dart';
 import '../../../core/constants/app_constants.dart';
+import '../../../shared/widgets/category_chip.dart';
 import '../providers/feed_provider.dart';
 
 class FeedFilterBar extends StatelessWidget {
@@ -26,16 +26,10 @@ class FeedFilterBar extends StatelessWidget {
             final isSelected = filter.category == cat;
             return Padding(
               padding: const EdgeInsets.only(right: 8),
-              child: FilterChip(
-                label: Text(cat),
+              child: CategoryChip(
+                label: cat,
                 selected: isSelected,
-                labelStyle: AppTextStyles.labelMedium.copyWith(
-                  color: isSelected ? Colors.white : AppColors.textPrimary,
-                ),
-                selectedColor: AppColors.primary,
-                backgroundColor: AppColors.chipBackground,
-                showCheckmark: false,
-                onSelected: (_) => onFilterChanged(
+                onTap: () => onFilterChanged(
                   filter.copyWith(category: cat, clearSub: true),
                 ),
               ),

@@ -98,6 +98,7 @@ class _ReviewFeedScreenState extends ConsumerState<ReviewFeedScreen> {
             },
             child: NestedScrollView(
               key: _scrollKey,
+              floatHeaderSlivers: true,
               headerSliverBuilder: (context, _) => [
                 SliverAppBar(
                   floating: true,
@@ -284,6 +285,7 @@ class _ReviewFeedScreenState extends ConsumerState<ReviewFeedScreen> {
                   backgroundColor: AppColors.surface,
                   foregroundColor: AppColors.textPrimary,
                   elevation: 3,
+                  shape: const StadiumBorder(),
                   child: const Icon(Icons.keyboard_arrow_up, size: 22),
                 ),
               ),
@@ -298,6 +300,7 @@ class _ReviewFeedScreenState extends ConsumerState<ReviewFeedScreen> {
               backgroundColor: AppColors.primary,
               foregroundColor: Colors.white,
               elevation: 4,
+              shape: const StadiumBorder(),
               label: const Text(
                 '리뷰 쓰기',
                 style: TextStyle(fontWeight: FontWeight.w600),

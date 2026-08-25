@@ -224,15 +224,15 @@ class _CreateBookSheetState extends ConsumerState<_CreateBookSheet> {
               filled: true,
               fillColor: const Color(0xFFFFFDF7),
               border: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(AppRadius.md),
+                borderRadius: BorderRadius.circular(AppRadius.full),
                 borderSide: const BorderSide(color: Color(0xFFD4C5A9)),
               ),
               enabledBorder: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(AppRadius.md),
+                borderRadius: BorderRadius.circular(AppRadius.full),
                 borderSide: const BorderSide(color: Color(0xFFD4C5A9)),
               ),
               focusedBorder: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(AppRadius.md),
+                borderRadius: BorderRadius.circular(AppRadius.full),
                 borderSide: const BorderSide(
                   color: AppColors.primary,
                   width: 1.5,
@@ -297,9 +297,7 @@ class _CreateBookSheetState extends ConsumerState<_CreateBookSheet> {
                 backgroundColor: AppColors.primary,
                 foregroundColor: Colors.white,
                 padding: const EdgeInsets.symmetric(vertical: 14),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(AppRadius.md),
-                ),
+                shape: const StadiumBorder(),
               ),
               child: _saving
                   ? const SizedBox(
@@ -437,14 +435,14 @@ class _BookOptionsSheetState extends ConsumerState<_BookOptionsSheet> {
                 filled: true,
                 fillColor: const Color(0xFFFFFDF7),
                 border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(AppRadius.md),
+                  borderRadius: BorderRadius.circular(AppRadius.full),
                 ),
                 enabledBorder: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(AppRadius.md),
+                  borderRadius: BorderRadius.circular(AppRadius.full),
                   borderSide: const BorderSide(color: Color(0xFFD4C5A9)),
                 ),
                 focusedBorder: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(AppRadius.md),
+                  borderRadius: BorderRadius.circular(AppRadius.full),
                   borderSide: const BorderSide(
                     color: AppColors.primary,
                     width: 1.5,

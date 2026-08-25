@@ -95,9 +95,7 @@ class _LevelUpDialogState extends State<LevelUpDialog> {
                       backgroundColor: AppColors.primary,
                       foregroundColor: Colors.white,
                       padding: const EdgeInsets.symmetric(vertical: 14),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(AppRadius.md),
-                      ),
+                      shape: const StadiumBorder(),
                       elevation: 0,
                     ),
                     child: const Text(

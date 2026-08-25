@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'dart:io';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:image_picker/image_picker.dart';
 import '../../../core/theme/app_theme.dart';
@@ -257,19 +258,78 @@ class _ProfileEditScreenState extends ConsumerState<ProfileEditScreen> {
                 ],
               ),
               const SizedBox(height: 16),
-              TextField(
-                controller: _bioController,
-                maxLength: AppConstants.maxBio,
-                maxLines: 3,
-                decoration: const InputDecoration(
-                  labelText: '소개',
-                  hintText: '나를 소개해주세요',
-                ),
+              LayoutBuilder(
+                builder: (context, constraints) {
+                  const bioStyle = AppTextStyles.bodyMedium;
+                  // 테마 기본 contentPadding(좌우 16px씩)을 뺀 실제 텍스트 영역
+                  // 폭 — 이 폭 기준으로 줄바꿈을 계산해야 실제 렌더링과 일치함
+                  final textWidth = constraints.maxWidth - AppSpacing.lg * 2;
+                  return TextField(
+                    controller: _bioController,
+                    maxLength: AppConstants.maxBio,
+                    minLines: 3,
+                    maxLines: 5,
+                    style: bioStyle,
+                    inputFormatters: [
+                      _MaxVisualLinesFormatter(
+                        maxLines: 5,
+                        style: bioStyle,
+                        maxWidth: textWidth,
+                      ),
+                    ],
+                    decoration: InputDecoration(
+                      labelText: '소개',
+                      hintText: '나를 소개해주세요',
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(AppRadius.md),
+                      ),
+                      enabledBorder: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(AppRadius.md),
+                      ),
+                      focusedBorder: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(AppRadius.md),
+                        borderSide: const BorderSide(
+                          color: AppColors.primary,
+                          width: 1.5,
+                        ),
+                      ),
+                    ),
+                  );
+                },
               ),
             ],
           ),
         ),
       ),
     );
+  }
+}
+
+// 소개칸 줄바꿈 제한 — TextField의 maxLines는 표시 높이만 제한할 뿐 입력 자체를
+// 막지 않으므로, 실제 렌더링 폭 기준으로 줄 수를 계산해 그 이상은 아예
+// 입력이 안 되게 막는다 (붙여넣기로 긴 텍스트를 넣는 경우까지 포함).
+class _MaxVisualLinesFormatter extends TextInputFormatter {
+  _MaxVisualLinesFormatter({
+    required this.maxLines,
+    required this.style,
+    required this.maxWidth,
+  });
+  final int maxLines;
+  final TextStyle style;
+  final double maxWidth;
+
+  @override
+  TextEditingValue formatEditUpdate(
+    TextEditingValue oldValue,
+    TextEditingValue newValue,
+  ) {
+    if (newValue.text.length <= oldValue.text.length) return newValue;
+    if (maxWidth <= 0) return newValue;
+    final painter = TextPainter(
+      text: TextSpan(text: newValue.text, style: style),
+      textDirection: TextDirection.ltr,
+    )..layout(maxWidth: maxWidth);
+    final lineCount = painter.computeLineMetrics().length;
+    return lineCount > maxLines ? oldValue : newValue;
   }
 }

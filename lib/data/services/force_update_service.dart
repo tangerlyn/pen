@@ -99,9 +99,7 @@ class ForceUpdateService {
                       backgroundColor: AppColors.primary,
                       foregroundColor: Colors.white,
                       padding: const EdgeInsets.symmetric(vertical: 14),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(AppRadius.md),
-                      ),
+                      shape: const StadiumBorder(),
                     ),
                     child: const Text(
                       '업데이트하기',

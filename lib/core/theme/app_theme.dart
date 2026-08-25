@@ -218,9 +218,7 @@ abstract class AppButtonStyles {
     backgroundColor: AppColors.primary,
     foregroundColor: Colors.white,
     minimumSize: const Size.fromHeight(52),
-    shape: RoundedRectangleBorder(
-      borderRadius: BorderRadius.circular(AppRadius.md),
-    ),
+    shape: const StadiumBorder(),
     textStyle: AppTextStyles.titleMedium,
   );
 
@@ -228,9 +226,7 @@ abstract class AppButtonStyles {
     foregroundColor: AppColors.primary,
     minimumSize: const Size.fromHeight(52),
     side: const BorderSide(color: AppColors.primary),
-    shape: RoundedRectangleBorder(
-      borderRadius: BorderRadius.circular(AppRadius.md),
-    ),
+    shape: const StadiumBorder(),
     textStyle: AppTextStyles.titleMedium,
   );
 
@@ -293,7 +289,7 @@ class AppTheme {
       ),
       side: BorderSide.none,
       shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(AppRadius.xl),
+        borderRadius: BorderRadius.circular(AppRadius.full),
       ),
       padding: const EdgeInsets.symmetric(
         horizontal: AppSpacing.md,
@@ -318,15 +314,15 @@ class AppTheme {
       filled: true,
       fillColor: AppColors.chipBackground,
       border: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(AppRadius.md),
+        borderRadius: BorderRadius.circular(AppRadius.full),
         borderSide: BorderSide.none,
       ),
       enabledBorder: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(AppRadius.md),
+        borderRadius: BorderRadius.circular(AppRadius.full),
         borderSide: BorderSide.none,
       ),
       focusedBorder: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(AppRadius.md),
+        borderRadius: BorderRadius.circular(AppRadius.full),
         borderSide: const BorderSide(color: AppColors.primary, width: 1.5),
       ),
       contentPadding: const EdgeInsets.symmetric(

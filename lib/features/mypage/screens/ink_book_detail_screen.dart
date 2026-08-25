@@ -270,9 +270,7 @@ class _InkBookDetailScreenState extends ConsumerState<InkBookDetailScreen> {
                     backgroundColor: AppColors.primary,
                     foregroundColor: Colors.white,
                     padding: const EdgeInsets.symmetric(vertical: 14),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(AppRadius.md),
-                    ),
+                    shape: const StadiumBorder(),
                   ),
                   child: const Text(
                     '앨범에서 확인하기',
@@ -1041,6 +1039,7 @@ class _InkBookDetailScreenState extends ConsumerState<InkBookDetailScreen> {
           : FloatingActionButton(
               onPressed: () => context.push('/ink-chart/${widget.bookId}/add'),
               backgroundColor: AppColors.primary,
+              shape: const StadiumBorder(),
               child: const Icon(Icons.add, color: Colors.white),
             ),
       body: Column(
@@ -1071,15 +1070,15 @@ class _InkBookDetailScreenState extends ConsumerState<InkBookDetailScreen> {
                   filled: true,
                   fillColor: const Color(0xFFFFFDF7),
                   border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(AppRadius.md),
+                    borderRadius: BorderRadius.circular(AppRadius.full),
                     borderSide: const BorderSide(color: Color(0xFFD4C5A9)),
                   ),
                   enabledBorder: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(AppRadius.md),
+                    borderRadius: BorderRadius.circular(AppRadius.full),
                     borderSide: const BorderSide(color: Color(0xFFD4C5A9)),
                   ),
                   focusedBorder: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(AppRadius.md),
+                    borderRadius: BorderRadius.circular(AppRadius.full),
                     borderSide: const BorderSide(
                       color: AppColors.primary,
                       width: 1.5,
@@ -1960,15 +1959,15 @@ class _RenameBottomSheetState extends State<_RenameBottomSheet> {
                   filled: true,
                   fillColor: const Color(0xFFFFFDF7),
                   border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(AppRadius.md),
+                    borderRadius: BorderRadius.circular(AppRadius.full),
                     borderSide: const BorderSide(color: Color(0xFFD4C5A9)),
                   ),
                   enabledBorder: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(AppRadius.md),
+                    borderRadius: BorderRadius.circular(AppRadius.full),
                     borderSide: const BorderSide(color: Color(0xFFD4C5A9)),
                   ),
                   focusedBorder: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(AppRadius.md),
+                    borderRadius: BorderRadius.circular(AppRadius.full),
                     borderSide: const BorderSide(
                       color: AppColors.primary,
                       width: 1.5,

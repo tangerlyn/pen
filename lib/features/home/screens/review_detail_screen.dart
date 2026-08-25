@@ -844,7 +844,7 @@ class _GearChip extends ConsumerWidget {
         padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
         decoration: BoxDecoration(
           color: isInk ? _inkBg : _penBg,
-          borderRadius: BorderRadius.circular(AppRadius.xl),
+          borderRadius: BorderRadius.circular(AppRadius.full),
           border: Border.all(color: isInk ? _inkBorder : _penBorder),
         ),
         child: Row(
