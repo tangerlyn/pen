@@ -47,5 +47,5 @@ void main() async {
   timeago.setLocaleMessages('ko', timeago.KoMessages());
 
   FlutterNativeSplash.remove();
-  runApp(const ProviderScope(child: NibpenApp()));
+  runApp(const ProviderScope(child: PengwynApp()));
 }

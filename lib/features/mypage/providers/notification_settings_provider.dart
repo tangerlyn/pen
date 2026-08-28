@@ -8,25 +8,21 @@ class NotificationSettings {
     this.likes = true,
     this.comments = true,
     this.follows = true,
-    this.chat = true,
   });
 
   final bool likes;
   final bool comments;
   final bool follows;
-  final bool chat;
 
   NotificationSettings copyWith({
     bool? likes,
     bool? comments,
     bool? follows,
-    bool? chat,
   }) {
     return NotificationSettings(
       likes: likes ?? this.likes,
       comments: comments ?? this.comments,
       follows: follows ?? this.follows,
-      chat: chat ?? this.chat,
     );
   }
 }
@@ -42,7 +38,6 @@ class NotificationSettingsNotifier extends StateNotifier<NotificationSettings> {
       likes: prefs.getBool('notif_likes') ?? true,
       comments: prefs.getBool('notif_comments') ?? true,
       follows: prefs.getBool('notif_follows') ?? true,
-      chat: prefs.getBool('notif_chat') ?? true,
     );
   }
 
@@ -65,7 +60,6 @@ class NotificationSettingsNotifier extends StateNotifier<NotificationSettings> {
   void setLikes(bool v) { state = state.copyWith(likes: v); _sync('notif_likes', v); }
   void setComments(bool v) { state = state.copyWith(comments: v); _sync('notif_comments', v); }
   void setFollows(bool v) { state = state.copyWith(follows: v); _sync('notif_follows', v); }
-  void setChat(bool v) { state = state.copyWith(chat: v); _sync('notif_chat', v); }
 }
 
 final notificationSettingsProvider =

@@ -9,7 +9,6 @@ import '../../core/utils/level_system.dart';
 import '../../data/repositories/user_repository.dart';
 import '../../data/repositories/review_repository.dart';
 import '../../data/repositories/archive_repository.dart';
-import '../../data/repositories/chat_repository.dart';
 import '../../data/repositories/inquiry_repository.dart';
 import '../../data/models/user_model.dart';
 
@@ -34,7 +33,6 @@ final reviewRepoProvider = Provider<ReviewRepository>(
 final archiveRepoProvider = Provider<ArchiveRepository>(
   (ref) => ArchiveRepository(ref.read(reviewRepoProvider)),
 );
-final chatRepoProvider = Provider<ChatRepository>((ref) => ChatRepository());
 final inquiryRepoProvider = Provider<InquiryRepository>(
   (ref) => InquiryRepository(),
 );

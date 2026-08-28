@@ -1,5 +1,7 @@
 abstract class AppConstants {
-  static const String appName = '펜귄';
+  static const String appNameKorean = '펜귄';
+  static const String appNameEnglish = 'PENGWYN';
+  static const String appName = '펜귄(PENGWYN)';
 
   // Firestore collections
   static const String usersCol = 'users';
@@ -7,8 +9,6 @@ abstract class AppConstants {
   static const String pensCol = 'pens';
   static const String reviewsCol = 'reviews';
   static const String listingsCol = 'listings';
-  static const String chatRoomsCol = 'chatRooms';
-  static const String messagesCol = 'messages';
   static const String followsCol = 'follows';
   static const String reportsCol = 'reports';
   static const String notificationsCol = 'notifications';
@@ -17,7 +17,6 @@ abstract class AppConstants {
   static const String profileImagesPath = 'profiles';
   static const String reviewImagesPath = 'reviews';
   static const String listingImagesPath = 'listings';
-  static const String chatImagesPath = 'chats';
 
   // 제한
   static const int maxReviewImages = 10;
@@ -37,12 +36,7 @@ abstract class AppConstants {
   // 네이버
   static const String naverClientId = 'YOUR_NAVER_CLIENT_ID';
   static const String naverClientSecret = 'YOUR_NAVER_CLIENT_SECRET';
-  static const String naverClientName = '펜귄';
-
-
-  // 채팅 위험 패턴 (전화번호·계좌번호)
-  static final phonePattern = RegExp(r'0\d{1,2}[-\s]?\d{3,4}[-\s]?\d{4}');
-  static final accountPattern = RegExp(r'\d{3,4}[-\s]?\d{4,6}[-\s]?\d{4,6}');
+  static const String naverClientName = appNameKorean;
 }
 
 abstract class AppStrings {

@@ -25,7 +25,7 @@ async function sendNotification({ token, body, data }) {
   try {
     await fcm.send({
       token,
-      notification: { title: "닙펜", body },
+      notification: { title: "펜귄(PENGWYN)", body },
       data,
       apns: { payload: { aps: { sound: "default" } } },
       android: {
@@ -368,7 +368,7 @@ exports.onInquiryAnswered = onDocumentUpdated(
         targetId: inquiryId,
         targetType: "inquiry",
         fromUid: "system",
-        fromNickname: "펜귄",
+        fromNickname: "펜귄(PENGWYN)",
         message: msg,
         docId: `inquiry_${inquiryId}`,
       }),
@@ -446,7 +446,7 @@ exports.onReportCreated = onDocumentCreated(
           targetId,
           targetType,
           fromUid: "system",
-          fromNickname: "펜귄",
+          fromNickname: "펜귄(PENGWYN)",
           message: msg,
           docId: `report_alert_${targetType}_${targetId}`,
         }),

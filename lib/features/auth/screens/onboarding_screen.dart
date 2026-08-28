@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:smooth_page_indicator/smooth_page_indicator.dart';
+import '../../../core/constants/app_constants.dart';
 import '../../../core/theme/app_theme.dart';
 
 class _OnboardingPageData {
@@ -17,7 +18,7 @@ class _OnboardingPageData {
 const _pages = [
   _OnboardingPageData(
     icon: Icons.edit_note,
-    title: '펜귄에 오신 걸 환영해요',
+    title: '${AppConstants.appNameKorean}에 오신 걸 환영해요',
     description: '만년필과 잉크를 사랑하는 사람들이 모인\n필기구 커뮤니티예요',
   ),
   _OnboardingPageData(
@@ -38,7 +39,7 @@ const _pages = [
   _OnboardingPageData(
     icon: Icons.favorite_rounded,
     title: '이제 시작해볼까요?',
-    description: '펜귄과 함께 필기구 생활을\n더 즐겁게 만들어보세요',
+    description: '${AppConstants.appNameKorean}과 함께 필기구 생활을\n더 즐겁게 만들어보세요',
   ),
 ];
 

@@ -22,7 +22,10 @@ import '../../../shared/widgets/image_viewer_screen.dart';
 import '../../../shared/widgets/common/skeletons.dart';
 import '../../../shared/widgets/tap_scale.dart';
 import '../../../shared/widgets/linkified_text.dart';
+import '../../../shared/controllers/comment_composer_controller.dart';
 import 'post_write_screen.dart';
+part '../widgets/post_detail_content.dart';
+part '../widgets/post_comment_widgets.dart';
 
 final _postAuthorProvider = StreamProvider.family<UserModel?, String>((
   ref,
@@ -40,45 +43,37 @@ class PostDetailScreen extends ConsumerStatefulWidget {
 }
 
 class _PostDetailScreenState extends ConsumerState<PostDetailScreen> {
-  final _commentController = TextEditingController();
-  final _commentFocusNode = FocusNode();
-  bool _isSubmitting = false;
+  final _composer = CommentComposerController();
   bool _hasActiveEdit = false;
-  String? _replyTargetCommentId;
-  String? _replyTargetNickname;
 
   @override
   void dispose() {
-    _commentController.dispose();
-    _commentFocusNode.dispose();
+    _composer.dispose();
     super.dispose();
   }
 
   void _startReply(String commentId, String nickname) {
-    setState(() {
-      _replyTargetCommentId = commentId;
-      _replyTargetNickname = nickname;
-    });
+    setState(() => _composer.startReply(commentId, nickname));
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      _commentFocusNode.requestFocus();
+      _composer.focusNode.requestFocus();
     });
   }
 
   Future<void> _submitComment() async {
-    final text = _commentController.text.trim();
+    final text = _composer.trimmedText;
     if (text.isEmpty) return;
     final user = ref.read(currentUserProvider).value;
     if (user == null) return;
 
-    setState(() => _isSubmitting = true);
+    setState(_composer.beginSubmit);
     try {
-      if (_replyTargetCommentId != null) {
+      if (_composer.isReplying) {
         await withRetry(
           () => ref
               .read(postRepositoryProvider)
               .addReply(
                 postId: widget.postId,
-                commentId: _replyTargetCommentId!,
+                commentId: _composer.replyTargetCommentId!,
                 reply: ReplyModel(
                   id: '',
                   authorId: user.uid,
@@ -89,10 +84,7 @@ class _PostDetailScreenState extends ConsumerState<PostDetailScreen> {
                 ),
               ),
         );
-        setState(() {
-          _replyTargetCommentId = null;
-          _replyTargetNickname = null;
-        });
+        setState(_composer.clearReply);
       } else {
         await withRetry(
           () => ref
@@ -112,7 +104,7 @@ class _PostDetailScreenState extends ConsumerState<PostDetailScreen> {
           ref.read(levelUpProvider.notifier).state = levelUp;
         }
       }
-      _commentController.clear();
+      _composer.textController.clear();
     } catch (_) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -124,7 +116,7 @@ class _PostDetailScreenState extends ConsumerState<PostDetailScreen> {
       }
     } finally {
       if (mounted) {
-        setState(() => _isSubmitting = false);
+        setState(_composer.finishSubmit);
         FocusScope.of(context).unfocus();
       }
     }
@@ -756,7 +748,7 @@ class _PostDetailScreenState extends ConsumerState<PostDetailScreen> {
               child: Column(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  if (_replyTargetNickname != null)
+                  if (_composer.replyTargetNickname != null)
                     Container(
                       padding: const EdgeInsets.symmetric(
                         horizontal: 12,
@@ -766,16 +758,14 @@ class _PostDetailScreenState extends ConsumerState<PostDetailScreen> {
                       child: Row(
                         children: [
                           Text(
-                            '@$_replyTargetNickname 에게 답글',
+                            '@${_composer.replyTargetNickname} 에게 답글',
                             style: AppTextStyles.bodySmall,
                           ),
                           const Spacer(),
                           TapScale(
-                            onTap: () => setState(() {
-                              _replyTargetCommentId = null;
-                              _replyTargetNickname = null;
-                              _commentController.clear();
-                            }),
+                            onTap: () => setState(
+                              () => _composer.clearReply(clearText: true),
+                            ),
                             child: const Icon(
                               Icons.close,
                               size: 16,
@@ -795,10 +785,10 @@ class _PostDetailScreenState extends ConsumerState<PostDetailScreen> {
                       children: [
                         Expanded(
                           child: TextField(
-                            controller: _commentController,
-                            focusNode: _commentFocusNode,
+                            controller: _composer.textController,
+                            focusNode: _composer.focusNode,
                             decoration: InputDecoration(
-                              hintText: _replyTargetNickname != null
+                              hintText: _composer.replyTargetNickname != null
                                   ? '답글을 입력하세요'
                                   : '댓글을 입력하세요',
                               border: InputBorder.none,
@@ -806,12 +796,12 @@ class _PostDetailScreenState extends ConsumerState<PostDetailScreen> {
                               counterStyle: AppTextStyles.labelSmall,
                             ),
                             maxLines: null,
-                            maxLength: _replyTargetNickname != null
+                            maxLength: _composer.replyTargetNickname != null
                                 ? AppConstants.maxReply
                                 : AppConstants.maxComment,
                           ),
                         ),
-                        _isSubmitting
+                        _composer.isSubmitting
                             ? const SizedBox(
                                 width: 24,
                                 height: 24,
@@ -841,695 +831,3 @@ class _PostDetailScreenState extends ConsumerState<PostDetailScreen> {
 }
 
 // ── 에디토리얼 바이라인 (LAYOUT A) ────────────────────────────────────
-class _EditorialByline extends ConsumerWidget {
-  const _EditorialByline({required this.post, required this.currentUid});
-  final PostModel post;
-  final String? currentUid;
-
-  @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final authorAsync = ref.watch(_postAuthorProvider(post.authorId));
-    final user = authorAsync.valueOrNull;
-    final timeStr = formatPostDate(post.createdAt);
-    final isOwnPost = post.authorId == currentUid;
-    final isDeletedUser = authorAsync.valueOrNull == null;
-    final isFollowing = (!isOwnPost && currentUid != null && !isDeletedUser)
-        ? ref
-                  .watch(followStatusProvider((currentUid!, post.authorId)))
-                  .valueOrNull ??
-              false
-        : false;
-
-    return Row(
-      children: [
-        Expanded(
-          child: TapScale(
-            onTap: () => navigateToProfile(context, ref, post.authorId),
-            child: Row(
-              children: [
-                UserAvatar(imageUrl: user?.profileImageUrl, radius: 16),
-                const SizedBox(width: 8),
-                Flexible(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Row(
-                        children: [
-                          Text(
-                            user?.nickname ?? post.authorNickname,
-                            style: AppTextStyles.labelMedium.copyWith(
-                              fontWeight: FontWeight.w600,
-                              color: AppColors.textPrimary,
-                            ),
-                          ),
-                          const SizedBox(width: 6),
-                          LevelBadge(user?.level ?? post.authorLevel),
-                        ],
-                      ),
-                      Text(timeStr, style: AppTextStyles.labelSmall),
-                    ],
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ),
-        if (!isOwnPost && currentUid != null && !isDeletedUser)
-          isFollowing
-              ? ElevatedButton(
-                  onPressed: () => ref
-                      .read(userRepoProvider)
-                      .unfollow(currentUid!, post.authorId),
-                  style: ElevatedButton.styleFrom(
-                    minimumSize: const Size(72, 32),
-                    padding: const EdgeInsets.symmetric(horizontal: 16),
-                    textStyle: const TextStyle(fontSize: 13),
-                    backgroundColor: AppColors.chipBackground,
-                    foregroundColor: AppColors.textSecondary,
-                    elevation: 0,
-                  ),
-                  child: const Text('팔로잉'),
-                )
-              : OutlinedButton(
-                  onPressed: () => ref
-                      .read(userRepoProvider)
-                      .follow(currentUid!, post.authorId),
-                  style: OutlinedButton.styleFrom(
-                    minimumSize: const Size(72, 32),
-                    padding: const EdgeInsets.symmetric(horizontal: 16),
-                    textStyle: const TextStyle(fontSize: 13),
-                    foregroundColor: AppColors.primary,
-                    side: const BorderSide(color: AppColors.primary),
-                  ),
-                  child: const Text('팔로우'),
-                ),
-      ],
-    );
-  }
-}
-
-class _CommentTile extends ConsumerStatefulWidget {
-  const _CommentTile({
-    required this.comment,
-    required this.postId,
-    required this.postAuthorId,
-    required this.currentUid,
-    required this.onReplyTap,
-    this.onEditStart,
-    this.onEditEnd,
-  });
-  final PostCommentModel comment;
-  final String postId;
-  final String postAuthorId;
-  final String? currentUid;
-  final void Function(String commentId, String nickname) onReplyTap;
-  final VoidCallback? onEditStart;
-  final VoidCallback? onEditEnd;
-
-  @override
-  ConsumerState<_CommentTile> createState() => _CommentTileState();
-}
-
-class _CommentTileState extends ConsumerState<_CommentTile> {
-  bool _isEditing = false;
-  late TextEditingController _editCtrl;
-
-  @override
-  void initState() {
-    super.initState();
-    _editCtrl = TextEditingController(text: widget.comment.body ?? '');
-  }
-
-  @override
-  void dispose() {
-    _editCtrl.dispose();
-    super.dispose();
-  }
-
-  bool get _isOwn => widget.comment.authorId == widget.currentUid;
-  bool get _isPostAuthor => widget.comment.authorId == widget.postAuthorId;
-
-  void _showMenu() {
-    FocusScope.of(context).unfocus();
-    showModalBottomSheet(
-      context: context,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(AppRadius.lg)),
-      ),
-      builder: (_) => SafeArea(
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Container(
-              width: 40,
-              height: 4,
-              margin: const EdgeInsets.symmetric(vertical: 12),
-              decoration: BoxDecoration(
-                color: AppColors.divider,
-                borderRadius: BorderRadius.circular(2),
-              ),
-            ),
-            if (_isOwn) ...[
-              ListTile(
-                leading: const Icon(Icons.edit_outlined),
-                title: const Text('수정'),
-                onTap: () {
-                  Navigator.pop(context);
-                  setState(() => _isEditing = true);
-                  widget.onEditStart?.call();
-                },
-              ),
-              ListTile(
-                leading: const Icon(
-                  Icons.delete_outline,
-                  color: AppColors.error,
-                ),
-                title: const Text(
-                  '삭제',
-                  style: TextStyle(color: AppColors.error),
-                ),
-                onTap: () async {
-                  Navigator.pop(context);
-                  await Future.delayed(const Duration(milliseconds: 100));
-                  if (!mounted) return;
-                  FocusScope.of(context).unfocus();
-                  await ref
-                      .read(postRepositoryProvider)
-                      .deleteComment(widget.postId, widget.comment.id);
-                },
-              ),
-            ] else ...[
-              ListTile(
-                leading: const Icon(Icons.block_outlined),
-                title: const Text('차단'),
-                onTap: () async {
-                  Navigator.pop(context);
-                  await showBlockDialog(
-                    context,
-                    ref,
-                    targetUid: widget.comment.authorId,
-                    targetNickname: widget.comment.authorNickname,
-                  );
-                },
-              ),
-              ListTile(
-                leading: const Icon(
-                  Icons.flag_outlined,
-                  color: AppColors.error,
-                ),
-                title: const Text(
-                  '신고하기',
-                  style: TextStyle(color: AppColors.error),
-                ),
-                onTap: () {
-                  Navigator.pop(context);
-                  showReportSheet(
-                    context,
-                    ref,
-                    targetType: 'comment',
-                    targetId: widget.comment.id,
-                  );
-                },
-              ),
-            ],
-            const SizedBox(height: 8),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Future<void> _saveEdit() async {
-    final newBody = _editCtrl.text.trim();
-    if (newBody.isEmpty || newBody == widget.comment.body) {
-      setState(() => _isEditing = false);
-      widget.onEditEnd?.call();
-      return;
-    }
-    await ref
-        .read(postRepositoryProvider)
-        .updateComment(widget.postId, widget.comment.id, newBody);
-    setState(() => _isEditing = false);
-    widget.onEditEnd?.call();
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    final replies = ref.watch(
-      postRepliesProvider((
-        postId: widget.postId,
-        commentId: widget.comment.id,
-      )),
-    );
-    final author = ref
-        .watch(_postAuthorProvider(widget.comment.authorId))
-        .valueOrNull;
-    final authorLevel = author?.level ?? widget.comment.authorLevel;
-    final profileImageUrl = author?.profileImageUrl;
-
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 12),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          if (widget.comment.isDeleted)
-            Row(
-              children: [
-                const UserAvatar(radius: 16),
-                const SizedBox(width: 10),
-                Text(
-                  '삭제된 댓글입니다.',
-                  style: AppTextStyles.bodyMedium.copyWith(
-                    color: AppColors.textTertiary,
-                    fontStyle: FontStyle.italic,
-                  ),
-                ),
-              ],
-            )
-          else
-            Row(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                TapScale(
-                  onTap: () =>
-                      navigateToProfile(context, ref, widget.comment.authorId),
-                  child: UserAvatar(imageUrl: profileImageUrl, radius: 16),
-                ),
-                const SizedBox(width: 10),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Row(
-                        children: [
-                          Flexible(
-                            child: TapScale(
-                              onTap: () => navigateToProfile(
-                                context,
-                                ref,
-                                widget.comment.authorId,
-                              ),
-                              child: Text(
-                                widget.comment.authorNickname,
-                                maxLines: 1,
-                                overflow: TextOverflow.ellipsis,
-                                style: const TextStyle(
-                                  fontSize: 13,
-                                  fontWeight: FontWeight.w600,
-                                ),
-                              ),
-                            ),
-                          ),
-                          const SizedBox(width: 4),
-                          LevelBadge(authorLevel),
-                          if (_isPostAuthor) ...[
-                            const SizedBox(width: 6),
-                            const AuthorBadge(),
-                          ],
-                          const SizedBox(width: 6),
-                          Text(
-                            formatPostDate(widget.comment.createdAt),
-                            style: AppTextStyles.labelSmall,
-                          ),
-                          if (widget.comment.updatedAt != null) ...[
-                            const SizedBox(width: 4),
-                            const Text(
-                              '(수정됨)',
-                              style: AppTextStyles.labelSmall,
-                            ),
-                          ],
-                          const SizedBox(width: 8),
-                          TapScale(
-                            onTap: () => widget.onReplyTap(
-                              widget.comment.id,
-                              widget.comment.authorNickname,
-                            ),
-                            child: const Padding(
-                              padding: EdgeInsets.all(4),
-                              child: Text('답글', style: AppTextStyles.bodySmall),
-                            ),
-                          ),
-                          TapScale(
-                            onTap: _showMenu,
-                            child: const Padding(
-                              padding: EdgeInsets.all(4),
-                              child: Icon(
-                                Icons.more_vert,
-                                size: 16,
-                                color: AppColors.textTertiary,
-                              ),
-                            ),
-                          ),
-                        ],
-                      ),
-                      const SizedBox(height: 3),
-                      if (_isEditing) ...[
-                        TextField(
-                          controller: _editCtrl,
-                          autofocus: true,
-                          style: const TextStyle(fontSize: 14),
-                          decoration: const InputDecoration(
-                            isDense: true,
-                            contentPadding: EdgeInsets.symmetric(
-                              horizontal: 8,
-                              vertical: 6,
-                            ),
-                            counterStyle: AppTextStyles.labelSmall,
-                          ),
-                          maxLines: null,
-                          maxLength: AppConstants.maxComment,
-                        ),
-                        Row(
-                          mainAxisAlignment: MainAxisAlignment.end,
-                          children: [
-                            TextButton(
-                              onPressed: () {
-                                setState(() {
-                                  _isEditing = false;
-                                  _editCtrl.text = widget.comment.body ?? '';
-                                });
-                                widget.onEditEnd?.call();
-                              },
-                              child: const Text('취소'),
-                            ),
-                            TextButton(
-                              onPressed: _saveEdit,
-                              child: const Text('저장'),
-                            ),
-                          ],
-                        ),
-                      ] else ...[
-                        Text(
-                          widget.comment.body ?? '',
-                          style: const TextStyle(fontSize: 14),
-                        ),
-                      ],
-                    ],
-                  ),
-                ),
-              ],
-            ),
-          replies.when(
-            data: (list) => list.isEmpty
-                ? const SizedBox.shrink()
-                : Padding(
-                    padding: const EdgeInsets.only(left: 36, top: 6),
-                    child: Column(
-                      children: list
-                          .map(
-                            (r) => _PostReplyTile(
-                              reply: r,
-                              postId: widget.postId,
-                              postAuthorId: widget.postAuthorId,
-                              commentId: widget.comment.id,
-                              currentUid: widget.currentUid,
-                              onReplyTap: () => widget.onReplyTap(
-                                widget.comment.id,
-                                r.authorNickname,
-                              ),
-                              onEditStart: widget.onEditStart,
-                              onEditEnd: widget.onEditEnd,
-                            ),
-                          )
-                          .toList(),
-                    ),
-                  ),
-            loading: () => const SizedBox.shrink(),
-            error: (_, __) => const SizedBox.shrink(),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-class _PostReplyTile extends ConsumerStatefulWidget {
-  const _PostReplyTile({
-    required this.reply,
-    required this.postId,
-    required this.postAuthorId,
-    required this.commentId,
-    required this.currentUid,
-    required this.onReplyTap,
-    this.onEditStart,
-    this.onEditEnd,
-  });
-  final ReplyModel reply;
-  final String postId;
-  final String postAuthorId;
-  final String commentId;
-  final String? currentUid;
-  final VoidCallback onReplyTap;
-  final VoidCallback? onEditStart;
-  final VoidCallback? onEditEnd;
-
-  @override
-  ConsumerState<_PostReplyTile> createState() => _PostReplyTileState();
-}
-
-class _PostReplyTileState extends ConsumerState<_PostReplyTile> {
-  bool _isEditing = false;
-  late TextEditingController _editCtrl;
-
-  @override
-  void initState() {
-    super.initState();
-    _editCtrl = TextEditingController(text: widget.reply.body ?? '');
-  }
-
-  @override
-  void dispose() {
-    _editCtrl.dispose();
-    super.dispose();
-  }
-
-  bool get _isOwn => widget.reply.authorId == widget.currentUid;
-  bool get _isPostAuthor => widget.reply.authorId == widget.postAuthorId;
-
-  void _showMenu() {
-    FocusScope.of(context).unfocus();
-    showModalBottomSheet(
-      context: context,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(AppRadius.lg)),
-      ),
-      builder: (_) => SafeArea(
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Container(
-              width: 40,
-              height: 4,
-              margin: const EdgeInsets.symmetric(vertical: 12),
-              decoration: BoxDecoration(
-                color: AppColors.divider,
-                borderRadius: BorderRadius.circular(2),
-              ),
-            ),
-            if (_isOwn) ...[
-              ListTile(
-                leading: const Icon(Icons.edit_outlined),
-                title: const Text('수정'),
-                onTap: () {
-                  Navigator.pop(context);
-                  setState(() => _isEditing = true);
-                  widget.onEditStart?.call();
-                },
-              ),
-              ListTile(
-                leading: const Icon(
-                  Icons.delete_outline,
-                  color: AppColors.error,
-                ),
-                title: const Text(
-                  '삭제',
-                  style: TextStyle(color: AppColors.error),
-                ),
-                onTap: () async {
-                  Navigator.pop(context);
-                  await Future.delayed(const Duration(milliseconds: 100));
-                  if (!mounted) return;
-                  FocusScope.of(context).unfocus();
-                  await ref
-                      .read(postRepositoryProvider)
-                      .deleteReply(
-                        widget.postId,
-                        widget.commentId,
-                        widget.reply.id,
-                      );
-                },
-              ),
-            ] else ...[
-              ListTile(
-                leading: const Icon(Icons.block_outlined),
-                title: const Text('차단'),
-                onTap: () async {
-                  Navigator.pop(context);
-                  await showBlockDialog(
-                    context,
-                    ref,
-                    targetUid: widget.reply.authorId,
-                    targetNickname: widget.reply.authorNickname,
-                  );
-                },
-              ),
-              ListTile(
-                leading: const Icon(
-                  Icons.flag_outlined,
-                  color: AppColors.error,
-                ),
-                title: const Text(
-                  '신고하기',
-                  style: TextStyle(color: AppColors.error),
-                ),
-                onTap: () {
-                  Navigator.pop(context);
-                  showReportSheet(
-                    context,
-                    ref,
-                    targetType: 'reply',
-                    targetId: widget.reply.id,
-                  );
-                },
-              ),
-            ],
-            const SizedBox(height: 8),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Future<void> _saveEdit() async {
-    final newBody = _editCtrl.text.trim();
-    if (newBody.isEmpty || newBody == widget.reply.body) {
-      setState(() => _isEditing = false);
-      widget.onEditEnd?.call();
-      return;
-    }
-    await ref
-        .read(postRepositoryProvider)
-        .updateReply(widget.postId, widget.commentId, widget.reply.id, newBody);
-    setState(() => _isEditing = false);
-    widget.onEditEnd?.call();
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    final author = ref
-        .watch(_postAuthorProvider(widget.reply.authorId))
-        .valueOrNull;
-    final authorLevel = author?.level ?? widget.reply.authorLevel;
-    final profileImageUrl = author?.profileImageUrl;
-
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 8),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          TapScale(
-            onTap: () => navigateToProfile(context, ref, widget.reply.authorId),
-            child: UserAvatar(imageUrl: profileImageUrl, radius: 14),
-          ),
-          const SizedBox(width: 8),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Row(
-                  children: [
-                    Flexible(
-                      child: TapScale(
-                        onTap: () => navigateToProfile(
-                          context,
-                          ref,
-                          widget.reply.authorId,
-                        ),
-                        child: Text(
-                          widget.reply.authorNickname,
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                          style: const TextStyle(
-                            fontWeight: FontWeight.w600,
-                            fontSize: 13,
-                          ),
-                        ),
-                      ),
-                    ),
-                    const SizedBox(width: 4),
-                    LevelBadge(authorLevel),
-                    if (_isPostAuthor) ...[
-                      const SizedBox(width: 6),
-                      const AuthorBadge(),
-                    ],
-                    const SizedBox(width: 6),
-                    Text(
-                      formatPostDate(widget.reply.createdAt),
-                      style: AppTextStyles.labelSmall,
-                    ),
-                    if (widget.reply.updatedAt != null) ...[
-                      const SizedBox(width: 4),
-                      const Text('(수정됨)', style: AppTextStyles.labelSmall),
-                    ],
-                    const SizedBox(width: 8),
-                    TapScale(
-                      onTap: _showMenu,
-                      child: const Padding(
-                        padding: EdgeInsets.all(4),
-                        child: Icon(
-                          Icons.more_vert,
-                          size: 16,
-                          color: AppColors.textTertiary,
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 3),
-                if (_isEditing) ...[
-                  TextField(
-                    controller: _editCtrl,
-                    autofocus: true,
-                    style: const TextStyle(fontSize: 14),
-                    decoration: const InputDecoration(
-                      isDense: true,
-                      contentPadding: EdgeInsets.symmetric(
-                        horizontal: 8,
-                        vertical: 6,
-                      ),
-                      counterStyle: AppTextStyles.labelSmall,
-                    ),
-                    maxLines: null,
-                    maxLength: AppConstants.maxReply,
-                  ),
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.end,
-                    children: [
-                      TextButton(
-                        onPressed: () {
-                          setState(() {
-                            _isEditing = false;
-                            _editCtrl.text = widget.reply.body ?? '';
-                          });
-                          widget.onEditEnd?.call();
-                        },
-                        child: const Text('취소'),
-                      ),
-                      TextButton(onPressed: _saveEdit, child: const Text('저장')),
-                    ],
-                  ),
-                ] else ...[
-                  Text(
-                    widget.reply.body ?? '',
-                    style: const TextStyle(fontSize: 14),
-                  ),
-                ],
-              ],
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-}

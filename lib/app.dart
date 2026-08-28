@@ -1,16 +1,17 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'core/constants/app_constants.dart';
 import 'core/router/app_router.dart';
 import 'core/theme/app_theme.dart';
 
-class NibpenApp extends ConsumerWidget {
-  const NibpenApp({super.key});
+class PengwynApp extends ConsumerWidget {
+  const PengwynApp({super.key});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final router = ref.watch(routerProvider);
     return MaterialApp.router(
-      title: '펜귄',
+      title: AppConstants.appName,
       theme: AppTheme.light,
       routerConfig: router,
       debugShowCheckedModeBanner: false,

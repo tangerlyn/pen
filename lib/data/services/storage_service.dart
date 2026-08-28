@@ -44,9 +44,6 @@ class StorageService {
   Future<List<String>> uploadListingImages(List<File> files, String listingId) =>
       uploadImages(files: files, folder: 'listings/$listingId');
 
-  Future<String> uploadChatImage(File file, String chatId) =>
-      uploadImage(file: file, folder: 'chats/$chatId');
-
   Future<String> uploadInkChartPhoto(File file, String uid) =>
       uploadImage(file: file, folder: 'inkChart/$uid', quality: 85, maxWidth: 1080);
 

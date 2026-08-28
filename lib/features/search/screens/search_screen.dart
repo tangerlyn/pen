@@ -323,7 +323,7 @@ class _ResultsView extends ConsumerWidget {
       return NotificationListener<ScrollNotification>(
         onNotification: (n) {
           if (n is ScrollEndNotification && n.metrics.extentAfter < 200) {
-            ref.read(searchProvider(type).notifier).loadMore();
+            ref.read(searchProvider(type).notifier).loadMoreReviews();
           }
           return false;
         },
@@ -333,7 +333,7 @@ class _ResultsView extends ConsumerWidget {
             Expanded(
               child: _ReviewGrid(
                 reviews: state.reviews,
-                isLoadingMore: state.isLoadingMore,
+                isLoadingMore: state.isLoadingMoreReviews,
               ),
             ),
           ],
@@ -344,7 +344,7 @@ class _ResultsView extends ConsumerWidget {
       return NotificationListener<ScrollNotification>(
         onNotification: (n) {
           if (n is ScrollEndNotification && n.metrics.extentAfter < 200) {
-            ref.read(searchProvider(type).notifier).loadMore();
+            ref.read(searchProvider(type).notifier).loadMorePosts();
           }
           return false;
         },
@@ -354,7 +354,7 @@ class _ResultsView extends ConsumerWidget {
             Expanded(
               child: _PostList(
                 posts: state.posts,
-                isLoadingMore: state.isLoadingMore,
+                isLoadingMore: state.isLoadingMorePosts,
               ),
             ),
           ],
@@ -362,30 +362,49 @@ class _ResultsView extends ConsumerWidget {
       );
     }
 
-    // type == 'all': 섹션 분리 (페이지네이션 없음)
-    return ListView(
-      children: [
-        if (state.reviews.isNotEmpty) ...[
-          _SectionHeader(title: '리뷰', count: state.reviews.length),
-          _ReviewsHorizontal(reviews: state.reviews),
-        ],
-        if (state.posts.isNotEmpty) ...[
-          _SectionHeader(title: '커뮤니티', count: state.posts.length),
-          ...state.posts.map(
-            (post) => Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                PostCard(
-                  post: post,
-                  onTap: () => context.push('/community/${post.id}'),
-                ),
-                const Divider(height: 1),
-              ],
+    return NotificationListener<ScrollNotification>(
+      onNotification: (notification) {
+        if (notification is ScrollEndNotification &&
+            notification.metrics.axis == Axis.vertical &&
+            notification.metrics.extentAfter < 200) {
+          ref.read(searchProvider(type).notifier).loadMorePosts();
+        }
+        return false;
+      },
+      child: ListView(
+        children: [
+          if (state.reviews.isNotEmpty) ...[
+            _SectionHeader(title: '리뷰', count: state.reviews.length),
+            _ReviewsHorizontal(
+              reviews: state.reviews,
+              isLoadingMore: state.isLoadingMoreReviews,
+              onEndReached: () =>
+                  ref.read(searchProvider(type).notifier).loadMoreReviews(),
             ),
-          ),
+          ],
+          if (state.posts.isNotEmpty) ...[
+            _SectionHeader(title: '커뮤니티', count: state.posts.length),
+            ...state.posts.map(
+              (post) => Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  PostCard(
+                    post: post,
+                    onTap: () => context.push('/community/${post.id}'),
+                  ),
+                  const Divider(height: 1),
+                ],
+              ),
+            ),
+          ],
+          if (state.isLoadingMorePosts)
+            const SizedBox(
+              height: 60,
+              child: Center(child: CircularProgressIndicator()),
+            ),
+          const SizedBox(height: 32),
         ],
-        const SizedBox(height: 32),
-      ],
+      ),
     );
   }
 }
@@ -618,30 +637,52 @@ class _ReviewGrid extends StatelessWidget {
 
 // ── 리뷰 가로 스크롤 (type=all) ───────────────────────────────────────
 class _ReviewsHorizontal extends StatelessWidget {
-  const _ReviewsHorizontal({required this.reviews});
+  const _ReviewsHorizontal({
+    required this.reviews,
+    required this.isLoadingMore,
+    required this.onEndReached,
+  });
   final List<ReviewModel> reviews;
+  final bool isLoadingMore;
+  final VoidCallback onEndReached;
 
   @override
   Widget build(BuildContext context) {
     return SizedBox(
       height: 200,
-      child: ListView.builder(
-        scrollDirection: Axis.horizontal,
-        padding: const EdgeInsets.symmetric(horizontal: 16),
-        itemCount: reviews.length,
-        itemBuilder: (_, i) {
-          final r = reviews[i];
-          return Padding(
-            padding: const EdgeInsets.only(right: 8, bottom: 8),
-            child: SizedBox(
-              width: 140,
-              child: ReviewFeedCard(
-                review: r,
-                onTap: () => context.push('/review/${r.id}'),
-              ),
-            ),
-          );
+      child: NotificationListener<ScrollNotification>(
+        onNotification: (notification) {
+          if (notification is ScrollEndNotification &&
+              notification.metrics.axis == Axis.horizontal &&
+              notification.metrics.extentAfter < 200) {
+            onEndReached();
+          }
+          return false;
         },
+        child: ListView.builder(
+          scrollDirection: Axis.horizontal,
+          padding: const EdgeInsets.symmetric(horizontal: 16),
+          itemCount: reviews.length + (isLoadingMore ? 1 : 0),
+          itemBuilder: (_, i) {
+            if (i >= reviews.length) {
+              return const SizedBox(
+                width: 60,
+                child: Center(child: CircularProgressIndicator()),
+              );
+            }
+            final r = reviews[i];
+            return Padding(
+              padding: const EdgeInsets.only(right: 8, bottom: 8),
+              child: SizedBox(
+                width: 140,
+                child: ReviewFeedCard(
+                  review: r,
+                  onTap: () => context.push('/review/${r.id}'),
+                ),
+              ),
+            );
+          },
+        ),
       ),
     );
   }

@@ -67,9 +67,11 @@
 
 - 리뷰·게시글 작성/수정 시 `title + body`를 토큰화 → Firestore `searchIndex` 배열 필드에 저장
 - 한 글자(유니그램) + 두 글자 연속(바이그램) 토큰 병행 인덱싱 → 단일 글자 검색 지원
-- 검색 시 `arrayContainsAny(queryTokens)` 쿼리 → 최대 50건 후보 조회
+- 검색 시 `arrayContainsAny(queryTokens)` 쿼리를 문서 ID 커서로 페이지당 50건씩 조회
 - 클라이언트 측 `matchesQuery` 함수로 2차 필터링 (오탐 제거)
-- 정렬은 모두 클라이언트 측에서 처리 (Firestore 인덱스 불필요)
+- 한 페이지가 전부 오탐이면 실제 일치 결과를 찾거나 후보가 끝날 때까지 다음 페이지를 이어서 조회
+- 리뷰와 게시글은 커서·로딩·종료 상태를 독립적으로 관리하며 통합 검색에서도 각각 무한 스크롤
+- 정렬은 지금까지 불러온 실제 일치 결과 전체를 클라이언트에서 다시 처리
 
 ---
 
@@ -87,5 +89,6 @@
 
 - `lib/features/search/screens/search_screen.dart`
 - `lib/features/search/providers/search_provider.dart`
+- `lib/data/repositories/search_repository.dart`
 - `lib/features/search/providers/suggestion_provider.dart`
 - `lib/core/utils/search_utils.dart`

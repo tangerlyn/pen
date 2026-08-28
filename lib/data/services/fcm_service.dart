@@ -3,6 +3,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
+import '../../core/constants/app_constants.dart';
 
 class FcmService {
   FcmService({
@@ -15,7 +16,7 @@ class FcmService {
 
   final _localNotifications = FlutterLocalNotificationsPlugin();
   static const _channelId = 'nibpen_notifications';
-  static const _channelName = '펜귄 알림';
+  static const _channelName = '${AppConstants.appNameKorean} 알림';
 
   Future<void> initialize() async {
     await _requestPermission();

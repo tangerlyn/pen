@@ -1,9 +1,9 @@
-import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../../../core/utils/search_utils.dart';
 import '../../../data/models/review_model.dart';
 import '../../../data/models/post_model.dart';
+import '../../../data/repositories/search_repository.dart';
 
 // ── 정렬 옵션 ─────────────────────────────────────────────────────────
 enum ReviewSortOption {
@@ -40,9 +40,10 @@ class SearchHistoryNotifier extends StateNotifier<List<String>> {
   Future<void> add(String query) async {
     final trimmed = query.trim();
     if (trimmed.isEmpty) return;
-    final list = [trimmed, ...state.where((s) => s != trimmed)]
-        .take(_maxHistory)
-        .toList();
+    final list = [
+      trimmed,
+      ...state.where((s) => s != trimmed),
+    ].take(_maxHistory).toList();
     state = list;
     final prefs = await SharedPreferences.getInstance();
     await prefs.setStringList(_prefKey, list);
@@ -64,7 +65,8 @@ class SearchHistoryNotifier extends StateNotifier<List<String>> {
 
 final searchHistoryProvider =
     StateNotifierProvider<SearchHistoryNotifier, List<String>>(
-        (_) => SearchHistoryNotifier());
+      (_) => SearchHistoryNotifier(),
+    );
 
 // ── 검색 상태 ─────────────────────────────────────────────────────────
 class SearchState {
@@ -78,6 +80,10 @@ class SearchState {
     this.error,
     this.reviewSort = ReviewSortOption.newest,
     this.postSort = PostSortOption.newest,
+    this.hasMoreReviews = false,
+    this.hasMorePosts = false,
+    this.isLoadingMoreReviews = false,
+    this.isLoadingMorePosts = false,
   });
 
   final bool isLoading;
@@ -89,11 +95,12 @@ class SearchState {
   final String? error;
   final ReviewSortOption reviewSort;
   final PostSortOption postSort;
+  final bool hasMoreReviews;
+  final bool hasMorePosts;
+  final bool isLoadingMoreReviews;
+  final bool isLoadingMorePosts;
 
-  // UI compat shims — always false (pagination not needed with indexed search)
-  bool get hasMoreReviews => false;
-  bool get hasMorePosts => false;
-  bool get isLoadingMore => false;
+  bool get isLoadingMore => isLoadingMoreReviews || isLoadingMorePosts;
 
   static const _sentinel = Object();
 
@@ -107,6 +114,10 @@ class SearchState {
     Object? error = _sentinel,
     ReviewSortOption? reviewSort,
     PostSortOption? postSort,
+    bool? hasMoreReviews,
+    bool? hasMorePosts,
+    bool? isLoadingMoreReviews,
+    bool? isLoadingMorePosts,
   }) {
     return SearchState(
       isLoading: isLoading ?? this.isLoading,
@@ -118,22 +129,37 @@ class SearchState {
       error: identical(error, _sentinel) ? this.error : error as String?,
       reviewSort: reviewSort ?? this.reviewSort,
       postSort: postSort ?? this.postSort,
+      hasMoreReviews: hasMoreReviews ?? this.hasMoreReviews,
+      hasMorePosts: hasMorePosts ?? this.hasMorePosts,
+      isLoadingMoreReviews: isLoadingMoreReviews ?? this.isLoadingMoreReviews,
+      isLoadingMorePosts: isLoadingMorePosts ?? this.isLoadingMorePosts,
     );
   }
 }
 
 // ── 검색 Notifier ─────────────────────────────────────────────────────
 class SearchNotifier extends StateNotifier<SearchState> {
-  SearchNotifier(this._type) : super(const SearchState());
+  SearchNotifier(this._type, this._repository) : super(const SearchState());
 
   final String _type;
-  final _db = FirebaseFirestore.instance;
+  final SearchRepository _repository;
 
   static const _limit = 50;
+  String _query = '';
+  List<String> _tokens = const [];
+  String? _reviewCursor;
+  String? _postCursor;
+  int _generation = 0;
 
   Future<void> search(String query) async {
     final q = query.trim();
     if (q.isEmpty) return;
+
+    final generation = ++_generation;
+    _query = q;
+    _tokens = SearchUtils.queryTokens(q);
+    _reviewCursor = null;
+    _postCursor = null;
 
     state = state.copyWith(
       isLoading: true,
@@ -145,61 +171,141 @@ class SearchNotifier extends StateNotifier<SearchState> {
       rawPosts: [],
       reviewSort: ReviewSortOption.newest,
       postSort: PostSortOption.newest,
+      hasMoreReviews: _includesReviews,
+      hasMorePosts: _includesPosts,
+      isLoadingMoreReviews: false,
+      isLoadingMorePosts: false,
     );
 
     try {
-      final tokens = SearchUtils.queryTokens(q);
-      if (tokens.isEmpty) {
+      if (_tokens.isEmpty) {
         state = state.copyWith(isLoading: false);
         return;
       }
 
-      final reviews = <ReviewModel>[];
-      final posts = <PostModel>[];
-
-      if (_type == 'review' || _type == 'all') {
-        final snap = await _db
-            .collection('reviews')
-            .where('searchIndex', arrayContainsAny: tokens)
-            .limit(_limit)
-            .get();
-        final candidates = snap.docs
-            .map((d) => ReviewModel.fromMap(d.data(), d.id))
-            .where((r) => SearchUtils.matchesQuery('${r.title} ${r.body}', q))
-            .toList();
-        reviews.addAll(candidates);
+      await Future.wait([
+        if (_includesReviews) _fetchReviewPage(generation),
+        if (_includesPosts) _fetchPostPage(generation),
+      ]);
+      if (generation == _generation) {
+        state = state.copyWith(isLoading: false);
       }
-
-      if (_type == 'community' || _type == 'all') {
-        final snap = await _db
-            .collection('posts')
-            .where('searchIndex', arrayContainsAny: tokens)
-            .limit(_limit)
-            .get();
-        final candidates = snap.docs
-            .map((d) => PostModel.fromMap(d.data(), d.id))
-            .where((p) => SearchUtils.matchesQuery('${p.title} ${p.body}', q))
-            .toList();
-        posts.addAll(candidates);
-      }
-
-      final sortedReviews = _sortReviews(reviews, ReviewSortOption.newest);
-      final sortedPosts = _sortPosts(posts, PostSortOption.newest);
-
-      state = state.copyWith(
-        isLoading: false,
-        reviews: sortedReviews,
-        rawReviews: sortedReviews,
-        posts: sortedPosts,
-        rawPosts: sortedPosts,
-      );
     } catch (e) {
-      state = state.copyWith(isLoading: false, error: e.toString());
+      if (generation == _generation) {
+        state = state.copyWith(isLoading: false, error: e.toString());
+      }
     }
   }
 
-  // No-op: pagination not needed with indexed full-text search
-  void loadMore() {}
+  Future<void> loadMore() {
+    return _type == 'community' ? loadMorePosts() : loadMoreReviews();
+  }
+
+  Future<void> loadMoreReviews() async {
+    if (!_includesReviews ||
+        !state.hasMoreReviews ||
+        state.isLoadingMoreReviews ||
+        state.isLoading) {
+      return;
+    }
+    final generation = _generation;
+    state = state.copyWith(isLoadingMoreReviews: true, error: null);
+    try {
+      await _fetchReviewPage(generation);
+    } catch (e) {
+      if (generation == _generation) {
+        state = state.copyWith(error: e.toString());
+      }
+    } finally {
+      if (generation == _generation) {
+        state = state.copyWith(isLoadingMoreReviews: false);
+      }
+    }
+  }
+
+  Future<void> loadMorePosts() async {
+    if (!_includesPosts ||
+        !state.hasMorePosts ||
+        state.isLoadingMorePosts ||
+        state.isLoading) {
+      return;
+    }
+    final generation = _generation;
+    state = state.copyWith(isLoadingMorePosts: true, error: null);
+    try {
+      await _fetchPostPage(generation);
+    } catch (e) {
+      if (generation == _generation) {
+        state = state.copyWith(error: e.toString());
+      }
+    } finally {
+      if (generation == _generation) {
+        state = state.copyWith(isLoadingMorePosts: false);
+      }
+    }
+  }
+
+  Future<void> _fetchReviewPage(int generation) async {
+    var hasMore = true;
+    final matches = <ReviewModel>[];
+    do {
+      final page = await _repository.fetchReviews(
+        tokens: _tokens,
+        cursor: _reviewCursor,
+        limit: _limit,
+      );
+      if (generation != _generation) return;
+      _reviewCursor = page.nextCursor;
+      hasMore = page.hasMore;
+      matches.addAll(
+        page.items.where(
+          (review) => SearchUtils.matchesQuery(
+            '${review.title} ${review.body}',
+            _query,
+          ),
+        ),
+      );
+    } while (matches.isEmpty && hasMore);
+
+    final rawReviews = _mergeById(
+      state.rawReviews,
+      matches,
+      (review) => review.id,
+    );
+    state = state.copyWith(
+      rawReviews: rawReviews,
+      reviews: _sortReviews(rawReviews, state.reviewSort),
+      hasMoreReviews: hasMore,
+    );
+  }
+
+  Future<void> _fetchPostPage(int generation) async {
+    var hasMore = true;
+    final matches = <PostModel>[];
+    do {
+      final page = await _repository.fetchPosts(
+        tokens: _tokens,
+        cursor: _postCursor,
+        limit: _limit,
+      );
+      if (generation != _generation) return;
+      _postCursor = page.nextCursor;
+      hasMore = page.hasMore;
+      matches.addAll(
+        page.items.where(
+          (post) =>
+              SearchUtils.matchesQuery('${post.title} ${post.body}', _query),
+        ),
+      );
+    } while (matches.isEmpty && hasMore);
+
+    final rawPosts = _mergeById(state.rawPosts, matches, (post) => post.id);
+    state = state.copyWith(
+      rawPosts: rawPosts,
+      posts: _sortPosts(rawPosts, state.postSort),
+      hasMorePosts: hasMore,
+    );
+  }
 
   void setReviewSort(ReviewSortOption sort) {
     state = state.copyWith(
@@ -216,12 +322,23 @@ class SearchNotifier extends StateNotifier<SearchState> {
   }
 
   void reset() {
+    _generation += 1;
+    _query = '';
+    _tokens = const [];
+    _reviewCursor = null;
+    _postCursor = null;
     state = const SearchState();
   }
 
+  bool get _includesReviews => _type == 'review' || _type == 'all';
+  bool get _includesPosts => _type == 'community' || _type == 'all';
+
   // ── 정렬 ──────────────────────────────────────────────────────────
 
-  List<ReviewModel> _sortReviews(List<ReviewModel> list, ReviewSortOption sort) {
+  List<ReviewModel> _sortReviews(
+    List<ReviewModel> list,
+    ReviewSortOption sort,
+  ) {
     final sorted = [...list];
     switch (sort) {
       case ReviewSortOption.newest:
@@ -252,6 +369,23 @@ class SearchNotifier extends StateNotifier<SearchState> {
   }
 }
 
+List<T> _mergeById<T>(
+  List<T> current,
+  List<T> additions,
+  String Function(T item) idOf,
+) {
+  final merged = <String, T>{for (final item in current) idOf(item): item};
+  for (final item in additions) {
+    merged[idOf(item)] = item;
+  }
+  return merged.values.toList(growable: false);
+}
+
+final searchRepositoryProvider = Provider<SearchRepository>(
+  (_) => FirestoreSearchRepository(),
+);
+
 final searchProvider =
     StateNotifierProvider.family<SearchNotifier, SearchState, String>(
-        (_, type) => SearchNotifier(type));
+      (ref, type) => SearchNotifier(type, ref.watch(searchRepositoryProvider)),
+    );

@@ -10,6 +10,15 @@ service cloud.firestore {
       return request.auth.uid == uid;
     }
 
+    // authorId 필드가 아예 없는 레거시 문서(작성자 필수화 규칙 이전에 생성된
+    // 리뷰/게시글/댓글/답글)에서 resource.data.authorId를 직접 읽으면 필드
+    // 부재로 규칙 평가 자체가 에러 나 permission-denied로 보인다.
+    // get(..., null)로 안전하게 기본값을 둬 "소유자 불명 → 거부"로 정상
+    // 평가되게 한다.
+    function isOwnedResource(data) {
+      return isOwner(data.get('authorId', null));
+    }
+
     function isFollowing(followerId, followeeId) {
       return exists(/databases/$(database)/documents/follows/$(followerId + '_' + followeeId));
     }
@@ -111,10 +120,10 @@ service cloud.firestore {
     match /reviews/{reviewId} {
       allow read: if isLoggedIn();
       allow create: if isOwnedCreate('authorId');
-      allow update: if isOwner(resource.data.authorId)
+      allow update: if isOwnedResource(resource.data)
         || (isLoggedIn() && request.resource.data.diff(resource.data).affectedKeys()
             .hasOnly(['likeCount', 'scrapCount', 'commentCount']));
-      allow delete: if isOwner(resource.data.authorId);
+      allow delete: if isOwnedResource(resource.data);
 
       match /likes/{likeId} {
         // likes 문서 ID가 곧 uid — 본인 좋아요 문서만 읽고 쓸 수 있음
@@ -129,14 +138,14 @@ service cloud.firestore {
       match /comments/{commentId} {
         allow read: if isLoggedIn();
         allow create: if isOwnedCreate('authorId');
-        allow update: if isOwner(resource.data.authorId);
-        allow delete: if isOwner(resource.data.authorId);
+        allow update: if isOwnedResource(resource.data);
+        allow delete: if isOwnedResource(resource.data);
 
         match /replies/{replyId} {
           allow read: if isLoggedIn();
           allow create: if isOwnedCreate('authorId');
-          allow update: if isOwner(resource.data.authorId);
-          allow delete: if isOwner(resource.data.authorId);
+          allow update: if isOwnedResource(resource.data);
+          allow delete: if isOwnedResource(resource.data);
         }
       }
     }
@@ -144,10 +153,10 @@ service cloud.firestore {
     match /posts/{postId} {
       allow read: if isLoggedIn();
       allow create: if isOwnedCreate('authorId');
-      allow update: if isOwner(resource.data.authorId)
+      allow update: if isOwnedResource(resource.data)
         || (isLoggedIn() && request.resource.data.diff(resource.data).affectedKeys()
             .hasOnly(['likeCount', 'commentCount']));
-      allow delete: if isOwner(resource.data.authorId);
+      allow delete: if isOwnedResource(resource.data);
 
       match /likes/{likeId} {
         // likes 문서 ID가 곧 uid — 본인 좋아요 문서만 읽고 쓸 수 있음
@@ -162,21 +171,26 @@ service cloud.firestore {
       match /comments/{commentId} {
         allow read: if isLoggedIn();
         allow create: if isOwnedCreate('authorId');
-        allow update: if isOwner(resource.data.authorId);
-        allow delete: if isOwner(resource.data.authorId);
+        allow update: if isOwnedResource(resource.data);
+        allow delete: if isOwnedResource(resource.data);
 
         match /replies/{replyId} {
           allow read: if isLoggedIn();
           allow create: if isOwnedCreate('authorId');
-          allow update: if isOwner(resource.data.authorId);
-          allow delete: if isOwner(resource.data.authorId);
+          allow update: if isOwnedResource(resource.data);
+          allow delete: if isOwnedResource(resource.data);
         }
       }
     }
 
     match /reports/{reportId} {
       allow create: if isOwnedCreate('reporterId');
-      allow read: if false;
+      // 다른 사람의 신고 내용은 여전히 볼 수 없지만, 본인이 이미 신고했는지
+      // 확인하는 hasReported() 조회(문서 ID로 직접 get)는 허용한다. 문서가
+      // 없으면(아직 신고 안 함) resource가 null이라 앞의 조건에서 안전하게
+      // 걸러진다.
+      allow read: if isLoggedIn() && resource != null
+          && resource.data.reporterId == request.auth.uid;
     }
 
     match /productRequests/{requestId} {

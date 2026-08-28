@@ -14,8 +14,6 @@ import '../../features/mypage/screens/mypage_screen.dart';
 import '../../features/mypage/screens/profile_edit_screen.dart';
 import '../../features/mypage/screens/settings_screen.dart';
 import '../../features/mypage/screens/blocked_users_screen.dart';
-import '../../features/chat/screens/chat_list_screen.dart';
-import '../../features/chat/screens/chat_room_screen.dart';
 import '../../features/review/screens/review_write_screen.dart';
 import '../../features/community/screens/post_detail_screen.dart';
 import '../../features/community/screens/post_write_screen.dart';
@@ -164,18 +162,6 @@ final routerProvider = Provider<GoRouter>((ref) {
       GoRoute(
         path: '/community/:postId',
         pageBuilder: (_, state) => _slidePage(state, PostDetailScreen(postId: state.pathParameters['postId']!)),
-      ),
-
-      // 채팅 (글로벌)
-      GoRoute(
-        path: '/chat',
-        pageBuilder: (_, state) => _slidePage(state, const ChatListScreen()),
-        routes: [
-          GoRoute(
-            path: ':chatId',
-            pageBuilder: (_, state) => _slidePage(state, ChatRoomScreen(chatId: state.pathParameters['chatId']!)),
-          ),
-        ],
       ),
 
       GoRoute(
