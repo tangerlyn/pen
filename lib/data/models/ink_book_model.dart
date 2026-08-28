@@ -81,18 +81,14 @@ class InkBookModel {
       );
 }
 
-/// 파스텔 팔레트 (공책 표지색 선택용)
-const kPastelColors = [
-  '#C8D8B0', // sage green
-  '#B8D4E8', // sky blue
-  '#E8C8B0', // peach
-  '#D4B8E8', // lavender
-  '#E8D4B8', // warm sand
-  '#B8E8D4', // mint
-  '#E8B8C8', // blush
-  '#E8E0B8', // butter
-  '#B8C8E8', // periwinkle
-  '#C8B8D4', // mauve
-  '#B8D8C8', // seafoam
-  '#E8C8D8', // rose
+/// 공책 표지색 선택용 고정 팔레트 (빨주노초파보라검정 7색).
+/// 카드 자체에서 옅게 처리하므로 여기 값은 원색에 가깝게 둔다.
+const kInkBookCoverColors = [
+  '#F44336', // 빨강
+  '#FF9800', // 주황
+  '#FFEB3B', // 노랑
+  '#4CAF50', // 초록
+  '#2196F3', // 파랑
+  '#9C27B0', // 보라
+  '#000000', // 검정
 ];

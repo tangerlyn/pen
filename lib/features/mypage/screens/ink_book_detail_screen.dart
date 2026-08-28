@@ -361,7 +361,6 @@ class _InkBookDetailScreenState extends ConsumerState<InkBookDetailScreen> {
     BuildContext context,
     List<InkChartModel> entries,
     String uid,
-    String bookName,
   ) async {
     final shape = ref.read(inkSwatchShapeProvider);
 
@@ -476,11 +475,6 @@ class _InkBookDetailScreenState extends ConsumerState<InkBookDetailScreen> {
                 },
               ),
               ListTile(
-                leading: const Icon(Icons.edit_outlined),
-                title: const Text('공책 이름 변경'),
-                onTap: () => Navigator.pop(context, 'rename'),
-              ),
-              ListTile(
                 leading: const Icon(
                   Icons.delete_outline,
                   color: AppColors.error,
@@ -511,8 +505,6 @@ class _InkBookDetailScreenState extends ConsumerState<InkBookDetailScreen> {
         _showViewSubSheet(context);
       case 'shape':
         _showShapeSubSheet(context);
-      case 'rename':
-        _renameBook(context, uid, bookName);
     }
   }
 
@@ -798,26 +790,6 @@ class _InkBookDetailScreenState extends ConsumerState<InkBookDetailScreen> {
     } catch (_) {}
   }
 
-  void _renameBook(BuildContext context, String uid, String currentName) {
-    showModalBottomSheet(
-      context: context,
-      isScrollControlled: true,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(AppRadius.xl)),
-      ),
-      builder: (_) => _RenameBottomSheet(
-        initialName: currentName,
-        onSave: (newName) async {
-          Navigator.pop(context);
-          if (!mounted) return;
-          await ref
-              .read(inkBookRepoProvider)
-              .updateBook(uid, widget.bookId, name: newName);
-        },
-      ),
-    );
-  }
-
   Future<void> _deleteBook(
     BuildContext context,
     String uid,
@@ -973,8 +945,7 @@ class _InkBookDetailScreenState extends ConsumerState<InkBookDetailScreen> {
               icon: const Icon(Icons.more_vert),
               tooltip: '메뉴',
               onPressed: () => chartAsync.whenData(
-                (entries) =>
-                    _showMenuSheet(context, entries, uid, book?.name ?? ''),
+                (entries) => _showMenuSheet(context, entries, uid),
               ),
             ),
           ],

@@ -38,6 +38,13 @@ class InkBookRepository {
   Future<void> updateBook(String uid, String bookId, {required String name}) =>
       _books(uid).doc(bookId).update({'name': name});
 
+  Future<void> updateBookColor(
+    String uid,
+    String bookId, {
+    required String coverColor,
+  }) =>
+      _books(uid).doc(bookId).update({'coverColor': coverColor});
+
   Future<void> updateBookVisibility(
     String uid,
     String bookId, {
