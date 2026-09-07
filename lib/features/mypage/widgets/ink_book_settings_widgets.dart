@@ -210,7 +210,7 @@ class _ShapePickerSheet extends StatelessWidget {
                         decoration: BoxDecoration(
                           color: selected
                               ? AppColors.primary.withValues(alpha: 0.12)
-                              : const Color(0xFFEDE8DF),
+                              : const Color(0xFFEDE7D6),
                           borderRadius: BorderRadius.circular(14),
                           border: Border.all(
                             color: selected

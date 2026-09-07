@@ -25,6 +25,17 @@ abstract class AppColors {
   static const mannerNormal = Color(0xFF4CAF50);
   static const mannerCool = Color(0xFF2196F3);
 
+  // 앱바 등 옅은 네이비 틴트 표면 (배경 그러데이션과는 별개)
+  static const navyTint = Color(0xFFF0F5FD);
+
+  // 태그·뱃지 2톤 세트 — 짙은 글자색(Fg) + 옅은 배경색(Bg)
+  static const successBg = Color(0xFFE8F5E9);
+  static const warningBg = Color(0xFFFFF3E0);
+  static const info = Color(0xFF1565C0);
+  static const infoBg = Color(0xFFE3F2FD);
+  static const purple = Color(0xFF6A1B9A);
+  static const purpleBg = Color(0xFFF3E5F5);
+
   // Shadow — 네이비 기반 그림자 (검은색 대신 포인트 네이비 사용)
   static const cardShadowColor = Color(0x141B2E4B); // navy 8%
 }
@@ -257,7 +268,7 @@ class AppTheme {
     ),
     fontFamily: 'Pretendard',
     appBarTheme: const AppBarTheme(
-      backgroundColor: Color(0xFFF0F5FD), // 투명한 네이비 틴트
+      backgroundColor: AppColors.navyTint, // 투명한 네이비 틴트
       foregroundColor: Color(0xFF1B2E4B),
       elevation: 0,
       scrolledUnderElevation: 0,

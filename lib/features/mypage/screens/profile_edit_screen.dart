@@ -241,7 +241,7 @@ class _ProfileEditScreenState extends ConsumerState<ProfileEditScreen> {
                       child: Text(
                         '사용 가능한 닉네임이에요',
                         style: AppTextStyles.bodySmall.copyWith(
-                          color: Colors.green,
+                          color: AppColors.success,
                         ),
                       ),
                     ),

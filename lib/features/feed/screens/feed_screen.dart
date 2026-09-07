@@ -430,8 +430,8 @@ class _TypeBadge extends StatelessWidget {
   );
   static const community = _TypeBadge._(
     label: '커뮤니티',
-    color: Color(0xFF1B6E3B),
-    bg: Color(0xFFE8F5EE),
+    color: AppColors.success,
+    bg: AppColors.successBg,
   );
 
   @override

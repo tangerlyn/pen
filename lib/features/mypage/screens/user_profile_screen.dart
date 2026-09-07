@@ -16,7 +16,7 @@ import '../providers/user_activity_provider.dart';
 import '../widgets/notebook_card.dart';
 
 // 네이비 기반 색상
-const _kNavyTint = Color(0xFFEEF2F8);
+const _kNavyTint = AppColors.navyTint;
 const _kNavyLight = Color(0xFFE2EAF4);
 const _kNavyMid = Color(0xFF8BA5C8);
 
@@ -151,7 +151,7 @@ class _ProfileHeader extends ConsumerWidget {
           borderRadius: BorderRadius.circular(AppRadius.lg),
           boxShadow: const [
             BoxShadow(
-              color: Color(0x14000000),
+              color: Color(0x141B2E4B),
               blurRadius: 12,
               offset: Offset(0, 3),
             ),
@@ -290,7 +290,7 @@ class _ProfileAvatar extends StatelessWidget {
         border: Border.all(color: _kNavyLight, width: 3),
         boxShadow: const [
           BoxShadow(
-            color: Color(0x1A000000),
+            color: Color(0x1A1B2E4B),
             blurRadius: 8,
             offset: Offset(0, 2),
           ),

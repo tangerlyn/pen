@@ -83,7 +83,7 @@ class _AddProductBottomSheetState extends ConsumerState<AddProductBottomSheet> {
   // 잉크
   final _inkNameCtrl = TextEditingController();
   String? _inkTypeValue;
-  Color _inkColor = const Color(0xFF1565C0);
+  Color _inkColor = AppColors.info;
 
   // 자동완성
   List<String> _allBrands = [];
@@ -664,7 +664,7 @@ class _AddProductBottomSheetState extends ConsumerState<AddProductBottomSheet> {
         border: Border.all(color: AppColors.divider),
         boxShadow: const [
           BoxShadow(
-            color: Color(0x10000000),
+            color: Color(0x101B2E4B),
             blurRadius: 6,
             offset: Offset(0, 2),
           ),

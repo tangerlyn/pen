@@ -526,7 +526,7 @@ class _PhotoPicker extends StatelessWidget {
             ),
             boxShadow: const [
               BoxShadow(
-                color: Color(0x12000000),
+                color: Color(0x121B2E4B),
                 blurRadius: 8,
                 offset: Offset(0, 3),
               ),

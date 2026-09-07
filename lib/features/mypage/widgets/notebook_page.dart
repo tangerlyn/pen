@@ -48,7 +48,7 @@ class NotebookPage extends StatelessWidget {
           borderRadius: BorderRadius.circular(AppRadius.xs),
           boxShadow: const [
             BoxShadow(
-              color: Color(0x30000000),
+              color: Color(0x301B2E4B),
               blurRadius: 10,
               offset: Offset(3, 4),
             ),

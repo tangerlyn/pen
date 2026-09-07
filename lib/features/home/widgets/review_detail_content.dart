@@ -231,12 +231,12 @@ class _GearChip extends ConsumerWidget {
   final String id;
   final VoidCallback onTap;
 
-  static const _inkBg = Color(0xFFE3F2FD);
+  static const _inkBg = AppColors.infoBg;
   static const _inkBorder = Color(0xFF90CAF9);
-  static const _inkFg = Color(0xFF1565C0);
-  static const _penBg = Color(0xFFF3E5F5);
+  static const _inkFg = AppColors.info;
+  static const _penBg = AppColors.purpleBg;
   static const _penBorder = Color(0xFFCE93D8);
-  static const _penFg = Color(0xFF6A1B9A);
+  static const _penFg = AppColors.purple;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {

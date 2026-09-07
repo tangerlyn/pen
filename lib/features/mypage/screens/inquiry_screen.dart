@@ -153,14 +153,14 @@ class _StatusBadge extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
       decoration: BoxDecoration(
-        color: isAnswered ? const Color(0xFFE8F5E9) : const Color(0xFFFFF3E0),
+        color: isAnswered ? AppColors.successBg : AppColors.warningBg,
         borderRadius: BorderRadius.circular(AppRadius.xl),
       ),
       child: Text(
         isAnswered ? '답변 완료' : '확인 중',
         style: AppTextStyles.labelSmall.copyWith(
           fontWeight: FontWeight.w600,
-          color: isAnswered ? const Color(0xFF2E7D32) : const Color(0xFFE65100),
+          color: isAnswered ? AppColors.success : AppColors.warning,
         ),
       ),
     );
@@ -284,7 +284,7 @@ class _InquiryDetailBody extends StatelessWidget {
             width: double.infinity,
             padding: const EdgeInsets.all(16),
             decoration: BoxDecoration(
-              color: const Color(0xFFE8F5E9),
+              color: AppColors.successBg,
               borderRadius: BorderRadius.circular(AppRadius.md),
             ),
             child: Text(

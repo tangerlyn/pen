@@ -135,8 +135,8 @@ class _NotificationTile extends StatelessWidget {
     return switch (item.type) {
       'like' => AppColors.error,
       'comment' => AppColors.primary,
-      'follow' => const Color(0xFF43A047),
-      'inquiry_answered' => const Color(0xFFFB8C00),
+      'follow' => AppColors.success,
+      'inquiry_answered' => AppColors.warning,
       'admin_report_alert' => AppColors.error,
       _ => AppColors.textTertiary,
     };

@@ -178,10 +178,10 @@ class _CategoryBadge extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final (color, bg) = switch (category) {
-      '질문' => (const Color(0xFF1565C0), const Color(0xFFE3F2FD)),
-      '정보공유' => (const Color(0xFF2E7D32), const Color(0xFFE8F5E9)),
-      '필사' => (const Color(0xFF6A1B9A), const Color(0xFFF3E5F5)),
-      '그림' => (const Color(0xFFEF6C00), const Color(0xFFFFF3E0)),
+      '질문' => (AppColors.info, AppColors.infoBg),
+      '정보공유' => (AppColors.success, AppColors.successBg),
+      '필사' => (AppColors.purple, AppColors.purpleBg),
+      '그림' => (AppColors.warning, AppColors.warningBg),
       _ => (AppColors.textSecondary, AppColors.chipBackground),
     };
     return Container(

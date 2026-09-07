@@ -299,7 +299,7 @@ class _SectionHeader extends StatelessWidget {
 class _Divider extends StatelessWidget {
   @override
   Widget build(BuildContext context) =>
-      const Divider(height: 1, thickness: 8, color: Color(0xFFF4F4F4));
+      const Divider(height: 1, thickness: 8, color: AppColors.divider);
 }
 
 // ── 2. 장비 태깅 ─────────────────────────────────────────────

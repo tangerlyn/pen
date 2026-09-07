@@ -344,7 +344,7 @@ class BlogEditorToolbar extends StatelessWidget {
       height: 44,
       decoration: const BoxDecoration(
         color: Colors.white,
-        border: Border(top: BorderSide(color: Color(0xFFEFEFEF), width: 1)),
+        border: Border(top: BorderSide(color: AppColors.divider, width: 1)),
       ),
       child: Row(
         children: [
