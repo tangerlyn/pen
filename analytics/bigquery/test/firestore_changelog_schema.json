@@ -1,0 +1,9 @@
+[
+  {"name": "timestamp", "type": "TIMESTAMP", "mode": "REQUIRED"},
+  {"name": "event_id", "type": "STRING", "mode": "REQUIRED"},
+  {"name": "document_name", "type": "STRING", "mode": "REQUIRED"},
+  {"name": "operation", "type": "STRING", "mode": "REQUIRED"},
+  {"name": "data", "type": "STRING"},
+  {"name": "old_data", "type": "STRING"},
+  {"name": "document_id", "type": "STRING"}
+]

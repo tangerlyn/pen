@@ -1,0 +1,31 @@
+[
+  {"name": "event_date", "type": "STRING"},
+  {"name": "event_timestamp", "type": "INTEGER"},
+  {"name": "event_name", "type": "STRING"},
+  {"name": "event_params", "type": "RECORD", "mode": "REPEATED", "fields": [
+    {"name": "key", "type": "STRING"},
+    {"name": "value", "type": "RECORD", "fields": [
+      {"name": "string_value", "type": "STRING"},
+      {"name": "int_value", "type": "INTEGER"},
+      {"name": "float_value", "type": "FLOAT"},
+      {"name": "double_value", "type": "FLOAT"}
+    ]}
+  ]},
+  {"name": "user_properties", "type": "RECORD", "mode": "REPEATED", "fields": [
+    {"name": "key", "type": "STRING"},
+    {"name": "value", "type": "RECORD", "fields": [
+      {"name": "string_value", "type": "STRING"},
+      {"name": "int_value", "type": "INTEGER"},
+      {"name": "float_value", "type": "FLOAT"},
+      {"name": "double_value", "type": "FLOAT"},
+      {"name": "set_timestamp_micros", "type": "INTEGER"}
+    ]}
+  ]},
+  {"name": "user_pseudo_id", "type": "STRING"},
+  {"name": "platform", "type": "STRING"},
+  {"name": "app_info", "type": "RECORD", "fields": [
+    {"name": "id", "type": "STRING"},
+    {"name": "version", "type": "STRING"}
+  ]},
+  {"name": "event_server_timestamp_offset", "type": "INTEGER"}
+]

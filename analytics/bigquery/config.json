@@ -1,0 +1,18 @@
+{
+  "prod": {
+    "project": "nibpen",
+    "location": "asia-northeast3",
+    "dataset": "review_dq",
+    "events_table": "auto",
+    "reviews_changelog": "nibpen.firestore_export.reviews_raw_changelog",
+    "logging_start": "2026-10-12 13:00:00+09"
+  },
+  "test": {
+    "project": "nibpen",
+    "location": "asia-northeast3",
+    "dataset": "review_dq_test",
+    "events_table": "nibpen.review_dq_test.events_*",
+    "reviews_changelog": "nibpen.review_dq_test.reviews_raw_changelog",
+    "logging_start": "2026-10-12 13:00:00+09"
+  }
+}

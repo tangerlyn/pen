@@ -209,24 +209,31 @@ review_write_view
 
 ## 검증 규칙
 
-모든 규칙은 `build_env` 필터 적용 후 실행한다. 규칙 ID는 SQL 파일명·대시보드와 일치시킨다.
+구현: `analytics/bigquery/checks/DQ-*.sql` (파일 1개 = 규칙 1개, 머리 주석이 규칙 카탈로그 `dq_rules`의 원본). 구조와 실행 방법은 `analytics/bigquery/README.md`.
 
-| ID | 품질 차원 | 규칙 (위반 조건) |
-|---|---|---|
-| DQ-01 | 유일성 | 한 세션에 `view`가 2개 이상 |
-| DQ-02 | 완전성 | `success`가 있는데 같은 세션에 `view`가 없음 |
-| DQ-03 | 완전성 | `success`가 있는데 같은 세션에 `start`가 없음 (`mode=new`) |
-| DQ-04 | 유일성 | 한 `review_id`에 `success`가 2개 이상 |
-| DQ-05 | 일관성 | 한 세션에 `success`와 `exit`가 함께 있음 |
-| DQ-06 | 일관성 | 이벤트 순서 역전 (`start`가 `view`보다 앞섬 등) |
-| DQ-07 | 정확성 | `success.photo_count` ≠ Firestore `imageUrls` 길이 |
-| DQ-08 | 정확성 | `success.photo_count` ≠ 같은 `attempt_no`의 `attempt.photo_count` |
-| DQ-09 | 정확성 | (`mode=new`) Σ`photo_add.added_count` − `photo_remove` 횟수 ≠ 마지막 `attempt.photo_count` |
-| DQ-10 | 완전성 | `attempt` 뒤에 `blocked`/`fail`/`success` 중 아무것도 없음 — 0이 목표가 아니라 **비율을 추적** |
-| DQ-11 | 유효성 | `entry_point = unknown` 또는 명세에 없는 파라미터 값 |
-| DQ-12 | 정합성 | Firestore에 생성된 리뷰인데 `success` 로그가 없음 (로그 유실) |
-| DQ-13 | 정합성 | `success` 로그가 있는데 Firestore에 문서가 없음 (유령 성공) |
-| DQ-14 | 적시성 | 이벤트 발생부터 서버 수집까지의 지연 분포 (`event_server_timestamp_offset` 등) |
+**공통 원칙**
+- 위반 건수 = 위반한 **대상(세션 또는 리뷰) 수**. 한 세션이 여러 이벤트에서 같은 규칙을 어겨도 1건
+- 결과는 `build_env`별로 나눠 집계한다. Firestore에서만 판단하는 규칙(DQ-12)은 `build_env = n/a`
+- `severity = monitor`인 규칙은 0이 목표가 아니라 **추이를 본다** (강제 종료·네트워크 지연처럼 앱이 막을 수 없는 원인)
+
+| ID | 품질 차원 | 심각도 | 규칙 (위반 조건) | 대상 |
+|---|---|---|---|---|
+| DQ-01 | 유일성 | error | 한 세션에 `view`가 2개 이상 | 세션 |
+| DQ-02 | 완전성 | error | `success`가 있는데 같은 세션에 `view`가 없음 | 세션 |
+| DQ-03 | 완전성 | error | `success`가 있는데 같은 세션에 `start`가 없음 (`mode=new`) | 세션 |
+| DQ-04 | 유일성 | error | 한 `review_id`에 **`mode=new`** `success`가 2개 이상 (수정 모드 성공은 같은 ID로 정상 발생하므로 제외) | 리뷰 |
+| DQ-05 | 일관성 | error | 한 세션에 `success`와 `exit`가 함께 있음 | 세션 |
+| DQ-06 | 일관성 | error | 이벤트 순서 역전: `view`보다 이른 `start`·`attempt`·`exit`, 첫 `attempt`보다 이른 `success` | 세션 |
+| DQ-07 | 정확성 | error | (`mode=new`) `success.photo_count` ≠ Firestore **생성 시점** `imageUrls` 길이 | 리뷰 |
+| DQ-08 | 정확성 | error | `success.photo_count` ≠ 같은 `attempt_no`의 `attempt.photo_count` | 세션 |
+| DQ-09 | 정확성 | error | (`mode=new`) 마지막 `attempt` **이전까지의** Σ`photo_add.added_count` − `photo_remove` 횟수 ≠ 마지막 `attempt.photo_count` | 세션 |
+| DQ-10 | 완전성 | monitor | `attempt` 뒤에 같은 `attempt_no`의 `blocked`/`fail`/`success`가 없음 | 세션#시도 |
+| DQ-11 | 유효성 | error | 필수 파라미터 누락 또는 명세에 없는 값 (`entry_point = unknown` 포함) | 세션 |
+| DQ-12 | 정합성 | error | Firestore에 생성된 리뷰인데 `success` 로그가 없음 (로그 유실). 로깅 배포(2026-10-12 13:00 KST) 이전에 생성된 문서, GA4 일별 테이블이 아직 도착하지 않은 날짜는 제외 | 리뷰 |
+| DQ-13 | 정합성 | error | `success` 로그가 있는데 Firestore에 그 리뷰가 **존재한 적이 없음** (유령 성공). 작성 후 삭제된 리뷰는 위반 아님 | 리뷰 |
+| DQ-14 | 적시성 | monitor | 이벤트 발생 후 24시간 넘게 지나서 수집됨. 지연 분포(p50·p95)는 `mart_ingest_latency_daily` | 세션 |
+
+**검증 쿼리 자체의 검증**: `analytics/bigquery/test/run_tests.py`가 정상 시나리오(S1~S4·S9, 업로드 실패, 삭제된 리뷰, 디버그 빌드 등)와 규칙마다 일부러 심은 위반 1건씩을 test 데이터 세트에 올리고, 각 규칙이 **심은 위반만 정확히** 잡는지(오탐·미탐 0) 확인한다. 일일 점검 잡을 두 번 실행해 결과가 같은지(멱등성)도 확인한다.
 
 ---
 
@@ -265,8 +272,9 @@ review_write_view
 ## 확인 필요
 
 - debug 모드(`-FIRDebugEnabled`)로 보낸 이벤트가 BigQuery export에 포함되는지
-- BigQuery 일별 export 테이블이 생성되는 시각과 수집 지연 이벤트가 어떻게 반영되는지
-- 개인정보처리방침(`docs/privacy_policy.md`)과 App Store / Play Console 개인정보 항목에 Analytics 수집 내용 반영
+- BigQuery 일별 export 테이블이 생성되는 시각과 수집 지연 이벤트가 어떻게 반영되는지 → 일일 점검을 KST 12:00에 돌리고 최근 7일을 매번 다시 계산하도록 설계 (`jobs/dq_daily.sql`)
+- Firestore 확장이 `createdAt`(Timestamp)을 `{"_seconds":..}` 형태로 직렬화하는지 실제 데이터로 확인 (`stg_reviews`는 문자열 형태도 함께 처리)
+- ~~개인정보처리방침에 Analytics 수집 내용 반영~~ (2026-10-12 반영). App Store / Play Console 개인정보 항목은 콘솔에서 직접 수정 필요
 
 ---
 
@@ -276,3 +284,5 @@ review_write_view
 |---|---|
 | 2026-10-12 | 초안 작성 |
 | 2026-10-12 | 구현 반영: `error_stage`에서 `post_process` 제거, 중복 리뷰 리스크 1·1-1·1-2 수정 |
+| 2026-10-12 | 검증 규칙 구현 반영: 심각도·대상 컬럼 추가, DQ-04를 `mode=new`로 한정, DQ-07을 생성 시점 기준으로, DQ-09를 마지막 시도 이전으로, DQ-12·13 제외 조건 명시, DQ-14 기준 24시간 |
+| 2026-10-12 | 실데이터 백필 후 수정: DQ-12에서 백필(IMPORT) 문서 제외 조건 삭제. 확장 설치 전·로깅 배포 후에 쓴 리뷰가 검사에서 빠지고 있었음. 기준은 문서 `createdAt` 하나로 통일 |
