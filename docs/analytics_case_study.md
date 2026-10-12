@@ -8,7 +8,7 @@
 | 로그 명세서 (이벤트 9종, 용어 정의, 불변 조건, 검증 규칙, QA 시나리오) | `docs/analytics_spec.md` |
 | 앱 로깅 구현 | `lib/features/review/analytics/review_write_tracker.dart` 외 |
 | BigQuery 정제·마트·검증 SQL | `analytics/bigquery/` |
-| 대시보드 구성안 | `docs/analytics_dashboard.md` |
+| 대시보드 (Looker Studio, 3페이지) | [https://datastudio.google.com/s/jM2rDh6cP7o](https://datastudio.google.com/s/jM2rDh6cP7o) · 구성안 `docs/analytics_dashboard.md` |
 
 ---
 
@@ -104,7 +104,7 @@ GA4 원본은 이벤트 파라미터가 중첩 배열이라 매번 풀어 써야
 | Firestore → BigQuery | 완료 (확장 설치, 기존 문서 9건 백필, 행 수 일치 확인) |
 | 검증 SQL·테스트 | 완료 (테스트 데이터 세트 기준) |
 | 실데이터 배포·일일 점검 예약 | 진행 예정 (GA4 첫 테이블 도착 후) |
-| 대시보드 | 구성안 완료, 제작 진행 예정 |
+| 대시보드 | 완료 (로그 품질·작성 퍼널·수집 지연 3페이지). 현재 테스트 데이터 세트 연결, 실데이터 배포 후 교체 예정 |
 | QA 시나리오 S1~S9 실기기 대조 | 진행 예정 |
 
 ### QA 시나리오 실기기 대조 결과

@@ -2,6 +2,8 @@
 
 ## 개요
 
+보고서: [https://datastudio.google.com/s/jM2rDh6cP7o](https://datastudio.google.com/s/jM2rDh6cP7o) (현재 `review_dq_test` 연결 — 실데이터 배포 후 `review_dq`로 교체)
+
 `analytics/bigquery`가 만든 결과를 보는 Looker Studio 대시보드 구성안. **누가 무엇을 결정할 때 보는지**를 기준으로 페이지를 나눈다.
 
 | 페이지 | 보는 사람 | 답하는 질문 | 데이터 소스 |
