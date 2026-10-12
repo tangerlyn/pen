@@ -21,6 +21,7 @@ reviews_raw_changelog                                                           
 | 정제 | `stg_reviews` | Firestore 변경 이력 → 리뷰 1개당 1행. 생성 시점 사진 수, 삭제 여부 |
 | 마트 | `mart_review_write_sessions` | 작성 세션 1개당 1행. 단계별 최초 도달 시각, 이벤트 수 |
 | 마트 | `mart_review_funnel_daily` | 일·환경·플랫폼·진입 경로별 퍼널 (새 리뷰만) |
+| 마트 | `mart_review_funnel_steps` | 위 퍼널을 단계별 행으로 세운 것 (대시보드 퍼널 막대 차트용) |
 | 마트 | `mart_ingest_latency_daily` | 수집 지연 p50·p95 |
 | 검증 | `checks/DQ-*.sql` → `dq_violations` | 규칙 14개의 위반 상세 (규칙·날짜·환경·대상 ID·설명) |
 | 검증 | `dq_rules` | 규칙 카탈로그. 각 check 파일의 머리 주석에서 자동 생성 |
