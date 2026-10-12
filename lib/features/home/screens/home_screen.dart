@@ -75,7 +75,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
               ListTile(
                 onTap: () {
                   Navigator.pop(context);
-                  context.push('/write/review');
+                  context.push('/write/review?entry=home');
                 },
                 leading: Container(
                   width: 48,

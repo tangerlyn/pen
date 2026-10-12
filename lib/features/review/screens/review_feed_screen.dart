@@ -296,7 +296,7 @@ class _ReviewFeedScreenState extends ConsumerState<ReviewFeedScreen> {
             bottom: 16,
             child: FloatingActionButton.extended(
               heroTag: 'review_write',
-              onPressed: () => context.push('/write/review'),
+              onPressed: () => context.push('/write/review?entry=review_feed'),
               backgroundColor: AppColors.primary,
               foregroundColor: Colors.white,
               elevation: 4,

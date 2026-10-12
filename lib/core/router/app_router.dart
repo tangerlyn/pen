@@ -169,6 +169,7 @@ final routerProvider = Provider<GoRouter>((ref) {
         pageBuilder: (_, state) => _slideUpPage(state, ReviewWriteScreen(
           initialType: state.uri.queryParameters['type'],
           initialProductId: state.uri.queryParameters['productId'],
+          entry: state.uri.queryParameters['entry'],
         )),
       ),
       GoRoute(

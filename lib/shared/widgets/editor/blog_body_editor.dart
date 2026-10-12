@@ -52,6 +52,8 @@ List<EditorBlock> editorBlocksFromLegacy({
   ];
 }
 
+enum EditorImageSource { camera, gallery }
+
 // ── Blog editor widget ────────────────────────────────────────
 class BlogBodyEditor extends StatefulWidget {
   const BlogBodyEditor({
@@ -60,6 +62,9 @@ class BlogBodyEditor extends StatefulWidget {
     this.initialBlocks,
     this.maxTextLength,
     this.onFocusChanged,
+    this.onTextChanged,
+    this.onImagesInserted,
+    this.onImageRemoved,
   });
 
   final String hintText;
@@ -68,6 +73,12 @@ class BlogBodyEditor extends StatefulWidget {
   /// 본문 텍스트 블록 중 하나라도 포커스를 갖게/잃게 될 때 호출됨.
   /// 키보드 위 툴바를 본문 입력 중에만 보여주기 위한 용도.
   final ValueChanged<bool>? onFocusChanged;
+  /// 사용자가 본문 텍스트를 고칠 때마다 호출됨.
+  final VoidCallback? onTextChanged;
+  /// 사진이 삽입된 직후 호출됨. count는 이번에 추가된 장수.
+  final void Function(EditorImageSource source, int count)? onImagesInserted;
+  /// 사진 블록이 ✕로 삭제된 직후 호출됨.
+  final VoidCallback? onImageRemoved;
 
   @override
   State<BlogBodyEditor> createState() => BlogBodyEditorState();
@@ -135,6 +146,7 @@ class BlogBodyEditorState extends State<BlogBodyEditor> {
       final xfiles = await picker.pickMultiImage(imageQuality: 85);
       if (xfiles.isEmpty || !mounted) return;
       _insertImages(xfiles.map((xf) => File(xf.path)).toList());
+      widget.onImagesInserted?.call(EditorImageSource.gallery, xfiles.length);
     } catch (_) {
       if (mounted) showCenterToast(context, message: '사진을 불러오지 못했어요. 다시 시도해주세요.');
     }
@@ -147,6 +159,7 @@ class BlogBodyEditorState extends State<BlogBodyEditor> {
       final xfile = await picker.pickImage(source: ImageSource.camera, imageQuality: 85);
       if (xfile == null || !mounted) return;
       _insertImages([File(xfile.path)]);
+      widget.onImagesInserted?.call(EditorImageSource.camera, 1);
     } catch (_) {
       if (mounted) showCenterToast(context, message: '사진을 불러오지 못했어요. 다시 시도해주세요.');
     }
@@ -239,6 +252,7 @@ class BlogBodyEditorState extends State<BlogBodyEditor> {
         _blocks.add(newBlock);
       }
     });
+    if (removed is ImageEditorBlock) widget.onImageRemoved?.call();
   }
 
   @override
@@ -269,6 +283,7 @@ class BlogBodyEditorState extends State<BlogBodyEditor> {
           focusNode: block.focusNode,
           maxLines: null,
           maxLength: widget.maxTextLength,
+          onChanged: (_) => widget.onTextChanged?.call(),
           decoration: InputDecoration(
             hintText: i == 0 ? widget.hintText : null,
             border: InputBorder.none,

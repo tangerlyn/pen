@@ -1,8 +1,8 @@
 import 'dart:io';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_crashlytics/firebase_crashlytics.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:uuid/uuid.dart';
 import '../../../core/utils/level_system.dart';
 import '../../../core/utils/network_utils.dart';
 import '../../../data/models/review_model.dart';
@@ -10,6 +10,19 @@ import '../../../shared/providers/providers.dart';
 import '../../../core/constants/app_constants.dart';
 import '../../home/providers/feed_provider.dart';
 import '../../home/providers/review_detail_provider.dart';
+import '../analytics/review_write_tracker.dart';
+
+/// 저장 실패를 단계와 함께 전달한다. 화면은 [message]를 토스트로 보여주고,
+/// [stage]로 실패 로그를 남긴다.
+class ReviewSubmitException implements Exception {
+  const ReviewSubmitException(this.stage, this.message, [this.cause]);
+  final ReviewErrorStage stage;
+  final String message;
+  final Object? cause;
+
+  @override
+  String toString() => message;
+}
 
 class ReviewWriteState {
   const ReviewWriteState({
@@ -63,7 +76,6 @@ class ReviewWriteNotifier extends StateNotifier<ReviewWriteState> {
   ReviewWriteNotifier(this._ref) : super(const ReviewWriteState());
 
   final Ref _ref;
-  final _uuid = const Uuid();
 
   // 수정 모드 초기화 (기존 리뷰 데이터 로드)
   void initForEdit(ReviewModel review) {
@@ -135,15 +147,24 @@ class ReviewWriteNotifier extends StateNotifier<ReviewWriteState> {
   /// 블로그 에디터로 빌드된 contentBlocks를 받아 저장.
   /// imageUrls: contentBlocks에서 추출한 이미지 URL 목록 (썸네일 등 하위호환용).
   /// body: 텍스트 블록들 합산 (검색/미리보기 하위호환용).
+  /// draftReviewId: 작성 화면 진입 시 정해 둔 문서 ID. 같은 화면에서 다시 저장해도
+  ///   같은 문서를 덮어쓰므로, 저장은 됐는데 응답만 실패한 경우에도 리뷰가 중복 생성되지 않는다.
+  /// onCommitted: Firestore 쓰기가 끝난 직후(EXP 지급 전) 호출 — 성공 로그 기록용.
   Future<String> submitWithBlocks({
     required List<Map<String, dynamic>> contentBlocks,
     required List<String> imageUrls,
     required String body,
+    required String draftReviewId,
+    void Function(String reviewId)? onCommitted,
   }) async {
     final authState = _ref.read(authUserProvider);
-    if (authState.isLoading) throw Exception('잠시 후 다시 시도해주세요.');
+    if (authState.isLoading) {
+      throw const ReviewSubmitException(ReviewErrorStage.auth, '잠시 후 다시 시도해주세요.');
+    }
     final uid = authState.value;
-    if (uid == null) throw Exception('로그인이 필요합니다.');
+    if (uid == null) {
+      throw const ReviewSubmitException(ReviewErrorStage.auth, '로그인이 필요합니다.');
+    }
 
     state = state.copyWith(isLoading: true);
     try {
@@ -163,6 +184,7 @@ class ReviewWriteNotifier extends StateNotifier<ReviewWriteState> {
           'contentBlocks': contentBlocks,
           'updatedAt': FieldValue.serverTimestamp(),
         }));
+        onCommitted?.call(state.editingReviewId!);
 
         _ref.invalidate(feedProvider);
         _ref.invalidate(reviewDetailProvider(state.editingReviewId!));
@@ -173,7 +195,7 @@ class ReviewWriteNotifier extends StateNotifier<ReviewWriteState> {
       }
 
       // 작성 모드
-      final reviewId = _uuid.v4();
+      final reviewId = draftReviewId;
       final currentUser = _ref.read(currentUserProvider).value;
       final review = ReviewModel(
         id: reviewId,
@@ -193,10 +215,18 @@ class ReviewWriteNotifier extends StateNotifier<ReviewWriteState> {
       debugPrint('[ReviewWrite] Firestore 저장 시작');
       await withRetry(() => _ref.read(reviewRepoProvider).createReview(review));
       debugPrint('[ReviewWrite] Firestore 저장 완료');
+      onCommitted?.call(reviewId);
 
-      final levelUp = await _ref.read(userRepoProvider).addExpAndCheck(uid, LevelSystem.expReview);
-      if (levelUp != null) {
-        _ref.read(levelUpProvider.notifier).state = levelUp;
+      // 리뷰는 이미 저장됐으므로 EXP 지급 실패가 저장 실패로 보이면 안 된다.
+      // (예전에는 여기서 예외가 나면 에러 토스트가 뜨고, 사용자가 다시 눌러 중복 리뷰가 생길 수 있었다)
+      try {
+        final levelUp = await _ref.read(userRepoProvider).addExpAndCheck(uid, LevelSystem.expReview);
+        if (levelUp != null) {
+          _ref.read(levelUpProvider.notifier).state = levelUp;
+        }
+      } catch (e, stack) {
+        debugPrint('[ReviewWrite] EXP 지급 실패: $e');
+        FirebaseCrashlytics.instance.recordError(e, stack, reason: 'review EXP grant failed');
       }
 
       _ref.invalidate(feedProvider);
@@ -205,7 +235,7 @@ class ReviewWriteNotifier extends StateNotifier<ReviewWriteState> {
     } catch (e, stack) {
       debugPrint('[ReviewWrite] 에러 발생: $e\n$stack');
       state = state.copyWith(isLoading: false);
-      rethrow;
+      throw ReviewSubmitException(ReviewErrorStage.firestoreWrite, e.toString().replaceAll('Exception: ', ''), e);
     }
   }
 }

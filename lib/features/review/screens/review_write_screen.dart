@@ -1,11 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:uuid/uuid.dart';
+import '../../../core/analytics/analytics_logger.dart';
 import '../../../core/theme/app_theme.dart';
 import '../../../core/constants/app_constants.dart';
 import '../../../shared/providers/providers.dart';
 import '../../../shared/widgets/editor/blog_body_editor.dart';
 import '../../archive/providers/archive_detail_provider.dart';
+import '../analytics/review_write_tracker.dart';
 import '../providers/review_write_provider.dart';
 import '../../../shared/widgets/archive/add_product_bottom_sheet.dart';
 // import '../../../shared/widgets/common/star_rating.dart'; // 별점 시스템 비활성화
@@ -21,10 +24,13 @@ class ReviewWriteScreen extends ConsumerStatefulWidget {
     this.reviewToEdit,
     this.initialType,
     this.initialProductId,
+    this.entry,
   });
   final ReviewModel? reviewToEdit;
   final String? initialType; // 'ink' | 'pen' | 'paper'
   final String? initialProductId;
+  /// 진입 경로 (라우트 쿼리 `entry`). 로그 분석용 — docs/analytics_spec.md 참고
+  final String? entry;
 
   @override
   ConsumerState<ReviewWriteScreen> createState() => _ReviewWriteScreenState();
@@ -33,12 +39,27 @@ class ReviewWriteScreen extends ConsumerStatefulWidget {
 class _ReviewWriteScreenState extends ConsumerState<ReviewWriteScreen> {
   final _editorKey = GlobalKey<BlogBodyEditorState>();
   List<EditorBlock>? _initialEditorBlocks;
+  late final ReviewWriteTracker _tracker;
+  // 이 화면에서 만드는 리뷰의 문서 ID. 다시 저장해도 같은 문서를 덮어써 중복 리뷰를 막는다.
+  final String _draftReviewId = const Uuid().v4();
+  // 이미지 업로드 단계부터 저장 완료까지 완료 버튼 연타를 막는다.
+  // (provider의 isLoading은 업로드가 끝난 뒤에야 켜지므로 그것만으로는 부족함)
+  bool _isSubmitting = false;
   bool _showEditorToolbar = false;
 
   @override
   void initState() {
     super.initState();
     final review = widget.reviewToEdit;
+    final prefilled = review == null && widget.initialProductId != null;
+    _tracker = ReviewWriteTracker(
+      logger: ref.read(analyticsLoggerProvider),
+      mode: review != null ? ReviewWriteMode.edit : ReviewWriteMode.create,
+      entryPoint: review != null
+          ? ReviewEntryPoint.reviewDetail
+          : ReviewEntryPoint.fromQuery(widget.entry),
+    )..view(prefilledProductType: prefilled ? widget.initialType : null);
+
     if (review != null) {
       if (review.contentBlocks != null && review.contentBlocks!.isNotEmpty) {
         _initialEditorBlocks = editorBlocksFromMap(review.contentBlocks!);
@@ -87,10 +108,20 @@ class _ReviewWriteScreenState extends ConsumerState<ReviewWriteScreen> {
     });
   }
 
-  Future<bool> _confirmDiscard() async {
-    if (!_hasContent()) return true;
-    return confirmDiscardDialog(context, confirmLabel: '삭제하고 나가기');
+  /// 뒤로가기·닫기 버튼 공통. 작성 중이면 확인을 받고, 나가기가 확정되면 이탈 로그를 남긴다.
+  Future<void> _tryLeave() async {
+    final hadContent = _hasContent();
+    final leave = !hadContent ||
+        await confirmDiscardDialog(context, confirmLabel: '삭제하고 나가기');
+    if (leave && mounted) {
+      _tracker.exited(hadContent: hadContent);
+      ref.read(reviewWriteProvider.notifier).reset();
+      Navigator.of(context).pop();
+    }
   }
+
+  int _photoCount() =>
+      _editorKey.currentState?.getBlocks().whereType<ImageEditorBlock>().length ?? 0;
 
   @override
   Widget build(BuildContext context) {
@@ -100,29 +131,21 @@ class _ReviewWriteScreenState extends ConsumerState<ReviewWriteScreen> {
       canPop: false,
       onPopInvokedWithResult: (didPop, _) async {
         if (didPop) return;
-        final leave = await _confirmDiscard();
-        if (leave && mounted) {
-          ref.read(reviewWriteProvider.notifier).reset();
-          Navigator.of(context).pop();
-        }
+        await _tryLeave();
       },
       child: Scaffold(
         appBar: AppBar(
           title: Text(widget.reviewToEdit != null ? '리뷰 수정' : '리뷰 작성'),
           leading: IconButton(
             icon: const Icon(Icons.close),
-            onPressed: () async {
-              final leave = await _confirmDiscard();
-              if (leave && mounted) {
-                ref.read(reviewWriteProvider.notifier).reset();
-                Navigator.of(context).pop();
-              }
-            },
+            onPressed: _tryLeave,
           ),
           actions: [
             TextButton(
-              onPressed: state.isLoading ? null : () => _submit(context),
-              child: state.isLoading
+              onPressed: state.isLoading || _isSubmitting
+                  ? null
+                  : () => _submit(context),
+              child: state.isLoading || _isSubmitting
                   ? const SizedBox(
                       width: 20,
                       height: 20,
@@ -142,13 +165,17 @@ class _ReviewWriteScreenState extends ConsumerState<ReviewWriteScreen> {
               children: [
                 // ── 1. 장비 태깅 ─────────────────────────────
                 _SectionHeader(title: '장비 태깅', subtitle: '선택'),
-                _GearSection(),
+                _GearSection(
+                  onTagAdded: () => _tracker.input(ReviewInputKind.tag),
+                ),
 
                 _Divider(),
 
                 // ── 2. 리뷰 내용 (제목 + 블로그 에디터) ──────
                 _SectionHeader(title: '리뷰 내용', subtitle: '사진 1장 이상 필수'),
-                const _TitleSection(),
+                _TitleSection(
+                  onUserInput: () => _tracker.input(ReviewInputKind.title),
+                ),
                 const SizedBox(height: 4),
                 BlogBodyEditor(
                   key: _editorKey,
@@ -157,6 +184,17 @@ class _ReviewWriteScreenState extends ConsumerState<ReviewWriteScreen> {
                   maxTextLength: AppConstants.maxReviewBody,
                   onFocusChanged: (hasFocus) =>
                       setState(() => _showEditorToolbar = hasFocus),
+                  onTextChanged: () => _tracker.input(ReviewInputKind.body),
+                  onImagesInserted: (source, count) => _tracker.photoAdded(
+                    source: switch (source) {
+                      EditorImageSource.camera => ReviewPhotoSource.camera,
+                      EditorImageSource.gallery => ReviewPhotoSource.gallery,
+                    },
+                    addedCount: count,
+                    photoCountAfter: _photoCount(),
+                  ),
+                  onImageRemoved: () =>
+                      _tracker.photoRemoved(photoCountAfter: _photoCount()),
                 ),
 
                 // 별점 시스템 비활성화
@@ -181,6 +219,16 @@ class _ReviewWriteScreenState extends ConsumerState<ReviewWriteScreen> {
   }
 
   Future<void> _submit(BuildContext context) async {
+    if (_isSubmitting) return;
+    setState(() => _isSubmitting = true);
+    try {
+      await _doSubmit(context);
+    } finally {
+      if (mounted) setState(() => _isSubmitting = false);
+    }
+  }
+
+  Future<void> _doSubmit(BuildContext context) async {
     // 별점 시스템 비활성화
     // final state = ref.read(reviewWriteProvider);
     // if (state.rating == 0.0) {
@@ -191,8 +239,21 @@ class _ReviewWriteScreenState extends ConsumerState<ReviewWriteScreen> {
     final editorState = _editorKey.currentState;
     if (editorState == null) return;
 
-    final hasImage = editorState.getBlocks().any((b) => b is ImageEditorBlock);
+    final blocks = editorState.getBlocks();
+    final writeState = ref.read(reviewWriteProvider);
+    _tracker.attempt(
+      photoCount: blocks.whereType<ImageEditorBlock>().length,
+      titleLength: writeState.title.length,
+      bodyLength: blocks
+          .whereType<TextEditorBlock>()
+          .fold(0, (sum, b) => sum + b.controller.text.trim().length),
+      inkTagCount: writeState.inkIds.length,
+      penTagCount: writeState.penIds.length,
+    );
+
+    final hasImage = blocks.any((b) => b is ImageEditorBlock);
     if (!hasImage) {
+      _tracker.blocked(ReviewBlockReason.noPhoto);
       await showDialog(
         context: context,
         builder: (_) => AlertDialog(
@@ -217,7 +278,8 @@ class _ReviewWriteScreenState extends ConsumerState<ReviewWriteScreen> {
             .read(storageServiceProvider)
             .uploadImage(file: file, folder: 'reviews'),
       );
-    } catch (_) {
+    } catch (e) {
+      _tracker.failed(ReviewErrorStage.imageUpload, e);
       if (context.mounted) {
         showCenterToast(
           context,
@@ -245,16 +307,21 @@ class _ReviewWriteScreenState extends ConsumerState<ReviewWriteScreen> {
             contentBlocks: contentBlocks,
             imageUrls: imageUrls,
             body: body,
+            draftReviewId: _draftReviewId,
+            onCommitted: (id) => _tracker.succeeded(
+              reviewId: id,
+              photoCount: imageUrls.length,
+            ),
           );
       if (context.mounted) {
         context.pushReplacement('/review/$reviewId');
       }
-    } catch (e) {
+    } on ReviewSubmitException catch (e) {
+      _tracker.failed(e.stage, e.cause ?? e);
       if (context.mounted) {
-        final msg = e.toString().replaceAll('Exception: ', '');
         showCenterToast(
           context,
-          message: msg,
+          message: e.message,
           icon: Icons.error_outline,
           iconColor: AppColors.error,
         );
@@ -304,6 +371,10 @@ class _Divider extends StatelessWidget {
 
 // ── 2. 장비 태깅 ─────────────────────────────────────────────
 class _GearSection extends ConsumerWidget {
+  const _GearSection({required this.onTagAdded});
+  /// 사용자가 검색 시트에서 태그를 직접 고른 경우에만 호출 (자동 태깅 제외)
+  final VoidCallback onTagAdded;
+
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final state = ref.watch(reviewWriteProvider);
@@ -348,6 +419,7 @@ class _GearSection extends ConsumerWidget {
       builder: (_) => _ProductSearchSheet(
         type: type,
         onSelected: (id, _) {
+          onTagAdded();
           switch (type) {
             case 'ink':
               ref.read(reviewWriteProvider.notifier).addInk(id);
@@ -453,7 +525,8 @@ class _GearChip extends ConsumerWidget {
 
 // ── 3-a. 제목 ────────────────────────────────────────────────
 class _TitleSection extends ConsumerStatefulWidget {
-  const _TitleSection();
+  const _TitleSection({required this.onUserInput});
+  final VoidCallback onUserInput;
 
   @override
   ConsumerState<_TitleSection> createState() => _TitleSectionState();
@@ -489,7 +562,10 @@ class _TitleSectionState extends ConsumerState<_TitleSection> {
         ),
         style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w600),
         maxLength: 50,
-        onChanged: (v) => ref.read(reviewWriteProvider.notifier).setTitle(v),
+        onChanged: (v) {
+          widget.onUserInput();
+          ref.read(reviewWriteProvider.notifier).setTitle(v);
+        },
       ),
     );
   }

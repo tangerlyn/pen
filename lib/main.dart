@@ -10,6 +10,7 @@ import 'package:timeago/timeago.dart' as timeago;
 import 'package:kakao_flutter_sdk_user/kakao_flutter_sdk_user.dart';
 import 'firebase_options.dart';
 import 'app.dart';
+import 'core/analytics/analytics_logger.dart';
 import 'core/constants/app_secrets.dart';
 
 // 백그라운드 메시지 핸들러 — 반드시 top-level 함수
@@ -33,6 +34,9 @@ void main() async {
     FirebaseCrashlytics.instance.recordError(error, stack, fatal: true);
     return true;
   };
+
+  // 테스트 빌드 로그를 실사용 로그와 구분하기 위한 사용자 속성 (docs/analytics_spec.md)
+  FirebaseAnalyticsLogger().setUserProperty('build_env', buildEnv);
 
   FirebaseFirestore.instance.settings = const Settings(
     persistenceEnabled: true,

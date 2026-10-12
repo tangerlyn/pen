@@ -38,7 +38,7 @@ class _DetailBody extends ConsumerWidget {
                 ),
                 OutlinedButton(
                   onPressed: () => context.push(
-                    '/write/review?type=$type&productId=$productId',
+                    '/write/review?type=$type&productId=$productId&entry=product_detail',
                   ),
                   style: OutlinedButton.styleFrom(
                     foregroundColor: AppColors.primary,
