@@ -35,7 +35,7 @@ reviews_raw_changelog                                                           
 - **수정 이력 오탐 방지**: 사진 수 비교(DQ-07)는 최신 문서가 아니라 **생성 시점** 스냅샷과 비교한다. 등록 후 수정으로 사진 수가 바뀌어도 오탐이 나지 않는다.
 - **늦게 도착하는 데이터**: GA4는 늦게 올라온 이벤트를 원래 날짜 테이블에 나중에 반영한다. 일일 점검은 최근 7일을 지우고 다시 계산하므로(delete → insert), 몇 번을 다시 돌려도 결과가 같다(멱등).
 - **아직 도착 안 한 날짜 제외**: Firestore는 실시간, GA4는 다음 날 도착한다. 로그 유실 검사(DQ-12)는 GA4 테이블이 도착한 날짜까지만 본다. 안 그러면 매일 오늘 작성분이 전부 "유실"로 잡힌다.
-- **0건도 기록**: 위반이 없는 규칙도 `violation_count = 0`으로 남겨, 대시보드에서 "점검했고 문제없음"과 "점검이 안 돌았음"을 구분한다.
+- **0건도 기록**: 위반이 없는 규칙도 `violation_count = 0`으로 남겨, 대시보드에서 "점검했고 문제없음"과 "점검이 안 돌았음"을 구분한다. 단 0은 그 규칙이 실제로 검사한 범위에만 채운다. Firestore만 보는 규칙(`env_scope: none`, DQ-12)은 `build_env = n/a`에만, 나머지는 빌드 환경별로.
 
 ## 검증 쿼리의 테스트
 
@@ -57,9 +57,9 @@ GA4 export·Firestore changelog와 같은 스키마의 가짜 데이터를 `revi
 # 사전 조건: bq CLI 로그인, GA4 export 데이터 세트(analytics_*)와 Firestore 확장 테이블 존재
 python3 analytics/bigquery/deploy.py --env prod                    # 뷰·규칙·결과 테이블 배포 (재실행 안전)
 python3 analytics/bigquery/deploy.py --env prod --run 2026-10-13   # 일일 점검 1회 수동 실행
-python3 analytics/bigquery/deploy.py --env prod --schedule         # 매일 KST 12:00 예약 쿼리 등록
+python3 analytics/bigquery/deploy.py --env prod --schedule         # 매일 KST 12:00 예약 쿼리 등록 (최초 1회 브라우저 동의 필요. 터미널이 아니면 BigQuery 콘솔에서 등록)
 ```
 
 - 설정: `config.json` (`events_table: auto`면 `analytics_<속성ID>` 데이터 세트를 자동으로 찾음)
-- 규칙 추가: `checks/DQ-15_xxx.sql` 파일을 머리 주석(`rule`/`dimension`/`severity`/`description`)과 함께 추가하고 테스트에 심은 위반 1건을 추가하면 끝. `dq_rules`·`dq_violations`는 배포 시 자동 갱신
+- 규칙 추가: `checks/DQ-15_xxx.sql` 파일을 머리 주석(`rule`/`dimension`/`severity`/`description`, 선택 `env_scope`)과 함께 추가하고 테스트에 심은 위반 1건을 추가하면 끝. `dq_rules`·`dq_violations`는 배포 시 자동 갱신
 - 출력 컬럼 규약: 모든 check는 `rule_id, check_date, build_env, entity_id, detail`을 반환

@@ -2,6 +2,7 @@
 -- dimension: 정합성
 -- severity: error
 -- description: Firestore에 생성된 리뷰인데 등록 성공 로그가 없음 (로그 유실)
+-- env_scope: none
 -- 로깅 배포 이전 문서와, 아직 GA4 일별 테이블이 도착하지 않은 날짜는 제외한다
 -- 확장 설치 전에 만들어져 백필(IMPORT)된 문서도 로깅 배포 이후 생성분이면 검사한다.
 -- 설치 시점은 로그 수집과 무관하므로, 기준은 문서의 createdAt 하나로 둔다.

@@ -41,7 +41,9 @@
 ## D5. 검증 SQL
 - [x] DQ-01~DQ-14 쿼리 작성 (`analytics/bigquery/checks/`), 정제 뷰·마트 (`analytics/bigquery/sql/`)
 - [x] 검증 쿼리 테스트: 가짜 데이터 + 규칙별 심은 위반 → 14개 오탐·미탐 0 (`analytics/bigquery/test/run_tests.py`)
-- [ ] 실데이터 배포: `deploy.py --env prod` (GA4 첫 테이블 + Firestore 확장 테이블 생긴 뒤)
+- [x] 실데이터 배포: `deploy.py --env prod` (2026-10-13, 원천 analytics_535406606) → 첫 점검 10-12분 14개 규칙 위반 0, 퍼널 2/2/2/2/2, 지연 p95 0.46초
+- [x] 첫 점검에서 발견: DQ-12(Firestore 전용) 0건이 testflight에 채워져 의미 없는 0 → 규칙별 `env_scope` 추가, 테스트 5) 추가
+- [ ] 일일 점검 예약 쿼리 등록 (bq CLI는 브라우저 동의 필요 → BigQuery 콘솔에서 사용자 등록)
 - [ ] 시나리오 기대값 vs 실제 로그 비교표 작성
 - [ ] 발견한 불일치 원인 분석 → 수정 → 재검증
 

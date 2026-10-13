@@ -211,6 +211,18 @@ def main() -> None:
         failures += not ok
         print(f"  {'✓' if ok else '✗'} {r['rule_id']}: 위반 {r['n']}건 (기대 {want}), 결과 행 {r['row_count']}개")
 
+    print("5) 0건의 의미 (규칙이 실제로 검사하는 환경에만 결과 행이 있어야 함)")
+    misplaced = deploy.query(cfg, f"""
+        SELECT c.rule_id, c.build_env
+        FROM `{cfg['dataset']}.dq_check_results` AS c
+        JOIN `{cfg['dataset']}.dq_rules` AS r USING (rule_id)
+        WHERE (r.env_scope = 'none') != (c.build_env = 'n/a')""")
+    if misplaced:
+        failures += 1
+        print(f"  ✗ 검사하지 않는 환경에 0건이 채워짐: {misplaced}")
+    else:
+        print("  ✓ Firestore 규칙(DQ-12)은 n/a에만, 나머지 규칙은 빌드 환경에만 집계됨")
+
     print("\n" + ("모든 검증 통과" if not failures else f"실패 {failures}건"))
     sys.exit(1 if failures else 0)
 

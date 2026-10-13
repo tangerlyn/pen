@@ -14,14 +14,29 @@ WHERE check_date BETWEEN start_date AND @run_date;
 INSERT INTO `{{dataset}}.dq_check_results`
   (check_date, build_env, rule_id, dimension, severity, violation_count, sample_entity_ids, checked_at)
 WITH scope AS (
-  -- 위반이 0건인 규칙도 "0"으로 남겨야 대시보드에서 "점검했고 문제없음"과 "점검 안 됨"이 구분된다
-  SELECT DISTINCT session_date_kst AS check_date, build_env
+  -- 위반이 0건인 규칙도 "0"으로 남겨야 대시보드에서 "점검했고 문제없음"과 "점검 안 됨"이 구분된다.
+  -- 그래서 0은 그 규칙이 실제로 검사한 범위에만 채운다.
+  --   by_env 규칙: 작성 세션이 있는 날짜 × 빌드 환경
+  --   none 규칙(Firestore만 보는 DQ-12): 세션 또는 리뷰 생성이 있는 날짜 × 'n/a'.
+  --     단 로깅 배포 이전 문서와 GA4 테이블이 아직 안 온 날짜는 DQ-12가 검사하지 않으므로 제외한다
+  SELECT DISTINCT session_date_kst AS check_date, build_env, 'by_env' AS env_scope
   FROM `{{dataset}}.mart_review_write_sessions`
   WHERE session_date_kst BETWEEN start_date AND @run_date
   UNION DISTINCT
-  SELECT DISTINCT check_date, build_env
-  FROM `{{dataset}}.dq_violations`
-  WHERE check_date BETWEEN start_date AND @run_date
+  SELECT DISTINCT session_date_kst, 'n/a', 'none'
+  FROM `{{dataset}}.mart_review_write_sessions`
+  WHERE session_date_kst BETWEEN start_date AND @run_date
+  UNION DISTINCT
+  SELECT DISTINCT DATE(created_at, 'Asia/Seoul'), 'n/a', 'none'
+  FROM `{{dataset}}.stg_reviews`
+  WHERE DATE(created_at, 'Asia/Seoul') BETWEEN start_date AND @run_date
+    AND created_at >= TIMESTAMP('{{logging_start}}')
+    AND DATE(created_at, 'Asia/Seoul') <= (SELECT MAX(event_date_kst) FROM `{{dataset}}.stg_review_events`)
+  UNION DISTINCT
+  SELECT DISTINCT v.check_date, v.build_env, r.env_scope
+  FROM `{{dataset}}.dq_violations` AS v
+  JOIN `{{dataset}}.dq_rules` AS r USING (rule_id)
+  WHERE v.check_date BETWEEN start_date AND @run_date
 )
 SELECT
   s.check_date,
@@ -34,7 +49,8 @@ SELECT
   ARRAY_AGG(DISTINCT v.entity_id IGNORE NULLS ORDER BY v.entity_id LIMIT 5) AS sample_entity_ids,
   CURRENT_TIMESTAMP() AS checked_at
 FROM scope AS s
-CROSS JOIN `{{dataset}}.dq_rules` AS r
+JOIN `{{dataset}}.dq_rules` AS r
+  ON r.env_scope = s.env_scope
 LEFT JOIN `{{dataset}}.dq_violations` AS v
   ON v.check_date = s.check_date
  AND v.build_env = s.build_env

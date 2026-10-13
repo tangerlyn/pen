@@ -23,7 +23,7 @@ import sys
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent
-HEADER = re.compile(r"^--\s*(rule|dimension|severity|description):\s*(.+)$", re.M)
+HEADER = re.compile(r"^--\s*(rule|dimension|severity|description|env_scope):\s*(.+)$", re.M)
 
 
 def load_config(env: str) -> dict:
@@ -80,14 +80,18 @@ def load_checks() -> list[dict]:
             raise ValueError(f"{path.name}: 머리 주석에 {missing} 없음")
         if not path.name.startswith(meta["rule"]):
             raise ValueError(f"{path.name}: 파일명과 rule({meta['rule']})이 다름")
+        # env_scope: by_env(기본) = 앱 빌드 환경별로 집계, none = Firestore만 보는 규칙이라 환경 구분 없이 'n/a'로 집계
+        meta.setdefault("env_scope", "by_env")
+        if meta["env_scope"] not in ("by_env", "none"):
+            raise ValueError(f"{path.name}: env_scope는 by_env 또는 none")
         checks.append({**meta, "sql": text})
     return checks
 
 
 def rules_table_sql(checks: list[dict]) -> str:
     rows = ",\n  ".join(
-        "STRUCT({} AS rule_id, {} AS dimension, {} AS severity, {} AS description)".format(
-            *(json.dumps(c[k], ensure_ascii=False) for k in ("rule", "dimension", "severity", "description"))
+        "STRUCT({} AS rule_id, {} AS dimension, {} AS severity, {} AS description, {} AS env_scope)".format(
+            *(json.dumps(c[k], ensure_ascii=False) for k in ("rule", "dimension", "severity", "description", "env_scope"))
         )
         for c in checks
     )
