@@ -1,6 +1,4 @@
-# 홈 (Home) → 디스커버리
-
-> 2026-10-18부터 첫 탭은 기록 홈(`docs/record.md`)이고, 이 화면은 `/discover`(기록 홈 앱바 "둘러보기")로 옮겨졌다. 코드는 그대로이며 FAB 리뷰 작성 진입값만 `entry=discover`로 바뀌었다. Remote Config `home_variant=discover`면 다시 첫 탭이 된다.
+# 홈 (Home)
 
 ## 개요
 

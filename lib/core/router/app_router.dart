@@ -31,10 +31,7 @@ import '../../features/mypage/screens/privacy_screen.dart';
 import '../../features/home/screens/notification_screen.dart';
 import '../../features/mypage/screens/wishlist_screen.dart';
 import '../../features/mypage/screens/public_ink_books_screen.dart';
-import '../../features/record/screens/swatch_record_detail_screen.dart';
-import '../../features/record/screens/swatch_record_screen.dart';
 import '../../shared/providers/providers.dart';
-import '../shell/home_tab.dart';
 import '../shell/main_shell.dart';
 
 // ── RouterNotifier: auth 상태 변화 시 GoRouter 갱신 ──────────────────
@@ -98,10 +95,9 @@ final routerProvider = Provider<GoRouter>((ref) {
       StatefulShellRoute.indexedStack(
         builder: (context, state, shell) => MainShell(shell: shell),
         branches: [
-          // 0. 기록 홈 (내 스와치). 기존 디스커버리 홈은 /discover,
-          //    Remote Config home_variant=discover면 첫 탭도 디스커버리 (롤백용)
+          // 0. 홈 (디스커버리)
           StatefulShellBranch(routes: [
-            GoRoute(path: '/', builder: (_, _) => const HomeTab()),
+            GoRoute(path: '/', builder: (_, _) => const HomeScreen()),
           ]),
           // 1. 리뷰 피드
           StatefulShellBranch(routes: [
@@ -176,23 +172,6 @@ final routerProvider = Provider<GoRouter>((ref) {
           entry: state.uri.queryParameters['entry'],
         )),
       ),
-      // 스와치 기록 (기록 홈 FAB·빈 화면, 아카이브 잉크 상세에서 진입)
-      GoRoute(
-        path: '/record/new',
-        pageBuilder: (_, state) => _slideUpPage(state, SwatchRecordScreen(
-          entryQuery: state.uri.queryParameters['entry'],
-          presetInkId: state.uri.queryParameters['inkId'],
-        )),
-      ),
-      GoRoute(
-        path: '/record/:bookId/:entryId',
-        pageBuilder: (_, state) => _slidePage(state, SwatchRecordDetailScreen(
-          bookId: state.pathParameters['bookId']!,
-          entryId: state.pathParameters['entryId']!,
-        )),
-      ),
-      // 디스커버리 피드 (기록 홈 전환 전의 홈 화면 그대로)
-      GoRoute(path: '/discover', pageBuilder: (_, state) => _slidePage(state, const HomeScreen())),
       GoRoute(
         path: '/review/:reviewId',
         pageBuilder: (_, state) => _slidePage(state, ReviewDetailScreen(reviewId: state.pathParameters['reviewId']!)),

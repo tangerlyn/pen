@@ -1,5 +1,16 @@
 part of '../screens/archive_screen.dart';
 
+// 색상 계열 목록 — 이름 → 칩에 보여줄 대표 색상
+const _colorFamilySwatches = {
+  '빨강': Color(0xFFE53935),
+  '주황': Color(0xFFFB8C00),
+  '노랑': Color(0xFFFDD835),
+  '초록': Color(0xFF43A047),
+  '파랑': Color(0xFF1E88E5),
+  '보라': Color(0xFF8E24AA),
+  '검정': Color(0xFF2B2B2B),
+};
+
 // 특수 속성 목록 (레이블 → DB 값 매핑)
 const _inkTypeLabels = ['일반', '펄', '테'];
 const _inkTypeValues = ['normal', 'shimmer', 'sheen'];
@@ -646,7 +657,7 @@ class _FilterDropdownOverlay extends StatelessWidget {
                                   onTap: onClear,
                                 ),
                                 ...(isColor
-                                    ? kInkColorFamilySwatches.entries.map(
+                                    ? _colorFamilySwatches.entries.map(
                                         (e) => _dropdownRow(
                                           label: e.key,
                                           swatch: e.value,

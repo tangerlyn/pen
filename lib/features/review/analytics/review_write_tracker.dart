@@ -172,7 +172,6 @@ enum ReviewWriteMode {
 
 enum ReviewEntryPoint {
   home('home'),
-  discover('discover'),
   reviewFeed('review_feed'),
   productDetail('product_detail'),
   reviewDetail('review_detail'),

@@ -299,7 +299,7 @@ class PostRepository {
       if (!postDoc.exists) throw Exception('Post not found');
 
       final likeDoc = await transaction.get(likeRef);
-      final data = postDoc.data();
+      final data = postDoc.data() as Map<String, dynamic>?;
       final currentLikeCount = data?['likeCount'] as num? ?? 0;
 
       if (isLiked) {

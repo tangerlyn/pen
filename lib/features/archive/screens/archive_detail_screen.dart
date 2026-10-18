@@ -15,7 +15,6 @@ import '../../../shared/widgets/ink_drop_circle.dart';
 import '../../../shared/widgets/archive/add_product_bottom_sheet.dart'
     show InkColorPicker;
 import '../providers/archive_provider.dart';
-import '../widgets/ink_record_actions.dart';
 part '../widgets/archive_detail_content.dart';
 part '../widgets/archive_detail_sheets.dart';
 // import 'ink_compare_screen.dart'; // 색상 비교 — 구현 완료, 적용 보류

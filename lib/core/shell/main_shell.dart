@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-import '../config/home_variant.dart';
 import '../theme/app_theme.dart';
 import '../utils/level_system.dart';
 import '../../data/services/force_update_service.dart';
@@ -102,15 +101,12 @@ class _MainShellState extends ConsumerState<MainShell> {
   }
 }
 
-class _BottomNav extends ConsumerWidget {
+class _BottomNav extends StatelessWidget {
   const _BottomNav({required this.shell});
   final StatefulNavigationShell shell;
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final isRecordHome =
-        (ref.watch(homeVariantProvider).valueOrNull ?? HomeVariant.record) ==
-            HomeVariant.record;
+  Widget build(BuildContext context) {
     return Container(
       decoration: const BoxDecoration(
         color: Colors.white,
@@ -123,9 +119,9 @@ class _BottomNav extends ConsumerWidget {
           child: Row(
             children: [
               _NavItem(
-                icon: isRecordHome ? Icons.water_drop_outlined : Icons.home_outlined,
-                activeIcon: isRecordHome ? Icons.water_drop : Icons.home,
-                label: isRecordHome ? '기록' : '홈',
+                icon: Icons.home_outlined,
+                activeIcon: Icons.home,
+                label: '홈',
                 index: 0,
                 shell: shell,
               ),
