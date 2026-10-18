@@ -34,7 +34,7 @@
 - [x] 테스트: 사진+이름만으로 저장, 기본 공책 생성, `filterInks`, 이벤트 순서, 저장 버튼 위젯
 
 ## S3. 아카이브 잉크 상세
-- [ ] "내 컬렉션에 추가" 토글, "스와치 기록하기" → `/record/new?inkId=..&entry=ink_detail`
+- [x] "내 컬렉션에 추가" 토글, "스와치 기록하기" → `/record/new?inkId=..&entry=ink_detail` (`test/ink_record_actions_test.dart`)
 
 ## S4. 기록 홈
 - [ ] `RecordHomeScreen` (그리드/타임라인, 빈 화면, 앱바 검색·알림·둘러보기, FAB), 상세 화면

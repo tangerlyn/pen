@@ -4,8 +4,10 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:nibpen/core/analytics/analytics_logger.dart';
 import 'package:nibpen/data/models/ink_book_model.dart';
 import 'package:nibpen/data/models/ink_chart_model.dart';
+import 'package:nibpen/data/models/owned_ink_model.dart';
 import 'package:nibpen/data/repositories/ink_book_repository.dart';
 import 'package:nibpen/data/repositories/ink_request_repository.dart';
+import 'package:nibpen/data/repositories/owned_ink_repository.dart';
 import 'package:nibpen/data/services/storage_service.dart';
 
 /// 기록 홈·스와치 기록 테스트용 가짜 구현. Firebase 없이 호출 기록만 남긴다.
@@ -118,5 +120,30 @@ class FakeInkRequestRepository extends Fake implements InkRequestRepository {
   Future<String> create({required String uid, required String brand, required String name}) async {
     requests.add((brand: brand, name: name));
     return 'req-${requests.length}';
+  }
+}
+
+class FakeOwnedInkRepository extends Fake implements OwnedInkRepository {
+  final owned = <String, OwnedInk>{};
+  final _changes = StreamController<void>.broadcast();
+
+  @override
+  Stream<bool> watchIsOwned(String uid, String inkId) async* {
+    yield owned.containsKey(inkId);
+    await for (final _ in _changes.stream) {
+      yield owned.containsKey(inkId);
+    }
+  }
+
+  @override
+  Future<void> add(String uid, OwnedInk ink) async {
+    owned[ink.inkId] = ink;
+    _changes.add(null);
+  }
+
+  @override
+  Future<void> remove(String uid, String inkId) async {
+    owned.remove(inkId);
+    _changes.add(null);
   }
 }

@@ -27,6 +27,11 @@ class _DetailBody extends ConsumerWidget {
                 ? _InkProfileHeader(data: data as InkModel)
                 : _PenProfileHeader(data: data as PenModel),
           ),
+          if (type == 'ink')
+            Padding(
+              padding: const EdgeInsets.fromLTRB(16, 0, 16, 8),
+              child: InkRecordActions(ink: data as InkModel),
+            ),
           Padding(
             padding: const EdgeInsets.fromLTRB(16, 8, 16, 8),
             child: Row(
