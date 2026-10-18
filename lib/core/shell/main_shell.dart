@@ -119,9 +119,9 @@ class _BottomNav extends StatelessWidget {
           child: Row(
             children: [
               _NavItem(
-                icon: Icons.home_outlined,
-                activeIcon: Icons.home,
-                label: '홈',
+                icon: Icons.water_drop_outlined,
+                activeIcon: Icons.water_drop,
+                label: '기록',
                 index: 0,
                 shell: shell,
               ),

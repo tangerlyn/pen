@@ -13,7 +13,7 @@ FROM `{{dataset}}.stg_review_events` AS e,
 UNNEST([
   STRUCT('write_session_id' AS field, e.write_session_id AS value, CAST([] AS ARRAY<STRING>) AS allowed, TRUE AS applies),
   ('mode', e.mode, ['new', 'edit'], TRUE),
-  ('entry_point', e.entry_point, ['home', 'review_feed', 'product_detail', 'review_detail'], TRUE),
+  ('entry_point', e.entry_point, ['home', 'discover', 'review_feed', 'product_detail', 'review_detail'], TRUE),
   ('prefilled_product_type', e.prefilled_product_type, ['ink', 'pen', 'none'], e.event_name = 'review_write_view'),
   ('first_input', e.first_input, ['title', 'body', 'tag', 'photo'], e.event_name = 'review_write_start'),
   ('source', e.photo_source, ['camera', 'gallery'], e.event_name = 'review_photo_add'),

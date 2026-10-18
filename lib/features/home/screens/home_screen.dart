@@ -4,7 +4,6 @@ import 'package:go_router/go_router.dart';
 import '../../../core/constants/app_constants.dart';
 import '../../../core/theme/app_theme.dart';
 import '../providers/home_discovery_provider.dart';
-import '../providers/notification_provider.dart';
 import '../../community/providers/community_provider.dart';
 import '../../../shared/widgets/community/post_card.dart';
 import '../../../shared/widgets/review/review_feed_card.dart';
@@ -12,6 +11,7 @@ import '../../../data/models/ink_model.dart';
 import '../../../data/models/pen_model.dart';
 import '../../../shared/widgets/common/skeletons.dart';
 import '../../../shared/widgets/ink_drop_circle.dart';
+import '../../../shared/widgets/notification_bell.dart';
 import '../../../shared/widgets/tap_scale.dart';
 import '../../../shared/providers/providers.dart';
 
@@ -75,7 +75,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
               ListTile(
                 onTap: () {
                   Navigator.pop(context);
-                  context.push('/write/review?entry=home');
+                  context.push('/write/review?entry=discover');
                 },
                 leading: Container(
                   width: 48,
@@ -173,7 +173,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                       icon: const Icon(Icons.search),
                       onPressed: () => context.push('/search?type=all'),
                     ),
-                    _NotificationBell(),
+                    const NotificationBell(),
                   ],
                 ),
                 SliverToBoxAdapter(
@@ -484,35 +484,6 @@ class _PopularPensSection extends ConsumerWidget {
           ],
         );
       },
-    );
-  }
-}
-
-class _NotificationBell extends ConsumerWidget {
-  @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final unread = ref.watch(unreadNotificationCountProvider);
-    return Stack(
-      clipBehavior: Clip.none,
-      children: [
-        IconButton(
-          icon: const Icon(Icons.notifications_outlined),
-          onPressed: () => context.push('/notifications'),
-        ),
-        if (unread > 0)
-          Positioned(
-            right: 10,
-            top: 10,
-            child: Container(
-              width: 8,
-              height: 8,
-              decoration: const BoxDecoration(
-                color: AppColors.error,
-                shape: BoxShape.circle,
-              ),
-            ),
-          ),
-      ],
     );
   }
 }

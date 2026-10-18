@@ -37,9 +37,10 @@
 - [x] "내 컬렉션에 추가" 토글, "스와치 기록하기" → `/record/new?inkId=..&entry=ink_detail` (`test/ink_record_actions_test.dart`)
 
 ## S4. 기록 홈
-- [ ] `RecordHomeScreen` (그리드/타임라인, 빈 화면, 앱바 검색·알림·둘러보기, FAB), 상세 화면
-- [ ] 탭 0 교체, `/discover` 라우트, 리뷰 `entry=discover`
-- [ ] 테스트: 빈 화면 버튼 2개, 기존 차트 기록 표시, 보기 전환
+- [x] `RecordHomeScreen` (그리드/타임라인, 빈 화면, 앱바 검색·알림·둘러보기, FAB), 상세 화면
+- [x] 탭 0 교체, `/discover` 라우트, 리뷰 `entry=discover` (명세·DQ-11 허용값 갱신 → BigQuery 재배포는 사용자)
+- [x] 알림 벨을 `shared/widgets/notification_bell.dart`로 추출 (기록 홈·디스커버리 공용)
+- [x] 테스트: 빈 화면 버튼 2개, 기존 차트 기록 표시, 보기 전환
 
 ## S5. 마무리
 - [ ] Remote Config `home_variant` 스위치

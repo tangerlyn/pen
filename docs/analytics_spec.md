@@ -44,7 +44,7 @@
 |---|---|---|---|
 | `write_session_id` | string | UUID v4 | 작성 세션 식별자. 화면 `initState`에서 발급 |
 | `mode` | string | `new` / `edit` | `reviewToEdit != null`이면 `edit` |
-| `entry_point` | string | `home` / `review_feed` / `product_detail` / `review_detail` | 진입 경로 (아래 "진입 경로 식별" 참고) |
+| `entry_point` | string | `home` / `discover` / `review_feed` / `product_detail` / `review_detail` | 진입 경로 (아래 "진입 경로 식별" 참고). `home`은 2026-10-18 기록 홈 전환 전 홈 FAB |
 
 **사용자 속성**
 
@@ -183,7 +183,8 @@ review_write_view
 
 | 진입 경로 | 코드 위치 | 변경 후 |
 |---|---|---|
-| 홈 FAB 바텀시트 | `lib/features/home/screens/home_screen.dart:78` | `/write/review?entry=home` |
+| 홈 FAB 바텀시트 (기록 홈 전환 전) | `lib/features/home/screens/home_screen.dart:78` | `/write/review?entry=home` |
+| 디스커버리 FAB 바텀시트 (2026-10-18~) | `lib/features/home/screens/home_screen.dart` (`/discover`) | `/write/review?entry=discover` |
 | 리뷰 피드 FAB | `lib/features/review/screens/review_feed_screen.dart:299` | `/write/review?entry=review_feed` |
 | 제품 상세 | `lib/features/archive/widgets/archive_detail_content.dart:41` | `...&entry=product_detail` |
 | 리뷰 상세 → 수정 | `lib/features/home/screens/review_detail_screen.dart:475` (`Navigator.push`) | 라우터를 거치지 않으므로 `reviewToEdit != null`이면 `review_detail` |
@@ -286,3 +287,4 @@ review_write_view
 | 2026-10-12 | 구현 반영: `error_stage`에서 `post_process` 제거, 중복 리뷰 리스크 1·1-1·1-2 수정 |
 | 2026-10-12 | 검증 규칙 구현 반영: 심각도·대상 컬럼 추가, DQ-04를 `mode=new`로 한정, DQ-07을 생성 시점 기준으로, DQ-09를 마지막 시도 이전으로, DQ-12·13 제외 조건 명시, DQ-14 기준 24시간 |
 | 2026-10-12 | 실데이터 백필 후 수정: DQ-12에서 백필(IMPORT) 문서 제외 조건 삭제. 확장 설치 전·로깅 배포 후에 쓴 리뷰가 검사에서 빠지고 있었음. 기준은 문서 `createdAt` 하나로 통일 |
+| 2026-10-18 | 기록 홈 전환: 디스커버리 화면이 `/discover`로 이동하면서 FAB 진입값을 `discover`로 분리. DQ-11 허용값에 추가 (BigQuery 재배포 필요) |
