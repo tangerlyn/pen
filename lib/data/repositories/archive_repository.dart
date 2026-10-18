@@ -269,6 +269,18 @@ class ArchiveRepository {
         .toList();
   }
 
+  /// 스와치 기록의 잉크 매칭용 전체 목록. searchInks와 달리 한 번만 읽어서
+  /// 호출 측(inkCatalogProvider)이 캐시하고, 검색·필터는 메모리에서 한다.
+  Future<List<InkModel>> getInkCatalog() async {
+    final snapshot = await _inks.get();
+    return snapshot.docs
+        .map(
+          (doc) => InkModel.fromMap(doc.data() as Map<String, dynamic>, doc.id),
+        )
+        .where((i) => i.brand.isNotEmpty && i.name.isNotEmpty)
+        .toList();
+  }
+
   // 동일 브랜드+이름 잉크 존재 여부 확인
   Future<bool> inkExists(String brand, String name) async {
     final snap = await _inks

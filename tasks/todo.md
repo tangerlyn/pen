@@ -29,9 +29,9 @@
 - 참고: 예전 경로 `users/{uid}/inkChart`(공책 없음)는 현재 앱 어디서도 안 읽음 → 기록 홈 집계 대상 아님. 운영 데이터 존재 여부는 사용자 확인 필요
 
 ## S2. 스와치 기록 플로우
-- [ ] `/record/new` 라우트, `SwatchRecordScreen`, 컨트롤러, 잉크 매칭 시트, 카탈로그 캐시
-- [ ] `SwatchRecordTracker` + 이벤트 연결
-- [ ] 테스트: 사진+이름만으로 저장, 기본 공책 생성, `filterInks`, 이벤트 순서, 저장 버튼 위젯
+- [x] `/record/new` 라우트, `SwatchRecordScreen`, 컨트롤러, 잉크 매칭 시트, 카탈로그 캐시
+- [x] `SwatchRecordTracker` + 이벤트 연결
+- [x] 테스트: 사진+이름만으로 저장, 기본 공책 생성, `filterInks`, 이벤트 순서, 저장 버튼 위젯
 
 ## S3. 아카이브 잉크 상세
 - [ ] "내 컬렉션에 추가" 토글, "스와치 기록하기" → `/record/new?inkId=..&entry=ink_detail`

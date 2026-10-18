@@ -31,6 +31,7 @@ import '../../features/mypage/screens/privacy_screen.dart';
 import '../../features/home/screens/notification_screen.dart';
 import '../../features/mypage/screens/wishlist_screen.dart';
 import '../../features/mypage/screens/public_ink_books_screen.dart';
+import '../../features/record/screens/swatch_record_screen.dart';
 import '../../shared/providers/providers.dart';
 import '../shell/main_shell.dart';
 
@@ -170,6 +171,14 @@ final routerProvider = Provider<GoRouter>((ref) {
           initialType: state.uri.queryParameters['type'],
           initialProductId: state.uri.queryParameters['productId'],
           entry: state.uri.queryParameters['entry'],
+        )),
+      ),
+      // 스와치 기록 (기록 홈 FAB·빈 화면, 아카이브 잉크 상세에서 진입)
+      GoRoute(
+        path: '/record/new',
+        pageBuilder: (_, state) => _slideUpPage(state, SwatchRecordScreen(
+          entryQuery: state.uri.queryParameters['entry'],
+          presetInkId: state.uri.queryParameters['inkId'],
         )),
       ),
       GoRoute(
