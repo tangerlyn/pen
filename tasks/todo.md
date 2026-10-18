@@ -20,11 +20,13 @@
 - [x] 분석 명세 초안 `docs/analytics_spec_swatch.md`
 
 ## S1. 데이터 계층
-- [ ] `InkChartModel` 선택 필드 + 하위 호환 `fromMap`/`toMap`
-- [ ] `OwnedInk` 모델·Repository·Provider, `InkRequest` Repository
-- [ ] 색 계열 상수 공용화 (`archive_filter_widgets` → 공용)
-- [ ] `firestore.rules`: `ownedInks`, `inkRequests`, `inkChart` 새 필드 검증
-- [ ] 테스트: 구 문서 하위 호환, 빈 필드 생략
+- [x] `InkChartModel` 선택 필드 + 하위 호환 `fromMap`/`toMap`
+- [x] `OwnedInk` 모델·Repository·Provider, `InkRequest` Repository
+- [x] 색 계열 상수 공용화 (`archive_filter_widgets` → 공용)
+- [x] `firestore.rules`: `ownedInks`, `inkRequests`, `inkChart` 새 필드 검증
+- [x] 테스트: 구 문서 하위 호환, 빈 필드 생략 (`test/ink_chart_model_test.dart`)
+- [x] 규칙 에뮬레이터 테스트 24케이스 (`scripts/firestore_rules_test.mjs`)
+- 참고: 예전 경로 `users/{uid}/inkChart`(공책 없음)는 현재 앱 어디서도 안 읽음 → 기록 홈 집계 대상 아님. 운영 데이터 존재 여부는 사용자 확인 필요
 
 ## S2. 스와치 기록 플로우
 - [ ] `/record/new` 라우트, `SwatchRecordScreen`, 컨트롤러, 잉크 매칭 시트, 카탈로그 캐시

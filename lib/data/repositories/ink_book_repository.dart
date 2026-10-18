@@ -21,7 +21,12 @@ class InkBookRepository {
         .map((s) => s.docs.map((d) => InkBookModel.fromMap(d.data(), d.id)).toList());
   }
 
-  Future<String> createBook(String uid, String name, String coverColor) async {
+  Future<String> createBook(
+    String uid,
+    String name,
+    String coverColor, {
+    String visibility = 'public',
+  }) async {
     final id = const Uuid().v4();
     await _books(uid).doc(id).set(
       InkBookModel(
@@ -30,6 +35,7 @@ class InkBookRepository {
         coverColor: coverColor,
         createdAt: DateTime.now(),
         ownerUid: uid,
+        visibility: visibility,
       ).toMap(),
     );
     return id;
@@ -165,6 +171,18 @@ class InkBookRepository {
         'inkName': entry.inkName,
         'memo': entry.memo,
         'contentBlocks': entry.contentBlocks ?? FieldValue.delete(),
+      });
+
+  /// 스와치 기록 플로우의 수정 — 선택 필드까지 함께 덮어쓰고, 비운 필드는 삭제.
+  /// (마이페이지 공책 화면은 updateEntry를 그대로 써서 선택 필드를 건드리지 않음)
+  Future<void> updateRecord(String uid, String bookId, InkChartModel entry) =>
+      _chart(uid, bookId).doc(entry.id).update({
+        'photoUrl': entry.photoUrl,
+        'brand': entry.brand,
+        'inkName': entry.inkName,
+        'memo': entry.memo,
+        'contentBlocks': entry.contentBlocks ?? FieldValue.delete(),
+        ...entry.optionalFieldsMap(deleteMissing: true),
       });
 
   Future<void> reorderEntries(

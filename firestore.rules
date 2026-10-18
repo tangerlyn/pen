@@ -45,6 +45,22 @@ service cloud.firestore {
       return isLoggedIn() && request.resource.data[field] == request.auth.uid;
     }
 
+    function isShortString(value, maxLen) {
+      return value is string && value.size() <= maxLen;
+    }
+
+    function optionalShortString(data, field, maxLen) {
+      return !(field in data) || isShortString(data[field], maxLen);
+    }
+
+    function validInkChartOptionals(data) {
+      return optionalShortString(data, 'inkId', 128)
+        && optionalShortString(data, 'penName', 100)
+        && optionalShortString(data, 'nibSize', 40)
+        && optionalShortString(data, 'paperName', 100)
+        && (!('recordedAt' in data) || data.recordedAt is timestamp);
+    }
+
     match /users/{uid} {
       allow read: if isLoggedIn();
       allow write: if isOwner(uid);
@@ -78,11 +94,24 @@ service cloud.firestore {
 
         match /inkChart/{chartId} {
           allow read: if isOwner(uid) || canReadInkChart(uid, bookId);
-          allow write: if isOwner(uid);
+          // 스와치 기록 플로우의 선택 필드는 있을 때만 타입·길이 검사 (구버전 앱 쓰기는 그대로 통과)
+          allow create, update: if isOwner(uid) && validInkChartOptionals(request.resource.data);
+          allow delete: if isOwner(uid);
         }
       }
       match /wishlist/{itemId} {
         allow read, write: if isOwner(uid);
+      }
+      // 내 컬렉션(보유 잉크) — 비공개. 문서 ID = 아카이브 잉크 ID
+      match /ownedInks/{inkId} {
+        allow read, delete: if isOwner(uid);
+        allow create, update: if isOwner(uid)
+          && request.resource.data.keys().hasOnly(['inkId', 'brand', 'name', 'hexColor', 'createdAt'])
+          && request.resource.data.inkId == inkId
+          && isShortString(request.resource.data.brand, 100)
+          && isShortString(request.resource.data.name, 100)
+          && isShortString(request.resource.data.hexColor, 9)
+          && request.resource.data.createdAt == request.time;
       }
     }
 
@@ -98,6 +127,19 @@ service cloud.firestore {
       allow read: if isLoggedIn();
       allow create, update: if isLoggedIn();
       allow delete: if false;
+    }
+
+    // 새 잉크 요청 — 본인 명의로 생성만 가능, 본인 요청만 읽기, 처리(수정·삭제)는 관리자 SDK로만
+    match /inkRequests/{requestId} {
+      allow read: if isLoggedIn() && resource.data.uid == request.auth.uid;
+      allow create: if isOwnedCreate('uid')
+        && request.resource.data.keys().hasOnly(['uid', 'brand', 'name', 'status', 'createdAt'])
+        && request.resource.data.status == 'pending'
+        && isShortString(request.resource.data.brand, 100)
+        && isShortString(request.resource.data.name, 100)
+        && request.resource.data.name.size() > 0
+        && request.resource.data.createdAt == request.time;
+      allow update, delete: if false;
     }
 
     match /pens/{penId} {
