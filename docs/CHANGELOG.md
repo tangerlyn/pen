@@ -10,6 +10,37 @@
 - 보안 키, 토큰, 비밀번호, 개인정보의 실제 값은 이 문서에 복사하지 않는다.
 - 기능을 변경한 날에는 관련 테스트와 검증 결과도 함께 기록한다.
 
+## 2026-10-18
+
+### 수정사항
+
+1. **첫 탭을 기록 홈으로 전환 — 완료**
+   - 첫 탭 "기록": 마이페이지 잉크 차트를 포함한 내 스와치를 그리드·타임라인으로 보여주고, 기록이 없으면 첫 기록을 안내한다.
+   - 기존 디스커버리 홈은 `/discover`로 옮겼다(코드 유지). Remote Config `home_variant=discover`로 되돌릴 수 있다.
+   - 관련 파일: `lib/features/record/`, `lib/core/shell/home_tab.dart`, `lib/core/config/home_variant.dart`, `lib/core/router/app_router.dart`, `docs/record.md`
+
+2. **스와치 기록 플로우 — 완료**
+   - 사진·크롭 → 잉크 매칭(검색·색 계열·브랜드, 새 잉크 요청) → 선택 입력(펜·닙·종이·날짜·메모) → 저장. 필수는 사진과 잉크 이름뿐.
+   - 스와치 문서에 선택 필드 5개 추가, 마이그레이션 없음. 새 컬렉션 `ownedInks`, `inkRequests`와 보안 규칙 추가.
+   - 아카이브 잉크 상세에 "내 컬렉션에 추가", "스와치 기록하기" 추가.
+   - 퍼널 이벤트 6종 (`docs/analytics_spec_swatch.md`), 리뷰 작성 진입값 `discover` 추가.
+
+3. **기존 코드 최소 수정 — 완료**
+   - 마이페이지 스와치 추가·수정: 브랜드를 선택 입력으로 완화.
+   - 알림 벨을 공용 위젯으로 추출, `post_repository.dart`의 불필요한 캐스트(analyze warning) 제거.
+
+### 검증
+
+- `flutter test` 전체 통과, `flutter analyze` warning·error 0 (기존 info만 남음)
+- 보안 규칙 에뮬레이터 테스트 24케이스 통과 (`scripts/firestore_rules_test.mjs`)
+
+### 확인된 문제 및 후속 작업
+
+1. **보안 규칙 배포 — 미완료**: 앱 배포 전에 `firebase deploy --only firestore:rules` (사용자)
+2. **BigQuery DQ-11 재배포 — 미완료**: `discover` 진입값 허용 (`deploy.py --env prod`, 사용자)
+3. **실기기 QA — 미완료**: `docs/qa_checklist.md` 기록 탭·스와치 기록 항목
+4. **예전 경로 `users/{uid}/inkChart` — 미확인**: 공책 도입 전 경로로 현재 앱 어디서도 읽지 않음. 운영 데이터가 남아 있는지 확인 필요
+
 ## 2026-08-27
 
 ### 수정사항

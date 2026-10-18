@@ -43,10 +43,18 @@
 - [x] 테스트: 빈 화면 버튼 2개, 기존 차트 기록 표시, 보기 전환
 
 ## S5. 마무리
-- [ ] Remote Config `home_variant` 스위치
-- [ ] 기존 스와치 수정 화면 브랜드 선택 입력
-- [ ] QA 체크리스트, `flutter analyze` warning 0 / `flutter test` 전체 통과
+- [x] Remote Config `home_variant` 스위치
+- [x] 기존 스와치 수정 화면 브랜드 선택 입력
+- [x] QA 체크리스트, `flutter analyze` warning 0 / `flutter test` 전체 통과
 - [ ] (사용자) 규칙 배포 `firebase deploy --only firestore:rules`, 실기기 확인
+
+## 검토 (2026-10-18)
+- 커밋: S0 `d35e9ba` → S1 `716f16c` → S2 `88426bf` → S3 `e2ceda4` → S4 `77f41a4` → S5
+- `flutter test` 67개 통과 (기존 24 + 신규 43), `flutter analyze` warning·error 0 (기존 info 108만 남음, 새 코드 0)
+- 기준선 정정: 시작 시 warning 1개(`post_repository.dart:302` 불필요한 캐스트)가 있었음 → S5에서 제거
+- 규칙 에뮬레이터 테스트 24케이스 통과
+- 실기기 확인 안 함 (시뮬레이터 실행 금지) → `docs/qa_checklist.md` "기록 탭" 섹션
+- 사용자 할 일: 규칙 배포, BigQuery DQ-11 재배포, 실기기 QA, 예전 `users/{uid}/inkChart` 경로 데이터 유무 확인
 
 ---
 

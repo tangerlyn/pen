@@ -216,8 +216,9 @@ class _InkChartAddScreenState extends ConsumerState<InkChartAddScreen> {
       _showSnack('발색 사진을 추가해주세요');
       return;
     }
-    if (brand.isEmpty || inkName.isEmpty) {
-      _showSnack('브랜드명과 잉크 이름을 입력해주세요');
+    // 브랜드는 선택 — 기록 홈에서 이름만으로 저장한 스와치도 여기서 수정할 수 있어야 함
+    if (inkName.isEmpty) {
+      _showSnack('잉크 이름을 입력해주세요');
       return;
     }
 
@@ -400,7 +401,7 @@ class _InkChartAddScreenState extends ConsumerState<InkChartAddScreen> {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      const _Label('브랜드'),
+                      const _Label('브랜드 (선택)'),
                       const SizedBox(height: 8),
                       _Field(
                         controller: _brandCtrl,

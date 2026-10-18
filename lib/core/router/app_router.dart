@@ -31,10 +31,10 @@ import '../../features/mypage/screens/privacy_screen.dart';
 import '../../features/home/screens/notification_screen.dart';
 import '../../features/mypage/screens/wishlist_screen.dart';
 import '../../features/mypage/screens/public_ink_books_screen.dart';
-import '../../features/record/screens/record_home_screen.dart';
 import '../../features/record/screens/swatch_record_detail_screen.dart';
 import '../../features/record/screens/swatch_record_screen.dart';
 import '../../shared/providers/providers.dart';
+import '../shell/home_tab.dart';
 import '../shell/main_shell.dart';
 
 // ── RouterNotifier: auth 상태 변화 시 GoRouter 갱신 ──────────────────
@@ -98,9 +98,10 @@ final routerProvider = Provider<GoRouter>((ref) {
       StatefulShellRoute.indexedStack(
         builder: (context, state, shell) => MainShell(shell: shell),
         branches: [
-          // 0. 기록 홈 (내 스와치). 기존 디스커버리 홈은 /discover
+          // 0. 기록 홈 (내 스와치). 기존 디스커버리 홈은 /discover,
+          //    Remote Config home_variant=discover면 첫 탭도 디스커버리 (롤백용)
           StatefulShellBranch(routes: [
-            GoRoute(path: '/', builder: (_, _) => const RecordHomeScreen()),
+            GoRoute(path: '/', builder: (_, _) => const HomeTab()),
           ]),
           // 1. 리뷰 피드
           StatefulShellBranch(routes: [
