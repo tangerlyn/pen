@@ -5,16 +5,44 @@ const { getFirestore, FieldValue } = require("firebase-admin/firestore");
 const { getMessaging } = require("firebase-admin/messaging");
 const { getStorage } = require("firebase-admin/storage");
 
+const { onCall } = require("firebase-functions/v2/https");
+const { defineString } = require("firebase-functions/params");
+const { getAuth } = require("firebase-admin/auth");
+const { socialLogin } = require("./social_login");
+
 initializeApp();
 const db = getFirestore();
 const fcm = getMessaging();
 
+// ── 카카오·네이버 로그인 (서버 검증 → 커스텀 토큰) ─────────────────────────
+// 카카오 디벨로퍼스 > 내 애플리케이션 > 앱 ID (숫자). 첫 배포 때 CLI가 물어보고
+// functions/.env.nibpen에 저장한다.
+const KAKAO_APP_ID = defineString("KAKAO_APP_ID", {
+  description: "카카오 디벨로퍼스 앱 ID (숫자, 앱 키 아님)",
+});
+
+exports.socialLogin = onCall((request) =>
+  socialLogin(request.data, {
+    fetchFn: fetch,
+    auth: getAuth(),
+    kakaoAppId: KAKAO_APP_ID.value(),
+  }),
+);
+
 // 유저의 FCM 토큰과 알림 설정 조회
+// 토큰은 본인만 읽는 users/{uid}/private/account에 저장한다(새 앱). 옛 앱은
+// 아직 공개 users 문서에 직접 쓰고, 새 앱은 저장할 때마다 그 공개 필드를
+// 지운다 — 그래서 공개 필드가 남아 있으면 옛 앱이 가장 최근에 쓴 값이므로
+// 그걸 우선 쓰고, 없으면 private 값을 쓴다.
 async function getUserFcmData(uid) {
-  const doc = await db.collection("users").doc(uid).get();
+  const userRef = db.collection("users").doc(uid);
+  const [doc, privateDoc] = await Promise.all([
+    userRef.get(),
+    userRef.collection("private").doc("account").get(),
+  ]);
   const data = doc.data() ?? {};
   return {
-    fcmToken: data.fcmToken ?? null,
+    fcmToken: data.fcmToken ?? privateDoc.data()?.fcmToken ?? null,
     notificationSettings: data.notificationSettings ?? {},
   };
 }
@@ -25,7 +53,7 @@ async function sendNotification({ token, body, data }) {
   try {
     await fcm.send({
       token,
-      notification: { title: "펜귄(PENGWYN)", body },
+      notification: { title: "만티(MANNTI)", body },
       data,
       apns: { payload: { aps: { sound: "default" } } },
       android: {
@@ -368,7 +396,7 @@ exports.onInquiryAnswered = onDocumentUpdated(
         targetId: inquiryId,
         targetType: "inquiry",
         fromUid: "system",
-        fromNickname: "펜귄(PENGWYN)",
+        fromNickname: "만티(MANNTI)",
         message: msg,
         docId: `inquiry_${inquiryId}`,
       }),
@@ -446,7 +474,7 @@ exports.onReportCreated = onDocumentCreated(
           targetId,
           targetType,
           fromUid: "system",
-          fromNickname: "펜귄(PENGWYN)",
+          fromNickname: "만티(MANNTI)",
           message: msg,
           docId: `report_alert_${targetType}_${targetId}`,
         }),
@@ -469,7 +497,67 @@ exports.onReportCreated = onDocumentCreated(
 async function deleteOwnedContent(query) {
   const snap = await query.get();
   if (snap.empty) return;
+  const imagePaths = snap.docs.flatMap((doc) => contentImagePaths(doc.data()));
   await Promise.all(snap.docs.map((doc) => db.recursiveDelete(doc.ref)));
+  await deleteStoragePaths(imagePaths);
+}
+
+// 리뷰·게시글 이미지는 reviews/{파일}·posts/{파일}처럼 경로에 작성자가 없어
+// prefix로 지울 수 없다 → 문서에 저장된 다운로드 URL에서 경로를 뽑아 지운다.
+const OWNED_IMAGE_PREFIXES = ["reviews/", "posts/"];
+
+function storagePathFromUrl(url) {
+  if (typeof url !== "string") return null;
+  const match = url.match(/\/o\/([^?]+)/);
+  if (!match) return null;
+  try {
+    const path = decodeURIComponent(match[1]);
+    return OWNED_IMAGE_PREFIXES.some((p) => path.startsWith(p)) ? path : null;
+  } catch {
+    return null;
+  }
+}
+
+function contentImagePaths(data) {
+  const urls = [
+    ...(Array.isArray(data.imageUrls) ? data.imageUrls : []),
+    ...(Array.isArray(data.contentBlocks) ?
+      data.contentBlocks.filter((b) => b?.type === "image").map((b) => b.url) :
+      []),
+  ];
+  return [...new Set(urls.map(storagePathFromUrl).filter(Boolean))];
+}
+
+async function deleteStoragePaths(paths) {
+  if (paths.length === 0) return;
+  const bucket = getStorage().bucket();
+  const results = await Promise.allSettled(
+    paths.map((p) => bucket.file(p).delete({ ignoreNotFound: true })),
+  );
+  const failed = results.filter((r) => r.status === "rejected");
+  if (failed.length) {
+    console.error(`[onUserDeleted] 이미지 ${failed.length}/${paths.length}개 삭제 실패:`, failed[0].reason);
+  }
+}
+
+// 본인이 작성한 문의·제품 등록 요청도 개인정보라 탈퇴 시 같이 지운다.
+// (reports는 신고 누적 판단에 쓰이는 운영 기록이라 남긴다)
+async function deleteDocs(query) {
+  const snap = await query.get();
+  if (snap.empty) return;
+  let batch = db.batch();
+  let ops = 0;
+  const commits = [];
+  for (const doc of snap.docs) {
+    batch.delete(doc.ref);
+    if (++ops >= 450) {
+      commits.push(batch.commit());
+      batch = db.batch();
+      ops = 0;
+    }
+  }
+  if (ops > 0) commits.push(batch.commit());
+  await Promise.all(commits);
 }
 
 // 델타를 부모 문서 경로별로 모아뒀다가 한 번에 반영 — 같은 부모를 가리키는
@@ -579,6 +667,8 @@ exports.onUserDeleted = functionsV1.auth.user().onDelete(async (user) => {
     deleteOwnedReplies(
       db.collectionGroup("replies").where("authorId", "==", uid)
     ),
+    deleteDocs(db.collection("inquiries").where("uid", "==", uid)),
+    deleteDocs(db.collection("productRequests").where("requesterId", "==", uid)),
   ]).catch((e) => console.error("[onUserDeleted] 콘텐츠 삭제 실패:", e));
 
   // 팔로우 관계는 콘텐츠가 아니라서 그대로 삭제하고, 상대방의
@@ -707,6 +797,7 @@ exports.onUserDeleted = functionsV1.auth.user().onDelete(async (user) => {
     const bucket = getStorage().bucket();
     await bucket.deleteFiles({ prefix: `profiles/${uid}/` });
     await bucket.deleteFiles({ prefix: `inkChart/${uid}/` });
+    // pens/{uid}/는 사용자가 등록한 카탈로그 만년필의 사진이라 남긴다 (다른 사용자도 봄)
   } catch (e) {
     console.error("[onUserDeleted] Storage 정리 실패:", e);
   }

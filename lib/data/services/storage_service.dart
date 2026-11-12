@@ -1,4 +1,5 @@
 import 'dart:io';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_storage/firebase_storage.dart';
 
 class StorageService {
@@ -15,9 +16,15 @@ class StorageService {
     final fileName = '${DateTime.now().millisecondsSinceEpoch}_${file.path.split('/').last}';
     final ref = _storage.ref().child('$folder/$fileName');
     
+    // uploader: storage.rules가 reviews/·posts/처럼 경로에 작성자가 없는
+    // 파일의 삭제 권한을 이 값으로 판단한다.
+    final uid = FirebaseAuth.instance.currentUser?.uid;
     final uploadTask = await ref.putFile(
       file,
-      SettableMetadata(contentType: 'image/jpeg'),
+      SettableMetadata(
+        contentType: 'image/jpeg',
+        customMetadata: {'uploader': ?uid},
+      ),
     );
     final url = await uploadTask.ref.getDownloadURL();
     return url;

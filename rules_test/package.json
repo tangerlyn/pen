@@ -1,0 +1,13 @@
+{
+  "name": "mannti-rules-test",
+  "private": true,
+  "type": "commonjs",
+  "scripts": {
+    "test": "node --test --test-concurrency=1 *.test.js",
+    "emu": "cd .. && firebase emulators:exec --only firestore,storage --project demo-mannti 'npm --prefix rules_test test'"
+  },
+  "devDependencies": {
+    "@firebase/rules-unit-testing": "^4.0.1",
+    "firebase": "^11.10.0"
+  }
+}

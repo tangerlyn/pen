@@ -1,9 +1,9 @@
-import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:connectivity_plus/connectivity_plus.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../data/services/auth_service.dart';
 import '../../data/services/fcm_service.dart';
+import '../../data/services/private_account_store.dart';
 import '../../data/services/storage_service.dart';
 import '../../core/utils/level_system.dart';
 import '../../data/repositories/user_repository.dart';
@@ -72,11 +72,7 @@ final fcmServiceProvider = Provider<FcmService>((ref) {
     onTokenRefresh: (_, token) {
       final uid = FirebaseAuth.instance.currentUser?.uid;
       if (uid != null) {
-        FirebaseFirestore.instance
-            .collection('users')
-            .doc(uid)
-            .update({'fcmToken': token})
-            .catchError((_) {});
+        PrivateAccountStore().saveFcmToken(uid, token).catchError((_) {});
       }
     },
   );

@@ -52,3 +52,4 @@ CLAUDE.md
 
 # Secrets
 lib/core/constants/app_secrets.dart
+rules_test/node_modules/

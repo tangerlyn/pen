@@ -35,11 +35,15 @@ class _EditorialByline extends ConsumerWidget {
                     children: [
                       Row(
                         children: [
-                          Text(
-                            user?.nickname ?? post.authorNickname,
-                            style: AppTextStyles.labelMedium.copyWith(
-                              fontWeight: FontWeight.w600,
-                              color: AppColors.textPrimary,
+                          Flexible(
+                            child: Text(
+                              user?.nickname ?? post.authorNickname,
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                              style: AppTextStyles.labelMedium.copyWith(
+                                fontWeight: FontWeight.w600,
+                                color: AppColors.textPrimary,
+                              ),
                             ),
                           ),
                           const SizedBox(width: 6),
@@ -87,4 +91,3 @@ class _EditorialByline extends ConsumerWidget {
     );
   }
 }
-

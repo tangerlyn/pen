@@ -1,9 +1,9 @@
-import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import '../../core/constants/app_constants.dart';
+import 'private_account_store.dart';
 
 class FcmService {
   FcmService({
@@ -66,10 +66,7 @@ class FcmService {
     try {
       final token = await FirebaseMessaging.instance.getToken();
       if (token != null) {
-        await FirebaseFirestore.instance
-            .collection('users')
-            .doc(uid)
-            .update({'fcmToken': token});
+        await PrivateAccountStore().saveFcmToken(uid, token);
       }
     } catch (e) {
       debugPrint('[FCM] 토큰 저장 실패: $e');

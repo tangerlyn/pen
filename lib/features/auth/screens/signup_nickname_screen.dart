@@ -27,13 +27,15 @@ class _SignupNicknameScreenState extends ConsumerState<SignupNicknameScreen> {
 
   File? _imageFile;
 
+  bool _ageConfirmed = false;
   bool _termsAgreed = false;
   bool _privacyAgreed = false;
 
-  bool get _allAgreed => _termsAgreed && _privacyAgreed;
+  bool get _allAgreed => _ageConfirmed && _termsAgreed && _privacyAgreed;
 
   void _setAllAgreed(bool value) {
     setState(() {
+      _ageConfirmed = value;
       _termsAgreed = value;
       _privacyAgreed = value;
     });
@@ -97,8 +99,7 @@ class _SignupNicknameScreenState extends ConsumerState<SignupNicknameScreen> {
     final canProceed =
         _isAvailable == true &&
         nickname.isNotEmpty &&
-        _termsAgreed &&
-        _privacyAgreed;
+        _allAgreed;
 
     return Scaffold(
       appBar: AppBar(title: const Text('프로필 설정')),
@@ -192,6 +193,13 @@ class _SignupNicknameScreenState extends ConsumerState<SignupNicknameScreen> {
               const SizedBox(height: 36),
               _AllAgreeTile(value: _allAgreed, onChanged: _setAllAgreed),
               const Divider(height: 28),
+              // 개인정보 보호법 제22조의2: 만 14세 미만은 법정대리인 동의가 필요한데
+              // 그 절차가 없으므로 가입 자체를 만 14세 이상으로 제한한다.
+              _AgreeTile(
+                label: '[필수] 만 14세 이상입니다',
+                value: _ageConfirmed,
+                onChanged: (v) => setState(() => _ageConfirmed = v),
+              ),
               _AgreeTile(
                 label: '[필수] 이용약관 동의',
                 value: _termsAgreed,
@@ -293,7 +301,7 @@ class _AgreeTile extends StatelessWidget {
                     color: value ? AppColors.primary : AppColors.textTertiary,
                   ),
                   const SizedBox(width: 12),
-                  Text(label, style: AppTextStyles.bodyMedium),
+                  Flexible(child: Text(label, style: AppTextStyles.bodyMedium)),
                 ],
               ),
             ),

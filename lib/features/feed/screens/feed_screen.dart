@@ -226,13 +226,16 @@ class _ReviewListItem extends StatelessWidget {
                   // 하단 메타
                   Row(
                     children: [
-                      Text(
-                        timeago.format(review.createdAt, locale: 'ko'),
-                        style: AppTextStyles.bodySmall.copyWith(
-                          color: AppColors.textTertiary,
+                      Expanded(
+                        child: Text(
+                          timeago.format(review.createdAt, locale: 'ko'),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: AppTextStyles.bodySmall.copyWith(
+                            color: AppColors.textTertiary,
+                          ),
                         ),
                       ),
-                      const Spacer(),
                       const Icon(
                         Icons.favorite_border,
                         size: 14,
@@ -340,25 +343,35 @@ class _PostListItem extends StatelessWidget {
                   const SizedBox(height: 8),
                   Row(
                     children: [
-                      Flexible(
-                        child: Text(
-                          post.authorNickname,
-                          style: AppTextStyles.bodySmall.copyWith(
-                            color: AppColors.primary,
-                            fontWeight: FontWeight.w600,
-                          ),
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
+                      // 닉네임·시간이 남는 폭만 쓰도록 묶어, 큰 숫자·큰 글씨에서도 넘치지 않게 한다.
+                      Expanded(
+                        child: Row(
+                          children: [
+                            Flexible(
+                              child: Text(
+                                post.authorNickname,
+                                style: AppTextStyles.bodySmall.copyWith(
+                                  color: AppColors.primary,
+                                  fontWeight: FontWeight.w600,
+                                ),
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                              ),
+                            ),
+                            const SizedBox(width: AppSpacing.sm),
+                            Flexible(
+                              child: Text(
+                                timeago.format(post.createdAt, locale: 'ko'),
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                                style: AppTextStyles.bodySmall.copyWith(
+                                  color: AppColors.textTertiary,
+                                ),
+                              ),
+                            ),
+                          ],
                         ),
                       ),
-                      const SizedBox(width: AppSpacing.sm),
-                      Text(
-                        timeago.format(post.createdAt, locale: 'ko'),
-                        style: AppTextStyles.bodySmall.copyWith(
-                          color: AppColors.textTertiary,
-                        ),
-                      ),
-                      const Spacer(),
                       const Icon(
                         Icons.chat_bubble_outline,
                         size: 14,

@@ -147,7 +147,7 @@ class _InkProfileHeader extends StatelessWidget {
                       style: AppTextStyles.headlineSmall.copyWith(
                         fontWeight: FontWeight.w700,
                       ),
-                      maxLines: 1,
+                      maxLines: 2,
                       overflow: TextOverflow.ellipsis,
                     ),
                   ),
@@ -245,7 +245,7 @@ class _PenProfileHeader extends StatelessWidget {
                       style: AppTextStyles.headlineSmall.copyWith(
                         fontWeight: FontWeight.w700,
                       ),
-                      maxLines: 1,
+                      maxLines: 2,
                       overflow: TextOverflow.ellipsis,
                     ),
                   ),

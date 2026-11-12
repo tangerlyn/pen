@@ -2,6 +2,7 @@ import 'package:firebase_crashlytics/firebase_crashlytics.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_native_splash/flutter_native_splash.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:firebase_core/firebase_core.dart';
@@ -21,6 +22,13 @@ Future<void> _firebaseMessagingBackgroundHandler(RemoteMessage message) async {
 
 void main() async {
   WidgetsBinding widgetsBinding = WidgetsFlutterBinding.ensureInitialized();
+  // 앱에 넣은 Pretendard 글꼴의 라이선스(SIL OFL)를 함께 등록한다
+  LicenseRegistry.addLicense(() async* {
+    final text = await rootBundle.loadString(
+      'assets/fonts/Pretendard-LICENSE.txt',
+    );
+    yield LicenseEntryWithLineBreaks(const ['Pretendard'], text);
+  });
   FlutterNativeSplash.preserve(widgetsBinding: widgetsBinding);
 
   await Firebase.initializeApp(
@@ -51,5 +59,5 @@ void main() async {
   timeago.setLocaleMessages('ko', timeago.KoMessages());
 
   FlutterNativeSplash.remove();
-  runApp(const ProviderScope(child: PengwynApp()));
+  runApp(const ProviderScope(child: ManntiApp()));
 }

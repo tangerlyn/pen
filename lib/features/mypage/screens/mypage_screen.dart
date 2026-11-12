@@ -99,11 +99,15 @@ class _MypageScreenState extends ConsumerState<MypageScreen>
                           children: [
                             Row(
                               children: [
-                                Text(
-                                  user?.nickname ?? '',
-                                  style: const TextStyle(
-                                    fontSize: 20,
-                                    fontWeight: FontWeight.w700,
+                                Flexible(
+                                  child: Text(
+                                    user?.nickname ?? '',
+                                    maxLines: 1,
+                                    overflow: TextOverflow.ellipsis,
+                                    style: const TextStyle(
+                                      fontSize: 20,
+                                      fontWeight: FontWeight.w700,
+                                    ),
                                   ),
                                 ),
                               ],

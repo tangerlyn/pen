@@ -333,7 +333,7 @@ class _PostDetailScreenState extends ConsumerState<PostDetailScreen> {
                   //           : '';
                   //       final box = btnContext.findRenderObject() as RenderBox?;
                   //       Share.share(
-                  //         '${post.title}\n$body\n\n펜귄 - 만년필 잉크 커뮤니티',
+                  //         '${post.title}\n$body\n\n만티 - 만년필 잉크 커뮤니티',
                   //         sharePositionOrigin:
                   //             box != null ? box.localToGlobal(Offset.zero) & box.size : null,
                   //       );
@@ -757,11 +757,15 @@ class _PostDetailScreenState extends ConsumerState<PostDetailScreen> {
                       color: AppColors.chipBackground,
                       child: Row(
                         children: [
-                          Text(
-                            '@${_composer.replyTargetNickname} 에게 답글',
-                            style: AppTextStyles.bodySmall,
+                          Expanded(
+                            child: Text(
+                              '@${_composer.replyTargetNickname} 에게 답글',
+                              style: AppTextStyles.bodySmall,
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                            ),
                           ),
-                          const Spacer(),
+                          const SizedBox(width: 8),
                           TapScale(
                             onTap: () => setState(
                               () => _composer.clearReply(clearText: true),
@@ -795,7 +799,11 @@ class _PostDetailScreenState extends ConsumerState<PostDetailScreen> {
                               isDense: true,
                               counterStyle: AppTextStyles.labelSmall,
                             ),
-                            maxLines: null,
+                            // 키보드가 올라온 작은 화면에서 긴 댓글이 입력창을
+                            // 무한히 키워 본문 영역을 밀어내지 않도록 최대 5줄까지만
+                            // 늘어나고 그 이상은 입력창 내부에서 스크롤한다.
+                            minLines: 1,
+                            maxLines: 5,
                             maxLength: _composer.replyTargetNickname != null
                                 ? AppConstants.maxReply
                                 : AppConstants.maxComment,

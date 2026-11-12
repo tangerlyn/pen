@@ -255,7 +255,7 @@ class _ReviewDetailScreenState extends ConsumerState<ReviewDetailScreen> {
                 //           : '';
                 //       final box = btnContext.findRenderObject() as RenderBox?;
                 //       Share.share(
-                //         '$title\n$body\n\n펜귄 - 만년필 잉크 커뮤니티',
+                //         '$title\n$body\n\n만티 - 만년필 잉크 커뮤니티',
                 //         sharePositionOrigin:
                 //             box != null ? box.localToGlobal(Offset.zero) & box.size : null,
                 //       );

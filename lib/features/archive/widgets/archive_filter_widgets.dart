@@ -215,6 +215,16 @@ class _FilterRowState extends ConsumerState<_FilterRow>
     // _adjustScrollForOverflow()가 칩 목록 전체를 왼쪽으로 밀어서 맞춘다.
     final screenWidth = MediaQuery.of(context).size.width;
     final maxDropdownWidth = screenWidth - 24;
+    // 패널(옵션 목록) 최대 높이 — 칩 아래부터 화면 하단(안전 영역 제외)까지.
+    // 브랜드처럼 옵션이 많거나 화면이 짧으면 목록이 화면 밖으로 넘치므로
+    // 이 높이를 넘으면 패널 안에서 스크롤되게 한다.
+    final chipBottom = box.localToGlobal(Offset(0, chipSize.height)).dy;
+    final maxPanelHeight =
+        (MediaQuery.of(context).size.height -
+                MediaQuery.of(context).viewPadding.bottom -
+                chipBottom -
+                16)
+            .clamp(120.0, double.infinity);
 
     _overlayEntry = OverlayEntry(
       builder: (_) => _FilterDropdownOverlay(
@@ -222,6 +232,7 @@ class _FilterRowState extends ConsumerState<_FilterRow>
         link: link,
         chipSize: chipSize,
         maxWidth: maxDropdownWidth,
+        maxPanelHeight: maxPanelHeight,
         filter: filter,
         animation: _animController,
         pendingColorFamilies: _pendingColorFamilies,
@@ -456,6 +467,7 @@ class _FilterDropdownOverlay extends StatelessWidget {
     required this.link,
     required this.chipSize,
     required this.maxWidth,
+    required this.maxPanelHeight,
     required this.filter,
     required this.animation,
     required this.pendingColorFamilies,
@@ -473,6 +485,7 @@ class _FilterDropdownOverlay extends StatelessWidget {
   final LayerLink link;
   final Size chipSize;
   final double maxWidth;
+  final double maxPanelHeight;
   final _ExpandedFilter filter;
   final Animation<double> animation;
   final List<String> pendingColorFamilies;
@@ -599,12 +612,16 @@ class _FilterDropdownOverlay extends StatelessWidget {
                           child: Row(
                             mainAxisSize: MainAxisSize.min,
                             children: [
-                              Text(
-                                headerText,
-                                overflow: TextOverflow.ellipsis,
-                                style: AppTextStyles.labelMedium.copyWith(
-                                  color: AppColors.primary,
-                                  fontWeight: FontWeight.w600,
+                              // 선택값이 많아 최대 폭을 넘으면 말줄임 처리
+                              Flexible(
+                                child: Text(
+                                  headerText,
+                                  maxLines: 1,
+                                  overflow: TextOverflow.ellipsis,
+                                  style: AppTextStyles.labelMedium.copyWith(
+                                    color: AppColors.primary,
+                                    fontWeight: FontWeight.w600,
+                                  ),
                                 ),
                               ),
                               const SizedBox(width: 4),
@@ -632,97 +649,133 @@ class _FilterDropdownOverlay extends StatelessWidget {
                             ),
                           ),
                           clipBehavior: Clip.antiAlias,
-                          child: Column(
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              if (isSort)
-                                // 정렬은 단일 선택 — 탭하면 바로 적용되고 닫힘.
-                                // "전체"/"완료" 없이 옵션 목록만 보여줌.
-                                ...ArchiveSortOption.values
-                                    .where(
-                                      (opt) => opt != ArchiveSortOption.rating,
-                                    )
-                                    .map(
-                                      (opt) => _dropdownRow(
-                                        label: opt.label,
-                                        isSelected: currentSort == opt,
-                                        onTap: () => onSelectSort(opt),
-                                      ),
-                                    )
-                              else ...[
-                                // "전체" — 선택 해제(초기화) 역할을 겸함, 항상 맨 위
-                                _dropdownRow(
-                                  label: '전체',
-                                  isSelected: pending.isEmpty,
-                                  onTap: onClear,
-                                ),
-                                ...(isColor
-                                    ? _colorFamilySwatches.entries.map(
-                                        (e) => _dropdownRow(
-                                          label: e.key,
-                                          swatch: e.value,
-                                          isSelected: pending.contains(e.key),
-                                          onTap: () => onToggle(e.key),
-                                        ),
-                                      )
-                                    : isType
-                                    ? _inkTypeLabels.map(
-                                        (label) => _dropdownRow(
-                                          label: label,
-                                          isSelected: pending.contains(
-                                            _inkTypeLabelToValue(label),
+                          // 옵션이 많거나 화면이 짧으면 화면 밖으로 넘치지 않도록
+                          // 최대 높이를 두고 옵션 목록만 스크롤 ("완료" 버튼은 항상 보임)
+                          child: ConstrainedBox(
+                            constraints: BoxConstraints(
+                              maxHeight: maxPanelHeight,
+                            ),
+                            child: Column(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                Flexible(
+                                  child: SingleChildScrollView(
+                                    // 오버레이라 화면의 PrimaryScrollController에
+                                    // 붙지 않도록 명시
+                                    primary: false,
+                                    child: Column(
+                                      mainAxisSize: MainAxisSize.min,
+                                      children: [
+                                        if (isSort)
+                                          // 정렬은 단일 선택 — 탭하면 바로 적용되고 닫힘.
+                                          // "전체"/"완료" 없이 옵션 목록만 보여줌.
+                                          ...ArchiveSortOption.values
+                                              .where(
+                                                (opt) =>
+                                                    opt !=
+                                                    ArchiveSortOption.rating,
+                                              )
+                                              .map(
+                                                (opt) => _dropdownRow(
+                                                  label: opt.label,
+                                                  isSelected:
+                                                      currentSort == opt,
+                                                  onTap: () =>
+                                                      onSelectSort(opt),
+                                                ),
+                                              )
+                                        else ...[
+                                          // "전체" — 선택 해제(초기화) 역할을 겸함, 항상 맨 위
+                                          _dropdownRow(
+                                            label: '전체',
+                                            isSelected: pending.isEmpty,
+                                            onTap: onClear,
                                           ),
-                                          onTap: () => onToggle(
-                                            _inkTypeLabelToValue(label),
-                                          ),
-                                        ),
-                                      )
-                                    : isFillType
-                                    ? _fillTypeLabels.map(
-                                        (label) => _dropdownRow(
-                                          label: label,
-                                          isSelected: pending.contains(label),
-                                          onTap: () => onToggle(label),
-                                        ),
-                                      )
-                                    : brandOptions.map(
-                                        (brand) => _dropdownRow(
-                                          label: brand,
-                                          isSelected: pending.contains(brand),
-                                          onTap: () => onToggle(brand),
-                                        ),
-                                      )),
-                                Padding(
-                                  padding: const EdgeInsets.fromLTRB(
-                                    12,
-                                    6,
-                                    12,
-                                    12,
+                                          ...(isColor
+                                              ? _colorFamilySwatches.entries
+                                                    .map(
+                                                      (e) => _dropdownRow(
+                                                        label: e.key,
+                                                        swatch: e.value,
+                                                        isSelected: pending
+                                                            .contains(e.key),
+                                                        onTap: () =>
+                                                            onToggle(e.key),
+                                                      ),
+                                                    )
+                                              : isType
+                                              ? _inkTypeLabels.map(
+                                                  (label) => _dropdownRow(
+                                                    label: label,
+                                                    isSelected: pending
+                                                        .contains(
+                                                          _inkTypeLabelToValue(
+                                                            label,
+                                                          ),
+                                                        ),
+                                                    onTap: () => onToggle(
+                                                      _inkTypeLabelToValue(
+                                                        label,
+                                                      ),
+                                                    ),
+                                                  ),
+                                                )
+                                              : isFillType
+                                              ? _fillTypeLabels.map(
+                                                  (label) => _dropdownRow(
+                                                    label: label,
+                                                    isSelected: pending
+                                                        .contains(label),
+                                                    onTap: () =>
+                                                        onToggle(label),
+                                                  ),
+                                                )
+                                              : brandOptions.map(
+                                                  (brand) => _dropdownRow(
+                                                    label: brand,
+                                                    isSelected: pending
+                                                        .contains(brand),
+                                                    onTap: () =>
+                                                        onToggle(brand),
+                                                  ),
+                                                )),
+                                        ],
+                                      ],
+                                    ),
                                   ),
-                                  child: SizedBox(
-                                    // IntrinsicWidth 아래에서는 width: infinity를 넣으면
-                                    // 고유 너비 계산이 무한대로 깨져서 드롭다운이 화면
-                                    // 가운데로 튀어보이는 버그가 있었음 — height만 지정하고
-                                    // 너비는 IntrinsicWidth가 강제하는 값을 그대로 따르게 둠
-                                    height: 40,
-                                    child: ElevatedButton(
-                                      onPressed: onClose,
-                                      style: ElevatedButton.styleFrom(
-                                        padding: EdgeInsets.zero,
-                                        shape: const StadiumBorder(),
-                                      ),
-                                      child: const Text(
-                                        '완료',
-                                        style: TextStyle(
-                                          fontSize: 14,
-                                          fontWeight: FontWeight.w600,
+                                ),
+                                if (!isSort)
+                                  Padding(
+                                    padding: const EdgeInsets.fromLTRB(
+                                      12,
+                                      6,
+                                      12,
+                                      12,
+                                    ),
+                                    child: SizedBox(
+                                      // IntrinsicWidth 아래에서는 width: infinity를 넣으면
+                                      // 고유 너비 계산이 무한대로 깨져서 드롭다운이 화면
+                                      // 가운데로 튀어보이는 버그가 있었음 — height만 지정하고
+                                      // 너비는 IntrinsicWidth가 강제하는 값을 그대로 따르게 둠
+                                      height: 40,
+                                      child: ElevatedButton(
+                                        onPressed: onClose,
+                                        style: ElevatedButton.styleFrom(
+                                          padding: EdgeInsets.zero,
+                                          shape: const StadiumBorder(),
+                                        ),
+                                        child: const Text(
+                                          '완료',
+                                          style: TextStyle(
+                                            fontSize: 14,
+                                            fontWeight: FontWeight.w600,
+                                          ),
                                         ),
                                       ),
                                     ),
                                   ),
-                                ),
                               ],
-                            ],
+                            ),
                           ),
                         ),
                       ),

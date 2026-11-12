@@ -1,10 +1,10 @@
 import 'dart:async';
 
 import 'package:flutter_test/flutter_test.dart';
-import 'package:nibpen/data/models/post_model.dart';
-import 'package:nibpen/data/models/review_model.dart';
-import 'package:nibpen/data/repositories/search_repository.dart';
-import 'package:nibpen/features/search/providers/search_provider.dart';
+import 'package:mannti/data/models/post_model.dart';
+import 'package:mannti/data/models/review_model.dart';
+import 'package:mannti/data/repositories/search_repository.dart';
+import 'package:mannti/features/search/providers/search_provider.dart';
 
 void main() {
   group('SearchNotifier pagination safety', () {

@@ -39,7 +39,7 @@ const _pages = [
   _OnboardingPageData(
     icon: Icons.favorite_rounded,
     title: '이제 시작해볼까요?',
-    description: '${AppConstants.appNameKorean}과 함께 필기구 생활을\n더 즐겁게 만들어보세요',
+    description: '${AppConstants.appNameKorean}와 함께 필기구 생활을\n더 즐겁게 만들어보세요',
   ),
 ];
 
@@ -94,42 +94,52 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                 onPageChanged: (i) => setState(() => _index = i),
                 itemBuilder: (context, i) {
                   final page = _pages[i];
-                  return Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 32),
-                    child: Column(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        Container(
-                          width: 120,
-                          height: 120,
-                          decoration: BoxDecoration(
-                            color: AppColors.primary.withValues(alpha: 0.08),
-                            shape: BoxShape.circle,
-                          ),
-                          child: Icon(
-                            page.icon,
-                            size: 56,
-                            color: AppColors.primary,
-                          ),
+                  // 작은 화면(568pt)·큰 글씨에서 넘치면 스크롤되고, 여유가 있으면 지금처럼 가운데 정렬.
+                  return LayoutBuilder(
+                    builder: (context, constraints) => SingleChildScrollView(
+                      padding: const EdgeInsets.symmetric(horizontal: 32),
+                      child: ConstrainedBox(
+                        constraints: BoxConstraints(
+                          minHeight: constraints.maxHeight,
                         ),
-                        const SizedBox(height: 40),
-                        Text(
-                          page.title,
-                          textAlign: TextAlign.center,
-                          style: AppTextStyles.headlineSmall.copyWith(
-                            fontWeight: FontWeight.w700,
-                          ),
+                        child: Column(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Container(
+                              width: 120,
+                              height: 120,
+                              decoration: BoxDecoration(
+                                color: AppColors.primary.withValues(
+                                  alpha: 0.08,
+                                ),
+                                shape: BoxShape.circle,
+                              ),
+                              child: Icon(
+                                page.icon,
+                                size: 56,
+                                color: AppColors.primary,
+                              ),
+                            ),
+                            const SizedBox(height: 40),
+                            Text(
+                              page.title,
+                              textAlign: TextAlign.center,
+                              style: AppTextStyles.headlineSmall.copyWith(
+                                fontWeight: FontWeight.w700,
+                              ),
+                            ),
+                            const SizedBox(height: 12),
+                            Text(
+                              page.description,
+                              textAlign: TextAlign.center,
+                              style: AppTextStyles.bodyMedium.copyWith(
+                                color: AppColors.textSecondary,
+                                height: 1.5,
+                              ),
+                            ),
+                          ],
                         ),
-                        const SizedBox(height: 12),
-                        Text(
-                          page.description,
-                          textAlign: TextAlign.center,
-                          style: AppTextStyles.bodyMedium.copyWith(
-                            color: AppColors.textSecondary,
-                            height: 1.5,
-                          ),
-                        ),
-                      ],
+                      ),
                     ),
                   );
                 },

@@ -1,7 +1,7 @@
 {
-  "name": "nibpen-scripts",
+  "name": "mannti-scripts",
   "version": "1.0.0",
-  "description": "Scripts for nibpen Firestore administration",
+  "description": "Scripts for MANNTI Firestore administration",
   "main": "upload_csv.js",
   "scripts": {
     "upload": "node upload_csv.js",

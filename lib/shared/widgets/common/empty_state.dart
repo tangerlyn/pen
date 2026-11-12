@@ -17,30 +17,36 @@ class EmptyStateWidget extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    // 좁은 화면·큰 글자에서 문구가 줄바꿈될 때도 가운데 정렬·좌우 여백 유지.
     return Center(
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Icon(icon, size: iconSize, color: AppColors.textTertiary),
-          const SizedBox(height: AppSpacing.md),
-          Text(
-            message,
-            style: const TextStyle(
-              fontSize: 15,
-              color: AppColors.textSecondary,
-            ),
-          ),
-          if (subtitle != null) ...[
-            const SizedBox(height: AppSpacing.xs),
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: AppSpacing.xxl),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(icon, size: iconSize, color: AppColors.textTertiary),
+            const SizedBox(height: AppSpacing.md),
             Text(
-              subtitle!,
-              style: AppTextStyles.labelMedium.copyWith(
-                color: AppColors.textTertiary,
-                fontWeight: FontWeight.w400,
+              message,
+              textAlign: TextAlign.center,
+              style: const TextStyle(
+                fontSize: 15,
+                color: AppColors.textSecondary,
               ),
             ),
+            if (subtitle != null) ...[
+              const SizedBox(height: AppSpacing.xs),
+              Text(
+                subtitle!,
+                textAlign: TextAlign.center,
+                style: AppTextStyles.labelMedium.copyWith(
+                  color: AppColors.textTertiary,
+                  fontWeight: FontWeight.w400,
+                ),
+              ),
+            ],
           ],
-        ],
+        ),
       ),
     );
   }

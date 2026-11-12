@@ -46,6 +46,8 @@ class _ReviewWriteScreenState extends ConsumerState<ReviewWriteScreen> {
   // (provider의 isLoading은 업로드가 끝난 뒤에야 켜지므로 그것만으로는 부족함)
   bool _isSubmitting = false;
   bool _showEditorToolbar = false;
+  // provider 초기화(수정할 리뷰 불러오기 / 새 작성 초기화)가 끝났는지
+  bool _ready = false;
 
   @override
   void initState() {
@@ -71,27 +73,28 @@ class _ReviewWriteScreenState extends ConsumerState<ReviewWriteScreen> {
       }
     }
 
-    if (review != null) {
-      // initState에서 직접 호출해야 _TitleSection.initState()가 올바른 제목을 읽음
-      ref.read(reviewWriteProvider.notifier).initForEdit(review);
-    } else {
-      WidgetsBinding.instance.addPostFrameCallback((_) {
-        // 새 작성 진입 시 이전 세션 캐시 제거
-        ref.read(reviewWriteProvider.notifier).reset();
+    // provider 상태는 initState(위젯 빌드 중)에서 바꿀 수 없다(Riverpod 오류).
+    // 첫 프레임이 끝난 뒤 수정할 리뷰를 불러오거나(수정) 이전 작성 내용을
+    // 비운 다음(새 작성), 그때 폼을 그린다. 제목 입력칸 등 하위 위젯이
+    // initState에서 provider 값을 읽으므로 준비 전에는 폼을 만들지 않는다.
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+      final notifier = ref.read(reviewWriteProvider.notifier);
+      if (review != null) {
+        notifier.initForEdit(review);
+      } else {
+        notifier.reset();
         if (widget.initialType != null && widget.initialProductId != null) {
           switch (widget.initialType) {
             case 'ink':
-              ref
-                  .read(reviewWriteProvider.notifier)
-                  .addInk(widget.initialProductId!);
+              notifier.addInk(widget.initialProductId!);
             case 'pen':
-              ref
-                  .read(reviewWriteProvider.notifier)
-                  .addPen(widget.initialProductId!);
+              notifier.addPen(widget.initialProductId!);
           }
         }
-      });
-    }
+      }
+      setState(() => _ready = true);
+    });
   }
 
   bool _hasContent() {
@@ -126,6 +129,8 @@ class _ReviewWriteScreenState extends ConsumerState<ReviewWriteScreen> {
   @override
   Widget build(BuildContext context) {
     final state = ref.watch(reviewWriteProvider);
+    // 첫 프레임 한 번만 빈 화면 (바로 다음 프레임에 폼이 그려진다)
+    if (!_ready) return const Scaffold();
 
     return PopScope(
       canPop: false,
@@ -347,13 +352,17 @@ class _SectionHeader extends StatelessWidget {
             style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w700),
           ),
           if (subtitle != null)
-            Padding(
-              padding: const EdgeInsets.only(left: 8),
-              child: Text(
-                subtitle!,
-                style: AppTextStyles.labelMedium.copyWith(
-                  color: AppColors.textTertiary,
-                  fontWeight: FontWeight.w400,
+            Flexible(
+              child: Padding(
+                padding: const EdgeInsets.only(left: 8),
+                child: Text(
+                  subtitle!,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: AppTextStyles.labelMedium.copyWith(
+                    color: AppColors.textTertiary,
+                    fontWeight: FontWeight.w400,
+                  ),
                 ),
               ),
             ),
@@ -511,6 +520,8 @@ class _GearChip extends ConsumerWidget {
     return Chip(
       label: Text(
         label,
+        maxLines: 1,
+        overflow: TextOverflow.ellipsis,
         style: AppTextStyles.labelMedium.copyWith(color: Colors.white),
       ),
       deleteIcon: const Icon(Icons.close, size: 14, color: Colors.white70),
@@ -676,75 +687,81 @@ class _ProductSearchSheetState extends ConsumerState<_ProductSearchSheet> {
           ),
           if (_isLoading) const LinearProgressIndicator(),
           Expanded(
-            child: _results.isEmpty
-                ? Center(
-                    child: Column(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        Text(
-                          _controller.text.isEmpty
-                              ? '$typeLabel 이름을 검색해보세요'
-                              : '검색 결과가 없습니다.',
-                          style: const TextStyle(
-                            color: AppColors.textSecondary,
-                          ),
-                        ),
-                        if (_controller.text.isNotEmpty && !_isLoading) ...[
-                          const SizedBox(height: 12),
-                          TextButton.icon(
-                            icon: const Icon(Icons.add),
-                            label: Text('+ "${_controller.text}" 직접 등록하기'),
-                            onPressed: () => showAddProductSheet(
-                              context,
-                              initialType: widget.type,
-                              initialName: _controller.text,
-                              onAdded: (id, name) {
-                                widget.onSelected(id, name);
-                                Navigator.pop(context);
-                              },
-                            ),
-                          ),
-                        ],
-                      ],
-                    ),
-                  )
-                : ListView.builder(
-                    controller: controller,
-                    itemCount: _results.length,
-                    itemBuilder: (_, i) {
-                      final item = _results[i];
-                      if (item is InkModel) {
-                        return ListTile(
-                          contentPadding: const EdgeInsets.symmetric(
-                            horizontal: 16,
-                            vertical: 4,
-                          ),
-                          leading: InkDropCircle(
-                            color: item.inkColor,
-                            size: 40,
-                          ),
-                          title: Text(
-                            item.name,
+            // 시트는 키보드에 맞춰 줄어들지 않으므로, 키보드에 가려지는 만큼 비워 둔다.
+            child: Padding(
+              padding: EdgeInsets.only(
+                bottom: MediaQuery.viewInsetsOf(context).bottom,
+              ),
+              child: _results.isEmpty
+                  ? Center(
+                      child: Column(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Text(
+                            _controller.text.isEmpty
+                                ? '$typeLabel 이름을 검색해보세요'
+                                : '검색 결과가 없습니다.',
                             style: const TextStyle(
-                              fontWeight: FontWeight.w600,
-                              fontSize: 14,
+                              color: AppColors.textSecondary,
                             ),
                           ),
-                          subtitle: Text(
-                            item.brand,
-                            style: AppTextStyles.bodySmall,
-                          ),
+                          if (_controller.text.isNotEmpty && !_isLoading) ...[
+                            const SizedBox(height: 12),
+                            TextButton.icon(
+                              icon: const Icon(Icons.add),
+                              label: Text('+ "${_controller.text}" 직접 등록하기'),
+                              onPressed: () => showAddProductSheet(
+                                context,
+                                initialType: widget.type,
+                                initialName: _controller.text,
+                                onAdded: (id, name) {
+                                  widget.onSelected(id, name);
+                                  Navigator.pop(context);
+                                },
+                              ),
+                            ),
+                          ],
+                        ],
+                      ),
+                    )
+                  : ListView.builder(
+                      controller: controller,
+                      itemCount: _results.length,
+                      itemBuilder: (_, i) {
+                        final item = _results[i];
+                        if (item is InkModel) {
+                          return ListTile(
+                            contentPadding: const EdgeInsets.symmetric(
+                              horizontal: 16,
+                              vertical: 4,
+                            ),
+                            leading: InkDropCircle(
+                              color: item.inkColor,
+                              size: 40,
+                            ),
+                            title: Text(
+                              item.name,
+                              style: const TextStyle(
+                                fontWeight: FontWeight.w600,
+                                fontSize: 14,
+                              ),
+                            ),
+                            subtitle: Text(
+                              item.brand,
+                              style: AppTextStyles.bodySmall,
+                            ),
+                            onTap: () =>
+                                widget.onSelected(item.id, item.displayName),
+                          );
+                        }
+                        return ListTile(
+                          title: Text(item.displayName),
                           onTap: () =>
                               widget.onSelected(item.id, item.displayName),
                         );
-                      }
-                      return ListTile(
-                        title: Text(item.displayName),
-                        onTap: () =>
-                            widget.onSelected(item.id, item.displayName),
-                      );
-                    },
-                  ),
+                      },
+                    ),
+            ),
           ),
         ],
       ),

@@ -132,8 +132,10 @@ class _EmptyState extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    // 검색창 + 키보드가 열린 작은 화면에서도 넘치지 않게 스크롤 허용
     return Center(
-      child: Column(
+      child: SingleChildScrollView(
+        child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
           Container(
@@ -152,10 +154,14 @@ class _EmptyState extends StatelessWidget {
           const SizedBox(height: 20),
           const Text('아직 잉크가 없어요', style: AppTextStyles.titleLarge),
           const SizedBox(height: 8),
-          Text(
-            '+ 버튼으로 첫 번째 잉크를 추가해보세요',
-            style: AppTextStyles.bodyMedium.copyWith(
-              color: AppColors.textSecondary,
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: AppSpacing.xl),
+            child: Text(
+              '+ 버튼으로 첫 번째 잉크를 추가해보세요',
+              textAlign: TextAlign.center,
+              style: AppTextStyles.bodyMedium.copyWith(
+                color: AppColors.textSecondary,
+              ),
             ),
           ),
           const SizedBox(height: 28),
@@ -170,6 +176,7 @@ class _EmptyState extends StatelessWidget {
             label: const Text('잉크 추가'),
           ),
         ],
+      ),
       ),
     );
   }

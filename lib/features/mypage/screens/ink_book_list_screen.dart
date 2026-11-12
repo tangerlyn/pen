@@ -322,7 +322,9 @@ class _CreateBookSheetState extends ConsumerState<_CreateBookSheet> {
   @override
   Widget build(BuildContext context) {
     final bottom = MediaQuery.of(context).viewInsets.bottom;
-    return Padding(
+    // 작은 화면 + 키보드 + 큰 글씨에서 시트 높이를 넘으면 스크롤되게 한다.
+    return SingleChildScrollView(
+      child: Padding(
       padding: EdgeInsets.fromLTRB(20, 20, 20, bottom + 24),
       child: Column(
         mainAxisSize: MainAxisSize.min,
@@ -415,6 +417,7 @@ class _CreateBookSheetState extends ConsumerState<_CreateBookSheet> {
             ),
           ),
         ],
+      ),
       ),
     );
   }
@@ -619,10 +622,14 @@ class _EmptyState extends StatelessWidget {
           const SizedBox(height: 20),
           const Text('공책이 없어요', style: AppTextStyles.titleLarge),
           const SizedBox(height: 8),
-          Text(
-            '잉크 스와치를 담을 공책을 만들어보세요',
-            style: AppTextStyles.bodyMedium.copyWith(
-              color: AppColors.textSecondary,
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: AppSpacing.xl),
+            child: Text(
+              '잉크 스와치를 담을 공책을 만들어보세요',
+              textAlign: TextAlign.center,
+              style: AppTextStyles.bodyMedium.copyWith(
+                color: AppColors.textSecondary,
+              ),
             ),
           ),
           const SizedBox(height: 28),

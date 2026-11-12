@@ -141,65 +141,80 @@ class ReviewListTile extends ConsumerWidget {
                     ),
                   ],
                   const SizedBox(height: 8),
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      Flexible(
-                        child: Row(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            Flexible(
-                              child: Row(
-                                mainAxisSize: MainAxisSize.min,
-                                children: [
-                                  UserAvatar(
-                                    imageUrl: user?.profileImageUrl,
-                                    radius: 11,
-                                    iconSize: 13,
-                                  ),
-                                  const SizedBox(width: 5),
-                                  Flexible(
-                                    child: Text(
-                                      user?.nickname ?? review.authorNickname,
-                                      maxLines: 1,
-                                      overflow: TextOverflow.ellipsis,
-                                      style: AppTextStyles.bodySmall.copyWith(
-                                        fontWeight: FontWeight.w600,
-                                        color: AppColors.primary,
+                  // 좁은 화면 + 큰 글자 + 큰 숫자에서 overflow 방지: 숫자 영역은
+                  // 최대 폭의 55%까지만 쓰고 넘치면 축소한다. 평소엔 그대로.
+                  LayoutBuilder(
+                    builder: (context, constraints) => Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Flexible(
+                          child: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Flexible(
+                                child: Row(
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: [
+                                    UserAvatar(
+                                      imageUrl: user?.profileImageUrl,
+                                      radius: 11,
+                                      iconSize: 13,
+                                    ),
+                                    const SizedBox(width: 5),
+                                    Flexible(
+                                      child: Text(
+                                        user?.nickname ?? review.authorNickname,
+                                        maxLines: 1,
+                                        overflow: TextOverflow.ellipsis,
+                                        style: AppTextStyles.bodySmall.copyWith(
+                                          fontWeight: FontWeight.w600,
+                                          color: AppColors.primary,
+                                        ),
                                       ),
                                     ),
-                                  ),
-                                  const SizedBox(width: 5),
-                                  LevelBadge(user?.level ?? review.authorLevel),
-                                ],
+                                    const SizedBox(width: 5),
+                                    LevelBadge(
+                                      user?.level ?? review.authorLevel,
+                                    ),
+                                  ],
+                                ),
                               ),
-                            ),
-                            const SizedBox(width: 8),
-                          ],
+                              const SizedBox(width: 8),
+                            ],
+                          ),
                         ),
-                      ),
-                      Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          IconCount(
-                            icon: isLiked
-                                ? Icons.favorite
-                                : Icons.favorite_border,
-                            count: likeCount,
-                            iconColor: isLiked
-                                ? AppColors.error
-                                : AppColors.textTertiary,
-                            spacing: 2,
+                        ConstrainedBox(
+                          constraints: BoxConstraints(
+                            maxWidth: constraints.maxWidth * 0.55,
                           ),
-                          const SizedBox(width: 8),
-                          IconCount(
-                            icon: Icons.chat_bubble_outline,
-                            count: commentCount,
-                            spacing: 2,
+                          child: FittedBox(
+                            fit: BoxFit.scaleDown,
+                            alignment: Alignment.centerRight,
+                            child: Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                IconCount(
+                                  icon: isLiked
+                                      ? Icons.favorite
+                                      : Icons.favorite_border,
+                                  count: likeCount,
+                                  iconColor: isLiked
+                                      ? AppColors.error
+                                      : AppColors.textTertiary,
+                                  spacing: 2,
+                                ),
+                                const SizedBox(width: 8),
+                                IconCount(
+                                  icon: Icons.chat_bubble_outline,
+                                  count: commentCount,
+                                  spacing: 2,
+                                ),
+                              ],
+                            ),
                           ),
-                        ],
-                      ),
-                    ],
+                        ),
+                      ],
+                    ),
                   ),
                 ],
               ),

@@ -1,5 +1,4 @@
-import 'dart:convert';
-import 'package:crypto/crypto.dart';
+import 'package:cloud_functions/cloud_functions.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
@@ -9,9 +8,7 @@ import 'package:flutter_naver_login/interface/types/naver_login_status.dart';
 import 'package:kakao_flutter_sdk_user/kakao_flutter_sdk_user.dart' as kakao;
 import 'package:sign_in_with_apple/sign_in_with_apple.dart';
 
-import '../../core/constants/app_secrets.dart';
-
-const _kAuthSalt = AppSecrets.authSalt;
+import 'private_account_store.dart';
 
 class AuthResult {
   const AuthResult({
@@ -35,88 +32,92 @@ class AuthService {
   Stream<String?> get authStateChanges =>
       _auth.authStateChanges().map((user) => user?.uid);
 
-  // ── Kakao ─────────────────────────────────────────────────��──────────
+  // ── Kakao / Naver ───────────────────────────────────────────────────
+  // 카카오·네이버가 발급한 액세스 토큰을 서버(functions/social_login.js)에
+  // 보내면, 서버가 그 토큰으로 사용자 ID를 직접 확인한 뒤 Firebase 커스텀
+  // 토큰을 돌려준다. (예전처럼 앱에서 소셜 ID로 비밀번호를 만들면, 앱에 든
+  // salt를 꺼낸 사람이 남의 계정으로 로그인할 수 있었다.)
   Future<AuthResult> signInWithKakao() async {
     try {
-      debugPrint('[Kakao] 카카오톡 설치 여부 확인 중...');
-      kakao.OAuthToken token;
-      if (await kakao.isKakaoTalkInstalled()) {
-        debugPrint('[Kakao] 카카오톡으로 로그인 시도');
-        token = await kakao.UserApi.instance.loginWithKakaoTalk();
-      } else {
-        debugPrint('[Kakao] 카카오 계정으로 로그인 시도');
-        token = await kakao.UserApi.instance.loginWithKakaoAccount();
-      }
-      debugPrint('[Kakao] 토큰 발급 성공: ${token.accessToken}');
-
-      final kakaoUser = await kakao.UserApi.instance.me();
-      debugPrint('[Kakao] 유저 정보 획득 성공: ${kakaoUser.id}');
-      final id = kakaoUser.id.toString();
-
-      final email = 'kakao_$id@nibpen.login';
-      final password = _hash(id);
-
-      debugPrint('[Kakao] Firebase 인증 시도...');
-      final credential = await _firebaseEmailAuth(email, password);
-      final uid = credential.user!.uid;
-      final isNew = credential.additionalUserInfo?.isNewUser ?? false;
-
-      if (isNew) {
-        debugPrint('[Kakao] 신규 유저 문서 생성 중...');
-        await _initUserDoc(uid, 'kakao', email);
-      }
-
-      final hasProfile = await _checkProfile(uid);
-      debugPrint('[Kakao] 로그인 완료 (신규여부: $isNew, 프로필완성: $hasProfile)');
-
-      return AuthResult(
-        uid: uid,
-        isNewUser: isNew,
-        hasProfile: hasProfile,
-        provider: 'kakao',
-      );
+      final accessToken = await _kakaoAccessToken();
+      return await _signInWithSocialToken('kakao', accessToken);
     } catch (e, stack) {
       debugPrint('[Kakao] 에러 발생: $e\n$stack');
       rethrow;
     }
   }
 
-  // ── Naver ────────────────────────────────────────────────────────────
   Future<AuthResult> signInWithNaver() async {
+    final accessToken = await _naverAccessToken();
+    return _signInWithSocialToken('naver', accessToken);
+  }
+
+  Future<String> _kakaoAccessToken() async {
+    final kakao.OAuthToken token;
+    if (await kakao.isKakaoTalkInstalled()) {
+      token = await kakao.UserApi.instance.loginWithKakaoTalk();
+    } else {
+      token = await kakao.UserApi.instance.loginWithKakaoAccount();
+    }
+    return token.accessToken;
+  }
+
+  Future<String> _naverAccessToken() async {
     // 이전 세션 초기화
     try {
       await FlutterNaverLogin.logOut();
     } catch (_) {}
 
+    // 네이버 앱이 없으면 웹 로그인 화면에서 아이디·비밀번호를 직접 입력해야
+    // 해서 20초로는 부족했다. SDK가 응답 없이 멈추는 경우만 막도록 넉넉히 둔다.
     final result = await FlutterNaverLogin.logIn().timeout(
-      const Duration(seconds: 20),
-      onTimeout: () => throw Exception('네이버 로그인 시간 초과 (20초)'),
+      const Duration(minutes: 3),
+      onTimeout: () => throw Exception('네이버 로그인 시간 초과 (3분)'),
     );
-
     if (result.status != NaverLoginStatus.loggedIn) {
       throw Exception('네이버 로그인 실패: ${result.errorMessage}');
     }
+    final token = await FlutterNaverLogin.getCurrentAccessToken();
+    if (token.accessToken.isEmpty) {
+      throw Exception('네이버 액세스 토큰을 가져올 수 없습니다.');
+    }
+    return token.accessToken;
+  }
 
-    final account = result.account;
-    if (account == null) throw Exception('네이버 계정 정보를 가져올 수 없습니다.');
+  /// 서버 검증 후 받은 커스텀 토큰으로 로그인. 기존 회원은 서버가 예전 uid를
+  /// 찾아주므로 같은 계정으로 들어온다.
+  Future<({UserCredential credential, String email})> _exchangeSocialToken(
+    String provider,
+    String accessToken,
+  ) async {
+    final res = await FirebaseFunctions.instance
+        .httpsCallable('socialLogin')
+        .call<Map<String, dynamic>>({
+      'provider': provider,
+      'accessToken': accessToken,
+    });
+    final credential =
+        await _auth.signInWithCustomToken(res.data['token'] as String);
+    return (credential: credential, email: (res.data['email'] as String?) ?? '');
+  }
 
-    final id = account.id ?? '';
-    final naverEmail = account.email ?? '';
-    final email = naverEmail.isNotEmpty ? naverEmail : 'naver_$id@nibpen.login';
-    final password = _hash(id);
-
-    final credential = await _firebaseEmailAuth(email, password);
+  Future<AuthResult> _signInWithSocialToken(
+    String provider,
+    String accessToken,
+  ) async {
+    final (:credential, :email) =
+        await _exchangeSocialToken(provider, accessToken);
     final uid = credential.user!.uid;
     final isNew = credential.additionalUserInfo?.isNewUser ?? false;
 
-    if (isNew) await _initUserDoc(uid, 'naver', email);
+    if (isNew) await _initUserDoc(uid, provider, email);
     final hasProfile = await _checkProfile(uid);
 
     return AuthResult(
       uid: uid,
       isNewUser: isNew,
       hasProfile: hasProfile,
-      provider: 'naver',
+      provider: provider,
     );
   }
 
@@ -178,6 +179,8 @@ class AuthService {
         'follows': true,
       },
       'termsAgreedAt': FieldValue.serverTimestamp(),
+      // 가입 화면에서 "[필수] 만 14세 이상입니다"를 체크해야만 여기까지 온다
+      'ageConfirmedAt': FieldValue.serverTimestamp(),
       'createdAt': FieldValue.serverTimestamp(),
     }, SetOptions(merge: true));
   }
@@ -197,10 +200,8 @@ class AuthService {
     try {
       final uid = _auth.currentUser?.uid;
       if (uid != null) {
-        await _db
-            .collection('users')
-            .doc(uid)
-            .update({'fcmToken': FieldValue.delete()})
+        await PrivateAccountStore(_db)
+            .deleteFcmToken(uid)
             .timeout(const Duration(seconds: 3));
         await FirebaseMessaging.instance.deleteToken();
       }
@@ -237,7 +238,8 @@ class AuthService {
       await kakao.UserApi.instance.unlink();
     } catch (_) {}
 
-    await user.delete();
+    // 카카오·네이버는 재인증 때 다시 로그인하므로 그 이후의 currentUser를 지운다
+    await _auth.currentUser!.delete();
   }
 
   // ── 탈퇴 전 재인증 ───────────────────────────────────────────────
@@ -247,43 +249,19 @@ class AuthService {
 
     switch (provider) {
       case 'kakao':
-        kakao.OAuthToken token;
-        if (await kakao.isKakaoTalkInstalled()) {
-          token = await kakao.UserApi.instance.loginWithKakaoTalk();
-        } else {
-          token = await kakao.UserApi.instance.loginWithKakaoAccount();
-        }
-        debugPrint('[Reauth] 카카오 토큰 갱신: ${token.accessToken}');
-        final kakaoUser = await kakao.UserApi.instance.me();
-        final id = kakaoUser.id.toString();
-        await user.reauthenticateWithCredential(
-          EmailAuthProvider.credential(
-            email: 'kakao_$id@nibpen.login',
-            password: _hash(id),
-          ),
-        );
-        break;
-
       case 'naver':
-        try {
-          await FlutterNaverLogin.logOut();
-        } catch (_) {}
-        final result = await FlutterNaverLogin.logIn().timeout(
-          const Duration(seconds: 20),
-          onTimeout: () => throw Exception('네이버 재인증 시간 초과'),
-        );
-        if (result.status != NaverLoginStatus.loggedIn) {
-          throw Exception('네이버 재인증 실패: ${result.errorMessage}');
+        // 커스텀 토큰 계정은 reauthenticateWithCredential을 쓸 수 없다 —
+        // 같은 계정으로 다시 로그인하면 최근 로그인 시각이 갱신된다.
+        final accessToken = provider == 'kakao'
+            ? await _kakaoAccessToken()
+            : await _naverAccessToken();
+        final (:credential, email: _) =
+            await _exchangeSocialToken(provider, accessToken);
+        // 다른 소셜 계정으로 재인증했다면 그 계정을 지우면 안 된다
+        if (credential.user?.uid != user.uid) {
+          await _auth.signOut();
+          throw Exception('로그인한 계정과 다른 계정으로 인증했어요. 다시 로그인해 주세요.');
         }
-        final account = result.account;
-        final id = account?.id ?? '';
-        final naverEmail = account?.email ?? '';
-        final email = naverEmail.isNotEmpty
-            ? naverEmail
-            : 'naver_$id@nibpen.login';
-        await user.reauthenticateWithCredential(
-          EmailAuthProvider.credential(email: email, password: _hash(id)),
-        );
         break;
 
       case 'apple':
@@ -309,31 +287,6 @@ class AuthService {
   }
 
   // ── Private helpers ───────────────────────────────────────────────
-  String _hash(String id) =>
-      sha256.convert(utf8.encode(id + _kAuthSalt)).toString().substring(0, 20);
-
-  Future<UserCredential> _firebaseEmailAuth(
-    String email,
-    String password,
-  ) async {
-    try {
-      return await _auth.signInWithEmailAndPassword(
-        email: email,
-        password: password,
-      );
-    } on FirebaseAuthException catch (e) {
-      if (e.code == 'user-not-found' ||
-          e.code == 'invalid-credential' ||
-          e.code == 'wrong-password') {
-        return await _auth.createUserWithEmailAndPassword(
-          email: email,
-          password: password,
-        );
-      }
-      rethrow;
-    }
-  }
-
   Future<void> _initUserDoc(String uid, String provider, String email) async {
     try {
       await _db
@@ -341,11 +294,16 @@ class AuthService {
           .doc(uid)
           .set({
             'uid': uid,
-            'email': email,
             'loginProvider': provider,
             'createdAt': FieldValue.serverTimestamp(),
           }, SetOptions(merge: true))
           .timeout(const Duration(seconds: 5));
+      // 이메일은 공개 users 문서가 아니라 본인만 읽는 private 문서에 둔다
+      if (email.isNotEmpty) {
+        await PrivateAccountStore(_db)
+            .saveEmail(uid, email)
+            .timeout(const Duration(seconds: 5));
+      }
     } catch (e) {
       debugPrint('[Auth] Initial user doc failed: $e');
     }

@@ -268,23 +268,24 @@ class _CommentTileState extends ConsumerState<CommentTile> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Row(
+              // 좁은 화면·큰 글자에서 닉네임/뱃지/날짜/(수정됨)/버튼이 한 줄에
+              // 다 안 들어가면 overflow 대신 다음 줄로 넘긴다. 평소엔 한 줄 그대로.
+              Wrap(
+                crossAxisAlignment: WrapCrossAlignment.center,
                 children: [
-                  Flexible(
-                    child: TapScale(
-                      onTap: () => navigateToProfile(
-                        context,
-                        ref,
-                        widget.comment.authorId,
-                      ),
-                      child: Text(
-                        _nickname,
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                        style: const TextStyle(
-                          fontWeight: FontWeight.w600,
-                          fontSize: 13,
-                        ),
+                  TapScale(
+                    onTap: () => navigateToProfile(
+                      context,
+                      ref,
+                      widget.comment.authorId,
+                    ),
+                    child: Text(
+                      _nickname,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: const TextStyle(
+                        fontWeight: FontWeight.w600,
+                        fontSize: 13,
                       ),
                     ),
                   ),
@@ -553,23 +554,24 @@ class _ReplyTileState extends ConsumerState<_ReplyTile> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Row(
+                // 좁은 화면·큰 글자에서 닉네임/뱃지/날짜/(수정됨)/버튼이 한 줄에
+                // 다 안 들어가면 overflow 대신 다음 줄로 넘긴다. 평소엔 한 줄 그대로.
+                Wrap(
+                  crossAxisAlignment: WrapCrossAlignment.center,
                   children: [
-                    Flexible(
-                      child: TapScale(
-                        onTap: () => navigateToProfile(
-                          context,
-                          ref,
-                          widget.reply.authorId,
-                        ),
-                        child: Text(
-                          widget.reply.authorNickname,
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                          style: const TextStyle(
-                            fontWeight: FontWeight.w600,
-                            fontSize: 13,
-                          ),
+                    TapScale(
+                      onTap: () => navigateToProfile(
+                        context,
+                        ref,
+                        widget.reply.authorId,
+                      ),
+                      child: Text(
+                        widget.reply.authorNickname,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: const TextStyle(
+                          fontWeight: FontWeight.w600,
+                          fontSize: 13,
                         ),
                       ),
                     ),

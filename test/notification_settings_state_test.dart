@@ -1,5 +1,5 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:nibpen/features/mypage/providers/notification_settings_provider.dart';
+import 'package:mannti/features/mypage/providers/notification_settings_provider.dart';
 
 void main() {
   test('notification defaults and copyWith preserve active channels', () {

@@ -169,21 +169,25 @@ class _ReadonlySwatchCard extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.center,
         children: [
-          AspectRatio(
-            aspectRatio: 1.0,
-            child: InkShapeClip(
-              shape: shape,
-              child: CachedNetworkImage(
-                imageUrl: entry.photoUrl,
-                fit: BoxFit.cover,
-                placeholder: (_, _) =>
-                    Container(color: const Color(0xFFD4C5A9)),
-                errorWidget: (_, _, _) => Container(
-                  color: const Color(0xFFD4C5A9),
-                  child: const Icon(
-                    Icons.broken_image_outlined,
-                    color: AppColors.textTertiary,
-                    size: 18,
+          // 좁은 화면(320)·큰 글씨에서 칸 높이가 모자라면 스와치를 살짝
+          // 줄여 아래 이름 텍스트가 넘치지 않게 한다(여유 있으면 그대로 정사각형).
+          Flexible(
+            child: AspectRatio(
+              aspectRatio: 1.0,
+              child: InkShapeClip(
+                shape: shape,
+                child: CachedNetworkImage(
+                  imageUrl: entry.photoUrl,
+                  fit: BoxFit.cover,
+                  placeholder: (_, _) =>
+                      Container(color: const Color(0xFFD4C5A9)),
+                  errorWidget: (_, _, _) => Container(
+                    color: const Color(0xFFD4C5A9),
+                    child: const Icon(
+                      Icons.broken_image_outlined,
+                      color: AppColors.textTertiary,
+                      size: 18,
+                    ),
                   ),
                 ),
               ),

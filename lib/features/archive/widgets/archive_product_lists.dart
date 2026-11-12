@@ -6,6 +6,10 @@ class _InkList extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    // 셀 내용(원 56 + 간격 6 + 브랜드 9pt 1줄 + 이름 10pt 2줄)이 들어갈 최소 높이.
+    // 글자 크기가 커지면 비율로 정한 셀 높이보다 길어질 수 있어 그때만 늘린다.
+    final minInkCellHeight =
+        62 + MediaQuery.textScalerOf(context).scale(9 + 10 * 2) * 1.25 + 2;
     // 항상 CustomScrollView를 반환 — 타입 변화로 인한 semantics assertion 방지
     return NotificationListener<ScrollNotification>(
       onNotification: (n) {
@@ -91,11 +95,14 @@ class _InkList extends ConsumerWidget {
               }, childCount: state.inks.length),
               // 고정 4열 대신 셀 최대 폭을 지정 — 좁은 폰에선 4열(기존과 동일),
               // 넓은 화면에선 열이 늘어나 셀이 지나치게 커지지 않는다.
-              gridDelegate: const SliverGridDelegateWithMaxCrossAxisExtent(
-                maxCrossAxisExtent: 95,
-                mainAxisSpacing: 12,
-                crossAxisSpacing: 12,
-                childAspectRatio: 0.72,
+              gridDelegate: MinExtentGridDelegate(
+                minMainAxisExtent: minInkCellHeight,
+                base: const SliverGridDelegateWithMaxCrossAxisExtent(
+                  maxCrossAxisExtent: 95,
+                  mainAxisSpacing: 12,
+                  crossAxisSpacing: 12,
+                  childAspectRatio: 0.72,
+                ),
               ),
             ),
           ),

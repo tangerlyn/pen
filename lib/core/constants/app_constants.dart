@@ -1,7 +1,7 @@
 abstract class AppConstants {
-  static const String appNameKorean = '펜귄';
-  static const String appNameEnglish = 'PENGWYN';
-  static const String appName = '펜귄(PENGWYN)';
+  static const String appNameKorean = '만티';
+  static const String appNameEnglish = 'MANNTI';
+  static const String appName = '만티(MANNTI)';
 
   // Firestore collections
   static const String usersCol = 'users';

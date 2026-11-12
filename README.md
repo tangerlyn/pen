@@ -1,6 +1,6 @@
 <div align="center">
 
-# 펜귄 (PENGWYN)
+# 만티 (MANNTI)
 
 **만년필 · 잉크 · 종이 덕후를 위한 커뮤니티 앱**
 

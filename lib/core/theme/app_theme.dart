@@ -25,7 +25,7 @@ abstract class AppColors {
   static const mannerNormal = Color(0xFF4CAF50);
   static const mannerCool = Color(0xFF2196F3);
 
-  // 앱바 등 옅은 네이비 틴트 표면 (배경 그러데이션과는 별개)
+  // 옅은 네이비 틴트 표면 (프로필 소개 박스 등)
   static const navyTint = Color(0xFFF0F5FD);
 
   // 태그·뱃지 2톤 세트 — 짙은 글자색(Fg) + 옅은 배경색(Bg)
@@ -268,7 +268,8 @@ class AppTheme {
     ),
     fontFamily: 'Pretendard',
     appBarTheme: const AppBarTheme(
-      backgroundColor: AppColors.navyTint, // 투명한 네이비 틴트
+      backgroundColor: AppColors.surface, // 상단 바는 흰색 (예전: 옅은 네이비 틴트)
+      surfaceTintColor: Colors.transparent,
       foregroundColor: Color(0xFF1B2E4B),
       elevation: 0,
       scrolledUnderElevation: 0,

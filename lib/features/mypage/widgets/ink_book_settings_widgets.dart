@@ -158,104 +158,106 @@ class _ShapePickerSheet extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return SafeArea(
-      child: Padding(
-        padding: const EdgeInsets.fromLTRB(20, 16, 20, 20),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Center(child: _sheetHandle()),
-            const SizedBox(height: 16),
-            const Text(
-              '스와치 모양',
-              style: TextStyle(fontSize: 15, fontWeight: FontWeight.w700),
-            ),
-            const SizedBox(height: 16),
-            Wrap(
-              spacing: 10,
-              runSpacing: 12,
-              children: InkSwatchShape.values.map((shape) {
-                final selected = shape == current;
-                return TapScale(
-                  onTap: () {
-                    ref.read(inkSwatchShapeProvider.notifier).setShape(shape);
-                    // 다른 유저가 읽기 전용으로 볼 때도 동일한 모양이 보이도록
-                    // 계정(users/{uid}) 문서에도 저장 — 스와치 모양은 책별이 아니라
-                    // 계정 전체에 적용되는 설정이라 여기 저장한다.
-                    final uid = ref.read(currentUidProvider);
-                    if (uid != null) {
-                      ref
-                          .read(userRepoProvider)
-                          .updateUser(uid, {'inkSwatchShape': shape.name})
-                          .then(
-                            (_) => debugPrint(
-                              '[InkBook] inkSwatchShape 저장 완료: ${shape.name}',
-                            ),
-                          )
-                          .catchError(
-                            (e) => debugPrint(
-                              '[InkBook] inkSwatchShape 저장 실패: $e',
-                            ),
-                          );
-                    }
-                    Navigator.pop(context);
-                  },
-                  child: Column(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      AnimatedContainer(
-                        duration: const Duration(milliseconds: 150),
-                        width: 56,
-                        height: 56,
-                        decoration: BoxDecoration(
-                          color: selected
-                              ? AppColors.primary.withValues(alpha: 0.12)
-                              : const Color(0xFFEDE7D6),
-                          borderRadius: BorderRadius.circular(14),
-                          border: Border.all(
+      child: SingleChildScrollView(
+        child: Padding(
+          padding: const EdgeInsets.fromLTRB(20, 16, 20, 20),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Center(child: _sheetHandle()),
+              const SizedBox(height: 16),
+              const Text(
+                '스와치 모양',
+                style: TextStyle(fontSize: 15, fontWeight: FontWeight.w700),
+              ),
+              const SizedBox(height: 16),
+              Wrap(
+                spacing: 10,
+                runSpacing: 12,
+                children: InkSwatchShape.values.map((shape) {
+                  final selected = shape == current;
+                  return TapScale(
+                    onTap: () {
+                      ref.read(inkSwatchShapeProvider.notifier).setShape(shape);
+                      // 다른 유저가 읽기 전용으로 볼 때도 동일한 모양이 보이도록
+                      // 계정(users/{uid}) 문서에도 저장 — 스와치 모양은 책별이 아니라
+                      // 계정 전체에 적용되는 설정이라 여기 저장한다.
+                      final uid = ref.read(currentUidProvider);
+                      if (uid != null) {
+                        ref
+                            .read(userRepoProvider)
+                            .updateUser(uid, {'inkSwatchShape': shape.name})
+                            .then(
+                              (_) => debugPrint(
+                                '[InkBook] inkSwatchShape 저장 완료: ${shape.name}',
+                              ),
+                            )
+                            .catchError(
+                              (e) => debugPrint(
+                                '[InkBook] inkSwatchShape 저장 실패: $e',
+                              ),
+                            );
+                      }
+                      Navigator.pop(context);
+                    },
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        AnimatedContainer(
+                          duration: const Duration(milliseconds: 150),
+                          width: 56,
+                          height: 56,
+                          decoration: BoxDecoration(
                             color: selected
-                                ? AppColors.primary
-                                : const Color(0xFFD4C5A9),
-                            width: selected ? 2 : 1,
+                                ? AppColors.primary.withValues(alpha: 0.12)
+                                : const Color(0xFFEDE7D6),
+                            borderRadius: BorderRadius.circular(14),
+                            border: Border.all(
+                              color: selected
+                                  ? AppColors.primary
+                                  : const Color(0xFFD4C5A9),
+                              width: selected ? 2 : 1,
+                            ),
                           ),
-                        ),
-                        padding: const EdgeInsets.all(10),
-                        child: shape == InkSwatchShape.bottle
-                            ? Image.asset(
-                                'assets/shapes/ink_jar.png',
-                                fit: BoxFit.contain,
-                                color: selected
-                                    ? AppColors.primary
-                                    : const Color(0xFF8B7355),
-                                colorBlendMode: BlendMode.srcIn,
-                              )
-                            : CustomPaint(
-                                painter: ShapePreviewPainter(
-                                  shape,
-                                  selected
+                          padding: const EdgeInsets.all(10),
+                          child: shape == InkSwatchShape.bottle
+                              ? Image.asset(
+                                  'assets/shapes/ink_jar.png',
+                                  fit: BoxFit.contain,
+                                  color: selected
                                       ? AppColors.primary
                                       : const Color(0xFF8B7355),
+                                  colorBlendMode: BlendMode.srcIn,
+                                )
+                              : CustomPaint(
+                                  painter: ShapePreviewPainter(
+                                    shape,
+                                    selected
+                                        ? AppColors.primary
+                                        : const Color(0xFF8B7355),
+                                  ),
                                 ),
-                              ),
-                      ),
-                      const SizedBox(height: 6),
-                      Text(
-                        shape.label,
-                        style: AppTextStyles.labelSmall.copyWith(
-                          color: selected
-                              ? AppColors.primary
-                              : AppColors.textSecondary,
-                          fontWeight: selected
-                              ? FontWeight.w600
-                              : FontWeight.normal,
                         ),
-                      ),
-                    ],
-                  ),
-                );
-              }).toList(),
-            ),
-          ],
+                        const SizedBox(height: 6),
+                        Text(
+                          shape.label,
+                          style: AppTextStyles.labelSmall.copyWith(
+                            color: selected
+                                ? AppColors.primary
+                                : AppColors.textSecondary,
+                            fontWeight: selected
+                                ? FontWeight.w600
+                                : FontWeight.normal,
+                          ),
+                        ),
+                      ],
+                    ),
+                  );
+                }).toList(),
+              ),
+            ],
+          ),
         ),
       ),
     );
@@ -272,41 +274,43 @@ class _VisibilitySheet extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return SafeArea(
-      child: Padding(
-        padding: const EdgeInsets.fromLTRB(16, 20, 16, 16),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            const Padding(
-              padding: EdgeInsets.only(left: 4, bottom: 12),
-              child: Text(
-                '공개 범위 설정',
-                style: TextStyle(fontSize: 16, fontWeight: FontWeight.w700),
+      child: SingleChildScrollView(
+        child: Padding(
+          padding: const EdgeInsets.fromLTRB(16, 20, 16, 16),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              const Padding(
+                padding: EdgeInsets.only(left: 4, bottom: 12),
+                child: Text(
+                  '공개 범위 설정',
+                  style: TextStyle(fontSize: 16, fontWeight: FontWeight.w700),
+                ),
               ),
-            ),
-            _VisibilityOption(
-              icon: Icons.public,
-              label: '모든 사람에게 공개',
-              description: '누구든지 이 잉크 차트를 볼 수 있어요',
-              isSelected: current == 'public',
-              onTap: () => onSelect('public'),
-            ),
-            _VisibilityOption(
-              icon: Icons.group_outlined,
-              label: '팔로워에게만 공개',
-              description: '나를 팔로우한 사람만 볼 수 있어요',
-              isSelected: current == 'followers',
-              onTap: () => onSelect('followers'),
-            ),
-            _VisibilityOption(
-              icon: Icons.lock_outlined,
-              label: '비공개',
-              description: '나만 볼 수 있어요',
-              isSelected: current == 'private',
-              onTap: () => onSelect('private'),
-            ),
-          ],
+              _VisibilityOption(
+                icon: Icons.public,
+                label: '모든 사람에게 공개',
+                description: '누구든지 이 잉크 차트를 볼 수 있어요',
+                isSelected: current == 'public',
+                onTap: () => onSelect('public'),
+              ),
+              _VisibilityOption(
+                icon: Icons.group_outlined,
+                label: '팔로워에게만 공개',
+                description: '나를 팔로우한 사람만 볼 수 있어요',
+                isSelected: current == 'followers',
+                onTap: () => onSelect('followers'),
+              ),
+              _VisibilityOption(
+                icon: Icons.lock_outlined,
+                label: '비공개',
+                description: '나만 볼 수 있어요',
+                isSelected: current == 'private',
+                onTap: () => onSelect('private'),
+              ),
+            ],
+          ),
         ),
       ),
     );

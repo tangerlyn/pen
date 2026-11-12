@@ -1,5 +1,5 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:nibpen/features/mypage/controllers/ink_book_display_controller.dart';
+import 'package:mannti/features/mypage/controllers/ink_book_display_controller.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 void main() {

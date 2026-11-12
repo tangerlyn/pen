@@ -9,6 +9,7 @@ import '../../../shared/providers/providers.dart';
 import '../../../shared/widgets/archive/add_product_bottom_sheet.dart';
 import '../../../shared/widgets/ink_drop_circle.dart';
 import '../../search/providers/suggestion_provider.dart';
+import '../widgets/min_extent_grid_delegate.dart';
 import '../widgets/pen_list_tile.dart';
 
 // ── 아카이브 검색 히스토리 ────────────────────────────────────────────
@@ -444,16 +445,23 @@ class _InkResults extends StatelessWidget {
         ),
       );
     }
+    // 셀 내용(원 56 + 간격 6 + 이름 10pt 2줄)이 들어갈 최소 높이 — 좁은 화면
+    // (320)이나 큰 글자 크기에서 비율로 정한 높이가 모자랄 때만 늘린다.
+    final minInkCellHeight =
+        62 + MediaQuery.textScalerOf(context).scale(10 * 2) * 1.25 + 2;
     return CustomScrollView(
       slivers: [
         SliverPadding(
           padding: const EdgeInsets.all(16),
           sliver: SliverGrid(
-            gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-              crossAxisCount: 4,
-              mainAxisSpacing: 20,
-              crossAxisSpacing: 12,
-              childAspectRatio: 0.75,
+            gridDelegate: MinExtentGridDelegate(
+              minMainAxisExtent: minInkCellHeight,
+              base: const SliverGridDelegateWithFixedCrossAxisCount(
+                crossAxisCount: 4,
+                mainAxisSpacing: 20,
+                crossAxisSpacing: 12,
+                childAspectRatio: 0.75,
+              ),
             ),
             delegate: SliverChildBuilderDelegate((_, i) {
               final ink = inks[i];

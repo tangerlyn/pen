@@ -648,8 +648,11 @@ class _ReviewsHorizontal extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    // 카드 하단 정보 영역(작성자·제목, 기본 약 64)만 글자 크기에 맞춰 늘려서
+    // 큰 글씨에서도 사진 영역이 찌그러지지 않게 한다 (기본 크기에선 200 그대로).
+    final height = 136 + MediaQuery.textScalerOf(context).scale(64);
     return SizedBox(
-      height: 200,
+      height: height,
       child: NotificationListener<ScrollNotification>(
         onNotification: (notification) {
           if (notification is ScrollEndNotification &&

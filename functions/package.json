@@ -1,11 +1,12 @@
 {
-  "name": "nibpen-functions",
-  "description": "Cloud Functions for nibpen",
+  "name": "mannti-functions",
+  "description": "Cloud Functions for MANNTI",
   "scripts": {
-    "deploy": "firebase deploy --only functions"
+    "deploy": "firebase deploy --only functions",
+    "test": "node --test test/"
   },
   "engines": {
-    "node": "20"
+    "node": "22"
   },
   "main": "index.js",
   "dependencies": {

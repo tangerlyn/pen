@@ -515,49 +515,51 @@ class _InkBookDetailScreenState extends ConsumerState<InkBookDetailScreen> {
         borderRadius: BorderRadius.vertical(top: Radius.circular(AppRadius.xl)),
       ),
       builder: (_) => SafeArea(
-        child: Padding(
-          padding: const EdgeInsets.fromLTRB(20, 16, 20, 20),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Center(child: _sheetHandle()),
-              const SizedBox(height: 12),
-              const Text(
-                '정렬',
-                style: TextStyle(fontSize: 15, fontWeight: FontWeight.w700),
-              ),
-              const SizedBox(height: 4),
-              ..._SortOption.values.map(
-                (opt) => ListTile(
-                  contentPadding: EdgeInsets.zero,
-                  title: Text(
-                    opt.label,
-                    style: TextStyle(
-                      fontWeight: FontWeight.w600,
-                      color: _sort == opt ? AppColors.primary : null,
-                    ),
-                  ),
-                  subtitle: Text(
-                    opt.description,
-                    style: const TextStyle(fontSize: 12),
-                  ),
-                  trailing: _sort == opt
-                      ? const Icon(Icons.check, color: AppColors.primary)
-                      : null,
-                  onTap: () async {
-                    Navigator.pop(context);
-                    if (opt == _SortOption.color) {
-                      await _extractColors(entries);
-                    }
-                    if (mounted) {
-                      setState(() => _sort = opt);
-                      _savePrefs();
-                    }
-                  },
+        child: SingleChildScrollView(
+          child: Padding(
+            padding: const EdgeInsets.fromLTRB(20, 16, 20, 20),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Center(child: _sheetHandle()),
+                const SizedBox(height: 12),
+                const Text(
+                  '정렬',
+                  style: TextStyle(fontSize: 15, fontWeight: FontWeight.w700),
                 ),
-              ),
-            ],
+                const SizedBox(height: 4),
+                ..._SortOption.values.map(
+                  (opt) => ListTile(
+                    contentPadding: EdgeInsets.zero,
+                    title: Text(
+                      opt.label,
+                      style: TextStyle(
+                        fontWeight: FontWeight.w600,
+                        color: _sort == opt ? AppColors.primary : null,
+                      ),
+                    ),
+                    subtitle: Text(
+                      opt.description,
+                      style: const TextStyle(fontSize: 12),
+                    ),
+                    trailing: _sort == opt
+                        ? const Icon(Icons.check, color: AppColors.primary)
+                        : null,
+                    onTap: () async {
+                      Navigator.pop(context);
+                      if (opt == _SortOption.color) {
+                        await _extractColors(entries);
+                      }
+                      if (mounted) {
+                        setState(() => _sort = opt);
+                        _savePrefs();
+                      }
+                    },
+                  ),
+                ),
+              ],
+            ),
           ),
         ),
       ),
@@ -571,40 +573,42 @@ class _InkBookDetailScreenState extends ConsumerState<InkBookDetailScreen> {
         borderRadius: BorderRadius.vertical(top: Radius.circular(AppRadius.xl)),
       ),
       builder: (_) => SafeArea(
-        child: Padding(
-          padding: const EdgeInsets.fromLTRB(20, 16, 20, 20),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Center(child: _sheetHandle()),
-              const SizedBox(height: 12),
-              const Text(
-                '페이지 스타일',
-                style: TextStyle(fontSize: 15, fontWeight: FontWeight.w700),
-              ),
-              const SizedBox(height: 4),
-              ..._PageStyle.values.map(
-                (opt) => ListTile(
-                  contentPadding: EdgeInsets.zero,
-                  title: Text(
-                    opt.label,
-                    style: TextStyle(
-                      fontWeight: FontWeight.w600,
-                      color: _pageStyle == opt ? AppColors.primary : null,
-                    ),
-                  ),
-                  trailing: _pageStyle == opt
-                      ? const Icon(Icons.check, color: AppColors.primary)
-                      : null,
-                  onTap: () {
-                    Navigator.pop(context);
-                    setState(() => _pageStyle = opt);
-                    _savePrefs();
-                  },
+        child: SingleChildScrollView(
+          child: Padding(
+            padding: const EdgeInsets.fromLTRB(20, 16, 20, 20),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Center(child: _sheetHandle()),
+                const SizedBox(height: 12),
+                const Text(
+                  '페이지 스타일',
+                  style: TextStyle(fontSize: 15, fontWeight: FontWeight.w700),
                 ),
-              ),
-            ],
+                const SizedBox(height: 4),
+                ..._PageStyle.values.map(
+                  (opt) => ListTile(
+                    contentPadding: EdgeInsets.zero,
+                    title: Text(
+                      opt.label,
+                      style: TextStyle(
+                        fontWeight: FontWeight.w600,
+                        color: _pageStyle == opt ? AppColors.primary : null,
+                      ),
+                    ),
+                    trailing: _pageStyle == opt
+                        ? const Icon(Icons.check, color: AppColors.primary)
+                        : null,
+                    onTap: () {
+                      Navigator.pop(context);
+                      setState(() => _pageStyle = opt);
+                      _savePrefs();
+                    },
+                  ),
+                ),
+              ],
+            ),
           ),
         ),
       ),
@@ -618,44 +622,46 @@ class _InkBookDetailScreenState extends ConsumerState<InkBookDetailScreen> {
         borderRadius: BorderRadius.vertical(top: Radius.circular(AppRadius.xl)),
       ),
       builder: (_) => SafeArea(
-        child: Padding(
-          padding: const EdgeInsets.fromLTRB(20, 16, 20, 20),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Center(child: _sheetHandle()),
-              const SizedBox(height: 12),
-              const Text(
-                '보기 방식',
-                style: TextStyle(fontSize: 15, fontWeight: FontWeight.w700),
-              ),
-              const SizedBox(height: 4),
-              ..._ViewMode.values.map(
-                (opt) => ListTile(
-                  contentPadding: EdgeInsets.zero,
-                  title: Text(
-                    opt.label,
-                    style: TextStyle(
-                      fontWeight: FontWeight.w600,
-                      color: _viewMode == opt ? AppColors.primary : null,
-                    ),
-                  ),
-                  subtitle: Text(
-                    opt.description,
-                    style: const TextStyle(fontSize: 12),
-                  ),
-                  trailing: _viewMode == opt
-                      ? const Icon(Icons.check, color: AppColors.primary)
-                      : null,
-                  onTap: () {
-                    Navigator.pop(context);
-                    setState(() => _viewMode = opt);
-                    _savePrefs();
-                  },
+        child: SingleChildScrollView(
+          child: Padding(
+            padding: const EdgeInsets.fromLTRB(20, 16, 20, 20),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Center(child: _sheetHandle()),
+                const SizedBox(height: 12),
+                const Text(
+                  '보기 방식',
+                  style: TextStyle(fontSize: 15, fontWeight: FontWeight.w700),
                 ),
-              ),
-            ],
+                const SizedBox(height: 4),
+                ..._ViewMode.values.map(
+                  (opt) => ListTile(
+                    contentPadding: EdgeInsets.zero,
+                    title: Text(
+                      opt.label,
+                      style: TextStyle(
+                        fontWeight: FontWeight.w600,
+                        color: _viewMode == opt ? AppColors.primary : null,
+                      ),
+                    ),
+                    subtitle: Text(
+                      opt.description,
+                      style: const TextStyle(fontSize: 12),
+                    ),
+                    trailing: _viewMode == opt
+                        ? const Icon(Icons.check, color: AppColors.primary)
+                        : null,
+                    onTap: () {
+                      Navigator.pop(context);
+                      setState(() => _viewMode = opt);
+                      _savePrefs();
+                    },
+                  ),
+                ),
+              ],
+            ),
           ),
         ),
       ),
@@ -687,72 +693,92 @@ class _InkBookDetailScreenState extends ConsumerState<InkBookDetailScreen> {
         borderRadius: BorderRadius.vertical(top: Radius.circular(AppRadius.xl)),
       ),
       builder: (ctx) => SafeArea(
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            _sheetHandle(topPadding: 10),
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
-              child: Row(
-                children: [
-                  InkShapeClip(
-                    shape: shape,
-                    child: CachedNetworkImage(
-                      imageUrl: entry.photoUrl,
-                      width: 40,
-                      height: 40,
-                      fit: BoxFit.cover,
-                      placeholder: (_, __) =>
-                          Container(color: const Color(0xFFD4C5A9)),
-                      errorWidget: (_, __, ___) =>
-                          Container(color: const Color(0xFFD4C5A9)),
-                    ),
-                  ),
-                  const SizedBox(width: 12),
-                  Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(entry.brand, style: AppTextStyles.labelSmall),
-                      Text(
-                        entry.inkName,
-                        style: const TextStyle(
-                          fontSize: 15,
-                          fontWeight: FontWeight.w600,
-                        ),
+        child: SingleChildScrollView(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              _sheetHandle(topPadding: 10),
+              Padding(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 20,
+                  vertical: 8,
+                ),
+                child: Row(
+                  children: [
+                    InkShapeClip(
+                      shape: shape,
+                      child: CachedNetworkImage(
+                        imageUrl: entry.photoUrl,
+                        width: 40,
+                        height: 40,
+                        fit: BoxFit.cover,
+                        placeholder: (_, __) =>
+                            Container(color: const Color(0xFFD4C5A9)),
+                        errorWidget: (_, __, ___) =>
+                            Container(color: const Color(0xFFD4C5A9)),
                       ),
-                    ],
-                  ),
-                ],
+                    ),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            entry.brand,
+                            style: AppTextStyles.labelSmall,
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                          Text(
+                            entry.inkName,
+                            maxLines: 2,
+                            overflow: TextOverflow.ellipsis,
+                            style: const TextStyle(
+                              fontSize: 15,
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
               ),
-            ),
-            const Divider(height: 1),
-            ListTile(
-              leading: const Icon(Icons.drag_indicator),
-              title: const Text('순서 변경'),
-              onTap: () {
-                Navigator.pop(ctx);
-                HapticFeedback.mediumImpact();
-                setState(() {
-                  _isReordering = true;
-                  _sort = _SortOption.defaultOrder;
-                });
-              },
-            ),
-            ListTile(
-              leading: const Icon(Icons.delete_outline, color: AppColors.error),
-              title: const Text('삭제', style: TextStyle(color: AppColors.error)),
-              onTap: () async {
-                Navigator.pop(ctx);
-                await _confirmDeleteEntry(context, entry, uid);
-              },
-            ),
-            ListTile(
-              leading: const Icon(Icons.close),
-              title: const Text('취소'),
-              onTap: () => Navigator.pop(ctx),
-            ),
-            const SizedBox(height: 4),
-          ],
+              const Divider(height: 1),
+              ListTile(
+                leading: const Icon(Icons.drag_indicator),
+                title: const Text('순서 변경'),
+                onTap: () {
+                  Navigator.pop(ctx);
+                  HapticFeedback.mediumImpact();
+                  setState(() {
+                    _isReordering = true;
+                    _sort = _SortOption.defaultOrder;
+                  });
+                },
+              ),
+              ListTile(
+                leading: const Icon(
+                  Icons.delete_outline,
+                  color: AppColors.error,
+                ),
+                title: const Text(
+                  '삭제',
+                  style: TextStyle(color: AppColors.error),
+                ),
+                onTap: () async {
+                  Navigator.pop(ctx);
+                  await _confirmDeleteEntry(context, entry, uid);
+                },
+              ),
+              ListTile(
+                leading: const Icon(Icons.close),
+                title: const Text('취소'),
+                onTap: () => Navigator.pop(ctx),
+              ),
+              const SizedBox(height: 4),
+            ],
+          ),
         ),
       ),
     );
@@ -879,6 +905,8 @@ class _InkBookDetailScreenState extends ConsumerState<InkBookDetailScreen> {
         backgroundColor: Colors.white,
         scrolledUnderElevation: 0,
         title: RichText(
+          maxLines: 1,
+          overflow: TextOverflow.ellipsis,
           text: TextSpan(
             children: [
               TextSpan(
@@ -1076,85 +1104,98 @@ class _InkBookDetailScreenState extends ConsumerState<InkBookDetailScreen> {
                         Column(
                           children: [
                             Expanded(
-                              child: Align(
-                                alignment: const Alignment(0, -0.4),
-                                child: Column(
-                                  mainAxisSize: MainAxisSize.min,
-                                  children: [
-                                    SizedBox(
-                                      height: pageViewHeight - 60,
-                                      child: PageView.builder(
-                                        scrollDirection:
-                                            _viewMode == _ViewMode.scroll
-                                            ? Axis.vertical
-                                            : Axis.horizontal,
-                                        controller: _pageCtrl,
-                                        itemCount: pageCount,
-                                        onPageChanged: (p) =>
-                                            setState(() => _currentPage = p),
-                                        itemBuilder: (_, pageIdx) {
-                                          final start = pageIdx * _itemsPerPage;
-                                          final end = math.min(
-                                            start + _itemsPerPage,
-                                            entries.length,
-                                          );
-                                          final pageEntries = entries.sublist(
-                                            start,
-                                            end,
-                                          );
-                                          // GlobalKey 동적 확장
-                                          while (_pageKeys.length <= pageIdx) {
-                                            _pageKeys.add(GlobalKey());
-                                          }
-                                          return RepaintBoundary(
-                                            key: _pageKeys[pageIdx],
-                                            child: NotebookPage(
-                                              pageEntries: pageEntries,
-                                              pageStyle:
-                                                  notebookPageStyleFromString(
-                                                    _pageStyle.name,
-                                                  ),
-                                              // 앨범 저장 중(_savingPages)엔
-                                              // 빈 칸의 점선 원을 숨겨서, 캡처된
-                                              // 이미지엔 실제로 채운 잉크만
-                                              // 보이고 나머지는 빈 페이지처럼
-                                              // 나오게 한다. 저장 중엔 화면
-                                              // 전체가 딤 처리 오버레이로 덮여
-                                              // 있어서 이 변화가 사용자 눈에
-                                              // 보이지 않는다.
-                                              showEmptySlotPlaceholder:
-                                                  !_savingPages,
-                                              itemBuilder: (ctx, entry, i) =>
-                                                  _SwatchCard(
-                                                    entry: entry,
-                                                    uid: uid,
-                                                    bookId: widget.bookId,
-                                                    shape: shape,
-                                                    allEntries: entries,
-                                                    absoluteIndex: start + i,
-                                                    onLongPress: () =>
-                                                        _showInkContextMenu(
-                                                          context,
-                                                          entry,
-                                                          uid,
-                                                        ),
-                                                  ),
-                                            ),
-                                          );
-                                        },
+                              // 검색창·키보드가 열려 실제 남은 높이가 화면
+                              // 기준 계산값보다 작아지면 그 높이에 맞춘다.
+                              child: LayoutBuilder(
+                                builder: (_, constraints) => Align(
+                                  alignment: const Alignment(0, -0.4),
+                                  child: Column(
+                                    mainAxisSize: MainAxisSize.min,
+                                    children: [
+                                      SizedBox(
+                                        height: math.max(
+                                          0.0,
+                                          math.min(
+                                            pageViewHeight - 60,
+                                            constraints.maxHeight -
+                                                pageIndicatorH,
+                                          ),
+                                        ),
+                                        child: PageView.builder(
+                                          scrollDirection:
+                                              _viewMode == _ViewMode.scroll
+                                              ? Axis.vertical
+                                              : Axis.horizontal,
+                                          controller: _pageCtrl,
+                                          itemCount: pageCount,
+                                          onPageChanged: (p) =>
+                                              setState(() => _currentPage = p),
+                                          itemBuilder: (_, pageIdx) {
+                                            final start =
+                                                pageIdx * _itemsPerPage;
+                                            final end = math.min(
+                                              start + _itemsPerPage,
+                                              entries.length,
+                                            );
+                                            final pageEntries = entries.sublist(
+                                              start,
+                                              end,
+                                            );
+                                            // GlobalKey 동적 확장
+                                            while (_pageKeys.length <=
+                                                pageIdx) {
+                                              _pageKeys.add(GlobalKey());
+                                            }
+                                            return RepaintBoundary(
+                                              key: _pageKeys[pageIdx],
+                                              child: NotebookPage(
+                                                pageEntries: pageEntries,
+                                                pageStyle:
+                                                    notebookPageStyleFromString(
+                                                      _pageStyle.name,
+                                                    ),
+                                                // 앨범 저장 중(_savingPages)엔
+                                                // 빈 칸의 점선 원을 숨겨서, 캡처된
+                                                // 이미지엔 실제로 채운 잉크만
+                                                // 보이고 나머지는 빈 페이지처럼
+                                                // 나오게 한다. 저장 중엔 화면
+                                                // 전체가 딤 처리 오버레이로 덮여
+                                                // 있어서 이 변화가 사용자 눈에
+                                                // 보이지 않는다.
+                                                showEmptySlotPlaceholder:
+                                                    !_savingPages,
+                                                itemBuilder: (ctx, entry, i) =>
+                                                    _SwatchCard(
+                                                      entry: entry,
+                                                      uid: uid,
+                                                      bookId: widget.bookId,
+                                                      shape: shape,
+                                                      allEntries: entries,
+                                                      absoluteIndex: start + i,
+                                                      onLongPress: () =>
+                                                          _showInkContextMenu(
+                                                            context,
+                                                            entry,
+                                                            uid,
+                                                          ),
+                                                    ),
+                                              ),
+                                            );
+                                          },
+                                        ),
                                       ),
-                                    ),
-                                    const SizedBox(height: 8),
-                                    if (pageCount > 1)
-                                      Text(
-                                        '${_currentPage + 1} / $pageCount',
-                                        style: AppTextStyles.labelMedium
-                                            .copyWith(
-                                              color: AppColors.textTertiary,
-                                              fontWeight: FontWeight.w400,
-                                            ),
-                                      ),
-                                  ],
+                                      const SizedBox(height: 8),
+                                      if (pageCount > 1)
+                                        Text(
+                                          '${_currentPage + 1} / $pageCount',
+                                          style: AppTextStyles.labelMedium
+                                              .copyWith(
+                                                color: AppColors.textTertiary,
+                                                fontWeight: FontWeight.w400,
+                                              ),
+                                        ),
+                                    ],
+                                  ),
                                 ),
                               ),
                             ),

@@ -113,7 +113,9 @@ class _CommunityScreenState extends ConsumerState<CommunityScreen> {
                           ]
                         : null,
                     bottom: PreferredSize(
-                      preferredSize: const Size.fromHeight(44),
+                      preferredSize: Size.fromHeight(
+                        _CategoryFilterBar.heightOf(context),
+                      ),
                       child: ColoredBox(
                         color: AppColors.surface,
                         child: _CategoryFilterBar(
@@ -240,10 +242,15 @@ class _CategoryFilterBar extends StatelessWidget {
 
   static const _categories = ['질문', '정보공유', '필사', '그림'];
 
+  /// 기본 44. 큰 글자(텍스트 스케일)에서 칩 라벨(13pt, 줄높이 ≈16)이 커진
+  /// 만큼만 바 높이를 늘려 칩 글자가 위아래로 잘리지 않게 한다.
+  static double heightOf(BuildContext context) =>
+      44 + MediaQuery.textScalerOf(context).scale(16) - 16;
+
   @override
   Widget build(BuildContext context) {
     return SizedBox(
-      height: 44,
+      height: heightOf(context),
       child: ListView(
         scrollDirection: Axis.horizontal,
         padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),

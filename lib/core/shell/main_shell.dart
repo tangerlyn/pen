@@ -114,46 +114,51 @@ class _BottomNav extends StatelessWidget {
       ),
       child: SafeArea(
         top: false,
-        child: SizedBox(
-          height: 56,
-          child: Row(
-            children: [
-              _NavItem(
-                icon: Icons.home_outlined,
-                activeIcon: Icons.home,
-                label: '홈',
-                index: 0,
-                shell: shell,
-              ),
-              _NavItem(
-                icon: Icons.grid_view_outlined,
-                activeIcon: Icons.grid_view,
-                label: '리뷰',
-                index: 1,
-                shell: shell,
-              ),
-              _NavItem(
-                icon: Icons.forum_outlined,
-                activeIcon: Icons.forum,
-                label: '커뮤니티',
-                index: 2,
-                shell: shell,
-              ),
-              _NavItem(
-                icon: Icons.book_outlined,
-                activeIcon: Icons.book,
-                label: '아카이브',
-                index: 3,
-                shell: shell,
-              ),
-              _NavItem(
-                icon: Icons.person_outline,
-                activeIcon: Icons.person,
-                label: '마이',
-                index: 4,
-                shell: shell,
-              ),
-            ],
+        // 기본 56 높이를 유지하되, 큰 글자(텍스트 스케일)에서 아이콘+라벨이
+        // 56을 넘으면 콘텐츠 높이만큼 늘어나도록 최소 높이로만 고정한다.
+        child: ConstrainedBox(
+          constraints: const BoxConstraints(minHeight: 56),
+          child: IntrinsicHeight(
+            child: Row(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                _NavItem(
+                  icon: Icons.home_outlined,
+                  activeIcon: Icons.home,
+                  label: '홈',
+                  index: 0,
+                  shell: shell,
+                ),
+                _NavItem(
+                  icon: Icons.grid_view_outlined,
+                  activeIcon: Icons.grid_view,
+                  label: '리뷰',
+                  index: 1,
+                  shell: shell,
+                ),
+                _NavItem(
+                  icon: Icons.forum_outlined,
+                  activeIcon: Icons.forum,
+                  label: '커뮤니티',
+                  index: 2,
+                  shell: shell,
+                ),
+                _NavItem(
+                  icon: Icons.book_outlined,
+                  activeIcon: Icons.book,
+                  label: '아카이브',
+                  index: 3,
+                  shell: shell,
+                ),
+                _NavItem(
+                  icon: Icons.person_outline,
+                  activeIcon: Icons.person,
+                  label: '마이',
+                  index: 4,
+                  shell: shell,
+                ),
+              ],
+            ),
           ),
         ),
       ),
@@ -206,9 +211,10 @@ class _NavItem extends ConsumerWidget {
         // 지정해 기존 opaque 히트테스트(전체 영역 탭 가능)를 유지한다.
         child: Container(
           width: double.infinity,
-          height: double.infinity,
           color: Colors.transparent,
+          padding: const EdgeInsets.symmetric(vertical: 4),
           child: Column(
+            mainAxisSize: MainAxisSize.min,
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
               AnimatedScale(
@@ -235,7 +241,12 @@ class _NavItem extends ConsumerWidget {
                   fontWeight: isActive ? FontWeight.w600 : FontWeight.w400,
                   color: isActive ? AppColors.primary : AppColors.textTertiary,
                 ),
-                child: Text(label),
+                child: Text(
+                  label,
+                  maxLines: 1,
+                  softWrap: false,
+                  overflow: TextOverflow.fade,
+                ),
               ),
               SizedBox(
                 height: 5,

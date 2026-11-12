@@ -191,35 +191,45 @@ class _AddSuccessOverlayState extends State<_AddSuccessOverlay>
                       offset: Offset(0, textDy),
                       child: Opacity(
                         opacity: textAlpha,
-                        child: Column(
-                          children: [
-                            Text(
-                              widget.title,
-                              style: AppTextStyles.labelMedium.copyWith(
-                                fontFamily: 'Pretendard',
+                        // 긴 브랜드/잉크 이름이 화면 가장자리에 붙지 않게
+                        // 좌우 여백을 두고 가운데 정렬로 줄바꿈한다.
+                        child: Padding(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: AppSpacing.xxl,
+                          ),
+                          child: Column(
+                            children: [
+                              Text(
+                                widget.title,
+                                textAlign: TextAlign.center,
+                                style: AppTextStyles.labelMedium.copyWith(
+                                  fontFamily: 'Pretendard',
+                                ),
                               ),
-                            ),
-                            const SizedBox(height: 4),
-                            Text(
-                              widget.subtitle,
-                              style: const TextStyle(
-                                fontSize: 22,
-                                fontWeight: FontWeight.w700,
-                                color: AppColors.textPrimary,
-                                fontFamily: 'Pretendard',
-                                letterSpacing: -0.3,
+                              const SizedBox(height: 4),
+                              Text(
+                                widget.subtitle,
+                                textAlign: TextAlign.center,
+                                style: const TextStyle(
+                                  fontSize: 22,
+                                  fontWeight: FontWeight.w700,
+                                  color: AppColors.textPrimary,
+                                  fontFamily: 'Pretendard',
+                                  letterSpacing: -0.3,
+                                ),
                               ),
-                            ),
-                            const SizedBox(height: 8),
-                            Text(
-                              widget.caption,
-                              style: AppTextStyles.labelMedium.copyWith(
-                                color: AppColors.textTertiary,
-                                fontWeight: FontWeight.w400,
-                                fontFamily: 'Pretendard',
+                              const SizedBox(height: 8),
+                              Text(
+                                widget.caption,
+                                textAlign: TextAlign.center,
+                                style: AppTextStyles.labelMedium.copyWith(
+                                  color: AppColors.textTertiary,
+                                  fontWeight: FontWeight.w400,
+                                  fontFamily: 'Pretendard',
+                                ),
                               ),
-                            ),
-                          ],
+                            ],
+                          ),
                         ),
                       ),
                     ),

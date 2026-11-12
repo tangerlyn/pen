@@ -19,6 +19,11 @@ service cloud.firestore {
       return isOwner(data.get('authorId', null));
     }
 
+    // 작성자가 수정할 때 authorId를 남의 uid로 바꿔 글을 떠넘기지 못하게 한다.
+    function authorIdUnchanged() {
+      return request.resource.data.get('authorId', null) == resource.data.get('authorId', null);
+    }
+
     function isFollowing(followerId, followeeId) {
       return exists(/databases/$(database)/documents/follows/$(followerId + '_' + followeeId));
     }
@@ -45,14 +50,114 @@ service cloud.firestore {
       return isLoggedIn() && request.resource.data[field] == request.auth.uid;
     }
 
+    // ── 카운터 검증 ───────────────────────────────────────────────────
+    // 예전 규칙은 "어떤 필드를 바꾸는지"만 봐서 likeCount·exp 등을 아무 값
+    // (예: 99999999)으로 덮어쓸 수 있었다. 이제 변화량까지 검사한다.
+    function delta(field) {
+      return request.resource.data.get(field, 0) - resource.data.get(field, 0);
+    }
+
+    function isZeroOrAbsent(field) {
+      return request.resource.data.get(field, 0) == 0;
+    }
+
+    // likeCount/scrapCount는 같은 트랜잭션 안에서 내 likes/{uid}·scraps/{uid}
+    // 문서가 생기면 +1, 사라지면 -1만 허용 — 좋아요 1번에 카운트 1번.
+    function toggleCountValid(col, docId, sub, field) {
+      let markerPath = /databases/$(database)/documents/$(col)/$(docId)/$(sub)/$(request.auth.uid);
+      let d = delta(field);
+      return d == 0
+        || (d == 1 && !exists(markerPath) && existsAfter(markerPath))
+        || (d == -1 && exists(markerPath) && !existsAfter(markerPath));
+    }
+
+    function commentCountValid() {
+      return delta('commentCount') in [-1, 0, 1];
+    }
+
+    function newContentCountersValid() {
+      return isZeroOrAbsent('likeCount')
+        && isZeroOrAbsent('scrapCount')
+        && isZeroOrAbsent('commentCount');
+    }
+
+    function contentUpdateValid(col, docId) {
+      return isLoggedIn()
+        && toggleCountValid(col, docId, 'likes', 'likeCount')
+        && toggleCountValid(col, docId, 'scraps', 'scrapCount')
+        && commentCountValid()
+        && (
+          (isOwnedResource(resource.data) && authorIdUnchanged())
+          || request.resource.data.diff(resource.data).affectedKeys()
+              .hasOnly(['likeCount', 'scrapCount', 'commentCount'])
+        );
+    }
+
+    // ── users 카운터 ──────────────────────────────────────────────────
+    // 클라이언트가 지급하는 EXP 중 최대값(리뷰 작성 10). 서버 지급으로 옮기기
+    // 전까지는 "한 번에 최대 10"으로만 제한한다.
+    function ownExpValid() {
+      let newExp = request.resource.data.get('exp', 0);
+      let oldExp = resource.data.get('exp', 0);
+      return newExp == oldExp || newExp == 0 || (newExp > oldExp && newExp <= oldExp + 10);
+    }
+
+    // 팔로워 수는 내가 아니라 상대가 바꾸는 값 — 본인은 0으로 초기화하는 것 외엔 못 바꾼다.
+    function ownFollowerCountValid() {
+      return delta('followerCount') == 0 || request.resource.data.get('followerCount', 0) == 0;
+    }
+
+    function ownFollowingCountValid() {
+      return delta('followingCount') in [-1, 0, 1]
+        || request.resource.data.get('followingCount', 0) == 0;
+    }
+
+    // 남이 내 followerCount를 바꿀 때는 같은 배치에서 follows/{그사람}_{나}
+    // 문서가 생기거나(+1) 사라질 때(-1)만 허용.
+    function othersFollowerCountValid(uid) {
+      let followPath = /databases/$(database)/documents/follows/$(request.auth.uid + '_' + uid);
+      let d = delta('followerCount');
+      return d == 0
+        || (d == 1 && !exists(followPath) && existsAfter(followPath))
+        || (d == -1 && exists(followPath) && !existsAfter(followPath));
+    }
+
+    // 이메일은 private 문서에만 둔다. 공개 users 문서에는 새로 쓰거나 바꿀 수
+    // 없고 지우는 것만 허용 (마이그레이션 전 레거시 값은 그대로 둬도 통과).
+    // fcmToken은 옛 앱이 아직 여기 쓰므로 강제 업데이트 이후에 같은 방식으로 막는다.
+    function noNewPublicEmail() {
+      return !('email' in request.resource.data)
+        || (resource != null && ('email' in resource.data)
+            && request.resource.data.email == resource.data.email);
+    }
+
     match /users/{uid} {
       allow read: if isLoggedIn();
-      allow write: if isOwner(uid);
-      // exp: 다른 사람이 내 리뷰/게시글에 좋아요 눌렀을 때 작성자에게 EXP를
-      // 지급하는 트랜잭션이 본인이 아닌 유저의 문서를 건드려야 해서 필요
-      allow update: if isOwner(uid)
-        || (isLoggedIn() && request.resource.data.diff(resource.data).affectedKeys()
-            .hasOnly(['followerCount', 'followingCount', 'exp']));
+      allow create: if isOwner(uid)
+        && noNewPublicEmail()
+        && isZeroOrAbsent('exp')
+        && isZeroOrAbsent('followerCount')
+        && isZeroOrAbsent('followingCount');
+      allow delete: if isOwner(uid);
+      // 본인: 프로필 필드는 자유, 카운터는 위 제한 안에서만
+      // 남: 좋아요 EXP 지급(+1)과 팔로우에 따른 followerCount(±1)만
+      allow update: if isLoggedIn() && (
+        (isOwner(uid)
+          && noNewPublicEmail()
+          && ownExpValid()
+          && ownFollowerCountValid()
+          && ownFollowingCountValid())
+        || (!isOwner(uid)
+          && request.resource.data.diff(resource.data).affectedKeys()
+              .hasOnly(['followerCount', 'exp'])
+          && delta('exp') in [0, 1]
+          && othersFollowerCountValid(uid))
+      );
+
+      // 이메일·FCM 토큰처럼 다른 사용자에게 보이면 안 되는 값 (users 문서는 전체 공개)
+      match /private/{docId} {
+        allow read, write: if isLoggedIn() && isOwner(uid);
+      }
 
       match /following/{targetUid} {
         allow read: if isLoggedIn();
@@ -88,21 +193,35 @@ service cloud.firestore {
 
     match /follows/{docId} {
       allow read: if isLoggedIn();
+      // 문서 ID를 `팔로워_팔로이`로 고정 — 랜덤 ID로 같은 관계를 계속 만들어
+      // 상대에게 팔로우 푸시를 반복해서 보내는 걸 막는다.
       allow create: if isLoggedIn()
-          && request.auth.uid == request.resource.data.followerId;
+          && request.auth.uid == request.resource.data.followerId
+          && request.resource.data.followeeId is string
+          && request.resource.data.followeeId != request.auth.uid
+          && docId == request.resource.data.followerId + '_' + request.resource.data.followeeId;
       allow delete: if isLoggedIn()
           && request.auth.uid == resource.data.followerId;
     }
 
+    // 잉크/만년필 카탈로그 — 사용자 등록은 허용하되 등록자 위조 금지,
+    // 수정은 본인이 등록한 잉크의 기본 정보만. (예전엔 누구나 모든 잉크의
+    // 모든 필드를 덮어쓸 수 있었음)
     match /inks/{inkId} {
       allow read: if isLoggedIn();
-      allow create, update: if isLoggedIn();
+      allow create: if isOwnedCreate('addedBy')
+          && request.resource.data.get('isUserAdded', false) == true;
+      allow update: if isLoggedIn()
+          && resource.data.get('addedBy', null) == request.auth.uid
+          && request.resource.data.diff(resource.data).affectedKeys()
+              .hasOnly(['brand', 'name', 'inkType', 'hexColor']);
       allow delete: if false;
     }
 
     match /pens/{penId} {
       allow read: if isLoggedIn();
-      allow create: if isLoggedIn();
+      allow create: if isOwnedCreate('addedBy')
+          && request.resource.data.get('isUserAdded', false) == true;
       allow update, delete: if false;
     }
 
@@ -119,10 +238,8 @@ service cloud.firestore {
 
     match /reviews/{reviewId} {
       allow read: if isLoggedIn();
-      allow create: if isOwnedCreate('authorId');
-      allow update: if isOwnedResource(resource.data)
-        || (isLoggedIn() && request.resource.data.diff(resource.data).affectedKeys()
-            .hasOnly(['likeCount', 'scrapCount', 'commentCount']));
+      allow create: if isOwnedCreate('authorId') && newContentCountersValid();
+      allow update: if contentUpdateValid('reviews', reviewId);
       allow delete: if isOwnedResource(resource.data);
 
       match /likes/{likeId} {
@@ -138,13 +255,13 @@ service cloud.firestore {
       match /comments/{commentId} {
         allow read: if isLoggedIn();
         allow create: if isOwnedCreate('authorId');
-        allow update: if isOwnedResource(resource.data);
+        allow update: if isOwnedResource(resource.data) && authorIdUnchanged();
         allow delete: if isOwnedResource(resource.data);
 
         match /replies/{replyId} {
           allow read: if isLoggedIn();
           allow create: if isOwnedCreate('authorId');
-          allow update: if isOwnedResource(resource.data);
+          allow update: if isOwnedResource(resource.data) && authorIdUnchanged();
           allow delete: if isOwnedResource(resource.data);
         }
       }
@@ -152,10 +269,8 @@ service cloud.firestore {
 
     match /posts/{postId} {
       allow read: if isLoggedIn();
-      allow create: if isOwnedCreate('authorId');
-      allow update: if isOwnedResource(resource.data)
-        || (isLoggedIn() && request.resource.data.diff(resource.data).affectedKeys()
-            .hasOnly(['likeCount', 'commentCount']));
+      allow create: if isOwnedCreate('authorId') && newContentCountersValid();
+      allow update: if contentUpdateValid('posts', postId);
       allow delete: if isOwnedResource(resource.data);
 
       match /likes/{likeId} {
@@ -171,20 +286,27 @@ service cloud.firestore {
       match /comments/{commentId} {
         allow read: if isLoggedIn();
         allow create: if isOwnedCreate('authorId');
-        allow update: if isOwnedResource(resource.data);
+        allow update: if isOwnedResource(resource.data) && authorIdUnchanged();
         allow delete: if isOwnedResource(resource.data);
 
         match /replies/{replyId} {
           allow read: if isLoggedIn();
           allow create: if isOwnedCreate('authorId');
-          allow update: if isOwnedResource(resource.data);
+          allow update: if isOwnedResource(resource.data) && authorIdUnchanged();
           allow delete: if isOwnedResource(resource.data);
         }
       }
     }
 
     match /reports/{reportId} {
-      allow create: if isOwnedCreate('reporterId');
+      // 문서 ID를 `대상타입_대상ID_신고자uid`로 강제 — 클라이언트는 이미 이
+      // 형식으로 쓰지만 규칙이 강제하지 않아, 한 사람이 랜덤 ID로 5건을 만들면
+      // onReportCreated가 남의 리뷰/게시글을 자동 삭제할 수 있었다.
+      allow create: if isOwnedCreate('reporterId')
+          && request.resource.data.targetType is string
+          && request.resource.data.targetId is string
+          && reportId == request.resource.data.targetType + '_'
+              + request.resource.data.targetId + '_' + request.auth.uid;
       // 다른 사람의 신고 내용은 여전히 볼 수 없지만, 본인이 이미 신고했는지
       // 확인하는 hasReported() 조회(문서 ID로 직접 get)는 허용한다. 문서가
       // 없으면(아직 신고 안 함) resource가 null이라 앞의 조건에서 안전하게

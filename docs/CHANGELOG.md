@@ -1,6 +1,6 @@
-# PENGWYN 개발 변경 기록
+# MANNTI 개발 변경 기록
 
-이 문서는 PENGWYN의 완료된 수정사항과 확인된 후속 작업을 한 파일에서 날짜별로 관리한다.
+이 문서는 MANNTI의 완료된 수정사항과 확인된 후속 작업을 한 파일에서 날짜별로 관리한다.
 
 작성 규칙:
 
@@ -9,6 +9,15 @@
 - 각 항목은 1번부터 순서대로 기록하고 상태를 `완료`, `진행 중`, `미완료`로 표시한다.
 - 보안 키, 토큰, 비밀번호, 개인정보의 실제 값은 이 문서에 복사하지 않는다.
 - 기능을 변경한 날에는 관련 테스트와 검증 결과도 함께 기록한다.
+
+## 2026-11-12
+
+### 수정사항
+
+1. **앱 이름 변경: 펜귄(PENGWYN) → 만티(MANNTI) — 완료**
+   - 홈 화면 표시 이름(iOS `CFBundleDisplayName`, Android `android:label`), 네이버 로그인 앱 이름, 앱 내 문구, 이용약관·개인정보처리방침, 푸시 알림 제목, 문서를 `만티`/`MANNTI`로 바꿨다.
+   - 앱 클래스 `PengwynApp` → `ManntiApp`, Dart 패키지 이름 `nibpen` → `mannti`, Node 패키지 이름과 에뮬레이터용 demo 프로젝트 ID도 바꿨다.
+   - 바꾸면 기존 앱·계정과 끊기는 기술 식별자는 유지했다: Firebase 프로젝트 ID `nibpen`, iOS bundle ID·Android application ID `com.nibpen.nibpen`, 네이버 URL scheme `nibpen`, Android 알림 채널 ID `nibpen_notifications`, 예전 소셜 계정 가상 이메일 `@nibpen.login`.
 
 ## 2026-08-27
 

@@ -1,27 +1,67 @@
 rules_version = '2';
 service firebase.storage {
   match /b/{bucket}/o {
-    match /reviews/{reviewId}/{allPaths=**} {
-      allow read: if request.auth != null;
-      allow write: if request.auth != null;
-      allow delete: if request.auth != null;
+
+    function isLoggedIn() {
+      return request.auth != null;
     }
+
+    // 이미지 파일만, 15MB 미만 — 아무 파일이나 무제한 올려 Storage 요금을
+    // 키우는 공격을 막는다. (클라이언트는 image/jpeg로만 업로드함)
+    function isImageUpload() {
+      return request.resource.contentType.matches('image/.*')
+        && request.resource.size < 15 * 1024 * 1024;
+    }
+
+    // 업로더 표시(customMetadata.uploader)를 넣었다면 본인 uid여야 한다.
+    // 이 표시가 없는 옛 앱 버전의 업로드도 계속 허용한다.
+    function uploaderNotSpoofed() {
+      return request.resource.metadata == null
+        || !('uploader' in request.resource.metadata)
+        || request.resource.metadata.uploader == request.auth.uid;
+    }
+
+    function isUploader() {
+      return resource.metadata != null
+        && ('uploader' in resource.metadata)
+        && resource.metadata.uploader == request.auth.uid;
+    }
+
+    // 리뷰·게시글 이미지는 `reviews/{파일}`, `posts/{파일}`처럼 경로에 작성자가
+    // 없다. 예전엔 로그인한 누구나 남의 사진을 덮어쓰거나 지울 수 있었음.
+    // → 새 파일 업로드만 허용, 덮어쓰기 금지, 삭제는 업로더 본인만.
+    // (uploader 메타데이터가 없는 옛 파일은 클라이언트에서 삭제 불가 — 고아 파일로 남음)
+    match /reviews/{allPaths=**} {
+      allow read: if isLoggedIn();
+      // Storage는 기존 파일을 덮어쓰는 업로드도 'create'로 판정하므로
+      // resource == null(아직 없는 파일)로 덮어쓰기를 막는다. update는 메타데이터 수정.
+      allow create: if isLoggedIn() && resource == null && isImageUpload() && uploaderNotSpoofed();
+      allow update: if false;
+      allow delete: if isLoggedIn() && isUploader();
+    }
+    match /posts/{allPaths=**} {
+      allow read: if isLoggedIn();
+      // Storage는 기존 파일을 덮어쓰는 업로드도 'create'로 판정하므로
+      // resource == null(아직 없는 파일)로 덮어쓰기를 막는다. update는 메타데이터 수정.
+      allow create: if isLoggedIn() && resource == null && isImageUpload() && uploaderNotSpoofed();
+      allow update: if false;
+      allow delete: if isLoggedIn() && isUploader();
+    }
+
     match /profiles/{uid}/{allPaths=**} {
-      allow read: if request.auth != null;
-      allow write: if request.auth.uid == uid;
+      allow read: if isLoggedIn();
+      allow create, update: if isLoggedIn() && request.auth.uid == uid && isImageUpload();
+      allow delete: if isLoggedIn() && request.auth.uid == uid;
     }
-    match /posts/{postId}/{allPaths=**} {
-      allow read: if request.auth != null;
-      allow write: if request.auth != null;
-    }
-    // 이거 추가!
     match /inkChart/{uid}/{allPaths=**} {
-      allow read: if request.auth != null;
-      allow write: if request.auth.uid == uid;
+      allow read: if isLoggedIn();
+      allow create, update: if isLoggedIn() && request.auth.uid == uid && isImageUpload();
+      allow delete: if isLoggedIn() && request.auth.uid == uid;
     }
     match /pens/{uid}/{allPaths=**} {
-      allow read: if request.auth != null;
-      allow write: if request.auth.uid == uid;
+      allow read: if isLoggedIn();
+      allow create, update: if isLoggedIn() && request.auth.uid == uid && isImageUpload();
+      allow delete: if isLoggedIn() && request.auth.uid == uid;
     }
   }
 }

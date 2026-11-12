@@ -1,5 +1,5 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:nibpen/core/utils/search_utils.dart';
+import 'package:mannti/core/utils/search_utils.dart';
 
 void main() {
   group('SearchUtils safety contract', () {

@@ -77,74 +77,82 @@ class _InkCompareScreenState extends ConsumerState<InkCompareScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(title: const Text('잉크 색상 비교'), scrolledUnderElevation: 0),
-      body: Column(
-        children: [
+      // 키보드가 올라오면 남는 높이가 비교 패널보다 작아질 수 있으므로
+      // 패널·검색창·결과를 한 스크롤 안에 둔다.
+      body: CustomScrollView(
+        slivers: [
           // 비교 패널
-          _ComparePanel(selected: _selected, onRemove: _removeInk),
-          const Divider(height: 1),
+          SliverToBoxAdapter(
+            child: _ComparePanel(selected: _selected, onRemove: _removeInk),
+          ),
+          const SliverToBoxAdapter(child: Divider(height: 1)),
           // 검색
           if (_selected.length < 3)
-            Padding(
-              padding: const EdgeInsets.fromLTRB(16, 12, 16, 8),
-              child: TextField(
-                controller: _searchCtrl,
-                decoration: InputDecoration(
-                  hintText: '잉크 이름 또는 브랜드 검색',
-                  prefixIcon: const Icon(Icons.search, size: 20),
-                  suffixIcon: _searchCtrl.text.isNotEmpty
-                      ? IconButton(
-                          icon: const Icon(Icons.clear, size: 18),
-                          onPressed: () {
-                            _searchCtrl.clear();
-                            setState(() => _searchResults = []);
-                          },
-                        )
-                      : null,
-                  filled: true,
-                  fillColor: AppColors.chipBackground,
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(AppRadius.full),
-                    borderSide: BorderSide.none,
+            SliverToBoxAdapter(
+              child: Padding(
+                padding: const EdgeInsets.fromLTRB(16, 12, 16, 8),
+                child: TextField(
+                  controller: _searchCtrl,
+                  decoration: InputDecoration(
+                    hintText: '잉크 이름 또는 브랜드 검색',
+                    prefixIcon: const Icon(Icons.search, size: 20),
+                    suffixIcon: _searchCtrl.text.isNotEmpty
+                        ? IconButton(
+                            icon: const Icon(Icons.clear, size: 18),
+                            onPressed: () {
+                              _searchCtrl.clear();
+                              setState(() => _searchResults = []);
+                            },
+                          )
+                        : null,
+                    filled: true,
+                    fillColor: AppColors.chipBackground,
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(AppRadius.full),
+                      borderSide: BorderSide.none,
+                    ),
+                    contentPadding: const EdgeInsets.symmetric(vertical: 10),
                   ),
-                  contentPadding: const EdgeInsets.symmetric(vertical: 10),
+                  onChanged: _search,
                 ),
-                onChanged: _search,
               ),
             ),
           // 검색 결과
-          Expanded(
-            child: _isSearching
-                ? const Center(child: CircularProgressIndicator())
-                : _searchResults.isEmpty && _searchCtrl.text.isNotEmpty
-                ? const Center(
-                    child: Text(
-                      '검색 결과가 없습니다',
-                      style: TextStyle(color: AppColors.textSecondary),
-                    ),
-                  )
-                : ListView.builder(
-                    itemCount: _searchResults.length,
-                    itemBuilder: (_, i) {
-                      final ink = _searchResults[i];
-                      return ListTile(
-                        leading: InkDropCircle(color: ink.inkColor, size: 36),
-                        title: Text(
-                          ink.name,
-                          style: const TextStyle(fontWeight: FontWeight.w500),
-                        ),
-                        subtitle: Text(
-                          ink.brand,
-                          style: AppTextStyles.bodySmall,
-                        ),
-                        trailing: const Icon(
-                          Icons.add_circle_outline,
-                          color: AppColors.primary,
-                        ),
-                        onTap: () => _addInk(ink),
-                      );
-                    },
+          if (_isSearching)
+            const SliverFillRemaining(
+              hasScrollBody: false,
+              child: Center(child: CircularProgressIndicator()),
+            )
+          else if (_searchResults.isEmpty && _searchCtrl.text.isNotEmpty)
+            const SliverFillRemaining(
+              hasScrollBody: false,
+              child: Center(
+                child: Text(
+                  '검색 결과가 없습니다',
+                  style: TextStyle(color: AppColors.textSecondary),
+                ),
+              ),
+            )
+          else
+            SliverList.builder(
+              itemCount: _searchResults.length,
+              itemBuilder: (_, i) {
+                final ink = _searchResults[i];
+                return ListTile(
+                  leading: InkDropCircle(color: ink.inkColor, size: 36),
+                  title: Text(
+                    ink.name,
+                    style: const TextStyle(fontWeight: FontWeight.w500),
                   ),
-          ),
+                  subtitle: Text(ink.brand, style: AppTextStyles.bodySmall),
+                  trailing: const Icon(
+                    Icons.add_circle_outline,
+                    color: AppColors.primary,
+                  ),
+                  onTap: () => _addInk(ink),
+                );
+              },
+            ),
         ],
       ),
     );

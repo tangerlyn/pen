@@ -210,7 +210,10 @@ class _ProfileHeader extends ConsumerWidget {
                         ),
                       ),
                       const SizedBox(height: 12),
-                      Row(
+                      // 좁은 화면 + 큰 글씨 + 큰 수치에서 한 줄을 넘치면
+                      // 다음 줄로 내린다(기본 크기에선 Row와 동일하게 한 줄).
+                      Wrap(
+                        crossAxisAlignment: WrapCrossAlignment.center,
                         children: [
                           _StatChip(
                             label: '팔로워',

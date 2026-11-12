@@ -1,14 +1,14 @@
-# PENGWYN Design System
+# MANNTI Design System
 
 ## 1. Atmosphere & Identity
 
-PENGWYN은 만년필·잉크·노트를 차분하게 기록하고 공유하는 커뮤니티다. 화면은 종이처럼 밝고 여백이 넉넉하며, 네이비 한 색으로 신뢰감과 집중도를 만든다. 장식보다 필기구 사진과 사용자의 기록이 주인공이어야 한다.
+MANNTI는 만년필·잉크·노트를 차분하게 기록하고 공유하는 커뮤니티다. 화면은 종이처럼 밝고 여백이 넉넉하며, 네이비 한 색으로 신뢰감과 집중도를 만든다. 장식보다 필기구 사진과 사용자의 기록이 주인공이어야 한다.
 
 ## 2. Color
 
 - Primary: `#1B2E4B`. 주요 버튼, 선택 상태, 핵심 아이콘에만 사용한다.
 - Background/Surface: `#FFFFFF`. 앱 기본 배경과 카드 표면이다.
-- Tinted app bar: `#F0F5FD`. 상단 영역을 본문과 부드럽게 구분한다.
+- App bar: 흰색 `#FFFFFF`. 본문과 같은 색으로 두어 상단을 깔끔하게 유지한다. (2026-11-12 옅은 네이비 틴트 `#F0F5FD`에서 변경)
 - Primary text: `#1A1A1A`; secondary: `#757575`; tertiary: `#BDBDBD`.
 - Divider: `#EEEEEE`; neutral chip: `#F2F4F7`.
 - Error/success/warning은 각각 `#E53935`, `#43A047`, `#FB8C00`을 사용한다.

@@ -102,44 +102,58 @@ class PostCard extends ConsumerWidget {
                     overflow: TextOverflow.ellipsis,
                   ),
                   const SizedBox(height: 10),
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      Flexible(
-                        child: Row(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            Flexible(
-                              child: _AuthorRow(
-                                authorId: post.authorId,
-                                fallbackNickname: post.authorNickname,
-                                authorLevel: post.authorLevel,
+                  // 좁은 화면 + 큰 글자 + 큰 숫자(예: 12345)에서 좋아요/댓글 수가
+                  // 작성자 영역을 밀어내 overflow 나지 않도록, 숫자 영역은 최대
+                  // 폭의 55%까지만 쓰고 넘치면 축소(scaleDown)한다. 평소엔 그대로.
+                  LayoutBuilder(
+                    builder: (context, constraints) => Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Flexible(
+                          child: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Flexible(
+                                child: _AuthorRow(
+                                  authorId: post.authorId,
+                                  fallbackNickname: post.authorNickname,
+                                  authorLevel: post.authorLevel,
+                                ),
                               ),
-                            ),
-                            const SizedBox(width: 8),
-                          ],
+                              const SizedBox(width: 8),
+                            ],
+                          ),
                         ),
-                      ),
-                      Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          IconCount(
-                            icon: isLiked
-                                ? Icons.favorite
-                                : Icons.favorite_border,
-                            count: likeCount,
-                            iconColor: isLiked
-                                ? AppColors.error
-                                : AppColors.textTertiary,
+                        ConstrainedBox(
+                          constraints: BoxConstraints(
+                            maxWidth: constraints.maxWidth * 0.55,
                           ),
-                          const SizedBox(width: 10),
-                          IconCount(
-                            icon: Icons.chat_bubble_outline,
-                            count: commentCount,
+                          child: FittedBox(
+                            fit: BoxFit.scaleDown,
+                            alignment: Alignment.centerRight,
+                            child: Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                IconCount(
+                                  icon: isLiked
+                                      ? Icons.favorite
+                                      : Icons.favorite_border,
+                                  count: likeCount,
+                                  iconColor: isLiked
+                                      ? AppColors.error
+                                      : AppColors.textTertiary,
+                                ),
+                                const SizedBox(width: 10),
+                                IconCount(
+                                  icon: Icons.chat_bubble_outline,
+                                  count: commentCount,
+                                ),
+                              ],
+                            ),
                           ),
-                        ],
-                      ),
-                    ],
+                        ),
+                      ],
+                    ),
                   ),
                 ],
               ),

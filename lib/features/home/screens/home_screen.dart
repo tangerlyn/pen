@@ -7,7 +7,7 @@ import '../providers/home_discovery_provider.dart';
 import '../providers/notification_provider.dart';
 import '../../community/providers/community_provider.dart';
 import '../../../shared/widgets/community/post_card.dart';
-import '../../../shared/widgets/review/review_feed_card.dart';
+import '../../../shared/widgets/review/review_grid_card.dart';
 import '../../../data/models/ink_model.dart';
 import '../../../data/models/pen_model.dart';
 import '../../../shared/widgets/common/skeletons.dart';
@@ -283,10 +283,13 @@ class _LatestReviewsSection extends ConsumerWidget {
     final reviewsAsync = ref.watch(homeLatestReviewsProvider);
     // 화면 폭에 비례한 카드 너비 — 좁은 폰에서도 다음 카드가 살짝 보이고,
     // 넓은 폰/기기에서 카드가 지나치게 작아 보이지 않도록 상하한을 둔다.
-    final cardWidth = (MediaQuery.of(context).size.width * 0.42).clamp(
-      140.0,
-      190.0,
+    // 리뷰 탭과 같은 카드(사진 4:5 + 작성자·제목·본문·시간). 한 화면에 2장 반쯤 보이게.
+    final cardWidth = (MediaQuery.sizeOf(context).width * 0.36).clamp(
+      124.0,
+      170.0,
     );
+    // 사진 높이 + 글 영역(실제 글꼴·글자 크기로 계산)
+    final listHeight = ReviewGridCard.extent(context, cardWidth);
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -298,7 +301,7 @@ class _LatestReviewsSection extends ConsumerWidget {
         ),
         reviewsAsync.when(
           loading: () => SizedBox(
-            height: 210,
+            height: listHeight,
             child: ListView.builder(
               scrollDirection: Axis.horizontal,
               padding: AppSpacing.pagePadding,
@@ -310,7 +313,7 @@ class _LatestReviewsSection extends ConsumerWidget {
           data: (reviews) {
             if (reviews.isEmpty) return const SizedBox.shrink();
             return SizedBox(
-              height: 210,
+              height: listHeight,
               child: ListView.builder(
                 scrollDirection: Axis.horizontal,
                 padding: AppSpacing.pagePadding,
@@ -319,7 +322,7 @@ class _LatestReviewsSection extends ConsumerWidget {
                   padding: const EdgeInsets.only(right: AppSpacing.xs),
                   child: SizedBox(
                     width: cardWidth,
-                    child: ReviewFeedCard(
+                    child: ReviewGridCard(
                       review: reviews[i],
                       onTap: () => context.push('/review/${reviews[i].id}'),
                     ),
@@ -469,7 +472,9 @@ class _PopularPensSection extends ConsumerWidget {
               onMore: () => context.go('/archive'),
             ),
             SizedBox(
-              height: 110,
+              // 패딩·아이콘(64)은 고정, 브랜드·모델명 텍스트(≈48)만 글자 크기에 비례.
+              // 모델명이 2줄일 때도 넘치지 않도록 텍스트 몫을 실제 줄 높이로 잡는다.
+              height: 64 + MediaQuery.textScalerOf(context).scale(48),
               child: ListView.builder(
                 scrollDirection: Axis.horizontal,
                 padding: AppSpacing.pagePadding,
@@ -554,7 +559,12 @@ class _PenCard extends StatelessWidget {
           children: [
             const Icon(Icons.edit, size: 22, color: AppColors.primary),
             const SizedBox(height: AppSpacing.sm),
-            Text(pen.brand, style: AppTextStyles.labelSmall),
+            Text(
+              pen.brand,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: AppTextStyles.labelSmall,
+            ),
             const SizedBox(height: 2),
             Text(
               pen.modelName,

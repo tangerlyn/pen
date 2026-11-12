@@ -26,80 +26,88 @@ class LoginScreen extends ConsumerWidget {
     return Scaffold(
       backgroundColor: AppColors.background,
       body: SafeArea(
-        child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 24),
-          child: Column(
-            children: [
-              const Spacer(flex: 2),
-              // 로고
-              Column(
-                children: [
-                  Container(
-                    width: 80,
-                    height: 80,
-                    decoration: BoxDecoration(
-                      color: AppColors.primary,
-                      borderRadius: BorderRadius.circular(AppRadius.xl),
-                    ),
-                    child: const Icon(
-                      Icons.edit,
-                      color: Colors.white,
-                      size: 40,
-                    ),
-                  ),
-                  const SizedBox(height: 16),
-                  const Text(
-                    AppConstants.appNameKorean,
-                    style: TextStyle(
-                      fontSize: 32,
-                      fontWeight: FontWeight.w700,
-                      letterSpacing: -0.5,
-                    ),
-                  ),
-                  const SizedBox(height: 8),
-                  const Text(
-                    '만년필·잉크·노트 커뮤니티',
-                    style: TextStyle(
-                      fontSize: 15,
-                      color: AppColors.textSecondary,
-                    ),
-                  ),
-                ],
-              ),
-              const Spacer(flex: 3),
-              // 소셜 로그인 버튼들
-              if (state.isLoading)
-                const CircularProgressIndicator()
-              else
-                Column(
+        // 짧은 화면·큰 글씨에서는 스크롤, 충분하면 Spacer 비율 그대로 화면을 채운다.
+        child: LayoutBuilder(
+          builder: (context, constraints) => SingleChildScrollView(
+            padding: const EdgeInsets.symmetric(horizontal: 24),
+            child: ConstrainedBox(
+              constraints: BoxConstraints(minHeight: constraints.maxHeight),
+              child: IntrinsicHeight(
+                child: Column(
                   children: [
-                    _KakaoLoginButton(
-                      onTap: () => ref
-                          .read(authProvider.notifier)
-                          .signInWithKakao(context),
+                    const Spacer(flex: 2),
+                    // 로고
+                    Column(
+                      children: [
+                        Container(
+                          width: 80,
+                          height: 80,
+                          decoration: BoxDecoration(
+                            color: AppColors.primary,
+                            borderRadius: BorderRadius.circular(AppRadius.xl),
+                          ),
+                          child: const Icon(
+                            Icons.edit,
+                            color: Colors.white,
+                            size: 40,
+                          ),
+                        ),
+                        const SizedBox(height: 16),
+                        const Text(
+                          AppConstants.appNameKorean,
+                          style: TextStyle(
+                            fontSize: 32,
+                            fontWeight: FontWeight.w700,
+                            letterSpacing: -0.5,
+                          ),
+                        ),
+                        const SizedBox(height: 8),
+                        const Text(
+                          '만년필·잉크·노트 커뮤니티',
+                          style: TextStyle(
+                            fontSize: 15,
+                            color: AppColors.textSecondary,
+                          ),
+                        ),
+                      ],
                     ),
-                    const SizedBox(height: 12),
-                    _NaverLoginButton(
-                      onTap: () => ref
-                          .read(authProvider.notifier)
-                          .signInWithNaver(context),
+                    const Spacer(flex: 3),
+                    // 소셜 로그인 버튼들
+                    if (state.isLoading)
+                      const CircularProgressIndicator()
+                    else
+                      Column(
+                        children: [
+                          _KakaoLoginButton(
+                            onTap: () => ref
+                                .read(authProvider.notifier)
+                                .signInWithKakao(context),
+                          ),
+                          const SizedBox(height: 12),
+                          _NaverLoginButton(
+                            onTap: () => ref
+                                .read(authProvider.notifier)
+                                .signInWithNaver(context),
+                          ),
+                          const SizedBox(height: 12),
+                          _AppleLoginButton(
+                            onTap: () => ref
+                                .read(authProvider.notifier)
+                                .signInWithApple(context),
+                          ),
+                        ],
+                      ),
+                    const SizedBox(height: 32),
+                    Text(
+                      '로그인하면 서비스 이용약관 및 개인정보처리방침에\n동의하는 것으로 간주됩니다.',
+                      textAlign: TextAlign.center,
+                      style: Theme.of(context).textTheme.labelSmall,
                     ),
-                    const SizedBox(height: 12),
-                    _AppleLoginButton(
-                      onTap: () => ref
-                          .read(authProvider.notifier)
-                          .signInWithApple(context),
-                    ),
+                    const SizedBox(height: 24),
                   ],
                 ),
-              const SizedBox(height: 32),
-              Text(
-                '로그인하면 서비스 이용약관 및 개인정보처리방침에\n동의하는 것으로 간주됩니다.',
-                textAlign: TextAlign.center,
-                style: Theme.of(context).textTheme.labelSmall,
               ),
-              const SizedBox(height: 24),
-            ],
+            ),
           ),
         ),
       ),

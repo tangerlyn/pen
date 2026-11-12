@@ -72,11 +72,14 @@ class _CommentInput extends StatelessWidget {
             color: AppColors.chipBackground,
             child: Row(
               children: [
-                Text(
-                  '@$replyTargetNickname 에게 답글',
-                  style: AppTextStyles.bodySmall,
+                Expanded(
+                  child: Text(
+                    '@$replyTargetNickname 에게 답글',
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: AppTextStyles.bodySmall,
+                  ),
                 ),
-                const Spacer(),
                 GestureDetector(
                   onTap: onCancelReply,
                   child: const Icon(
@@ -110,7 +113,9 @@ class _CommentInput extends StatelessWidget {
                     ),
                     counterStyle: AppTextStyles.labelSmall,
                   ),
-                  maxLines: null,
+                  // 무제한으로 늘어나면 키보드가 열린 작은 화면에서 본문 영역을 다 덮는다.
+                  minLines: 1,
+                  maxLines: 5,
                   maxLength: replyTargetNickname != null
                       ? AppConstants.maxReply
                       : AppConstants.maxComment,

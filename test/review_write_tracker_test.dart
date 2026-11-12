@@ -1,6 +1,6 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:nibpen/core/analytics/analytics_logger.dart';
-import 'package:nibpen/features/review/analytics/review_write_tracker.dart';
+import 'package:mannti/core/analytics/analytics_logger.dart';
+import 'package:mannti/features/review/analytics/review_write_tracker.dart';
 
 /// docs/analytics_spec.md의 QA 시나리오를 트래커 단위에서 재현한다.
 /// 화면 연결은 실기기 QA로, 이벤트 순서·파라미터 규칙은 여기서 검증한다.

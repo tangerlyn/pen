@@ -4,7 +4,7 @@ import 'package:go_router/go_router.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../../../core/theme/app_theme.dart';
 import '../../home/providers/feed_provider.dart';
-import '../../../shared/widgets/review/review_feed_card.dart';
+import '../../../shared/widgets/review/review_grid_card.dart';
 import '../../../shared/widgets/review/review_list_tile.dart';
 import '../../home/widgets/feed_filter_bar.dart';
 import '../../../shared/widgets/common/skeletons.dart';
@@ -61,6 +61,22 @@ class _ReviewFeedScreenState extends ConsumerState<ReviewFeedScreen> {
         curve: Curves.easeOut,
       );
     }
+  }
+
+  static const _gridColumns = 3;
+  static const _gridGap = 3.0;
+
+  // 한 줄에 3개. 칸 높이 = 사진(4:5) + 글 영역(글자 크기에 맞춰 늘어남)
+  SliverGridDelegate _gridDelegate(BuildContext context) {
+    final width = MediaQuery.sizeOf(context).width;
+    final cellWidth =
+        (width - _gridGap * (_gridColumns - 1)) / _gridColumns;
+    return SliverGridDelegateWithFixedCrossAxisCount(
+      crossAxisCount: _gridColumns,
+      crossAxisSpacing: _gridGap,
+      mainAxisSpacing: 12,
+      mainAxisExtent: ReviewGridCard.extent(context, cellWidth),
+    );
   }
 
   @override
@@ -156,14 +172,8 @@ class _ReviewFeedScreenState extends ConsumerState<ReviewFeedScreen> {
                         ? GridView.builder(
                             physics: const NeverScrollableScrollPhysics(),
                             padding: EdgeInsets.zero,
-                            gridDelegate:
-                                const SliverGridDelegateWithFixedCrossAxisCount(
-                                  crossAxisCount: 2,
-                                  crossAxisSpacing: 1,
-                                  mainAxisSpacing: 1,
-                                  childAspectRatio: 0.85,
-                                ),
-                            itemCount: 6,
+                            gridDelegate: _gridDelegate(context),
+                            itemCount: 9,
                             itemBuilder: (_, _) => const ReviewGridSkeleton(),
                           )
                         : ListView.builder(
@@ -203,20 +213,14 @@ class _ReviewFeedScreenState extends ConsumerState<ReviewFeedScreen> {
                                     ? SliverPadding(
                                         padding: EdgeInsets.zero,
                                         sliver: SliverGrid(
-                                          gridDelegate:
-                                              const SliverGridDelegateWithFixedCrossAxisCount(
-                                                crossAxisCount: 2,
-                                                crossAxisSpacing: 1,
-                                                mainAxisSpacing: 1,
-                                                childAspectRatio: 0.85,
-                                              ),
+                                          gridDelegate: _gridDelegate(context),
                                           delegate: SliverChildBuilderDelegate(
                                             (context, index) {
                                               if (index >= combined.length) {
                                                 return const ReviewGridSkeleton();
                                               }
                                               final review = combined[index];
-                                              return ReviewFeedCard(
+                                              return ReviewGridCard(
                                                 review: review,
                                                 onTap: () => context.push(
                                                   '/review/${review.id}',
@@ -225,7 +229,7 @@ class _ReviewFeedScreenState extends ConsumerState<ReviewFeedScreen> {
                                             },
                                             childCount:
                                                 combined.length +
-                                                (state.isLoadingMore ? 2 : 0),
+                                                (state.isLoadingMore ? 3 : 0),
                                           ),
                                         ),
                                       )
