@@ -1,7 +1,7 @@
 name: mannti
 description: 만티(MANNTI) 만년필·잉크·노트 커뮤니티 앱
 publish_to: 'none'
-version: 1.0.0+1
+version: 1.0.0+2
 
 environment:
   sdk: ^3.10.8
