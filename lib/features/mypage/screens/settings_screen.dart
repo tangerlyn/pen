@@ -80,17 +80,17 @@ class SettingsScreen extends ConsumerWidget {
   void _showLogoutDialog(BuildContext context, WidgetRef ref) {
     showDialog(
       context: context,
-      builder: (_) => AlertDialog(
+      builder: (dialogContext) => AlertDialog(
         title: const Text('로그아웃'),
         content: const Text('로그아웃 하시겠습니까?'),
         actions: [
           TextButton(
-            onPressed: () => Navigator.pop(context),
+            onPressed: () => Navigator.pop(dialogContext),
             child: const Text('취소'),
           ),
           TextButton(
             onPressed: () async {
-              Navigator.pop(context);
+              Navigator.pop(dialogContext);
               await ref.read(authServiceProvider).signOut();
             },
             child: const Text('로그아웃', style: TextStyle(color: AppColors.error)),
@@ -156,7 +156,11 @@ class _DeleteAccountDialogState extends State<_DeleteAccountDialog> {
         mainAxisSize: MainAxisSize.min,
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Text('탈퇴하면 모든 데이터가 삭제됩니다.\n정말 탈퇴하시겠습니까?'),
+          const Text(
+            '탈퇴하면 프로필, 잉크북, 작성한 리뷰·게시글·댓글이 모두 삭제되고 되돌릴 수 없어요.\n'
+            '다른 사람의 답글이 달린 댓글은 내용 없이 \'삭제된 댓글\'로 남아요.\n\n'
+            '정말 탈퇴하시겠어요?',
+          ),
           if (_error != null) ...[
             const SizedBox(height: 12),
             Text(

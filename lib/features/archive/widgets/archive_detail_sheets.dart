@@ -55,6 +55,7 @@ class _EditInkSheetState extends ConsumerState<_EditInkSheet> {
             hexColor: _colorToHex(_color),
           );
       ref.invalidate(archiveDetailProvider);
+      ref.invalidate(inkBrandsProvider);
       ref.read(archiveProvider.notifier).refresh();
       if (mounted) {
         Navigator.pop(context);
@@ -65,10 +66,11 @@ class _EditInkSheetState extends ConsumerState<_EditInkSheet> {
         );
       }
     } catch (e) {
+      debugPrint('InkEditSheet._submit error: $e');
       if (mounted) {
         showCenterToast(
           context,
-          message: '수정 실패: $e',
+          message: '수정하지 못했어요. 잠시 후 다시 시도해주세요.',
           icon: Icons.error_outline,
           iconColor: AppColors.error,
         );
@@ -237,10 +239,12 @@ class _EditInkSheetState extends ConsumerState<_EditInkSheet> {
 
   Widget _editTextField(TextEditingController ctrl, String hint) => TextField(
     controller: ctrl,
+    maxLength: 40,
     style: const TextStyle(fontSize: 14),
     onChanged: (_) => setState(() {}),
     decoration: InputDecoration(
       hintText: hint,
+      counterText: '',
       hintStyle: AppTextStyles.labelMedium.copyWith(
         color: AppColors.textTertiary,
         fontWeight: FontWeight.w400,
@@ -324,10 +328,11 @@ class _ReportSheetState extends ConsumerState<_ReportSheet> {
         );
       }
     } catch (e) {
+      debugPrint('ProductReportSheet._submit error: $e');
       if (mounted) {
         showCenterToast(
           context,
-          message: '신고 실패: $e',
+          message: '신고하지 못했어요. 잠시 후 다시 시도해주세요.',
           icon: Icons.error_outline,
           iconColor: AppColors.error,
         );
@@ -425,9 +430,11 @@ class _ReportSheetState extends ConsumerState<_ReportSheet> {
                     TextField(
                       controller: _detailCtrl,
                       maxLines: 3,
+                      maxLength: 500,
                       style: const TextStyle(fontSize: 14),
                       decoration: InputDecoration(
                         hintText: '추가적인 사유가 있으면 입력해주세요',
+                        counterText: '',
                         hintStyle: AppTextStyles.labelMedium.copyWith(
                           color: AppColors.textTertiary,
                           fontWeight: FontWeight.w400,

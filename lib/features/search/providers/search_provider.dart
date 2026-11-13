@@ -4,6 +4,19 @@ import '../../../core/utils/search_utils.dart';
 import '../../../data/models/review_model.dart';
 import '../../../data/models/post_model.dart';
 import '../../../data/repositories/search_repository.dart';
+import '../../../shared/providers/providers.dart';
+
+/// 차단한 유저의 글을 걸러내는 함수 (UserRepository.filterByBlocked 위임)
+typedef BlockedFilter = Future<List<T>> Function<T>(
+  List<T> items,
+  String Function(T item) authorId,
+);
+
+Future<List<T>> _noBlockedFilter<T>(
+  List<T> items,
+  String Function(T item) authorId,
+) async =>
+    items;
 
 // ── 정렬 옵션 ─────────────────────────────────────────────────────────
 enum ReviewSortOption {
@@ -139,10 +152,16 @@ class SearchState {
 
 // ── 검색 Notifier ─────────────────────────────────────────────────────
 class SearchNotifier extends StateNotifier<SearchState> {
-  SearchNotifier(this._type, this._repository) : super(const SearchState());
+  SearchNotifier(
+    this._type,
+    this._repository, {
+    BlockedFilter filterBlocked = _noBlockedFilter,
+  })  : _filterBlocked = filterBlocked,
+        super(const SearchState());
 
   final String _type;
   final SearchRepository _repository;
+  final BlockedFilter _filterBlocked;
 
   static const _limit = 50;
   String _query = '';
@@ -257,14 +276,19 @@ class SearchNotifier extends StateNotifier<SearchState> {
       if (generation != _generation) return;
       _reviewCursor = page.nextCursor;
       hasMore = page.hasMore;
-      matches.addAll(
-        page.items.where(
-          (review) => SearchUtils.matchesQuery(
-            '${review.title} ${review.body}',
-            _query,
-          ),
-        ),
+      final visible = await _filterBlocked(
+        page.items
+            .where(
+              (review) => SearchUtils.matchesQuery(
+                '${review.title} ${review.body}',
+                _query,
+              ),
+            )
+            .toList(),
+        (review) => review.authorId,
       );
+      if (generation != _generation) return;
+      matches.addAll(visible);
     } while (matches.isEmpty && hasMore);
 
     final rawReviews = _mergeById(
@@ -291,12 +315,19 @@ class SearchNotifier extends StateNotifier<SearchState> {
       if (generation != _generation) return;
       _postCursor = page.nextCursor;
       hasMore = page.hasMore;
-      matches.addAll(
-        page.items.where(
-          (post) =>
-              SearchUtils.matchesQuery('${post.title} ${post.body}', _query),
-        ),
+      final visible = await _filterBlocked(
+        page.items
+            .where(
+              (post) => SearchUtils.matchesQuery(
+                '${post.title} ${post.body}',
+                _query,
+              ),
+            )
+            .toList(),
+        (post) => post.authorId,
       );
+      if (generation != _generation) return;
+      matches.addAll(visible);
     } while (matches.isEmpty && hasMore);
 
     final rawPosts = _mergeById(state.rawPosts, matches, (post) => post.id);
@@ -387,5 +418,14 @@ final searchRepositoryProvider = Provider<SearchRepository>(
 
 final searchProvider =
     StateNotifierProvider.family<SearchNotifier, SearchState, String>(
-      (ref, type) => SearchNotifier(type, ref.watch(searchRepositoryProvider)),
+      (ref, type) {
+        final uid = ref.watch(currentUidProvider);
+        final userRepo = ref.watch(userRepoProvider);
+        return SearchNotifier(
+          type,
+          ref.watch(searchRepositoryProvider),
+          filterBlocked: <T>(items, authorId) =>
+              userRepo.filterByBlocked(uid, items, authorId),
+        );
+      },
     );

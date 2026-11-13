@@ -29,6 +29,7 @@ class _CommentList extends ConsumerWidget {
       data: (list) => SliverList(
         delegate: SliverChildBuilderDelegate(
           (_, i) => CommentTile(
+            key: ValueKey(list[i].id),
             comment: list[i],
             reviewId: reviewId,
             reviewAuthorId: reviewAuthorId,
@@ -54,10 +55,12 @@ class _CommentInput extends StatelessWidget {
     required this.onSubmit,
     this.replyTargetNickname,
     this.onCancelReply,
+    this.isSubmitting = false,
   });
   final TextEditingController controller;
   final FocusNode focusNode;
   final VoidCallback onSubmit;
+  final bool isSubmitting;
   final String? replyTargetNickname;
   final VoidCallback? onCancelReply;
 
@@ -123,8 +126,14 @@ class _CommentInput extends StatelessWidget {
               ),
               const SizedBox(width: 8),
               IconButton(
-                onPressed: onSubmit,
-                icon: const Icon(Icons.send, color: AppColors.primary),
+                onPressed: isSubmitting ? null : onSubmit,
+                icon: isSubmitting
+                    ? const SizedBox(
+                        width: 20,
+                        height: 20,
+                        child: CircularProgressIndicator(strokeWidth: 2),
+                      )
+                    : const Icon(Icons.send, color: AppColors.primary),
               ),
             ],
           ),

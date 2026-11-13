@@ -6,8 +6,7 @@ import 'package:url_launcher/url_launcher.dart';
 import '../../core/theme/app_theme.dart';
 
 class ForceUpdateService {
-  // TODO: App Store에 앱 출시 후 실제 앱 ID로 교체
-  static const _iosAppStoreUrl = 'https://apps.apple.com/app/id000000000';
+  static const _iosAppStoreUrl = 'https://apps.apple.com/app/id6791441592';
   static const _androidPlayStoreUrl =
       'https://play.google.com/store/apps/details?id=com.nibpen.nibpen';
 

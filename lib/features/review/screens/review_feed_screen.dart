@@ -8,6 +8,7 @@ import '../../../shared/widgets/review/review_grid_card.dart';
 import '../../../shared/widgets/review/review_list_tile.dart';
 import '../../home/widgets/feed_filter_bar.dart';
 import '../../../shared/widgets/common/skeletons.dart';
+import '../../../shared/widgets/common/empty_state.dart';
 import '../../../shared/providers/providers.dart';
 
 class ReviewFeedScreen extends ConsumerStatefulWidget {
@@ -207,6 +208,43 @@ class _ReviewFeedScreenState extends ConsumerState<ReviewFeedScreen> {
                               ...state.followingRecent,
                               ...state.reviews,
                             ];
+                            if (combined.isEmpty) {
+                              return CustomScrollView(
+                                physics:
+                                    const AlwaysScrollableScrollPhysics(),
+                                slivers: [
+                                  SliverFillRemaining(
+                                    hasScrollBody: false,
+                                    child: state.hasError
+                                        ? Column(
+                                            mainAxisAlignment:
+                                                MainAxisAlignment.center,
+                                            children: [
+                                              const EmptyStateWidget(
+                                                icon: Icons.cloud_off_outlined,
+                                                message:
+                                                    '리뷰를 불러오지 못했어요.\n잠시 후 다시 시도해주세요.',
+                                              ),
+                                              const SizedBox(height: 12),
+                                              OutlinedButton(
+                                                onPressed: () => ref
+                                                    .read(
+                                                      feedProvider.notifier,
+                                                    )
+                                                    .loadFeed(refresh: true),
+                                                child: const Text('다시 시도'),
+                                              ),
+                                            ],
+                                          )
+                                        : const EmptyStateWidget(
+                                            icon: Icons.rate_review_outlined,
+                                            message: '아직 등록된 리뷰가 없어요',
+                                            subtitle: '첫 리뷰를 남겨보세요',
+                                          ),
+                                  ),
+                                ],
+                              );
+                            }
                             return CustomScrollView(
                               slivers: [
                                 _isGridView

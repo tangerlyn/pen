@@ -91,7 +91,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                 ),
                 title: const Text('리뷰 작성', style: AppTextStyles.titleMedium),
                 subtitle: const Text(
-                  '내가 사용한 잉크·펜·종이를 기록해요',
+                  '내가 사용한 잉크·펜을 기록해요',
                   style: AppTextStyles.labelMedium,
                 ),
                 contentPadding: const EdgeInsets.symmetric(
@@ -134,10 +134,13 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
   }
 
   Future<void> _onRefresh() async {
-    ref.invalidate(homeLatestReviewsProvider);
-    ref.invalidate(homePopularInksProvider);
-    ref.invalidate(homePopularPensProvider);
-    ref.invalidate(filteredPostsProvider);
+    // 새로 불러오기가 끝날 때까지 당김 인디케이터를 유지한다. 실패는 각 섹션이 따로 처리한다.
+    await Future.wait<Object?>([
+      ref.refresh(homeLatestReviewsProvider.future),
+      ref.refresh(homePopularInksProvider.future),
+      ref.refresh(homePopularPensProvider.future),
+      ref.refresh(filteredPostsProvider.future),
+    ].map((f) => f.then<Object?>((v) => v, onError: (_) => null)));
   }
 
   @override

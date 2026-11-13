@@ -216,13 +216,10 @@ class _InkShapeClipState extends State<InkShapeClip> {
   @override
   void initState() {
     super.initState();
-    debugPrint('[InkShapeClip] shape: ${widget.shape}');
     if (widget.shape == InkSwatchShape.bottle) {
       _maskImage = BottleMask._cached;
-      debugPrint('[InkShapeClip] cached image: $_maskImage');
       if (_maskImage == null) {
         BottleMask.load().then((img) {
-          debugPrint('[InkShapeClip] image loaded: ${img.width}x${img.height}');
           if (mounted) setState(() => _maskImage = img);
         }).catchError((e) {
           debugPrint('[InkShapeClip] load error: $e');
@@ -246,7 +243,6 @@ class _InkShapeClipState extends State<InkShapeClip> {
 
   @override
   Widget build(BuildContext context) {
-    debugPrint('[InkShapeClip] build - shape: ${widget.shape}, maskImage: $_maskImage');
     if (widget.shape != InkSwatchShape.bottle) {
       return ClipPath(clipper: InkShapeClipper(widget.shape), child: widget.child);
     }

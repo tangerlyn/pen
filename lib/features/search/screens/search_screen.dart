@@ -164,7 +164,17 @@ class _SuggestionsView extends ConsumerWidget {
       loading: () => const SizedBox.shrink(),
       error: (_, __) => const SizedBox.shrink(),
       data: (suggestions) {
-        if (suggestions.isEmpty) return const SizedBox.shrink();
+        if (suggestions.isEmpty) {
+          return Padding(
+            padding: const EdgeInsets.fromLTRB(16, 20, 16, 0),
+            child: Text(
+              '연관 검색어가 없어요',
+              style: AppTextStyles.bodyMedium.copyWith(
+                color: AppColors.textTertiary,
+              ),
+            ),
+          );
+        }
         return ListView.builder(
           itemCount: suggestions.length,
           itemBuilder: (_, i) => ListTile(
@@ -282,11 +292,11 @@ class _ResultsView extends ConsumerWidget {
     }
 
     if (state.error != null) {
-      return Center(
+      return const Center(
         child: Text(
-          '오류가 발생했어요\n${state.error}',
+          '검색하지 못했어요\n잠시 후 다시 시도해 주세요.',
           textAlign: TextAlign.center,
-          style: const TextStyle(color: AppColors.textSecondary),
+          style: TextStyle(color: AppColors.textSecondary),
         ),
       );
     }

@@ -19,7 +19,7 @@ class BlockedUsersScreen extends ConsumerWidget {
       appBar: AppBar(title: const Text('차단 목록')),
       body: blockedAsync.when(
         loading: () => const Center(child: CircularProgressIndicator()),
-        error: (e, _) => Center(child: Text('오류: $e')),
+        error: (_, _) => const Center(child: Text('차단 목록을 불러오지 못했어요.')),
         data: (users) {
           final valid = users.whereType<UserModel>().toList();
           if (valid.isEmpty) {
@@ -60,17 +60,17 @@ class BlockedUsersScreen extends ConsumerWidget {
   ) {
     showDialog(
       context: context,
-      builder: (_) => AlertDialog(
+      builder: (dialogContext) => AlertDialog(
         title: const Text('차단 해제'),
         content: Text('${target.nickname} 님의 차단을 해제하시겠습니까?'),
         actions: [
           TextButton(
-            onPressed: () => Navigator.pop(context),
+            onPressed: () => Navigator.pop(dialogContext),
             child: const Text('취소'),
           ),
           TextButton(
             onPressed: () async {
-              Navigator.pop(context);
+              Navigator.pop(dialogContext);
               await ref.read(userRepoProvider).unblock(myUid, target.uid);
               if (context.mounted) {
                 showCenterToast(

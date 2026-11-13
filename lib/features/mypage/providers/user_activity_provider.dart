@@ -33,6 +33,13 @@ final profileUserProvider = StreamProvider.family<UserModel?, String>((ref, uid)
   return ref.watch(userRepoProvider).watchUser(uid);
 });
 
+// 내가 차단한 uid 목록 — 다른 사람 프로필에서 차단 상태를 보여주는 데 사용
+final myBlockedUidsProvider = StreamProvider<List<String>>((ref) {
+  final uid = ref.watch(currentUidProvider);
+  if (uid == null) return Stream.value(const []);
+  return ref.watch(userRepoProvider).watchBlockedUids(uid);
+});
+
 final blockedUsersDetailProvider = StreamProvider<List<UserModel?>>((ref) {
   final uid = ref.watch(currentUidProvider);
   if (uid == null) return Stream.value([]);

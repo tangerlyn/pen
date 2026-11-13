@@ -61,6 +61,7 @@ class BlogBodyEditor extends StatefulWidget {
     this.hintText = '내용을 입력하세요',
     this.initialBlocks,
     this.maxTextLength,
+    this.maxImages,
     this.onFocusChanged,
     this.onTextChanged,
     this.onImagesInserted,
@@ -70,6 +71,8 @@ class BlogBodyEditor extends StatefulWidget {
   final String hintText;
   final List<EditorBlock>? initialBlocks;
   final int? maxTextLength;
+  /// 본문 전체에 넣을 수 있는 사진 최대 장수. null이면 제한 없음.
+  final int? maxImages;
   /// 본문 텍스트 블록 중 하나라도 포커스를 갖게/잃게 될 때 호출됨.
   /// 키보드 위 툴바를 본문 입력 중에만 보여주기 위한 용도.
   final ValueChanged<bool>? onFocusChanged;
@@ -121,6 +124,18 @@ class BlogBodyEditorState extends State<BlogBodyEditor> {
 
   List<EditorBlock> getBlocks() => List.unmodifiable(_blocks);
 
+  /// 추가로 넣을 수 있는 사진 장수. 제한이 없으면 null.
+  int? get _remainingImageSlots {
+    final max = widget.maxImages;
+    if (max == null) return null;
+    final count = _blocks.whereType<ImageEditorBlock>().length;
+    return (max - count).clamp(0, max);
+  }
+
+  void _showImageLimitToast() {
+    showCenterToast(context, message: '사진은 최대 ${widget.maxImages}장까지 넣을 수 있어요.');
+  }
+
   /// 이미지 블록은 업로드하고, Firestore 저장 가능한 Map 목록 반환.
   Future<List<Map<String, dynamic>>> buildContentBlocks({
     required Future<String> Function(File file) uploadImage,
@@ -141,10 +156,21 @@ class BlogBodyEditorState extends State<BlogBodyEditor> {
 
   /// 툴바의 "사진" 버튼 — 갤러리에서 여러 장 선택해 커서 위치에 삽입.
   Future<void> insertImagesFromGallery() async {
+    if (_remainingImageSlots == 0) {
+      _showImageLimitToast();
+      return;
+    }
     try {
       final picker = ImagePicker();
-      final xfiles = await picker.pickMultiImage(imageQuality: 85);
+      var xfiles = await picker.pickMultiImage(imageQuality: 85);
       if (xfiles.isEmpty || !mounted) return;
+      // 고르는 사이 개수가 바뀔 수 있으므로 고른 뒤 다시 계산한다.
+      final remaining = _remainingImageSlots;
+      if (remaining != null && xfiles.length > remaining) {
+        _showImageLimitToast();
+        if (remaining == 0) return;
+        xfiles = xfiles.take(remaining).toList();
+      }
       _insertImages(xfiles.map((xf) => File(xf.path)).toList());
       widget.onImagesInserted?.call(EditorImageSource.gallery, xfiles.length);
     } catch (_) {
@@ -154,10 +180,18 @@ class BlogBodyEditorState extends State<BlogBodyEditor> {
 
   /// 툴바의 "카메라" 버튼 — 촬영한 사진 1장을 커서 위치에 삽입.
   Future<void> insertImageFromCamera() async {
+    if (_remainingImageSlots == 0) {
+      _showImageLimitToast();
+      return;
+    }
     try {
       final picker = ImagePicker();
       final xfile = await picker.pickImage(source: ImageSource.camera, imageQuality: 85);
       if (xfile == null || !mounted) return;
+      if (_remainingImageSlots == 0) {
+        _showImageLimitToast();
+        return;
+      }
       _insertImages([File(xfile.path)]);
       widget.onImagesInserted?.call(EditorImageSource.camera, 1);
     } catch (_) {
@@ -366,11 +400,13 @@ class BlogEditorToolbar extends StatelessWidget {
           const SizedBox(width: 24),
           _ToolbarIconButton(
             icon: Icons.camera_alt_outlined,
+            tooltip: '사진 촬영',
             onTap: () => editorKey.currentState?.insertImageFromCamera(),
           ),
           const SizedBox(width: 20),
           _ToolbarIconButton(
             icon: Icons.photo_outlined,
+            tooltip: '사진 추가',
             onTap: () => editorKey.currentState?.insertImagesFromGallery(),
           ),
         ],
@@ -380,14 +416,20 @@ class BlogEditorToolbar extends StatelessWidget {
 }
 
 class _ToolbarIconButton extends StatelessWidget {
-  const _ToolbarIconButton({required this.icon, required this.onTap});
+  const _ToolbarIconButton({
+    required this.icon,
+    required this.onTap,
+    this.tooltip,
+  });
   final IconData icon;
   final VoidCallback onTap;
+  final String? tooltip;
 
   @override
   Widget build(BuildContext context) {
     return IconButton(
       icon: Icon(icon, size: 22),
+      tooltip: tooltip,
       color: AppColors.textSecondary,
       onPressed: onTap,
     );

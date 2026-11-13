@@ -35,8 +35,12 @@ class FcmService {
       if (uid != null) onTokenRefresh(uid, token);
     });
 
-    // 포그라운드 메시지 → 로컬 알림
-    FirebaseMessaging.onMessage.listen(_showLocalNotification);
+    // 포그라운드 메시지 → 로컬 알림 (Android만).
+    // iOS는 위 presentation 옵션으로 시스템 배너가 이미 뜨므로, 로컬 알림까지
+    // 띄우면 같은 알림이 두 번 보인다. 배너를 탭하면 onMessageOpenedApp으로 온다.
+    if (defaultTargetPlatform == TargetPlatform.android) {
+      FirebaseMessaging.onMessage.listen(_showLocalNotification);
+    }
 
     // 백그라운드에서 알림 탭
     FirebaseMessaging.onMessageOpenedApp.listen(_handleTap);

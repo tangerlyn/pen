@@ -76,7 +76,10 @@ class ArchiveState {
     this.pens = const [],
     this.rawInks = const [],
     this.rawPens = const [],
-    this.isLoading = false,
+    this.isLoadingInks = false,
+    this.isLoadingPens = false,
+    this.inkLoadFailed = false,
+    this.penLoadFailed = false,
     this.inkFilter = const InkFilter(),
     this.penFilter = const PenFilter(),
     this.inkSort = ArchiveSortOption.defaultOrder,
@@ -95,7 +98,12 @@ class ArchiveState {
   final List<PenModel> pens;
   final List<InkModel> rawInks;
   final List<PenModel> rawPens;
-  final bool isLoading;
+  // 탭별로 따로 관리 — 한쪽 탭 로드가 끝났다고 다른 탭의 로딩 표시가 꺼지지 않게
+  final bool isLoadingInks;
+  final bool isLoadingPens;
+  // 마지막 로드가 실패했는지 — "결과 없음"과 구분해서 다시 시도 버튼을 보여준다
+  final bool inkLoadFailed;
+  final bool penLoadFailed;
   final InkFilter inkFilter;
   final PenFilter penFilter;
   final ArchiveSortOption inkSort;
@@ -116,7 +124,10 @@ class ArchiveState {
     List<PenModel>? pens,
     List<InkModel>? rawInks,
     List<PenModel>? rawPens,
-    bool? isLoading,
+    bool? isLoadingInks,
+    bool? isLoadingPens,
+    bool? inkLoadFailed,
+    bool? penLoadFailed,
     InkFilter? inkFilter,
     PenFilter? penFilter,
     ArchiveSortOption? inkSort,
@@ -139,7 +150,10 @@ class ArchiveState {
       pens: pens ?? this.pens,
       rawInks: rawInks ?? this.rawInks,
       rawPens: rawPens ?? this.rawPens,
-      isLoading: isLoading ?? this.isLoading,
+      isLoadingInks: isLoadingInks ?? this.isLoadingInks,
+      isLoadingPens: isLoadingPens ?? this.isLoadingPens,
+      inkLoadFailed: inkLoadFailed ?? this.inkLoadFailed,
+      penLoadFailed: penLoadFailed ?? this.penLoadFailed,
       inkFilter: inkFilter ?? this.inkFilter,
       penFilter: penFilter ?? this.penFilter,
       inkSort: inkSort ?? this.inkSort,
@@ -161,7 +175,7 @@ class ArchiveState {
 const _unset = Object();
 
 class ArchiveNotifier extends StateNotifier<ArchiveState> {
-  ArchiveNotifier(this._ref) : super(const ArchiveState()) {
+  ArchiveNotifier(this._ref) : super(const ArchiveState(isLoadingInks: true)) {
     // 첫 build() 도중 동기 상태 변경이 Flutter 렌더 파이프라인을 깨지 않도록
     // microtask로 미뤄서 현재 프레임이 완전히 끝난 뒤에 로드 시작
     Future.microtask(_load);
@@ -169,26 +183,49 @@ class ArchiveNotifier extends StateNotifier<ArchiveState> {
 
   final Ref _ref;
 
+  // 탭별 요청 세대 — 필터/검색을 빠르게 바꾸면 이전 요청이 나중에 끝나서
+  // 최신 결과를 덮어쓸 수 있어, 가장 마지막 요청의 결과만 반영한다.
+  int _inkGen = 0;
+  int _penGen = 0;
+
   Future<void> _load() async {
-    state = state.copyWith(isLoading: true);
-    try {
-      final repo = _ref.read(archiveRepoProvider);
-      switch (state.tabIndex) {
-        case 0:
+    final repo = _ref.read(archiveRepoProvider);
+    switch (state.tabIndex) {
+      case 0:
+        final gen = ++_inkGen;
+        state = state.copyWith(isLoadingInks: true, inkLoadFailed: false);
+        try {
           final result = await repo.getInks(
             brands: state.inkFilter.brands.isNotEmpty ? state.inkFilter.brands : null,
             colorFamilies: state.inkFilter.colorFamilies.isNotEmpty ? state.inkFilter.colorFamilies : null,
             inkTypes: state.inkFilter.inkTypes.isNotEmpty ? state.inkFilter.inkTypes : null,
             search: state.search.isNotEmpty ? state.search : null,
           );
+          if (!mounted || gen != _inkGen) return;
           state = state.copyWith(
             rawInks: result.items,
             inks: _sortInks(result.items, state.inkSort),
-            isLoading: false,
+            isLoadingInks: false,
             inkLastDoc: result.lastDoc,
             inkHasMore: result.hasMore,
           );
-        case 1:
+        } catch (e, st) {
+          debugPrint('ArchiveNotifier._load(ink) error: $e');
+          debugPrint('$st');
+          if (!mounted || gen != _inkGen) return;
+          state = state.copyWith(
+            isLoadingInks: false,
+            inkLoadFailed: true,
+            rawInks: const [],
+            inks: const [],
+            inkLastDoc: null,
+            inkHasMore: false,
+          );
+        }
+      case 1:
+        final gen = ++_penGen;
+        state = state.copyWith(isLoadingPens: true, penLoadFailed: false);
+        try {
           final result = await repo.getPens(
             brands: state.penFilter.brands.isNotEmpty ? state.penFilter.brands : null,
             nibSize: state.penFilter.nibSize,
@@ -196,18 +233,27 @@ class ArchiveNotifier extends StateNotifier<ArchiveState> {
             fillTypes: state.penFilter.fillTypes.isNotEmpty ? state.penFilter.fillTypes : null,
             search: state.search.isNotEmpty ? state.search : null,
           );
+          if (!mounted || gen != _penGen) return;
           state = state.copyWith(
             rawPens: result.items,
             pens: _sortPens(result.items, state.penSort),
-            isLoading: false,
+            isLoadingPens: false,
             penLastDoc: result.lastDoc,
             penHasMore: result.hasMore,
           );
-      }
-    } catch (e, st) {
-      debugPrint('ArchiveNotifier._load error: $e');
-      debugPrint('$st');
-      state = state.copyWith(isLoading: false);
+        } catch (e, st) {
+          debugPrint('ArchiveNotifier._load(pen) error: $e');
+          debugPrint('$st');
+          if (!mounted || gen != _penGen) return;
+          state = state.copyWith(
+            isLoadingPens: false,
+            penLoadFailed: true,
+            rawPens: const [],
+            pens: const [],
+            penLastDoc: null,
+            penHasMore: false,
+          );
+        }
     }
   }
 
@@ -218,9 +264,10 @@ class ArchiveNotifier extends StateNotifier<ArchiveState> {
     final repo = _ref.read(archiveRepoProvider);
     switch (state.tabIndex) {
       case 0:
-        if (!state.inkHasMore || state.isLoadingMoreInks || state.isLoading) {
+        if (!state.inkHasMore || state.isLoadingMoreInks || state.isLoadingInks) {
           return;
         }
+        final gen = _inkGen;
         state = state.copyWith(isLoadingMoreInks: true);
         try {
           final result = await repo.getInks(
@@ -230,6 +277,12 @@ class ArchiveNotifier extends StateNotifier<ArchiveState> {
             search: state.search.isNotEmpty ? state.search : null,
             lastDoc: state.inkLastDoc,
           );
+          if (!mounted) return;
+          // 그 사이 필터/검색이 바뀌어 새 로드가 시작됐으면 이전 목록에 이어붙이지 않는다
+          if (gen != _inkGen) {
+            state = state.copyWith(isLoadingMoreInks: false);
+            return;
+          }
           final merged = [...state.rawInks, ...result.items];
           state = state.copyWith(
             rawInks: merged,
@@ -241,12 +294,14 @@ class ArchiveNotifier extends StateNotifier<ArchiveState> {
         } catch (e, st) {
           debugPrint('ArchiveNotifier.loadMore(ink) error: $e');
           debugPrint('$st');
+          if (!mounted) return;
           state = state.copyWith(isLoadingMoreInks: false);
         }
       case 1:
-        if (!state.penHasMore || state.isLoadingMorePens || state.isLoading) {
+        if (!state.penHasMore || state.isLoadingMorePens || state.isLoadingPens) {
           return;
         }
+        final gen = _penGen;
         state = state.copyWith(isLoadingMorePens: true);
         try {
           final result = await repo.getPens(
@@ -257,6 +312,11 @@ class ArchiveNotifier extends StateNotifier<ArchiveState> {
             search: state.search.isNotEmpty ? state.search : null,
             lastDoc: state.penLastDoc,
           );
+          if (!mounted) return;
+          if (gen != _penGen) {
+            state = state.copyWith(isLoadingMorePens: false);
+            return;
+          }
           final merged = [...state.rawPens, ...result.items];
           state = state.copyWith(
             rawPens: merged,
@@ -268,6 +328,7 @@ class ArchiveNotifier extends StateNotifier<ArchiveState> {
         } catch (e, st) {
           debugPrint('ArchiveNotifier.loadMore(pen) error: $e');
           debugPrint('$st');
+          if (!mounted) return;
           state = state.copyWith(isLoadingMorePens: false);
         }
     }

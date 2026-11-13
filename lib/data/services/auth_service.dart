@@ -3,6 +3,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/foundation.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_naver_login/flutter_naver_login.dart';
 import 'package:flutter_naver_login/interface/types/naver_login_status.dart';
 import 'package:kakao_flutter_sdk_user/kakao_flutter_sdk_user.dart' as kakao;
@@ -53,13 +54,17 @@ class AuthService {
   }
 
   Future<String> _kakaoAccessToken() async {
-    final kakao.OAuthToken token;
-    if (await kakao.isKakaoTalkInstalled()) {
-      token = await kakao.UserApi.instance.loginWithKakaoTalk();
-    } else {
-      token = await kakao.UserApi.instance.loginWithKakaoAccount();
+    if (!await kakao.isKakaoTalkInstalled()) {
+      return (await kakao.UserApi.instance.loginWithKakaoAccount()).accessToken;
     }
-    return token.accessToken;
+    try {
+      return (await kakao.UserApi.instance.loginWithKakaoTalk()).accessToken;
+    } catch (e) {
+      // 사용자가 직접 취소한 경우는 그대로 전달하고, 그 외(카카오톡 미로그인,
+      // 앱 연동 오류 등)는 카카오계정 웹 로그인으로 한 번 더 시도한다.
+      if (e is PlatformException && e.code == 'CANCELED') rethrow;
+      return (await kakao.UserApi.instance.loginWithKakaoAccount()).accessToken;
+    }
   }
 
   Future<String> _naverAccessToken() async {
@@ -160,7 +165,11 @@ class AuthService {
     required List<String> interests,
     String? profileImageUrl,
   }) async {
-    await _db.collection('users').doc(uid).set({
+    final ref = _db.collection('users').doc(uid);
+    // 닉네임이 비어 있던 기존 회원이 가입 화면을 다시 거치는 경우에도
+    // 팔로워 수·경험치·가입일이 0으로 초기화되지 않도록, 없는 필드만 채운다.
+    final existing = (await ref.get()).data() ?? const <String, dynamic>{};
+    await ref.set({
       'uid': uid,
       'nickname': nickname,
       // loginProvider를 모르는 채로(예: 프로세스 재시작 후 pendingProvider 유실)
@@ -169,19 +178,21 @@ class AuthService {
       if (loginProvider.isNotEmpty) 'loginProvider': loginProvider,
       'interests': interests,
       'profileImageUrl': profileImageUrl,
-      'bio': '',
-      'followerCount': 0,
-      'followingCount': 0,
-      'exp': 0,
-      'notificationSettings': {
-        'likes': true,
-        'comments': true,
-        'follows': true,
-      },
+      if (!existing.containsKey('bio')) 'bio': '',
+      if (!existing.containsKey('followerCount')) 'followerCount': 0,
+      if (!existing.containsKey('followingCount')) 'followingCount': 0,
+      if (!existing.containsKey('exp')) 'exp': 0,
+      if (!existing.containsKey('notificationSettings'))
+        'notificationSettings': {
+          'likes': true,
+          'comments': true,
+          'follows': true,
+        },
       'termsAgreedAt': FieldValue.serverTimestamp(),
       // 가입 화면에서 "[필수] 만 14세 이상입니다"를 체크해야만 여기까지 온다
       'ageConfirmedAt': FieldValue.serverTimestamp(),
-      'createdAt': FieldValue.serverTimestamp(),
+      if (!existing.containsKey('createdAt'))
+        'createdAt': FieldValue.serverTimestamp(),
     }, SetOptions(merge: true));
   }
 
@@ -215,10 +226,9 @@ class AuthService {
     await _auth.signOut();
   }
 
-  // 탈퇴 후처리(리뷰/글/댓글/대댓글 작성자를 "알 수 없음"으로 표시,
-  // 잉크북/팔로우/알림/스토리지 정리)는 Cloud Functions의 onUserDeleted
-  // 트리거가 Admin 권한으로 서버에서 처리한다 — 콘텐츠 자체는 지우지
-  // 않는다. 클라이언트가 먼저 Firestore 데이터를 지우고 마지막에 계정을
+  // 탈퇴 후처리(작성한 리뷰/글/댓글/대댓글 삭제 — 남의 답글이 달린 댓글은
+  // 내용만 비워 '삭제된 댓글'로 남김 — 와 잉크북/팔로우/알림/스토리지 정리)는
+  // Cloud Functions의 onUserDeleted 트리거가 Admin 권한으로 서버에서 처리한다. 클라이언트가 먼저 Firestore 데이터를 지우고 마지막에 계정을
   // 삭제하면, 계정 삭제가 (requires-recent-login 등으로) 실패했을 때
   // "로그인은 되는데 데이터는 사라진" 유령 계정 상태가 생길 수 있어
   // 클라이언트는 재인증 후 계정 삭제만 성공시키는 방식으로 바꿨다.
@@ -229,23 +239,42 @@ class AuthService {
 
     final doc = await _db.collection('users').doc(uid).get();
     final loginProvider = (doc.data()?['loginProvider'] as String?) ?? '';
-    await _reauthenticate(loginProvider);
+    final appleAuthCode = await _reauthenticate(loginProvider);
 
-    try {
-      await FlutterNaverLogin.logOut();
-    } catch (_) {}
-    try {
-      await kakao.UserApi.instance.unlink();
-    } catch (_) {}
+    // App Store 심사 지침 5.1.1(v): Apple로 가입한 계정을 지울 때는 Apple
+    // 토큰도 함께 폐기해야 한다. 실패해도 탈퇴 자체는 막지 않는다.
+    if (appleAuthCode != null && appleAuthCode.isNotEmpty) {
+      try {
+        await _auth.revokeTokenWithAuthorizationCode(appleAuthCode);
+      } catch (e) {
+        debugPrint('[Auth] Apple token revoke failed: $e');
+      }
+    }
+
+    // 소셜 연결 해제는 best-effort — 실패해도 계정 삭제는 진행한다
+    if (loginProvider == 'naver') {
+      try {
+        await FlutterNaverLogin.logOutAndDeleteToken();
+      } catch (e) {
+        debugPrint('[Auth] Naver token delete failed: $e');
+      }
+    } else if (loginProvider == 'kakao') {
+      try {
+        await kakao.UserApi.instance.unlink();
+      } catch (e) {
+        debugPrint('[Auth] Kakao unlink failed: $e');
+      }
+    }
 
     // 카카오·네이버는 재인증 때 다시 로그인하므로 그 이후의 currentUser를 지운다
     await _auth.currentUser!.delete();
   }
 
   // ── 탈퇴 전 재인증 ───────────────────────────────────────────────
-  Future<void> _reauthenticate(String provider) async {
+  /// Apple 계정이면 토큰 폐기에 쓸 새 authorizationCode를 돌려준다.
+  Future<String?> _reauthenticate(String provider) async {
     final user = _auth.currentUser;
-    if (user == null) return;
+    if (user == null) return null;
 
     switch (provider) {
       case 'kakao':
@@ -277,13 +306,14 @@ class AuthService {
             accessToken: appleCredential.authorizationCode,
           ),
         );
-        break;
+        return appleCredential.authorizationCode;
 
       default:
         // loginProvider를 알 수 없으면(예: 유령 계정) 재인증을 생략하고
         // 기존 세션으로 진행 — 실패하면 user.delete()에서 자연스럽게 에러가 난다.
         break;
     }
+    return null;
   }
 
   // ── Private helpers ───────────────────────────────────────────────

@@ -328,16 +328,26 @@ class _LikedGrid extends ConsumerWidget {
       ...posts.map(_LikedPost.new),
     ]..sort((a, b) => b.createdAt.compareTo(a.createdAt));
 
+    // 불러오기에 실패했는데 "좋아요한 게시물이 없습니다"로 보이면 오해할 수 있다
+    final hasError = reviewsAsync.hasError || postsAsync.hasError;
     if (items.isEmpty) {
       return RefreshIndicator(
         onRefresh: refresh,
         child: ListView(
-          children: const [
-            SizedBox(height: 120),
-            EmptyStateWidget(
-              icon: Icons.favorite_border,
-              message: '좋아요한 게시물이 없습니다',
-            ),
+          children: [
+            const SizedBox(height: 120),
+            hasError
+                ? const Center(
+                    child: Text(
+                      '좋아요한 게시물을 불러오지 못했어요.\n아래로 당겨 다시 시도해주세요.',
+                      textAlign: TextAlign.center,
+                      style: TextStyle(color: AppColors.textSecondary),
+                    ),
+                  )
+                : const EmptyStateWidget(
+                    icon: Icons.favorite_border,
+                    message: '좋아요한 게시물이 없습니다',
+                  ),
           ],
         ),
       );

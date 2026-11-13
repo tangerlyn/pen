@@ -82,14 +82,29 @@ class _SignupNicknameScreenState extends ConsumerState<SignupNicknameScreen> {
       _isAvailable = null;
     });
 
-    final available = await ref
-        .read(authProvider.notifier)
-        .checkNickname(nickname);
-    setState(() {
-      _isChecking = false;
-      _isAvailable = available;
-      _lastChecked = nickname;
-    });
+    try {
+      final available = await ref
+          .read(authProvider.notifier)
+          .checkNickname(nickname);
+      if (!mounted) return;
+      setState(() {
+        _isAvailable = available;
+        _lastChecked = nickname;
+      });
+    } catch (_) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('닉네임을 확인하지 못했어요. 다시 시도해주세요.')),
+      );
+    } finally {
+      if (mounted) setState(() => _isChecking = false);
+    }
+  }
+
+  // 가입을 이어가지 않고 다른 소셜 계정으로 들어가고 싶을 때의 출구.
+  // 로그아웃하면 라우터 redirect가 /login으로 보낸다.
+  Future<void> _signOut() async {
+    await ref.read(authProvider.notifier).signOut();
   }
 
   @override
@@ -102,7 +117,18 @@ class _SignupNicknameScreenState extends ConsumerState<SignupNicknameScreen> {
         _allAgreed;
 
     return Scaffold(
-      appBar: AppBar(title: const Text('프로필 설정')),
+      appBar: AppBar(
+        title: const Text('프로필 설정'),
+        actions: [
+          TextButton(
+            onPressed: state.isLoading ? null : _signOut,
+            child: const Text(
+              '다른 계정으로 로그인',
+              style: TextStyle(color: AppColors.textSecondary),
+            ),
+          ),
+        ],
+      ),
       body: SafeArea(
         child: SingleChildScrollView(
           padding: const EdgeInsets.all(24),
@@ -156,6 +182,7 @@ class _SignupNicknameScreenState extends ConsumerState<SignupNicknameScreen> {
                       onChanged: (_) {
                         setState(() {
                           _isAvailable = null;
+                          _lastChecked = '';
                         });
                       },
                       decoration: const InputDecoration(

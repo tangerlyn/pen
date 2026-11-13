@@ -7,6 +7,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:image_picker/image_picker.dart';
 import '../../../core/theme/app_theme.dart';
+import '../../../data/models/pen_model.dart';
 import '../../../shared/providers/providers.dart';
 import '../../../features/archive/providers/archive_provider.dart';
 import '../../../features/mypage/screens/ink_crop_screen.dart';
@@ -21,7 +22,10 @@ import '../tap_scale.dart';
 const _kInkTypeLabels = ['일반', '펄', '테'];
 const _kInkTypeValues = ['normal', 'shimmer', 'sheen'];
 
-const _kFillTypes = ['카트리지·컨버터', '피스톤필러', '아이드로퍼', '진공'];
+const _kFillTypes = kPenFillTypes;
+
+// 브랜드/제품명 최대 길이
+const _kNameMaxLength = 40;
 
 // ── 진입 함수 ─────────────────────────────────────────────────────────────────
 
@@ -232,6 +236,13 @@ class _AddProductBottomSheetState extends ConsumerState<AddProductBottomSheet> {
 
         case 'pen':
           final model = _penModelCtrl.text.trim();
+          final exists = await repo.penExists(brand, model);
+          if (exists) {
+            if (mounted) {
+              showCenterToast(context, message: '이미 등록된 만년필입니다.');
+            }
+            return;
+          }
           String? photoUrl;
           if (_penPhoto != null) {
             photoUrl = await ref
@@ -253,6 +264,8 @@ class _AddProductBottomSheetState extends ConsumerState<AddProductBottomSheet> {
       }
 
       ref.read(archiveProvider.notifier).refresh();
+      // 새 브랜드가 생겼을 수 있으니 브랜드 필터 옵션도 다시 불러온다
+      ref.invalidate(_type == 'ink' ? inkBrandsProvider : penBrandsProvider);
       if (!mounted) return;
 
       if (widget.navigateToDetailOnSuccess) {
@@ -274,10 +287,11 @@ class _AddProductBottomSheetState extends ConsumerState<AddProductBottomSheet> {
         widget.onAdded?.call(id, displayName);
       }
     } catch (e) {
+      debugPrint('AddProductBottomSheet._submit error: $e');
       if (mounted) {
         showCenterToast(
           context,
-          message: '등록 실패: $e',
+          message: '등록하지 못했어요. 잠시 후 다시 시도해주세요.',
           icon: Icons.error_outline,
           iconColor: AppColors.error,
         );
@@ -626,6 +640,7 @@ class _AddProductBottomSheetState extends ConsumerState<AddProductBottomSheet> {
       const SizedBox(height: 6),
       TextField(
         controller: ctrl,
+        maxLength: _kNameMaxLength,
         keyboardType: keyboard,
         inputFormatters: inputFormatters,
         style: const TextStyle(fontSize: 14),
@@ -635,6 +650,7 @@ class _AddProductBottomSheetState extends ConsumerState<AddProductBottomSheet> {
         },
         decoration: InputDecoration(
           hintText: hint,
+          counterText: '',
           hintStyle: AppTextStyles.labelMedium.copyWith(
             color: AppColors.textTertiary,
             fontWeight: FontWeight.w400,

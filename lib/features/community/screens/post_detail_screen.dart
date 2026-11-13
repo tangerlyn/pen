@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:cached_network_image/cached_network_image.dart';
@@ -27,7 +28,8 @@ import 'post_write_screen.dart';
 part '../widgets/post_detail_content.dart';
 part '../widgets/post_comment_widgets.dart';
 
-final _postAuthorProvider = StreamProvider.family<UserModel?, String>((
+final _postAuthorProvider =
+    StreamProvider.autoDispose.family<UserModel?, String>((
   ref,
   uid,
 ) {
@@ -97,11 +99,17 @@ class _PostDetailScreenState extends ConsumerState<PostDetailScreen> {
                 body: text,
               ),
         );
-        final levelUp = await ref
-            .read(userRepoProvider)
-            .addExpAndCheck(user.uid, LevelSystem.expComment);
-        if (levelUp != null && mounted) {
-          ref.read(levelUpProvider.notifier).state = levelUp;
+        // 댓글은 이미 등록됐으니 EXP 지급 실패는 무시한다 (입력창은 비우고
+        // "인터넷 연결" 오류도 띄우지 않는다)
+        try {
+          final levelUp = await ref
+              .read(userRepoProvider)
+              .addExpAndCheck(user.uid, LevelSystem.expComment);
+          if (levelUp != null && mounted) {
+            ref.read(levelUpProvider.notifier).state = levelUp;
+          }
+        } catch (e) {
+          if (kDebugMode) debugPrint('addExpAndCheck(comment) failed: $e');
         }
       }
       _composer.textController.clear();
@@ -175,12 +183,16 @@ class _PostDetailScreenState extends ConsumerState<PostDetailScreen> {
                 title: const Text('사용자 차단하기'),
                 onTap: () async {
                   Navigator.pop(context);
-                  await showBlockDialog(
+                  final blocked = await showBlockDialog(
                     context,
                     ref,
                     targetUid: post.authorId,
                     targetNickname: post.authorNickname,
                   );
+                  if (!blocked) return;
+                  ref.invalidate(communityFeedProvider);
+                  // 차단한 사람의 글이므로 상세 화면을 닫는다
+                  if (mounted) Navigator.of(this.context).pop();
                 },
               ),
               ListTile(
@@ -224,15 +236,31 @@ class _PostDetailScreenState extends ConsumerState<PostDetailScreen> {
           TextButton(
             onPressed: () async {
               Navigator.pop(context);
-              // Storage 이미지 삭제
-              if (post.imageUrls.isNotEmpty) {
-                final storage = ref.read(storageServiceProvider);
-                for (final url in post.imageUrls) {
+              try {
+                await ref.read(postRepositoryProvider).deletePost(post.id);
+              } catch (e) {
+                if (kDebugMode) debugPrint('deletePost failed: $e');
+                if (mounted) {
+                  ScaffoldMessenger.of(this.context).showSnackBar(
+                    const SnackBar(
+                      content: Text('게시글을 삭제하지 못했어요. 잠시 후 다시 시도해 주세요.'),
+                      duration: Duration(seconds: 3),
+                    ),
+                  );
+                }
+                return;
+              }
+              final storage = ref.read(storageServiceProvider);
+              ref.invalidate(communityFeedProvider);
+              if (mounted) Navigator.pop(this.context);
+              // 문서를 먼저 지운 뒤 Storage 이미지는 가능한 만큼만 정리한다
+              for (final url in post.imageUrls) {
+                try {
                   await storage.deleteByUrl(url);
+                } catch (e) {
+                  if (kDebugMode) debugPrint('deleteByUrl failed: $e');
                 }
               }
-              await ref.read(postRepositoryProvider).deletePost(post.id);
-              if (mounted) Navigator.pop(context);
             },
             child: const Text('삭제', style: TextStyle(color: AppColors.error)),
           ),
@@ -738,7 +766,12 @@ class _PostDetailScreenState extends ConsumerState<PostDetailScreen> {
               },
               loading: () =>
                   const SingleChildScrollView(child: DetailSkeleton()),
-              error: (e, _) => Center(child: Text('오류: $e')),
+              error: (e, _) {
+                if (kDebugMode) debugPrint('postDetailProvider error: $e');
+                return const Center(
+                  child: Text('게시글을 불러오지 못했어요. 잠시 후 다시 시도해 주세요.'),
+                );
+              },
             ),
           ),
           // 댓글 입력창

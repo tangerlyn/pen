@@ -12,7 +12,8 @@ import '../level_badge.dart';
 import '../tap_scale.dart';
 import '../user_avatar.dart';
 
-final _postCardAuthorProvider = StreamProvider.family<UserModel?, String>((
+final _postCardAuthorProvider =
+    StreamProvider.autoDispose.family<UserModel?, String>((
   ref,
   uid,
 ) {
@@ -42,7 +43,12 @@ class PostCard extends ConsumerWidget {
     // 목록은 한 번 불러온 뒤 실시간으로 안 갱신되는 스냅샷이라, 상세 화면에서
     // 좋아요/댓글을 누르고 돌아와도 숫자가 그대로였다. 좋아요 여부(isLiked)처럼
     // 문서를 실시간으로 watch해서 좋아요/댓글 수만 최신값으로 덮어씌운다.
-    final live = ref.watch(postDetailProvider(post.id)).valueOrNull;
+    final liveAsync = ref.watch(postDetailProvider(post.id));
+    // 삭제된 글(문서가 사라짐)은 목록에서 바로 숨긴다
+    if (liveAsync.hasValue && liveAsync.value == null) {
+      return const SizedBox.shrink();
+    }
+    final live = liveAsync.valueOrNull;
     final likeCount = live?.likeCount ?? post.likeCount;
     final commentCount = live?.commentCount ?? post.commentCount;
 

@@ -2,10 +2,13 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../data/models/review_model.dart';
 import '../../../data/models/reply_model.dart';
+import '../../../core/constants/app_constants.dart';
 import '../../../core/theme/app_theme.dart';
 import '../../../core/utils/profile_navigation.dart';
 import '../../../core/utils/post_date_format.dart';
 import '../../providers/providers.dart';
+import '../../../features/home/providers/feed_provider.dart';
+import '../../../features/home/providers/home_discovery_provider.dart';
 import '../../../features/home/providers/review_detail_provider.dart';
 import '../content_moderation.dart';
 import '../level_badge.dart';
@@ -20,6 +23,36 @@ final _commentAuthorProvider = StreamProvider.family<UserModel?, String>((
 ) {
   return ref.watch(userRepoProvider).watchUser(uid);
 });
+
+Future<bool> _confirmDelete(BuildContext context, String label) async {
+  final confirmed = await showDialog<bool>(
+    context: context,
+    builder: (dialogContext) => AlertDialog(
+      title: Text('$label 삭제'),
+      content: Text('$label을 삭제할까요?'),
+      actions: [
+        TextButton(
+          onPressed: () => Navigator.pop(dialogContext, false),
+          child: const Text('취소'),
+        ),
+        TextButton(
+          onPressed: () => Navigator.pop(dialogContext, true),
+          child: const Text('삭제', style: TextStyle(color: AppColors.error)),
+        ),
+      ],
+    ),
+  );
+  return confirmed == true;
+}
+
+void _showNetworkError(BuildContext context) {
+  ScaffoldMessenger.of(context).showSnackBar(
+    const SnackBar(
+      content: Text('인터넷 연결을 확인해주세요'),
+      duration: Duration(seconds: 3),
+    ),
+  );
+}
 
 class CommentTile extends ConsumerStatefulWidget {
   const CommentTile({
@@ -115,10 +148,17 @@ class _CommentTileState extends ConsumerState<CommentTile> {
                   await Future.delayed(const Duration(milliseconds: 100));
                   if (!mounted) return;
                   FocusScope.of(context).unfocus();
-                  await ref
-                      .read(reviewRepoProvider)
-                      .deleteComment(widget.reviewId, widget.comment.id);
-                  widget.onDeleted?.call();
+                  if (!await _confirmDelete(context, '댓글') || !mounted) {
+                    return;
+                  }
+                  try {
+                    await ref
+                        .read(reviewRepoProvider)
+                        .deleteComment(widget.reviewId, widget.comment.id);
+                    widget.onDeleted?.call();
+                  } catch (_) {
+                    if (mounted) _showNetworkError(context);
+                  }
                 },
               ),
             ] else ...[
@@ -127,12 +167,19 @@ class _CommentTileState extends ConsumerState<CommentTile> {
                 title: const Text('차단'),
                 onTap: () async {
                   Navigator.pop(context);
-                  await showBlockDialog(
+                  // 차단 직후 이 타일이 목록에서 빠지며 dispose될 수 있어 컨테이너를 미리 잡아 둔다.
+                  final container = ProviderScope.containerOf(context);
+                  final blocked = await showBlockDialog(
                     context,
                     ref,
                     targetUid: widget.comment.authorId,
                     targetNickname: _nickname,
                   );
+                  if (blocked) {
+                    container
+                      ..invalidate(feedProvider)
+                      ..invalidate(homeLatestReviewsProvider);
+                  }
                 },
               ),
               ListTile(
@@ -169,9 +216,15 @@ class _CommentTileState extends ConsumerState<CommentTile> {
       widget.onEditEnd?.call();
       return;
     }
-    await ref
-        .read(reviewRepoProvider)
-        .updateComment(widget.reviewId, widget.comment.id, newBody);
+    try {
+      await ref
+          .read(reviewRepoProvider)
+          .updateComment(widget.reviewId, widget.comment.id, newBody);
+    } catch (_) {
+      if (mounted) _showNetworkError(context);
+      return;
+    }
+    if (!mounted) return;
     setState(() => _isEditing = false);
     widget.onEditEnd?.call();
   }
@@ -210,6 +263,7 @@ class _CommentTileState extends ConsumerState<CommentTile> {
                       children: list
                           .map(
                             (r) => _ReplyTile(
+                              key: ValueKey(r.id),
                               reply: r,
                               reviewId: widget.reviewId,
                               reviewAuthorId: widget.reviewAuthorId,
@@ -340,6 +394,7 @@ class _CommentTileState extends ConsumerState<CommentTile> {
                     ),
                   ),
                   maxLines: null,
+                  maxLength: AppConstants.maxComment,
                 ),
                 Row(
                   mainAxisAlignment: MainAxisAlignment.end,
@@ -374,6 +429,7 @@ class _CommentTileState extends ConsumerState<CommentTile> {
 // ── 답글 타일 ──────────────────────────────────────────────────
 class _ReplyTile extends ConsumerStatefulWidget {
   const _ReplyTile({
+    super.key,
     required this.reply,
     required this.reviewId,
     required this.reviewAuthorId,
@@ -462,14 +518,21 @@ class _ReplyTileState extends ConsumerState<_ReplyTile> {
                   await Future.delayed(const Duration(milliseconds: 100));
                   if (!mounted) return;
                   FocusScope.of(context).unfocus();
-                  await ref
-                      .read(reviewRepoProvider)
-                      .deleteReply(
-                        widget.reviewId,
-                        widget.commentId,
-                        widget.reply.id,
-                      );
-                  widget.onDeleted?.call();
+                  if (!await _confirmDelete(context, '답글') || !mounted) {
+                    return;
+                  }
+                  try {
+                    await ref
+                        .read(reviewRepoProvider)
+                        .deleteReply(
+                          widget.reviewId,
+                          widget.commentId,
+                          widget.reply.id,
+                        );
+                    widget.onDeleted?.call();
+                  } catch (_) {
+                    if (mounted) _showNetworkError(context);
+                  }
                 },
               ),
             ] else ...[
@@ -478,12 +541,19 @@ class _ReplyTileState extends ConsumerState<_ReplyTile> {
                 title: const Text('차단'),
                 onTap: () async {
                   Navigator.pop(context);
-                  await showBlockDialog(
+                  // 차단 직후 이 타일이 목록에서 빠지며 dispose될 수 있어 컨테이너를 미리 잡아 둔다.
+                  final container = ProviderScope.containerOf(context);
+                  final blocked = await showBlockDialog(
                     context,
                     ref,
                     targetUid: widget.reply.authorId,
                     targetNickname: widget.reply.authorNickname,
                   );
+                  if (blocked) {
+                    container
+                      ..invalidate(feedProvider)
+                      ..invalidate(homeLatestReviewsProvider);
+                  }
                 },
               ),
               ListTile(
@@ -520,14 +590,20 @@ class _ReplyTileState extends ConsumerState<_ReplyTile> {
       widget.onEditEnd?.call();
       return;
     }
-    await ref
-        .read(reviewRepoProvider)
-        .updateReply(
-          widget.reviewId,
-          widget.commentId,
-          widget.reply.id,
-          newBody,
-        );
+    try {
+      await ref
+          .read(reviewRepoProvider)
+          .updateReply(
+            widget.reviewId,
+            widget.commentId,
+            widget.reply.id,
+            newBody,
+          );
+    } catch (_) {
+      if (mounted) _showNetworkError(context);
+      return;
+    }
+    if (!mounted) return;
     setState(() => _isEditing = false);
     widget.onEditEnd?.call();
   }
@@ -618,6 +694,7 @@ class _ReplyTileState extends ConsumerState<_ReplyTile> {
                       ),
                     ),
                     maxLines: null,
+                    maxLength: AppConstants.maxReply,
                   ),
                   Row(
                     mainAxisAlignment: MainAxisAlignment.end,

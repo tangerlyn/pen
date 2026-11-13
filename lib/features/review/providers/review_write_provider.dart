@@ -9,6 +9,7 @@ import '../../../data/models/review_model.dart';
 import '../../../shared/providers/providers.dart';
 import '../../../core/constants/app_constants.dart';
 import '../../home/providers/feed_provider.dart';
+import '../../home/providers/home_discovery_provider.dart';
 import '../../home/providers/review_detail_provider.dart';
 import '../analytics/review_write_tracker.dart';
 
@@ -187,6 +188,7 @@ class ReviewWriteNotifier extends StateNotifier<ReviewWriteState> {
         onCommitted?.call(state.editingReviewId!);
 
         _ref.invalidate(feedProvider);
+        _ref.invalidate(homeLatestReviewsProvider);
         _ref.invalidate(reviewDetailProvider(state.editingReviewId!));
 
         final resultId = state.editingReviewId!;
@@ -212,9 +214,7 @@ class ReviewWriteNotifier extends StateNotifier<ReviewWriteState> {
         createdAt: DateTime.now(),
       );
 
-      debugPrint('[ReviewWrite] Firestore 저장 시작');
       await withRetry(() => _ref.read(reviewRepoProvider).createReview(review));
-      debugPrint('[ReviewWrite] Firestore 저장 완료');
       onCommitted?.call(reviewId);
 
       // 리뷰는 이미 저장됐으므로 EXP 지급 실패가 저장 실패로 보이면 안 된다.
@@ -225,17 +225,23 @@ class ReviewWriteNotifier extends StateNotifier<ReviewWriteState> {
           _ref.read(levelUpProvider.notifier).state = levelUp;
         }
       } catch (e, stack) {
-        debugPrint('[ReviewWrite] EXP 지급 실패: $e');
+        if (kDebugMode) debugPrint('[ReviewWrite] EXP 지급 실패: $e');
         FirebaseCrashlytics.instance.recordError(e, stack, reason: 'review EXP grant failed');
       }
 
       _ref.invalidate(feedProvider);
+      _ref.invalidate(homeLatestReviewsProvider);
       state = const ReviewWriteState();
       return reviewId;
     } catch (e, stack) {
-      debugPrint('[ReviewWrite] 에러 발생: $e\n$stack');
+      if (kDebugMode) debugPrint('[ReviewWrite] 에러 발생: $e\n$stack');
       state = state.copyWith(isLoading: false);
-      throw ReviewSubmitException(ReviewErrorStage.firestoreWrite, e.toString().replaceAll('Exception: ', ''), e);
+      // 원인(e)은 cause로 넘겨 화면의 실패 로그에 남기고, 사용자에게는 고정 문구만 보여준다.
+      throw ReviewSubmitException(
+        ReviewErrorStage.firestoreWrite,
+        '리뷰를 저장하지 못했어요. 잠시 후 다시 시도해주세요.',
+        e,
+      );
     }
   }
 }

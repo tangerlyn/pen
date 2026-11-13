@@ -62,13 +62,48 @@ class _PhotoSliderState extends State<_PhotoSlider> {
 }
 
 // ── 프로필 ────────────────────────────────────────────────────
-class _ProfileRow extends ConsumerWidget {
+class _ProfileRow extends ConsumerStatefulWidget {
   const _ProfileRow({required this.review, required this.currentUid});
   final ReviewModel review;
   final String? currentUid;
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<_ProfileRow> createState() => _ProfileRowState();
+}
+
+class _ProfileRowState extends ConsumerState<_ProfileRow> {
+  bool _isFollowBusy = false;
+
+  ReviewModel get review => widget.review;
+  String? get currentUid => widget.currentUid;
+
+  Future<void> _toggleFollow(bool isFollowing) async {
+    final uid = currentUid;
+    if (uid == null || _isFollowBusy) return;
+    setState(() => _isFollowBusy = true);
+    try {
+      final repo = ref.read(userRepoProvider);
+      if (isFollowing) {
+        await repo.unfollow(uid, review.authorId);
+      } else {
+        await repo.follow(uid, review.authorId);
+      }
+    } catch (_) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('인터넷 연결을 확인해주세요'),
+            duration: Duration(seconds: 3),
+          ),
+        );
+      }
+    } finally {
+      if (mounted) setState(() => _isFollowBusy = false);
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
     final authorAsync = ref.watch(_reviewAuthorProvider(review.authorId));
     final isOwnPost = review.authorId == currentUid;
     final isDeletedUser = authorAsync.valueOrNull == null;
@@ -110,7 +145,7 @@ class _ProfileRow extends ConsumerWidget {
                       children: [
                         Flexible(
                           child: Text(
-                            user == null ? '알수없음(탈퇴)' : user.nickname,
+                            user == null ? '알 수 없음(탈퇴)' : user.nickname,
                             maxLines: 1,
                             overflow: TextOverflow.ellipsis,
                             style: AppTextStyles.labelMedium.copyWith(
@@ -144,9 +179,9 @@ class _ProfileRow extends ConsumerWidget {
                     borderRadius: BorderRadius.circular(AppRadius.xs),
                   ),
                 ),
-                error: (_, __) => Text(
-                  review.authorId,
-                  style: const TextStyle(fontWeight: FontWeight.w600),
+                error: (_, __) => const Text(
+                  '알 수 없음',
+                  style: TextStyle(fontWeight: FontWeight.w600),
                 ),
               ),
             ),
@@ -154,9 +189,8 @@ class _ProfileRow extends ConsumerWidget {
           if (!isOwnPost && currentUid != null && !isDeletedUser)
             isFollowing
                 ? ElevatedButton(
-                    onPressed: () => ref
-                        .read(userRepoProvider)
-                        .unfollow(currentUid!, review.authorId),
+                    onPressed:
+                        _isFollowBusy ? null : () => _toggleFollow(true),
                     style: ElevatedButton.styleFrom(
                       minimumSize: const Size(72, 32),
                       padding: const EdgeInsets.symmetric(horizontal: 16),
@@ -168,9 +202,8 @@ class _ProfileRow extends ConsumerWidget {
                     child: const Text('팔로잉'),
                   )
                 : OutlinedButton(
-                    onPressed: () => ref
-                        .read(userRepoProvider)
-                        .follow(currentUid!, review.authorId),
+                    onPressed:
+                        _isFollowBusy ? null : () => _toggleFollow(false),
                     style: OutlinedButton.styleFrom(
                       minimumSize: const Size(72, 32),
                       padding: const EdgeInsets.symmetric(horizontal: 16),
@@ -256,7 +289,7 @@ class _GearChip extends ConsumerWidget {
             ? '${data.brand} ${data.name}'
             : '${data.brand} ${data.modelName}';
       },
-      loading: () => '로딩중...',
+      loading: () => '불러오는 중…',
       error: (_, __) => isInk ? '잉크' : '만년필',
     );
 
@@ -297,10 +330,12 @@ class _ActionBar extends StatelessWidget {
     required this.review,
     required this.currentUid,
     required this.onLike,
+    required this.onCommentTap,
   });
   final ReviewModel review;
   final String? currentUid;
   final VoidCallback onLike;
+  final VoidCallback onCommentTap;
 
   @override
   Widget build(BuildContext context) {
@@ -318,7 +353,7 @@ class _ActionBar extends StatelessWidget {
           _ActionButton(
             icon: Icons.chat_bubble_outline,
             label: '${review.commentCount}',
-            onTap: () {},
+            onTap: onCommentTap,
           ),
         ],
       ),

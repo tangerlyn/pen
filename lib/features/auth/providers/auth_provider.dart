@@ -85,7 +85,9 @@ class AuthNotifier extends StateNotifier<AuthState> {
       }
     } catch (e, stack) {
       debugPrint('[Auth] 로그인 에러: $e\n$stack');
-      final msg = e.toString().contains('canceled')
+      // 카카오(CANCELED)·애플(canceled)·네이버(Login cancelled by user /
+      // user_cancel) 모두 사용자가 직접 닫은 경우라 오류 문구를 띄우지 않는다.
+      final msg = e.toString().toLowerCase().contains('cancel')
           ? null
           : '로그인에 실패했어요. 다시 시도해주세요.';
       state = state.copyWith(isLoading: false, error: msg);

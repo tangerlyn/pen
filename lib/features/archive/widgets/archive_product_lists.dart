@@ -21,7 +21,7 @@ class _InkList extends ConsumerWidget {
       child: CustomScrollView(
       key: const PageStorageKey('archive_ink_list'),
       slivers: [
-        if (state.isLoading)
+        if (state.isLoadingInks)
           SliverPadding(
             padding: const EdgeInsets.all(16),
             sliver: SliverGrid(
@@ -38,6 +38,11 @@ class _InkList extends ConsumerWidget {
                 childAspectRatio: 0.72,
               ),
             ),
+          )
+        else if (state.inkLoadFailed)
+          const SliverFillRemaining(
+            hasScrollBody: false,
+            child: _LoadErrorView(),
           )
         else if (state.inks.isEmpty)
           const SliverFillRemaining(
@@ -195,7 +200,7 @@ class _PenList extends ConsumerWidget {
       child: CustomScrollView(
       key: const PageStorageKey('archive_pen_list'),
       slivers: [
-        if (state.isLoading)
+        if (state.isLoadingPens)
           SliverList(
             delegate: SliverChildBuilderDelegate(
               (ctx, i) => const Column(
@@ -204,6 +209,11 @@ class _PenList extends ConsumerWidget {
               ),
               childCount: 6,
             ),
+          )
+        else if (state.penLoadFailed)
+          const SliverFillRemaining(
+            hasScrollBody: false,
+            child: _LoadErrorView(),
           )
         else if (state.pens.isEmpty)
           const SliverFillRemaining(
@@ -253,6 +263,31 @@ class _PenList extends ConsumerWidget {
         ],
         ],
       ),
+    );
+  }
+}
+
+// ── 목록 로드 실패 — "결과 없음"과 구분해서 다시 시도할 수 있게 ──────────────
+class _LoadErrorView extends ConsumerWidget {
+  const _LoadErrorView();
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    return Column(
+      mainAxisAlignment: MainAxisAlignment.center,
+      children: [
+        const Text(
+          '목록을 불러오지 못했어요.\n잠시 후 다시 시도해주세요.',
+          textAlign: TextAlign.center,
+          style: TextStyle(color: AppColors.textSecondary),
+        ),
+        const SizedBox(height: 12),
+        TextButton.icon(
+          icon: const Icon(Icons.refresh),
+          label: const Text('다시 시도'),
+          onPressed: () => ref.read(archiveProvider.notifier).refresh(),
+        ),
+      ],
     );
   }
 }

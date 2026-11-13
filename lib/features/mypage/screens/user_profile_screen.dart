@@ -8,6 +8,7 @@ import '../../../shared/providers/user_providers.dart';
 import '../../../shared/providers/ink_book_providers.dart'
     show userVisibleBooksProvider;
 import '../../../shared/widgets/common/empty_state.dart';
+import '../../../shared/widgets/content_moderation.dart';
 import '../../../shared/widgets/community/post_card.dart';
 import '../../../shared/widgets/review/review_list_tile.dart';
 import '../../../shared/widgets/tap_scale.dart';
@@ -91,8 +92,55 @@ class _UserProfileScreenState extends ConsumerState<UserProfileScreen>
       });
     }
 
+    final profileUser = userAsync.valueOrNull;
+    final isBlocked = ref
+            .watch(myBlockedUidsProvider)
+            .valueOrNull
+            ?.contains(widget.uid) ??
+        false;
+    final appBar = AppBar(
+      scrolledUnderElevation: 0,
+      elevation: 0,
+      actions: [
+        if (currentUid != null &&
+            currentUid != widget.uid &&
+            profileUser != null)
+          _ProfileMenu(user: profileUser, isBlocked: isBlocked),
+      ],
+    );
+
+    // 차단한 사용자는 리뷰·글·잉크북을 보여주지 않는다
+    if (isBlocked) {
+      return Scaffold(
+        appBar: appBar,
+        body: Center(
+          child: Padding(
+            padding: const EdgeInsets.all(24),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                const Icon(Icons.block, size: 52, color: AppColors.textTertiary),
+                const SizedBox(height: 12),
+                const Text(
+                  '차단한 사용자예요',
+                  style: TextStyle(color: AppColors.textSecondary),
+                ),
+                const SizedBox(height: 16),
+                OutlinedButton(
+                  onPressed: () => ref
+                      .read(userRepoProvider)
+                      .unblock(currentUid!, widget.uid),
+                  child: const Text('차단 해제'),
+                ),
+              ],
+            ),
+          ),
+        ),
+      );
+    }
+
     return Scaffold(
-      appBar: AppBar(scrolledUnderElevation: 0, elevation: 0),
+      appBar: appBar,
       body: NestedScrollView(
         headerSliverBuilder: (context, _) => [
           SliverToBoxAdapter(
@@ -186,17 +234,13 @@ class _ProfileHeader extends ConsumerWidget {
                             const SizedBox(width: 8),
                             _FollowButton(
                               isFollowing: isFollowing,
-                              onTap: () {
-                                if (isFollowing) {
-                                  ref
-                                      .read(userRepoProvider)
-                                      .unfollow(currentUid!, user.uid);
-                                } else {
-                                  ref
-                                      .read(userRepoProvider)
-                                      .follow(currentUid!, user.uid);
-                                }
-                              },
+                              onTap: () => isFollowing
+                                  ? ref
+                                        .read(userRepoProvider)
+                                        .unfollow(currentUid!, user.uid)
+                                  : ref
+                                        .read(userRepoProvider)
+                                        .follow(currentUid!, user.uid),
                             ),
                           ],
                         ],
@@ -311,15 +355,86 @@ class _ProfileAvatar extends StatelessWidget {
 
 // ── 팔로우 버튼 ──────────────────────────────────────────────────────────────
 
-class _FollowButton extends StatelessWidget {
+// ── 프로필 더보기 메뉴 (신고·차단) ─────────────────────────────────────────
+
+class _ProfileMenu extends ConsumerWidget {
+  const _ProfileMenu({required this.user, required this.isBlocked});
+  final UserModel user;
+  final bool isBlocked;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    return PopupMenuButton<String>(
+      icon: const Icon(Icons.more_vert),
+      onSelected: (value) async {
+        final myUid = ref.read(currentUidProvider);
+        switch (value) {
+          case 'report':
+            await showReportSheet(
+              context,
+              ref,
+              targetType: 'user',
+              targetId: user.uid,
+            );
+          case 'block':
+            await showBlockDialog(
+              context,
+              ref,
+              targetUid: user.uid,
+              targetNickname: user.nickname,
+            );
+          case 'unblock':
+            if (myUid != null) {
+              await ref.read(userRepoProvider).unblock(myUid, user.uid);
+            }
+        }
+      },
+      itemBuilder: (_) => [
+        const PopupMenuItem(value: 'report', child: Text('신고하기')),
+        isBlocked
+            ? const PopupMenuItem(value: 'unblock', child: Text('차단 해제'))
+            : const PopupMenuItem(
+                value: 'block',
+                child: Text('차단하기', style: TextStyle(color: AppColors.error)),
+              ),
+      ],
+    );
+  }
+}
+
+class _FollowButton extends StatefulWidget {
   const _FollowButton({required this.isFollowing, required this.onTap});
   final bool isFollowing;
-  final VoidCallback onTap;
+  final Future<void> Function() onTap;
+
+  @override
+  State<_FollowButton> createState() => _FollowButtonState();
+}
+
+class _FollowButtonState extends State<_FollowButton> {
+  // 요청이 끝나기 전에 다시 눌러 팔로우/언팔로우가 겹치지 않게 막는다
+  bool _busy = false;
+
+  Future<void> _handleTap() async {
+    setState(() => _busy = true);
+    try {
+      await widget.onTap();
+    } catch (_) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('잠시 후 다시 시도해주세요.')),
+        );
+      }
+    } finally {
+      if (mounted) setState(() => _busy = false);
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
+    final isFollowing = widget.isFollowing;
     return TapScale(
-      onTap: onTap,
+      onTap: _busy ? null : _handleTap,
       child: AnimatedContainer(
         duration: const Duration(milliseconds: 200),
         padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),

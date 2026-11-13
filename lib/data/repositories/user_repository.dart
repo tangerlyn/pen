@@ -61,23 +61,34 @@ class UserRepository {
     return result;
   }
 
+  // follows 문서 존재 여부를 트랜잭션 안에서 확인한 뒤에만 카운터를 바꾼다.
+  // 버튼을 연달아 누르거나 두 기기에서 동시에 눌러도 카운트가 두 번 오르거나
+  // 내려가지 않는다. (보안 규칙도 follows/{팔로워_팔로이} 문서의 생성·삭제와
+  // 같은 요청에서만 followerCount ±1을 허용한다.)
   Future<void> follow(String fromUid, String toUid) async {
-    final batch = _db.batch();
-    batch.update(_users.doc(fromUid), {'followingCount': FieldValue.increment(1)});
-    batch.update(_users.doc(toUid), {'followerCount': FieldValue.increment(1)});
-    batch.set(
-      _db.collection('follows').doc('${fromUid}_$toUid'),
-      {'followerId': fromUid, 'followeeId': toUid, 'createdAt': FieldValue.serverTimestamp()},
-    );
-    await batch.commit();
+    final followRef = _db.collection('follows').doc('${fromUid}_$toUid');
+    await _db.runTransaction((tx) async {
+      final followDoc = await tx.get(followRef);
+      if (followDoc.exists) return;
+      tx.update(_users.doc(fromUid), {'followingCount': FieldValue.increment(1)});
+      tx.update(_users.doc(toUid), {'followerCount': FieldValue.increment(1)});
+      tx.set(followRef, {
+        'followerId': fromUid,
+        'followeeId': toUid,
+        'createdAt': FieldValue.serverTimestamp(),
+      });
+    });
   }
 
   Future<void> unfollow(String fromUid, String toUid) async {
-    final batch = _db.batch();
-    batch.update(_users.doc(fromUid), {'followingCount': FieldValue.increment(-1)});
-    batch.update(_users.doc(toUid), {'followerCount': FieldValue.increment(-1)});
-    batch.delete(_db.collection('follows').doc('${fromUid}_$toUid'));
-    await batch.commit();
+    final followRef = _db.collection('follows').doc('${fromUid}_$toUid');
+    await _db.runTransaction((tx) async {
+      final followDoc = await tx.get(followRef);
+      if (!followDoc.exists) return;
+      tx.update(_users.doc(fromUid), {'followingCount': FieldValue.increment(-1)});
+      tx.update(_users.doc(toUid), {'followerCount': FieldValue.increment(-1)});
+      tx.delete(followRef);
+    });
   }
 
   Stream<bool> watchFollowStatus(String myUid, String targetUid) {

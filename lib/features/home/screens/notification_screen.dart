@@ -1,4 +1,5 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -72,7 +73,15 @@ class NotificationScreen extends ConsumerWidget {
       ),
       body: notifAsync.when(
         loading: () => const Center(child: CircularProgressIndicator()),
-        error: (e, _) => Center(child: Text('오류: $e')),
+        error: (e, _) {
+          if (kDebugMode) debugPrint('[Notification] 알림 불러오기 실패: $e');
+          return const Center(
+            child: Text(
+              '알림을 불러오지 못했어요.\n잠시 후 다시 시도해주세요.',
+              textAlign: TextAlign.center,
+            ),
+          );
+        },
         data: (items) {
           if (items.isEmpty) {
             return const Center(

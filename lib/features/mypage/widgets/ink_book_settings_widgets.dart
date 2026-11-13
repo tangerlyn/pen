@@ -123,16 +123,16 @@ class _DetailMenuButton extends ConsumerWidget {
   Future<void> _confirmDelete(BuildContext context, WidgetRef ref) async {
     final ok = await showDialog<bool>(
       context: context,
-      builder: (_) => AlertDialog(
+      builder: (dialogContext) => AlertDialog(
         title: const Text('잉크 삭제'),
-        content: Text('"${entry.brand} ${entry.inkName}"을 삭제할까요?'),
+        content: Text('"${entry.brand} ${entry.inkName}" 잉크를 삭제할까요?'),
         actions: [
           TextButton(
-            onPressed: () => Navigator.pop(context, false),
+            onPressed: () => Navigator.pop(dialogContext, false),
             child: const Text('취소'),
           ),
           TextButton(
-            onPressed: () => Navigator.pop(context, true),
+            onPressed: () => Navigator.pop(dialogContext, true),
             style: TextButton.styleFrom(foregroundColor: AppColors.error),
             child: const Text('삭제'),
           ),
@@ -188,11 +188,6 @@ class _ShapePickerSheet extends StatelessWidget {
                         ref
                             .read(userRepoProvider)
                             .updateUser(uid, {'inkSwatchShape': shape.name})
-                            .then(
-                              (_) => debugPrint(
-                                '[InkBook] inkSwatchShape 저장 완료: ${shape.name}',
-                              ),
-                            )
                             .catchError(
                               (e) => debugPrint(
                                 '[InkBook] inkSwatchShape 저장 실패: $e',

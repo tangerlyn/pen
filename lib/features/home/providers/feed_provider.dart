@@ -1,6 +1,7 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../data/models/review_model.dart';
 import '../../../shared/providers/providers.dart';
+import 'home_discovery_provider.dart';
 
 class FeedFilter {
   const FeedFilter({
@@ -42,6 +43,7 @@ class FeedState {
     this.isLoading = false,
     this.isLoadingMore = false,
     this.hasMore = true,
+    this.hasError = false,
     this.filter = const FeedFilter(),
   });
 
@@ -51,6 +53,9 @@ class FeedState {
   final bool isLoading;
   final bool isLoadingMore;
   final bool hasMore;
+
+  /// 마지막 로드가 실패했는지 — 목록이 비어 있을 때 "다시 시도" 화면을 띄우는 데 쓴다.
+  final bool hasError;
   final FeedFilter filter;
 
   FeedState copyWith({
@@ -59,6 +64,7 @@ class FeedState {
     bool? isLoading,
     bool? isLoadingMore,
     bool? hasMore,
+    bool? hasError,
     FeedFilter? filter,
   }) {
     return FeedState(
@@ -67,6 +73,7 @@ class FeedState {
       isLoading: isLoading ?? this.isLoading,
       isLoadingMore: isLoadingMore ?? this.isLoadingMore,
       hasMore: hasMore ?? this.hasMore,
+      hasError: hasError ?? this.hasError,
       filter: filter ?? this.filter,
     );
   }
@@ -80,6 +87,9 @@ class FeedNotifier extends StateNotifier<FeedState> {
   final Ref _ref;
   Object? _lastDoc;
 
+  /// refresh/필터 변경마다 증가 — 이전 세대의 늦게 도착한 응답(loadMore 포함)은 버린다.
+  int _generation = 0;
+
   Future<List<ReviewModel>> _loadFollowingRecent(String? uid) async {
     if (uid == null) return [];
     final followingUids = await _ref.read(userRepoProvider).getFollowingUids(uid);
@@ -90,14 +100,25 @@ class FeedNotifier extends StateNotifier<FeedState> {
         .getFollowingFeed(followingUids: followingUids, limit: 30);
 
     final cutoff = DateTime.now().subtract(const Duration(hours: 24));
-    return reviews.where((r) => r.createdAt.isAfter(cutoff)).toList();
+    final recent = reviews.where((r) => r.createdAt.isAfter(cutoff)).toList();
+    return _ref
+        .read(userRepoProvider)
+        .filterByBlocked(uid, recent, (r) => r.authorId);
   }
 
   Future<void> loadFeed({bool refresh = false}) async {
     if (refresh) {
+      _generation++;
       _lastDoc = null;
-      state = state.copyWith(isLoading: true, reviews: [], hasMore: true);
+      state = state.copyWith(
+        isLoading: true,
+        isLoadingMore: false,
+        reviews: [],
+        hasMore: true,
+        hasError: false,
+      );
     }
+    final generation = _generation;
 
     final repo = _ref.read(reviewRepoProvider);
     final uid = _ref.read(currentUidProvider);
@@ -111,6 +132,7 @@ class FeedNotifier extends StateNotifier<FeedState> {
         filterCategory: category == '전체' ? null : category,
         lastDoc: _lastDoc,
       );
+      if (!mounted || generation != _generation) return;
       _lastDoc = lastDoc;
 
       // 상단 "팔로잉 최근" 섹션에 이미 나온 리뷰는 일반 피드에서 중복 제거
@@ -121,22 +143,27 @@ class FeedNotifier extends StateNotifier<FeedState> {
           .read(userRepoProvider)
           .filterByBlocked(uid, deduped, (r) => r.authorId);
 
-      if (!mounted) return;
+      if (!mounted || generation != _generation) return;
       state = state.copyWith(
         followingRecent: followingRecent,
         reviews: refresh ? filtered : [...state.reviews, ...filtered],
         isLoading: false,
         isLoadingMore: false,
         hasMore: fetched.length >= 20,
+        hasError: false,
       );
     } catch (e) {
-      if (!mounted) return;
-      state = state.copyWith(isLoading: false, isLoadingMore: false);
+      if (!mounted || generation != _generation) return;
+      state = state.copyWith(
+        isLoading: false,
+        isLoadingMore: false,
+        hasError: true,
+      );
     }
   }
 
   Future<void> loadMore() async {
-    if (state.isLoadingMore || !state.hasMore) return;
+    if (state.isLoading || state.isLoadingMore || !state.hasMore) return;
     state = state.copyWith(isLoadingMore: true);
     await loadFeed();
   }
@@ -170,3 +197,9 @@ class FeedNotifier extends StateNotifier<FeedState> {
 final feedProvider = StateNotifierProvider<FeedNotifier, FeedState>((ref) {
   return FeedNotifier(ref);
 });
+
+/// 리뷰 작성·수정·삭제·차단 후 피드와 홈 최신 리뷰를 새로 불러오게 한다.
+void invalidateReviewLists(WidgetRef ref) {
+  ref.invalidate(feedProvider);
+  ref.invalidate(homeLatestReviewsProvider);
+}

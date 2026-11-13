@@ -71,6 +71,7 @@ class _ArchiveSearchScreenState extends ConsumerState<ArchiveSearchScreen>
 
   bool _hasSearched = false;
   bool _isLoading = false;
+  bool _hasError = false;
   List<InkModel> _inks = [];
   List<PenModel> _pens = [];
   int _searchGen = 0;
@@ -103,6 +104,7 @@ class _ArchiveSearchScreenState extends ConsumerState<ArchiveSearchScreen>
     setState(() {
       _hasSearched = true;
       _isLoading = true;
+      _hasError = false;
     });
     try {
       final repo = ref.read(archiveRepoProvider);
@@ -115,8 +117,16 @@ class _ArchiveSearchScreenState extends ConsumerState<ArchiveSearchScreen>
           _isLoading = false;
         });
       }
-    } catch (_) {
-      if (mounted && gen == _searchGen) setState(() => _isLoading = false);
+    } catch (e) {
+      debugPrint('ArchiveSearchScreen._doSearch error: $e');
+      // 실패를 "검색 결과 없음"으로 보여주면 직접 등록으로 중복 제품이 생길 수
+      // 있어, 에러 화면과 다시 시도 버튼을 따로 보여준다.
+      if (mounted && gen == _searchGen) {
+        setState(() {
+          _isLoading = false;
+          _hasError = true;
+        });
+      }
     }
   }
 
@@ -196,6 +206,8 @@ class _ArchiveSearchScreenState extends ConsumerState<ArchiveSearchScreen>
               inks: _inks,
               pens: _pens,
               isLoading: _isLoading,
+              hasError: _hasError,
+              onRetry: () => _doSearch(_lastQuery),
               query: _lastQuery,
             ),
     );
@@ -324,17 +336,43 @@ class _ResultsView extends StatelessWidget {
     required this.inks,
     required this.pens,
     required this.isLoading,
+    required this.hasError,
+    required this.onRetry,
     required this.query,
   });
   final TabController tabController;
   final List<InkModel> inks;
   final List<PenModel> pens;
   final bool isLoading;
+  final bool hasError;
+  final VoidCallback onRetry;
   final String query;
 
   @override
   Widget build(BuildContext context) {
     if (isLoading) return const Center(child: CircularProgressIndicator());
+    if (hasError) {
+      return Center(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Text(
+              '검색 결과를 불러오지 못했어요.\n잠시 후 다시 시도해주세요.',
+              textAlign: TextAlign.center,
+              style: AppTextStyles.bodyMedium.copyWith(
+                color: AppColors.textSecondary,
+              ),
+            ),
+            const SizedBox(height: 12),
+            TextButton.icon(
+              icon: const Icon(Icons.refresh),
+              label: const Text('다시 시도'),
+              onPressed: onRetry,
+            ),
+          ],
+        ),
+      );
+    }
     return Column(
       children: [
         TabBar(
@@ -445,10 +483,10 @@ class _InkResults extends StatelessWidget {
         ),
       );
     }
-    // 셀 내용(원 56 + 간격 6 + 이름 10pt 2줄)이 들어갈 최소 높이 — 좁은 화면
-    // (320)이나 큰 글자 크기에서 비율로 정한 높이가 모자랄 때만 늘린다.
+    // 셀 내용(원 56 + 간격 6 + 브랜드 9pt 1줄 + 이름 10pt 2줄)이 들어갈 최소
+    // 높이 — 좁은 화면(320)이나 큰 글자 크기에서 비율로 정한 높이가 모자랄 때만 늘린다.
     final minInkCellHeight =
-        62 + MediaQuery.textScalerOf(context).scale(10 * 2) * 1.25 + 2;
+        62 + MediaQuery.textScalerOf(context).scale(9 + 10 * 2) * 1.25 + 2;
     return CustomScrollView(
       slivers: [
         SliverPadding(
@@ -475,6 +513,16 @@ class _InkResults extends StatelessWidget {
                       reviewCount: ink.reviewCount,
                     ),
                     const SizedBox(height: 6),
+                    Text(
+                      ink.brand,
+                      style: const TextStyle(
+                        fontSize: 9,
+                        color: AppColors.textSecondary,
+                      ),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      textAlign: TextAlign.center,
+                    ),
                     Text(
                       ink.name,
                       style: AppTextStyles.caption.copyWith(

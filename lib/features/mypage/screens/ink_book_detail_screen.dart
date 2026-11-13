@@ -104,7 +104,6 @@ class _InkBookDetailScreenState extends ConsumerState<InkBookDetailScreen> {
             pageStyle: _pageStyle.name,
             viewMode: _viewMode.name,
           )
-          .then((_) => debugPrint('[InkBook] displaySettings 저장 완료: $id'))
           .catchError((e) => debugPrint('[InkBook] displaySettings 저장 실패: $e'));
     }
   }
@@ -169,7 +168,7 @@ class _InkBookDetailScreenState extends ConsumerState<InkBookDetailScreen> {
     showDialog(
       context: context,
       barrierColor: Colors.black38,
-      builder: (_) => Dialog(
+      builder: (dialogContext) => Dialog(
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(AppRadius.xl),
         ),
@@ -206,7 +205,7 @@ class _InkBookDetailScreenState extends ConsumerState<InkBookDetailScreen> {
                 width: double.infinity,
                 child: ElevatedButton(
                   onPressed: () async {
-                    Navigator.pop(context);
+                    Navigator.pop(dialogContext);
                     final uri = Uri.parse('photos-redirect://');
                     if (await canLaunchUrl(uri)) {
                       await launchUrl(uri);
@@ -226,7 +225,7 @@ class _InkBookDetailScreenState extends ConsumerState<InkBookDetailScreen> {
               ),
               const SizedBox(height: 10),
               TextButton(
-                onPressed: () => Navigator.pop(context),
+                onPressed: () => Navigator.pop(dialogContext),
                 child: Text(
                   '닫기',
                   style: AppTextStyles.bodyMedium.copyWith(
@@ -791,16 +790,16 @@ class _InkBookDetailScreenState extends ConsumerState<InkBookDetailScreen> {
   ) async {
     final ok = await showDialog<bool>(
       context: context,
-      builder: (_) => AlertDialog(
+      builder: (dialogContext) => AlertDialog(
         title: const Text('잉크 삭제'),
-        content: Text('"${entry.brand} ${entry.inkName}"을 삭제할까요?'),
+        content: Text('"${entry.brand} ${entry.inkName}" 잉크를 삭제할까요?'),
         actions: [
           TextButton(
-            onPressed: () => Navigator.pop(context, false),
+            onPressed: () => Navigator.pop(dialogContext, false),
             child: const Text('취소'),
           ),
           TextButton(
-            onPressed: () => Navigator.pop(context, true),
+            onPressed: () => Navigator.pop(dialogContext, true),
             style: TextButton.styleFrom(foregroundColor: AppColors.error),
             child: const Text('삭제'),
           ),
@@ -823,16 +822,16 @@ class _InkBookDetailScreenState extends ConsumerState<InkBookDetailScreen> {
   ) async {
     final ok = await showDialog<bool>(
       context: context,
-      builder: (_) => AlertDialog(
+      builder: (dialogContext) => AlertDialog(
         title: const Text('공책 삭제'),
         content: const Text('공책과 모든 잉크 기록이 삭제됩니다.\n되돌릴 수 없습니다.'),
         actions: [
           TextButton(
-            onPressed: () => Navigator.pop(context, false),
+            onPressed: () => Navigator.pop(dialogContext, false),
             child: const Text('취소'),
           ),
           TextButton(
-            onPressed: () => Navigator.pop(context, true),
+            onPressed: () => Navigator.pop(dialogContext, true),
             style: TextButton.styleFrom(foregroundColor: AppColors.error),
             child: const Text('삭제'),
           ),
@@ -1040,7 +1039,7 @@ class _InkBookDetailScreenState extends ConsumerState<InkBookDetailScreen> {
           Expanded(
             child: chartAsync.when(
               loading: () => const Center(child: CircularProgressIndicator()),
-              error: (e, _) => Center(child: Text('오류: $e')),
+              error: (_, _) => const Center(child: Text('잉크 기록을 불러오지 못했어요.')),
               data: (raw) {
                 if (raw.isEmpty) {
                   return _EmptyState(bookId: widget.bookId);

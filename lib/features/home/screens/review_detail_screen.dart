@@ -70,8 +70,9 @@ class _ReviewDetailScreenState extends ConsumerState<ReviewDetailScreen> {
 
   Future<void> _submitInput() async {
     final text = _composer.trimmedText;
-    if (text.isEmpty) return;
+    if (text.isEmpty || _composer.isSubmitting) return;
 
+    setState(_composer.beginSubmit);
     try {
       if (_composer.isReplying) {
         final user = ref.read(currentUserProvider).value;
@@ -112,7 +113,29 @@ class _ReviewDetailScreenState extends ConsumerState<ReviewDetailScreen> {
           ),
         );
       }
+    } finally {
+      if (mounted) {
+        setState(_composer.finishSubmit);
+      } else {
+        _composer.finishSubmit();
+      }
     }
+  }
+
+  /// 로딩·오류·삭제 상태에서도 뒤로 갈 수 있게 기본 AppBar를 붙인다.
+  Widget _buildStatusScaffold(Widget body) {
+    return Scaffold(
+      backgroundColor: AppColors.surface,
+      appBar: AppBar(
+        backgroundColor: AppColors.surface,
+        scrolledUnderElevation: 0,
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back_ios_new),
+          onPressed: () => Navigator.pop(context),
+        ),
+      ),
+      body: body,
+    );
   }
 
   @override
@@ -120,17 +143,23 @@ class _ReviewDetailScreenState extends ConsumerState<ReviewDetailScreen> {
     final state = ref.watch(reviewDetailProvider(widget.reviewId));
     final currentUid = ref.watch(currentUidProvider);
 
-    return Scaffold(
-      backgroundColor: AppColors.surface,
-      resizeToAvoidBottomInset: true,
-      body: state.when(
-        loading: () =>
-            const SingleChildScrollView(child: ReviewDetailSkeleton()),
-        error: (e, _) => Center(child: Text('오류가 발생했습니다: $e')),
-        data: (review) => review == null
-            ? const Center(child: Text('삭제된 리뷰입니다.'))
-            : _buildContent(context, review, currentUid),
+    return state.when(
+      loading: () => _buildStatusScaffold(
+        const SafeArea(
+          top: false,
+          child: SingleChildScrollView(child: ReviewDetailSkeleton()),
+        ),
       ),
+      error: (_, _) => _buildStatusScaffold(
+        const Center(child: Text('리뷰를 불러오지 못했어요.\n잠시 후 다시 시도해주세요.', textAlign: TextAlign.center)),
+      ),
+      data: (review) => review == null
+          ? _buildStatusScaffold(const Center(child: Text('삭제된 리뷰입니다.')))
+          : Scaffold(
+              backgroundColor: AppColors.surface,
+              resizeToAvoidBottomInset: true,
+              body: _buildContent(context, review, currentUid),
+            ),
     );
   }
 
@@ -384,6 +413,7 @@ class _ReviewDetailScreenState extends ConsumerState<ReviewDetailScreen> {
                   child: _ActionBar(
                     review: review,
                     currentUid: currentUid,
+                    onCommentTap: () => _composer.focusNode.requestFocus(),
                     onLike: () async {
                       try {
                         await ref
@@ -434,6 +464,7 @@ class _ReviewDetailScreenState extends ConsumerState<ReviewDetailScreen> {
               replyTargetNickname: _composer.replyTargetNickname,
               onCancelReply: _cancelReply,
               onSubmit: _submitInput,
+              isSubmitting: _composer.isSubmitting,
             ),
           ),
       ],
@@ -500,14 +531,17 @@ class _ReviewDetailScreenState extends ConsumerState<ReviewDetailScreen> {
                   final authorAsync = ref.read(
                     _reviewAuthorProvider(review.authorId),
                   );
-                  final nickname =
-                      authorAsync.value?.nickname ?? review.authorId;
-                  await showBlockDialog(
+                  final nickname = authorAsync.value?.nickname ?? '이 사용자';
+                  final blocked = await showBlockDialog(
                     context,
                     ref,
                     targetUid: review.authorId,
                     targetNickname: nickname,
                   );
+                  // 리뷰 작성자를 차단했으면 목록을 새로 고치고 상세 화면을 닫는다.
+                  if (!blocked) return;
+                  invalidateReviewLists(ref);
+                  if (mounted) Navigator.pop(this.context);
                 },
               ),
               ListTile(
@@ -540,33 +574,58 @@ class _ReviewDetailScreenState extends ConsumerState<ReviewDetailScreen> {
   void _confirmDelete(BuildContext context, ReviewModel review) {
     showDialog(
       context: context,
-      builder: (_) => AlertDialog(
+      builder: (dialogContext) => AlertDialog(
         title: const Text('리뷰 삭제'),
         content: const Text('정말 삭제하시겠습니까? 이 작업은 되돌릴 수 없습니다.'),
         actions: [
           TextButton(
-            onPressed: () => Navigator.pop(context),
+            onPressed: () => Navigator.pop(dialogContext),
             child: const Text('취소'),
           ),
           TextButton(
-            onPressed: () async {
-              Navigator.pop(context);
-              // Storage 이미지 삭제
-              final storage = ref.read(storageServiceProvider);
-              for (final url in review.imageUrls) {
-                await storage.deleteByUrl(url);
-              }
-              await ref
-                  .read(reviewRepoProvider)
-                  .deleteReview(review.id, review);
-              ref.invalidate(feedProvider);
-              if (mounted) Navigator.pop(context);
+            onPressed: () {
+              Navigator.pop(dialogContext);
+              _deleteReview(review);
             },
             child: const Text('삭제', style: TextStyle(color: AppColors.error)),
           ),
         ],
       ),
     );
+  }
+
+  Future<void> _deleteReview(ReviewModel review) async {
+    final navigator = Navigator.of(context);
+    final rootNavigator = Navigator.of(context, rootNavigator: true);
+    final messenger = ScaffoldMessenger.of(context);
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (_) => const PopScope(
+        canPop: false,
+        child: Center(child: CircularProgressIndicator()),
+      ),
+    );
+    try {
+      // 문서를 먼저 지워야 이미지만 사라지고 글이 남는 상태가 생기지 않는다.
+      await ref.read(reviewRepoProvider).deleteReview(review.id, review);
+    } catch (_) {
+      rootNavigator.pop(); // 로딩 다이얼로그
+      messenger.showSnackBar(
+        const SnackBar(content: Text('리뷰를 삭제하지 못했어요. 잠시 후 다시 시도해주세요.')),
+      );
+      return;
+    }
+    // Storage 이미지는 best-effort — 실패해도 삭제 자체는 완료로 본다.
+    final storage = ref.read(storageServiceProvider);
+    for (final url in review.imageUrls) {
+      try {
+        await storage.deleteByUrl(url);
+      } catch (_) {}
+    }
+    invalidateReviewLists(ref);
+    rootNavigator.pop(); // 로딩 다이얼로그
+    if (mounted) navigator.pop(); // 상세 화면
   }
 }
 

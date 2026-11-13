@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../core/utils/level_system.dart';
 import '../../../core/utils/network_utils.dart';
@@ -58,9 +59,14 @@ class ReviewDetailNotifier extends FamilyAsyncNotifier<ReviewModel?, String> {
     await withRetry(() => ref.read(reviewRepoProvider).addComment(review.id, comment));
     state = AsyncData(review.copyWith(commentCount: review.commentCount + 1));
 
-    final levelUp = await ref.read(userRepoProvider).addExpAndCheck(uid, LevelSystem.expComment);
-    if (levelUp != null) {
-      ref.read(levelUpProvider.notifier).state = levelUp;
+    // 댓글은 이미 저장됐으므로 경험치 지급 실패는 사용자에게 실패로 보이지 않게 한다.
+    try {
+      final levelUp = await ref.read(userRepoProvider).addExpAndCheck(uid, LevelSystem.expComment);
+      if (levelUp != null) {
+        ref.read(levelUpProvider.notifier).state = levelUp;
+      }
+    } catch (e) {
+      if (kDebugMode) debugPrint('[ReviewDetail] 댓글 경험치 지급 실패: $e');
     }
   }
 
@@ -71,13 +77,49 @@ class ReviewDetailNotifier extends FamilyAsyncNotifier<ReviewModel?, String> {
   }
 }
 
+/// 내가 차단한 유저 uid 목록 — 차단 직후 댓글/답글 목록에서 바로 빠지도록 스트림으로 구독한다.
+final _myBlockedUidsProvider = StreamProvider<List<String>>((ref) {
+  final uid = ref.watch(currentUidProvider);
+  if (uid == null) return Stream.value(const []);
+  // 유저 문서의 다른 필드(경험치 등) 변경으로 댓글 스트림이 재구독되지 않게 목록이 바뀔 때만 흘린다.
+  return ref
+      .watch(userRepoProvider)
+      .watchBlockedUids(uid)
+      .distinct((a, b) => listEquals(a, b));
+});
+
+/// 차단 목록을 먼저 받은 뒤 차단한 유저의 항목을 빼고 흘려보낸다
+/// (차단 목록 로딩 전 잠깐 노출되는 것 방지). 차단 목록이 바뀌면 provider가 다시 빌드된다.
+Stream<List<T>> _withoutBlocked<T>(
+  Future<List<String>> blockedFuture,
+  Stream<List<T>> source,
+  String Function(T) authorId,
+) async* {
+  final blocked = await blockedFuture.catchError((_) => const <String>[]);
+  if (blocked.isEmpty) {
+    yield* source;
+    return;
+  }
+  yield* source.map(
+    (list) => list.where((item) => !blocked.contains(authorId(item))).toList(),
+  );
+}
+
 final commentsProvider = StreamProviderFamily<List<CommentModel>, String>((ref, reviewId) {
-  return ref.watch(reviewRepoProvider).watchComments(reviewId);
+  return _withoutBlocked(
+    ref.watch(_myBlockedUidsProvider.future),
+    ref.watch(reviewRepoProvider).watchComments(reviewId),
+    (c) => c.authorId,
+  );
 });
 
 final reviewRepliesProvider = StreamProviderFamily<List<ReplyModel>,
     ({String reviewId, String commentId})>((ref, args) {
-  return ref.watch(reviewRepoProvider).watchReplies(args.reviewId, args.commentId);
+  return _withoutBlocked(
+    ref.watch(_myBlockedUidsProvider.future),
+    ref.watch(reviewRepoProvider).watchReplies(args.reviewId, args.commentId),
+    (r) => r.authorId,
+  );
 });
 
 /// 리뷰 목록(1열 리스트)에서 하트 채움 여부를 실시간으로 보여주기 위한

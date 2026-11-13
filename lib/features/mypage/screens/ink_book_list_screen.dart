@@ -32,7 +32,7 @@ class InkBookListScreen extends ConsumerWidget {
       ),
       body: booksAsync.when(
         loading: () => const Center(child: CircularProgressIndicator()),
-        error: (e, _) => Center(child: Text('오류: $e')),
+        error: (_, _) => const Center(child: Text('잉크 차트를 불러오지 못했어요.')),
         data: (books) => books.isEmpty
             ? _EmptyState(uid: uid)
             : _BookGrid(books: books, uid: uid),
@@ -306,12 +306,12 @@ class _CreateBookSheetState extends ConsumerState<_CreateBookSheet> {
           .read(inkBookRepoProvider)
           .createBook(widget.uid, name, _selectedColor);
       if (mounted) Navigator.pop(context);
-    } catch (e) {
+    } catch (_) {
       setState(() => _saving = false);
       if (mounted) {
         showCenterToast(
           context,
-          message: '저장 실패: $e',
+          message: '공책을 만들지 못했어요. 다시 시도해주세요.',
           icon: Icons.error_outline,
           iconColor: AppColors.error,
         );
@@ -452,18 +452,18 @@ class _BookOptionsSheetState extends ConsumerState<_BookOptionsSheet> {
     // 쓰다가 크래시한다. 시트는 "삭제" 확정을 받은 뒤에만 닫는다.
     final confirmed = await showDialog<bool>(
       context: context,
-      builder: (_) => AlertDialog(
+      builder: (dialogContext) => AlertDialog(
         title: const Text('공책 삭제'),
         content: Text(
           '"${widget.book.name}" 공책을 삭제할까요?\n안에 있는 잉크 기록도 모두 삭제됩니다.',
         ),
         actions: [
           TextButton(
-            onPressed: () => Navigator.pop(context, false),
+            onPressed: () => Navigator.pop(dialogContext, false),
             child: const Text('취소'),
           ),
           TextButton(
-            onPressed: () => Navigator.pop(context, true),
+            onPressed: () => Navigator.pop(dialogContext, true),
             style: TextButton.styleFrom(foregroundColor: AppColors.error),
             child: const Text('삭제'),
           ),
@@ -471,15 +471,16 @@ class _BookOptionsSheetState extends ConsumerState<_BookOptionsSheet> {
       ),
     );
     if (confirmed != true || !mounted) return;
+    // 시트를 닫으면 이 State가 dispose되어 이후 ref를 쓸 수 없으므로 미리 잡아둔다
+    final repo = ref.read(inkBookRepoProvider);
+    final storage = ref.read(storageServiceProvider);
     Navigator.pop(context);
 
-    final entries = await ref
-        .read(inkBookRepoProvider)
-        .deleteBook(widget.uid, widget.book.id);
+    final entries = await repo.deleteBook(widget.uid, widget.book.id);
     // Delete storage photos
     for (final e in entries) {
       try {
-        await ref.read(storageServiceProvider).deleteByUrl(e.photoUrl);
+        await storage.deleteByUrl(e.photoUrl);
       } catch (_) {}
     }
   }

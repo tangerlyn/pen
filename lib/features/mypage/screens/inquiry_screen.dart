@@ -44,7 +44,7 @@ class InquiryListScreen extends ConsumerWidget {
       ),
       body: async.when(
         loading: () => const Center(child: CircularProgressIndicator()),
-        error: (e, _) => Center(child: Text('오류: $e')),
+        error: (_, _) => const Center(child: Text('문의 내역을 불러오지 못했어요.')),
         data: (list) {
           if (list.isEmpty) {
             return Center(
@@ -181,7 +181,7 @@ class InquiryDetailScreen extends ConsumerWidget {
       appBar: AppBar(title: const Text('문의 상세')),
       body: async.when(
         loading: () => const Center(child: CircularProgressIndicator()),
-        error: (e, _) => Center(child: Text('오류: $e')),
+        error: (_, _) => const Center(child: Text('문의를 불러오지 못했어요.')),
         data: (inquiry) {
           if (inquiry == null) {
             return const Center(child: Text('문의를 찾을 수 없습니다.'));
@@ -364,11 +364,11 @@ class _InquiryWriteScreenState extends ConsumerState<InquiryWriteScreen> {
         );
         context.pop();
       }
-    } catch (e) {
+    } catch (_) {
       if (mounted) {
         showCenterToast(
           context,
-          message: '오류: $e',
+          message: '문의를 보내지 못했어요. 잠시 후 다시 시도해주세요.',
           icon: Icons.error_outline,
           iconColor: AppColors.error,
         );

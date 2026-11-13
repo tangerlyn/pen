@@ -191,6 +191,18 @@ service cloud.firestore {
       }
     }
 
+    // ── 컬렉션 그룹 쿼리용 ───────────────────────────────────────────
+    // collectionGroup() 쿼리는 경로별 match가 아니라 {path=**} 매치로만 허용된다.
+    // 마이페이지 "좋아요한 리뷰/게시글": where('uid' == 내 uid)로 내 좋아요만 조회.
+    match /{path=**}/likes/{likeId} {
+      allow read: if isLoggedIn() && resource.data.uid == request.auth.uid;
+    }
+    // 전체 공개 잉크북 목록: where('isPublic' == true)로만 조회.
+    match /{path=**}/inkBooks/{bookId} {
+      allow read: if isLoggedIn()
+          && (resource.data.isPublic == true || resource.data.visibility == 'public');
+    }
+
     match /follows/{docId} {
       allow read: if isLoggedIn();
       // 문서 ID를 `팔로워_팔로이`로 고정 — 랜덤 ID로 같은 관계를 계속 만들어

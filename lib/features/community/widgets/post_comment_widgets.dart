@@ -1,5 +1,53 @@
 part of '../screens/post_detail_screen.dart';
 
+/// 댓글·답글 삭제 확인 후 실행. 실패하면 스낵바로 알린다.
+Future<void> _confirmAndRun(
+  BuildContext context,
+  Future<void> Function() action, {
+  String title = '댓글을 삭제할까요?',
+}) async {
+  final ok = await showDialog<bool>(
+    context: context,
+    builder: (ctx) => AlertDialog(
+      title: Text(title),
+      content: const Text('삭제하면 되돌릴 수 없어요.'),
+      actions: [
+        TextButton(
+          onPressed: () => Navigator.pop(ctx, false),
+          child: const Text('취소'),
+        ),
+        TextButton(
+          onPressed: () => Navigator.pop(ctx, true),
+          child: const Text('삭제', style: TextStyle(color: AppColors.error)),
+        ),
+      ],
+    ),
+  );
+  if (ok != true) return;
+  try {
+    await action();
+  } catch (e) {
+    if (kDebugMode) debugPrint('delete comment/reply failed: $e');
+    if (!context.mounted) return;
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(
+        content: Text('삭제하지 못했어요. 잠시 후 다시 시도해 주세요.'),
+        duration: Duration(seconds: 3),
+      ),
+    );
+  }
+}
+
+void _showEditFailed(BuildContext context, Object error) {
+  if (kDebugMode) debugPrint('update comment/reply failed: $error');
+  ScaffoldMessenger.of(context).showSnackBar(
+    const SnackBar(
+      content: Text('수정하지 못했어요. 잠시 후 다시 시도해 주세요.'),
+      duration: Duration(seconds: 3),
+    ),
+  );
+}
+
 class _CommentTile extends ConsumerStatefulWidget {
   const _CommentTile({
     required this.comment,
@@ -85,9 +133,12 @@ class _CommentTileState extends ConsumerState<_CommentTile> {
                   await Future.delayed(const Duration(milliseconds: 100));
                   if (!mounted) return;
                   FocusScope.of(context).unfocus();
-                  await ref
-                      .read(postRepositoryProvider)
-                      .deleteComment(widget.postId, widget.comment.id);
+                  await _confirmAndRun(
+                    context,
+                    () => ref
+                        .read(postRepositoryProvider)
+                        .deleteComment(widget.postId, widget.comment.id),
+                  );
                 },
               ),
             ] else ...[
@@ -96,12 +147,24 @@ class _CommentTileState extends ConsumerState<_CommentTile> {
                 title: const Text('차단'),
                 onTap: () async {
                   Navigator.pop(context);
-                  await showBlockDialog(
+                  // 차단 후 이 타일은 목록에서 빠져 dispose되므로(ref 사용 불가)
+                  // Navigator와 ProviderContainer를 미리 잡아 둔다
+                  final navigator = Navigator.of(context);
+                  final container = ProviderScope.containerOf(
+                    context,
+                    listen: false,
+                  );
+                  final isPostAuthor = _isPostAuthor;
+                  final blocked = await showBlockDialog(
                     context,
                     ref,
                     targetUid: widget.comment.authorId,
                     targetNickname: widget.comment.authorNickname,
                   );
+                  if (!blocked) return;
+                  container.invalidate(communityFeedProvider);
+                  // 글쓴이를 차단했다면 글 자체가 안 보여야 하므로 상세 화면을 닫는다
+                  if (isPostAuthor) navigator.pop();
                 },
               ),
               ListTile(
@@ -138,9 +201,15 @@ class _CommentTileState extends ConsumerState<_CommentTile> {
       widget.onEditEnd?.call();
       return;
     }
-    await ref
-        .read(postRepositoryProvider)
-        .updateComment(widget.postId, widget.comment.id, newBody);
+    try {
+      await ref
+          .read(postRepositoryProvider)
+          .updateComment(widget.postId, widget.comment.id, newBody);
+    } catch (e) {
+      if (mounted) _showEditFailed(context, e);
+      return;
+    }
+    if (!mounted) return;
     setState(() => _isEditing = false);
     widget.onEditEnd?.call();
   }
@@ -423,13 +492,17 @@ class _PostReplyTileState extends ConsumerState<_PostReplyTile> {
                   await Future.delayed(const Duration(milliseconds: 100));
                   if (!mounted) return;
                   FocusScope.of(context).unfocus();
-                  await ref
-                      .read(postRepositoryProvider)
-                      .deleteReply(
-                        widget.postId,
-                        widget.commentId,
-                        widget.reply.id,
-                      );
+                  await _confirmAndRun(
+                    context,
+                    () => ref
+                        .read(postRepositoryProvider)
+                        .deleteReply(
+                          widget.postId,
+                          widget.commentId,
+                          widget.reply.id,
+                        ),
+                    title: '답글을 삭제할까요?',
+                  );
                 },
               ),
             ] else ...[
@@ -438,12 +511,24 @@ class _PostReplyTileState extends ConsumerState<_PostReplyTile> {
                 title: const Text('차단'),
                 onTap: () async {
                   Navigator.pop(context);
-                  await showBlockDialog(
+                  // 차단 후 이 타일은 목록에서 빠져 dispose되므로(ref 사용 불가)
+                  // Navigator와 ProviderContainer를 미리 잡아 둔다
+                  final navigator = Navigator.of(context);
+                  final container = ProviderScope.containerOf(
+                    context,
+                    listen: false,
+                  );
+                  final isPostAuthor = _isPostAuthor;
+                  final blocked = await showBlockDialog(
                     context,
                     ref,
                     targetUid: widget.reply.authorId,
                     targetNickname: widget.reply.authorNickname,
                   );
+                  if (!blocked) return;
+                  container.invalidate(communityFeedProvider);
+                  // 글쓴이를 차단했다면 글 자체가 안 보여야 하므로 상세 화면을 닫는다
+                  if (isPostAuthor) navigator.pop();
                 },
               ),
               ListTile(
@@ -480,9 +565,15 @@ class _PostReplyTileState extends ConsumerState<_PostReplyTile> {
       widget.onEditEnd?.call();
       return;
     }
-    await ref
-        .read(postRepositoryProvider)
-        .updateReply(widget.postId, widget.commentId, widget.reply.id, newBody);
+    try {
+      await ref
+          .read(postRepositoryProvider)
+          .updateReply(widget.postId, widget.commentId, widget.reply.id, newBody);
+    } catch (e) {
+      if (mounted) _showEditFailed(context, e);
+      return;
+    }
+    if (!mounted) return;
     setState(() => _isEditing = false);
     widget.onEditEnd?.call();
   }

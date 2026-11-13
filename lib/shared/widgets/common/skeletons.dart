@@ -27,14 +27,18 @@ Widget _shimmer(Widget child) => Shimmer.fromColors(
 
 // ── 홈 최신 리뷰 가로 스크롤 카드 ──────────────────────────────
 class HomeReviewCardSkeleton extends StatelessWidget {
-  const HomeReviewCardSkeleton({super.key, this.width = 150});
+  const HomeReviewCardSkeleton({super.key, this.width = 150, this.height});
   final double width;
+
+  /// null이면 부모(가로 리스트) 높이를 그대로 채운다 — 실제 카드 높이
+  /// (`ReviewGridCard.extent`)와 맞춰 로딩 후 레이아웃이 튀지 않게 한다.
+  final double? height;
 
   @override
   Widget build(BuildContext context) => _shimmer(
     Container(
       width: width,
-      height: 210,
+      height: height,
       margin: const EdgeInsets.only(right: 4),
       decoration: BoxDecoration(
         color: Colors.white,

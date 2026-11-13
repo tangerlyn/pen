@@ -25,6 +25,8 @@ class _PostWriteScreenState extends ConsumerState<PostWriteScreen> {
   bool _isSubmitting = false;
   final _editorKey = GlobalKey<BlogBodyEditorState>();
   List<EditorBlock>? _initialEditorBlocks;
+  // 에디터가 초기 블록 인스턴스를 그대로 고쳐 쓰므로, 시작 시점 내용을 따로 남겨 둔다
+  String? _initialBlocksSignature;
   bool _showEditorToolbar = false;
 
   bool get _isEditing => widget.postToEdit != null;
@@ -45,6 +47,7 @@ class _PostWriteScreenState extends ConsumerState<PostWriteScreen> {
           imageUrls: post.imageUrls,
         );
       }
+      _initialBlocksSignature = _blocksSignature(_initialEditorBlocks!);
     }
   }
 
@@ -109,9 +112,13 @@ class _PostWriteScreenState extends ConsumerState<PostWriteScreen> {
                 'body': body,
                 'imageUrls': imageUrls,
                 'contentBlocks': contentBlocks,
+                'category': _selectedCategory,
               }),
         );
-        if (mounted) context.pop();
+        if (mounted) {
+          ref.invalidate(communityFeedProvider);
+          context.pop();
+        }
       } else {
         final postId = await withRetry(
           () => ref
@@ -127,7 +134,7 @@ class _PostWriteScreenState extends ConsumerState<PostWriteScreen> {
                 contentBlocks: contentBlocks,
               ),
         );
-        if (mounted && postId != null) {
+        if (mounted) {
           context.pop();
           context.push('/community/$postId');
         }
@@ -135,9 +142,13 @@ class _PostWriteScreenState extends ConsumerState<PostWriteScreen> {
     } catch (_) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('인터넷 연결을 확인해주세요'),
-            duration: Duration(seconds: 3),
+          SnackBar(
+            content: Text(
+              _isEditing
+                  ? '게시글을 수정하지 못했어요. 잠시 후 다시 시도해 주세요.'
+                  : '게시글을 올리지 못했어요. 잠시 후 다시 시도해 주세요.',
+            ),
+            duration: const Duration(seconds: 3),
           ),
         );
       }
@@ -147,6 +158,7 @@ class _PostWriteScreenState extends ConsumerState<PostWriteScreen> {
   }
 
   bool _hasContent() {
+    if (_isEditing) return _hasEditChanges();
     if (_titleController.text.isNotEmpty) return true;
     if (_selectedCategory != null) return true;
     final blocks = _editorKey.currentState?.getBlocks() ?? [];
@@ -157,8 +169,37 @@ class _PostWriteScreenState extends ConsumerState<PostWriteScreen> {
     });
   }
 
+  /// 수정 모드: 제목·카테고리·본문 블록이 원래 글과 달라졌는지
+  bool _hasEditChanges() {
+    final post = widget.postToEdit!;
+    if (_titleController.text.trim() != post.title.trim()) return true;
+    if (_selectedCategory != post.category) return true;
+    final current = _editorKey.currentState?.getBlocks();
+    if (current == null) return false;
+    return _blocksSignature(current) != _initialBlocksSignature;
+  }
+
+  /// 블록 목록을 비교용 문자열로 만든다 (텍스트는 내용, 이미지는 URL/파일 경로)
+  String _blocksSignature(List<EditorBlock> blocks) => blocks
+      .map((b) {
+        if (b is TextEditorBlock) return 't:${b.controller.text.trim()}';
+        if (b is ImageEditorBlock) return 'i:${b.url ?? b.file?.path}';
+        return '';
+      })
+      .where((s) => s != 't:')
+      .join('\u0000');
+
   Future<bool> _confirmDiscard() async {
     if (!_hasContent()) return true;
+    if (_isEditing) {
+      return confirmDiscardDialog(
+        context,
+        title: '수정 중인 내용이 있어요',
+        content: '지금 나가면 수정한 내용이 저장되지 않아요.',
+        cancelLabel: '계속 수정',
+        confirmLabel: '나가기',
+      );
+    }
     return confirmDiscardDialog(context, confirmLabel: '삭제하고 나가기');
   }
 

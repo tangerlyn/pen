@@ -1,3 +1,13 @@
+/// 충전 방식 선택지 — 아카이브 필터와 직접 등록 시트가 같은 목록/값을 쓴다.
+const kPenFillTypes = ['카트리지·컨버터', '카트리지', '피스톤필러', '아이드로퍼', '진공'];
+
+/// 표기가 갈린 충전 방식 값을 [kPenFillTypes]의 표준 값으로 맞춘다
+/// (시드 데이터는 '피스톤', 필터/등록은 '피스톤필러').
+String normalizePenFillType(String raw) {
+  final t = raw.trim();
+  return t == '피스톤' ? '피스톤필러' : t;
+}
+
 class PenModel {
   const PenModel({
     required this.id,
@@ -35,7 +45,7 @@ class PenModel {
       modelName: data['modelName'] as String? ?? '',
       nibSizes: List<String>.from(data['nibSizes'] as List? ?? []),
       nibMaterial: data['nibMaterial'] as String? ?? '스틸닙',
-      fillType: data['fillType'] as String? ?? '카트리지·컨버터',
+      fillType: normalizePenFillType(data['fillType'] as String? ?? '카트리지·컨버터'),
       priceRange: data['priceRange'] as String? ?? '',
       reviewCount: (data['reviewCount'] as num?)?.toInt() ?? 0,
       avgRating: (data['avgRating'] as num?)?.toDouble() ?? 0.0,

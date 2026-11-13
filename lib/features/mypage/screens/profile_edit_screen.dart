@@ -68,10 +68,19 @@ class _ProfileEditScreenState extends ConsumerState<ProfileEditScreen> {
 
   Future<void> _checkNickname(String nickname) async {
     final uid = ref.read(currentUidProvider);
-    final available = await ref
-        .read(userRepoProvider)
-        .isNicknameAvailable(nickname, excludeUid: uid);
+    final bool available;
+    try {
+      available = await ref
+          .read(userRepoProvider)
+          .isNicknameAvailable(nickname, excludeUid: uid);
+    } catch (_) {
+      // 확인에 실패하면 checking에 머물러 저장이 막히지 않도록 되돌린다
+      if (mounted) setState(() => _nicknameStatus = _NicknameStatus.idle);
+      return;
+    }
     if (!mounted) return;
+    // 응답을 기다리는 사이 입력이 바뀌었으면 이 결과는 버린다
+    if (_nicknameController.text.trim() != nickname) return;
     setState(
       () => _nicknameStatus = available
           ? _NicknameStatus.available
@@ -79,8 +88,11 @@ class _ProfileEditScreenState extends ConsumerState<ProfileEditScreen> {
     );
   }
 
+  // 닉네임이 비면 프로필 미완성으로 간주돼 가입 화면으로 튕기므로 저장을 막는다
   bool get _canSave =>
-      !_isLoading && _nicknameStatus != _NicknameStatus.duplicate;
+      !_isLoading &&
+      _nicknameController.text.trim().isNotEmpty &&
+      _nicknameStatus != _NicknameStatus.duplicate;
 
   Future<void> _save() async {
     final uid = ref.read(currentUidProvider);
@@ -88,6 +100,7 @@ class _ProfileEditScreenState extends ConsumerState<ProfileEditScreen> {
 
     // 닉네임을 변경했는데 아직 체크 중이면 완료 대기
     final trimmed = _nicknameController.text.trim();
+    if (trimmed.isEmpty) return;
     if (trimmed != _originalNickname &&
         _nicknameStatus == _NicknameStatus.checking) {
       return;
@@ -112,6 +125,12 @@ class _ProfileEditScreenState extends ConsumerState<ProfileEditScreen> {
       });
 
       if (mounted) Navigator.pop(context);
+    } catch (_) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('프로필을 저장하지 못했어요. 다시 시도해주세요.')),
+        );
+      }
     } finally {
       if (mounted) setState(() => _isLoading = false);
     }

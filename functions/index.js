@@ -44,7 +44,13 @@ async function getUserFcmData(uid) {
   return {
     fcmToken: data.fcmToken ?? privateDoc.data()?.fcmToken ?? null,
     notificationSettings: data.notificationSettings ?? {},
+    blockedUsers: Array.isArray(data.blockedUsers) ? data.blockedUsers : [],
   };
+}
+
+// 받는 사람이 보낸 사람을 차단했으면 알림(푸시·인앱 모두)을 보내지 않는다.
+function isBlocked(fcmData, fromUid) {
+  return !!fromUid && fcmData.blockedUsers.includes(fromUid);
 }
 
 // FCM 메시지 전송
@@ -99,8 +105,10 @@ exports.onReviewLike = onDocumentCreated(
     const authorId = reviewDoc.data()?.authorId;
     if (!authorId || authorId === likerUid) return;
 
-    const { fcmToken, notificationSettings } = await getUserFcmData(authorId);
+    const fcmData = await getUserFcmData(authorId);
+    const { fcmToken, notificationSettings } = fcmData;
     if (!fcmToken || notificationSettings.likes === false) return;
+    if (isBlocked(fcmData, likerUid)) return;
 
     const likerDoc = await db.collection("users").doc(likerUid).get();
     const likerNickname = likerDoc.data()?.nickname ?? "누군가";
@@ -140,13 +148,15 @@ exports.onReviewComment = onDocumentCreated(
     const authorId = reviewDoc.data()?.authorId;
     if (!authorId || authorId === commenterUid) return;
 
-    const { fcmToken, notificationSettings } = await getUserFcmData(authorId);
+    const fcmData = await getUserFcmData(authorId);
+    const { fcmToken, notificationSettings } = fcmData;
     if (!fcmToken || notificationSettings.comments === false) return;
-
-    const commenterNickname = commentData.authorNickname || "누군가";
+    if (isBlocked(fcmData, commenterUid)) return;
 
     const msg = `회원님의 리뷰에 댓글을 남겼어요`;
     const commenterDoc = await db.collection("users").doc(commenterUid).get();
+    // 닉네임은 댓글 문서 값(작성자가 임의로 넣을 수 있음) 대신 프로필에서 읽는다.
+    const commenterNickname = commenterDoc.data()?.nickname || "누군가";
     const commenterProfile = commenterDoc.data()?.profileImageUrl ?? null;
     await Promise.all([
       sendNotification({
@@ -178,8 +188,10 @@ exports.onPostLike = onDocumentCreated(
     const authorId = postDoc.data()?.authorId;
     if (!authorId || authorId === likerUid) return;
 
-    const { fcmToken, notificationSettings } = await getUserFcmData(authorId);
+    const fcmData = await getUserFcmData(authorId);
+    const { fcmToken, notificationSettings } = fcmData;
     if (!fcmToken || notificationSettings.likes === false) return;
+    if (isBlocked(fcmData, likerUid)) return;
 
     const likerDoc = await db.collection("users").doc(likerUid).get();
     const likerNickname = likerDoc.data()?.nickname ?? "누군가";
@@ -219,13 +231,14 @@ exports.onPostComment = onDocumentCreated(
     const authorId = postDoc.data()?.authorId;
     if (!authorId || authorId === commenterUid) return;
 
-    const { fcmToken, notificationSettings } = await getUserFcmData(authorId);
+    const fcmData = await getUserFcmData(authorId);
+    const { fcmToken, notificationSettings } = fcmData;
     if (!fcmToken || notificationSettings.comments === false) return;
-
-    const commenterNickname = commentData.authorNickname || "누군가";
+    if (isBlocked(fcmData, commenterUid)) return;
 
     const msgPost = `회원님의 게시글에 댓글을 남겼어요`;
     const commenterDocPost = await db.collection("users").doc(commenterUid).get();
+    const commenterNickname = commenterDocPost.data()?.nickname || "누군가";
     const commenterProfilePost = commenterDocPost.data()?.profileImageUrl ?? null;
     await Promise.all([
       sendNotification({
@@ -253,8 +266,10 @@ exports.onFollow = onDocumentCreated("follows/{followDoc}", async (event) => {
   const { followerId, followeeId } = followData;
   if (!followerId || !followeeId) return;
 
-  const { fcmToken, notificationSettings } = await getUserFcmData(followeeId);
+  const fcmData = await getUserFcmData(followeeId);
+  const { fcmToken, notificationSettings } = fcmData;
   if (!fcmToken || notificationSettings.follows === false) return;
+  if (isBlocked(fcmData, followerId)) return;
 
   const followerDoc = await db.collection("users").doc(followerId).get();
   const followerNickname = followerDoc.data()?.nickname ?? "누군가";
@@ -296,11 +311,13 @@ exports.onReviewReply = onDocumentCreated(
     const commentAuthorId = commentDoc.data()?.authorId;
     if (!commentAuthorId || commentAuthorId === replierUid) return;
 
-    const { fcmToken, notificationSettings } = await getUserFcmData(commentAuthorId);
+    const fcmData = await getUserFcmData(commentAuthorId);
+    const { fcmToken, notificationSettings } = fcmData;
     if (!fcmToken || notificationSettings.comments === false) return;
+    if (isBlocked(fcmData, replierUid)) return;
 
-    const replierNickname = replyData.authorNickname || "누군가";
     const replierDoc = await db.collection("users").doc(replierUid).get();
+    const replierNickname = replierDoc.data()?.nickname || "누군가";
     const replierProfile = replierDoc.data()?.profileImageUrl ?? null;
 
     const msg = `회원님의 댓글에 답글을 남겼어요`;
@@ -339,11 +356,13 @@ exports.onPostReply = onDocumentCreated(
     const commentAuthorId = commentDoc.data()?.authorId;
     if (!commentAuthorId || commentAuthorId === replierUid) return;
 
-    const { fcmToken, notificationSettings } = await getUserFcmData(commentAuthorId);
+    const fcmData = await getUserFcmData(commentAuthorId);
+    const { fcmToken, notificationSettings } = fcmData;
     if (!fcmToken || notificationSettings.comments === false) return;
+    if (isBlocked(fcmData, replierUid)) return;
 
-    const replierNickname = replyData.authorNickname || "누군가";
     const replierDoc = await db.collection("users").doc(replierUid).get();
+    const replierNickname = replierDoc.data()?.nickname || "누군가";
     const replierProfile = replierDoc.data()?.profileImageUrl ?? null;
 
     const msg = `회원님의 댓글에 답글을 남겼어요`;
@@ -736,10 +755,11 @@ exports.onUserDeleted = functionsV1.auth.user().onDelete(async (user) => {
   // 탈퇴 사용자가 다른 사람 리뷰/글에 남긴 좋아요·스크랩도 정리하고
   // (문서 ID = uid), 해당 글의 likeCount/scrapCount를 같이 줄인다.
   // likes/scraps는 review/post마다 서브컬렉션이라 "이 uid의 좋아요 전체"를
-  // 바로 조회할 방법이 없어, collection group 전체를 훑어 문서 ID로 걸러낸다.
+  // 좋아요 문서에는 uid 필드가 있어(collection group 인덱스 등록됨) 바로 조회한다.
+  // 스크랩은 현재 앱에서 쓰지 않아 비어 있지만, 예전 데이터를 위해 문서 ID로 거른다.
   try {
     const [likeDocs, scrapDocs] = await Promise.all([
-      db.collectionGroup("likes").get(),
+      db.collectionGroup("likes").where("uid", "==", uid).get(),
       db.collectionGroup("scraps").get(),
     ]);
 

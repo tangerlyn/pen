@@ -71,8 +71,10 @@ class RouterNotifier extends Notifier<void> with ChangeNotifier {
       return '/signup/nickname';
     }
 
-    // 프로필 완성 — 인증 화면 접근 차단
-    if (isAuthRoute) return '/';
+    // 프로필 완성 — 인증 화면 접근 차단. 가입 화면(/signup/*)에서 프로필이
+    // 막 저장된 경우는 유저 문서 스냅샷이 completeSignup의 화면 이동보다 먼저
+    // 도착할 수 있으므로, 홈이 아니라 온보딩으로 보내 건너뛰지 않게 한다.
+    if (isAuthRoute) return loc.startsWith('/signup') ? '/onboarding' : '/';
     return null;
   }
 }

@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../core/theme/app_theme.dart';
@@ -39,7 +40,8 @@ Future<void> showReportSheet(
   );
 }
 
-Future<void> showBlockDialog(
+/// 차단에 성공하면 true를 돌려준다 (호출한 화면에서 목록 새로고침·화면 닫기용)
+Future<bool> showBlockDialog(
   BuildContext context,
   WidgetRef ref, {
   required String targetUid,
@@ -48,7 +50,7 @@ Future<void> showBlockDialog(
   final currentUid = ref.read(currentUidProvider);
   if (currentUid == null) {
     showCenterToast(context, message: '로그인 후 이용 가능합니다.');
-    return;
+    return false;
   }
 
   final confirmed = await showDialog<bool>(
@@ -71,12 +73,25 @@ Future<void> showBlockDialog(
     ),
   );
 
-  if (confirmed == true && context.mounted) {
+  if (confirmed != true || !context.mounted) return false;
+  try {
     await ref.read(userRepoProvider).block(currentUid, targetUid);
+  } catch (e) {
+    if (kDebugMode) debugPrint('block failed: $e');
     if (context.mounted) {
-      showCenterToast(context, message: '차단되었습니다.', icon: Icons.check_circle);
+      showCenterToast(
+        context,
+        message: '차단하지 못했어요. 잠시 후 다시 시도해 주세요.',
+        icon: Icons.error_outline,
+        iconColor: AppColors.error,
+      );
     }
+    return false;
   }
+  if (context.mounted) {
+    showCenterToast(context, message: '차단되었습니다.', icon: Icons.check_circle);
+  }
+  return true;
 }
 
 class _ReportSheet extends ConsumerStatefulWidget {
@@ -133,11 +148,12 @@ class _ReportSheetState extends ConsumerState<_ReportSheet> {
         );
       }
     } catch (e) {
+      if (kDebugMode) debugPrint('report failed: $e');
       if (mounted) {
         setState(() => _isSubmitting = false);
         showCenterToast(
           context,
-          message: '신고 실패: $e',
+          message: '신고하지 못했어요. 잠시 후 다시 시도해 주세요.',
           icon: Icons.error_outline,
           iconColor: AppColors.error,
         );

@@ -6,7 +6,9 @@ import '../../../shared/providers/providers.dart';
 
 final homeLatestReviewsProvider = FutureProvider<List<ReviewModel>>((ref) async {
   final (reviews, _) = await ref.read(reviewRepoProvider).getFeed(limit: 6);
-  return reviews;
+  return ref
+      .read(userRepoProvider)
+      .filterByBlocked(ref.read(currentUidProvider), reviews, (r) => r.authorId);
 });
 
 final homePopularInksProvider = FutureProvider<List<InkModel>>((ref) async {

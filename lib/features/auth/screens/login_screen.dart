@@ -99,7 +99,7 @@ class LoginScreen extends ConsumerWidget {
                       ),
                     const SizedBox(height: 32),
                     Text(
-                      '로그인하면 서비스 이용약관 및 개인정보처리방침에\n동의하는 것으로 간주됩니다.',
+                      '처음 가입할 때 이용약관과 개인정보처리방침\n동의를 받아요.',
                       textAlign: TextAlign.center,
                       style: Theme.of(context).textTheme.labelSmall,
                     ),

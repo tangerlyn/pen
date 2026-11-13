@@ -1,3 +1,5 @@
+import 'dart:async';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -45,9 +47,10 @@ class _ReviewWriteScreenState extends ConsumerState<ReviewWriteScreen> {
   // 이미지 업로드 단계부터 저장 완료까지 완료 버튼 연타를 막는다.
   // (provider의 isLoading은 업로드가 끝난 뒤에야 켜지므로 그것만으로는 부족함)
   bool _isSubmitting = false;
-  bool _showEditorToolbar = false;
   // provider 초기화(수정할 리뷰 불러오기 / 새 작성 초기화)가 끝났는지
   bool _ready = false;
+  // 수정 모드에서 처음 불러온 본문 — 바뀐 게 없으면 나갈 때 확인을 묻지 않는다.
+  List<String> _initialBodySignature = const [];
 
   @override
   void initState() {
@@ -71,6 +74,7 @@ class _ReviewWriteScreenState extends ConsumerState<ReviewWriteScreen> {
           imageUrls: review.imageUrls,
         );
       }
+      _initialBodySignature = _bodySignature(_initialEditorBlocks!);
     }
 
     // provider 상태는 initState(위젯 빌드 중)에서 바꿀 수 없다(Riverpod 오류).
@@ -97,6 +101,24 @@ class _ReviewWriteScreenState extends ConsumerState<ReviewWriteScreen> {
     });
   }
 
+  /// 본문 비교용 요약 — 빈 텍스트 블록은 저장 시에도 빠지므로 무시한다.
+  static List<String> _bodySignature(List<EditorBlock> blocks) => [
+    for (final b in blocks)
+      if (b is TextEditorBlock && b.controller.text.trim().isNotEmpty)
+        'T:${b.controller.text.trim()}'
+      else if (b is ImageEditorBlock)
+        'I:${b.url ?? b.file?.path}',
+  ];
+
+  bool _hasEditChanges(ReviewModel original) {
+    final s = ref.read(reviewWriteProvider);
+    if (s.title != original.title) return true;
+    if (!listEquals(s.inkIds, original.inkIds)) return true;
+    if (!listEquals(s.penIds, original.penIds)) return true;
+    final blocks = _editorKey.currentState?.getBlocks() ?? const [];
+    return !listEquals(_bodySignature(blocks), _initialBodySignature);
+  }
+
   bool _hasContent() {
     final s = ref.read(reviewWriteProvider);
     if (s.inkIds.isNotEmpty || s.penIds.isNotEmpty) return true;
@@ -113,9 +135,23 @@ class _ReviewWriteScreenState extends ConsumerState<ReviewWriteScreen> {
 
   /// 뒤로가기·닫기 버튼 공통. 작성 중이면 확인을 받고, 나가기가 확정되면 이탈 로그를 남긴다.
   Future<void> _tryLeave() async {
-    final hadContent = _hasContent();
-    final leave = !hadContent ||
-        await confirmDiscardDialog(context, confirmLabel: '삭제하고 나가기');
+    final original = widget.reviewToEdit;
+    final hadContent =
+        original != null ? _hasEditChanges(original) : _hasContent();
+    final bool leave;
+    if (!hadContent) {
+      leave = true;
+    } else if (original != null) {
+      leave = await confirmDiscardDialog(
+        context,
+        title: '수정을 취소할까요?',
+        content: '지금 나가면 수정한 내용이 반영되지 않아요.',
+        cancelLabel: '계속 수정',
+        confirmLabel: '수정 취소',
+      );
+    } else {
+      leave = await confirmDiscardDialog(context, confirmLabel: '삭제하고 나가기');
+    }
     if (leave && mounted) {
       _tracker.exited(hadContent: hadContent);
       ref.read(reviewWriteProvider.notifier).reset();
@@ -187,8 +223,7 @@ class _ReviewWriteScreenState extends ConsumerState<ReviewWriteScreen> {
                   hintText: '잉크 색상, 종이와의 궁합, 닙의 느낌 등을 자유롭게 작성해보세요.',
                   initialBlocks: _initialEditorBlocks,
                   maxTextLength: AppConstants.maxReviewBody,
-                  onFocusChanged: (hasFocus) =>
-                      setState(() => _showEditorToolbar = hasFocus),
+                  maxImages: AppConstants.maxReviewImages,
                   onTextChanged: () => _tracker.input(ReviewInputKind.body),
                   onImagesInserted: (source, count) => _tracker.photoAdded(
                     source: switch (source) {
@@ -211,14 +246,20 @@ class _ReviewWriteScreenState extends ConsumerState<ReviewWriteScreen> {
             ),
           ),
         ),
-        bottomNavigationBar: _showEditorToolbar
-            ? Padding(
-                padding: EdgeInsets.only(
-                  bottom: MediaQuery.of(context).viewInsets.bottom,
-                ),
-                child: BlogEditorToolbar(editorKey: _editorKey),
-              )
-            : null,
+        // 사진이 필수라서 본문에 포커스가 없어도 사진 버튼이 보이도록 툴바를 항상 띄운다.
+        // 키보드가 열리면 키보드 바로 위로, 닫히면 홈 인디케이터 위로 붙는다.
+        bottomNavigationBar: Padding(
+          padding: EdgeInsets.only(
+            bottom: MediaQuery.of(context).viewInsets.bottom,
+          ),
+          child: ColoredBox(
+            color: Colors.white,
+            child: SafeArea(
+              top: false,
+              child: BlogEditorToolbar(editorKey: _editorKey),
+            ),
+          ),
+        ),
       ),
     );
   }
@@ -319,7 +360,13 @@ class _ReviewWriteScreenState extends ConsumerState<ReviewWriteScreen> {
             ),
           );
       if (context.mounted) {
-        context.pushReplacement('/review/$reviewId');
+        if (widget.reviewToEdit != null) {
+          // 수정은 기존 상세 화면 위에서 열린다 — 닫으면 (provider에서
+          // 무효화된) 상세가 새 내용으로 다시 보인다. 상세를 또 쌓지 않는다.
+          context.pop();
+        } else {
+          context.pushReplacement('/review/$reviewId');
+        }
       }
     } on ReviewSubmitException catch (e) {
       _tracker.failed(e.stage, e.cause ?? e);
@@ -637,29 +684,55 @@ class _ProductSearchSheetState extends ConsumerState<_ProductSearchSheet> {
   final _controller = TextEditingController();
   List<dynamic> _results = [];
   bool _isLoading = false;
+  bool _hasError = false;
+  Timer? _debounce;
 
   @override
   void dispose() {
+    _debounce?.cancel();
     _controller.dispose();
     super.dispose();
   }
 
-  Future<void> _search(String query) async {
+  void _onQueryChanged(String query) {
+    _debounce?.cancel();
     if (query.isEmpty) {
-      setState(() => _results = []);
+      setState(() {
+        _results = [];
+        _isLoading = false;
+        _hasError = false;
+      });
       return;
     }
     setState(() => _isLoading = true);
+    _debounce = Timer(const Duration(milliseconds: 300), () => _search(query));
+  }
+
+  Future<void> _search(String query) async {
     final repo = ref.read(archiveRepoProvider);
     try {
-      switch (widget.type) {
-        case 'ink':
-          _results = await repo.searchInks(query);
-        case 'pen':
-          _results = await repo.searchPens(query);
-      }
+      final List<dynamic> results = switch (widget.type) {
+        'ink' => await repo.searchInks(query),
+        'pen' => await repo.searchPens(query),
+        _ => const [],
+      };
+      // 늦게 도착한 이전 검색어 결과는 버린다.
+      if (!mounted || query != _controller.text) return;
+      setState(() {
+        _results = results;
+        _hasError = false;
+      });
+    } catch (e) {
+      if (kDebugMode) debugPrint('[ReviewWrite] 제품 검색 실패: $e');
+      if (!mounted || query != _controller.text) return;
+      setState(() {
+        _results = [];
+        _hasError = true;
+      });
     } finally {
-      setState(() => _isLoading = false);
+      if (mounted && query == _controller.text) {
+        setState(() => _isLoading = false);
+      }
     }
   }
 
@@ -682,7 +755,7 @@ class _ProductSearchSheetState extends ConsumerState<_ProductSearchSheet> {
                 hintText: '$typeLabel 검색',
                 prefixIcon: const Icon(Icons.search),
               ),
-              onChanged: _search,
+              onChanged: _onQueryChanged,
             ),
           ),
           if (_isLoading) const LinearProgressIndicator(),
@@ -700,6 +773,10 @@ class _ProductSearchSheetState extends ConsumerState<_ProductSearchSheet> {
                           Text(
                             _controller.text.isEmpty
                                 ? '$typeLabel 이름을 검색해보세요'
+                                : _isLoading
+                                ? '검색 중…'
+                                : _hasError
+                                ? '검색하지 못했어요. 잠시 후 다시 시도해주세요.'
                                 : '검색 결과가 없습니다.',
                             style: const TextStyle(
                               color: AppColors.textSecondary,
@@ -709,15 +786,14 @@ class _ProductSearchSheetState extends ConsumerState<_ProductSearchSheet> {
                             const SizedBox(height: 12),
                             TextButton.icon(
                               icon: const Icon(Icons.add),
-                              label: Text('+ "${_controller.text}" 직접 등록하기'),
+                              label: Text('"${_controller.text}" 직접 등록하기'),
+                              // 등록 시트는 스스로 닫히고, onSelected가 검색 시트를 닫는다.
+                              // 여기서 한 번 더 pop하면 작성 화면까지 닫혀 버린다.
                               onPressed: () => showAddProductSheet(
                                 context,
                                 initialType: widget.type,
                                 initialName: _controller.text,
-                                onAdded: (id, name) {
-                                  widget.onSelected(id, name);
-                                  Navigator.pop(context);
-                                },
+                                onAdded: widget.onSelected,
                               ),
                             ),
                           ],

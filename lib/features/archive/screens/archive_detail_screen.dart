@@ -68,7 +68,13 @@ class ArchiveDetailScreen extends ConsumerWidget {
       ),
       body: state.when(
         loading: () => const Center(child: CircularProgressIndicator()),
-        error: (e, st) => Center(child: Text('오류: $e')),
+        error: (e, st) => const Center(
+          child: Text(
+            '제품 정보를 불러오지 못했어요.\n잠시 후 다시 시도해주세요.',
+            textAlign: TextAlign.center,
+            style: TextStyle(color: AppColors.textSecondary),
+          ),
+        ),
         data: (data) => data == null
             ? const Center(child: Text('제품을 찾을 수 없습니다.'))
             : _DetailBody(type: type, data: data, productId: productId),

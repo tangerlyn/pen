@@ -53,11 +53,11 @@
 		<key>LSRequiresIPhoneOS</key>
 		<true/>
 		<key>NSCameraUsageDescription</key>
-		<string>사진 촬영을 위해 카메라 접근 권한이 필요합니다.</string>
+		<string>리뷰·게시글에 첨부할 사진을 촬영하기 위해 카메라 접근 권한이 필요합니다.</string>
 		<key>NSPhotoLibraryAddUsageDescription</key>
-		<string>리뷰 사진 저장을 위해 사진 접근 권한이 필요합니다.</string>
+		<string>잉크북 이미지를 사진 앱에 저장하기 위해 사진 접근 권한이 필요합니다.</string>
 		<key>NSPhotoLibraryUsageDescription</key>
-		<string>리뷰 사진 업로드를 위해 사진 접근 권한이 필요합니다.</string>
+		<string>리뷰·게시글·프로필·잉크 차트에 사진을 첨부하기 위해 사진 접근 권한이 필요합니다.</string>
 		<key>NidAppName</key>
 		<string>만티</string>
 		<key>NidClientID</key>
@@ -79,8 +79,6 @@
 		<key>UISupportedInterfaceOrientations</key>
 		<array>
 			<string>UIInterfaceOrientationPortrait</string>
-			<string>UIInterfaceOrientationLandscapeLeft</string>
-			<string>UIInterfaceOrientationLandscapeRight</string>
 		</array>
 		<key>UISupportedInterfaceOrientations~ipad</key>
 		<array>
@@ -89,6 +87,8 @@
 			<string>UIInterfaceOrientationLandscapeLeft</string>
 			<string>UIInterfaceOrientationLandscapeRight</string>
 		</array>
+		<key>ITSAppUsesNonExemptEncryption</key>
+		<false/>
 		<key>UIStatusBarHidden</key>
 		<false/>
 	</dict>

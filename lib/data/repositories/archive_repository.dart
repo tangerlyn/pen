@@ -1,22 +1,12 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_core/firebase_core.dart';
-import 'package:flutter/foundation.dart';
-import 'package:flutter/services.dart';
-import 'package:csv/csv.dart';
 import '../models/ink_model.dart';
 import '../models/pen_model.dart';
 import 'review_repository.dart';
 import '../../core/constants/app_constants.dart';
 
 class ArchiveRepository {
-  ArchiveRepository(this._reviewRepo) {
-    debugPrint(
-      'ArchiveRepo Constructor - Firestore app name: ${_firestore.app.name}',
-    );
-    debugPrint(
-      'ArchiveRepo Constructor - Firestore project ID: ${_firestore.app.options.projectId}',
-    );
-  }
+  ArchiveRepository(this._reviewRepo);
   final ReviewRepository _reviewRepo;
   final FirebaseFirestore _firestore = FirebaseFirestore.instanceFor(
     app: Firebase.app(),
@@ -24,145 +14,6 @@ class ArchiveRepository {
 
   CollectionReference get _inks => _firestore.collection(AppConstants.inksCol);
   CollectionReference get _pens => _firestore.collection(AppConstants.pensCol);
-
-  // ── CSV 초기화 ────────────────────────────────────────────────
-  Future<void> initializeDatabase() async {
-    try {
-      // 1. Inks — 기존 문서 전체 삭제 후 새로 업로드
-      final existingInkDocs = await _inks.get();
-      final deleteInkBatch = _firestore.batch();
-      for (final doc in existingInkDocs.docs) {
-        deleteInkBatch.delete(doc.reference);
-      }
-      await deleteInkBatch.commit();
-      debugPrint('기존 잉크 ${existingInkDocs.docs.length}개 삭제 완료');
-
-      var batch = _firestore.batch();
-      final inksCsv = await rootBundle.loadString('assets/info_csv/inks.csv');
-      final normalizedCsv = inksCsv
-          .replaceAll('\r\n', '\n')
-          .replaceAll('\r', '\n');
-      final inksRows = const CsvToListConverter(
-        eol: '\n',
-      ).convert(normalizedCsv);
-      debugPrint('Inks CSV rows: ${inksRows.length}개');
-      if (inksRows.isNotEmpty) {
-        final headers = inksRows[0]
-            .map(
-              (e) =>
-                  e.toString().replaceAll(RegExp(r'^\xEF\xBB\xBF'), '').trim(),
-            )
-            .toList();
-        final idIdx = headers.indexOf('id');
-        final brandIdx = headers.indexOf('brand');
-        final nameIdx = headers.indexOf('name');
-        final inkTypeIdx = headers.indexOf('inkType');
-        final hexColorIdx = headers.indexOf('hexColor');
-        final capacityIdx = headers.indexOf('capacityMl');
-
-        for (var i = 1; i < inksRows.length; i++) {
-          final row = inksRows[i];
-          if (row.isEmpty || idIdx == -1 || row.length <= idIdx) continue;
-          final id = row[idIdx].toString().trim();
-          if (id.isEmpty || id == 'id') continue;
-
-          final data = <String, dynamic>{};
-          if (brandIdx != -1 && row.length > brandIdx)
-            data['brand'] = row[brandIdx].toString().trim();
-          if (nameIdx != -1 && row.length > nameIdx)
-            data['name'] = row[nameIdx].toString().trim();
-          if (inkTypeIdx != -1 && row.length > inkTypeIdx)
-            data['inkType'] = row[inkTypeIdx].toString().trim();
-          if (hexColorIdx != -1 && row.length > hexColorIdx)
-            data['hexColor'] = row[hexColorIdx].toString().trim();
-          if (capacityIdx != -1 && row.length > capacityIdx)
-            data['capacityMl'] =
-                int.tryParse(row[capacityIdx].toString().trim()) ?? 0;
-
-          batch.set(_inks.doc(id), data);
-        }
-        await batch.commit();
-        debugPrint('Inks batch commit success');
-        final testSnap = await _inks.get();
-        debugPrint('Inks uploaded: ${testSnap.docs.length}개');
-      }
-
-      // 2. Pens
-      var batchPens = _firestore.batch();
-      final pensCsv = await rootBundle.loadString('assets/info_csv/pens.csv');
-      final pensRows = const CsvToListConverter().convert(pensCsv);
-      if (pensRows.isNotEmpty) {
-        final headers = pensRows[0]
-            .map(
-              (e) =>
-                  e.toString().replaceAll(RegExp(r'^\xEF\xBB\xBF'), '').trim(),
-            )
-            .toList();
-        debugPrint('Pens CSV Headers: $headers');
-        final idIdx = headers.indexOf('id');
-        final brandIdx = headers.indexOf('brand');
-        final modelNameIdx = headers.indexOf('modelName');
-        final nibMaterialIdx = headers.indexOf('nibMaterial');
-        final nibSizesIdx = headers.indexOf('nibSizes');
-        final fillTypeIdx = headers.indexOf('fillType');
-        final lineupIdx = headers.indexOf('lineup');
-        final priceRangeIdx = headers.indexOf('priceRange');
-
-        for (var i = 1; i < pensRows.length; i++) {
-          final row = pensRows[i];
-          if (row.isEmpty || idIdx == -1 || row.length <= idIdx) continue;
-          final id = row[idIdx].toString().trim();
-          if (id.isEmpty || id == 'id') continue;
-
-          final data = <String, dynamic>{
-            'lineup': lineupIdx != -1 && row.length > lineupIdx
-                ? row[lineupIdx].toString().trim()
-                : '',
-          };
-          if (brandIdx != -1 && row.length > brandIdx)
-            data['brand'] = row[brandIdx].toString().trim();
-          if (modelNameIdx != -1 && row.length > modelNameIdx)
-            data['modelName'] = row[modelNameIdx].toString().trim();
-          if (nibMaterialIdx != -1 && row.length > nibMaterialIdx)
-            data['nibMaterial'] = row[nibMaterialIdx].toString().trim();
-          if (nibSizesIdx != -1 && row.length > nibSizesIdx) {
-            final sizesStr = row[nibSizesIdx].toString().trim();
-            data['nibSizes'] = sizesStr.isEmpty
-                ? []
-                : sizesStr
-                      .split('|')
-                      .map((e) => e.trim())
-                      .where((e) => e.isNotEmpty)
-                      .toList();
-          }
-          if (fillTypeIdx != -1 && row.length > fillTypeIdx)
-            data['fillType'] = row[fillTypeIdx].toString().trim();
-          if (priceRangeIdx != -1 && row.length > priceRangeIdx)
-            data['priceRange'] = row[priceRangeIdx].toString().trim();
-
-          batchPens.set(_pens.doc(id), data, SetOptions(merge: true));
-        }
-        debugPrint(
-          'Before Pens batch commit - Firestore app name: ${_firestore.app.name}',
-        );
-        debugPrint(
-          'Before Pens batch commit - Firestore project ID: ${_firestore.app.options.projectId}',
-        );
-        await batchPens.commit();
-        debugPrint('Pens batch commit success');
-      }
-
-      // -- 테스트: DB 쓰기 직후 정상적으로 저장되었는지 확인
-      final testSnapshot = await _pens.get();
-      debugPrint(
-        'Test query after init: pens collection size = ${testSnapshot.docs.length}',
-      );
-    } catch (e, st) {
-      debugPrint('batch commit error: $e');
-      debugPrint('$st');
-      rethrow;
-    }
-  }
 
   // ── 잉크 ───────────────────────────────────────────────────
   Future<({List<InkModel> items, DocumentSnapshot? lastDoc, bool hasMore})>
@@ -269,15 +120,36 @@ class ArchiveRepository {
         .toList();
   }
 
-  // 동일 브랜드+이름 잉크 존재 여부 확인
-  Future<bool> inkExists(String brand, String name) async {
-    final snap = await _inks
-        .where('brand', isEqualTo: brand)
-        .where('name', isEqualTo: name)
-        .limit(1)
-        .get();
-    return snap.docs.isNotEmpty;
+  // 중복 등록 판정용 정규화 — 앞뒤 공백·연속 공백·대소문자 차이는 같은 제품으로 본다
+  static String _normalize(String s) =>
+      s.trim().replaceAll(RegExp(r'\s+'), ' ').toLowerCase();
+
+  // 같은 브랜드+이름 문서가 있는지 — Firestore는 대소문자 무시 비교가 안 돼서
+  // (PILOT vs Pilot) 컬렉션을 받아 클라이언트에서 정규화 비교한다.
+  // 검색(searchInks/searchPens)과 같은 방식이고, 등록 시에만 호출된다.
+  Future<bool> _productExists(
+    CollectionReference col,
+    String nameField,
+    String brand,
+    String name,
+  ) async {
+    final b = _normalize(brand);
+    final n = _normalize(name);
+    final snap = await col.get();
+    return snap.docs.any((doc) {
+      final data = doc.data() as Map<String, dynamic>;
+      return _normalize(data['brand'] as String? ?? '') == b &&
+          _normalize(data[nameField] as String? ?? '') == n;
+    });
   }
+
+  // 동일 브랜드+이름 잉크 존재 여부 확인
+  Future<bool> inkExists(String brand, String name) =>
+      _productExists(_inks, 'name', brand, name);
+
+  // 동일 브랜드+모델명 만년필 존재 여부 확인
+  Future<bool> penExists(String brand, String modelName) =>
+      _productExists(_pens, 'modelName', brand, modelName);
 
   // 잉크 등록 자동완성용 — 기존 브랜드/이름 목록 반환
   Future<({List<String> brands, List<String> names})>

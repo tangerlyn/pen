@@ -319,9 +319,9 @@ class _InkChartAddScreenState extends ConsumerState<InkChartAddScreen> {
         );
         if (mounted) context.pop();
       }
-    } catch (e) {
+    } catch (_) {
       setState(() => _isSaving = false);
-      _showSnack('저장 실패: $e');
+      _showSnack('저장하지 못했어요. 다시 시도해주세요.');
     }
   }
 

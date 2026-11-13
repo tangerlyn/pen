@@ -16,7 +16,7 @@ const _inkTypeLabels = ['일반', '펄', '테'];
 const _inkTypeValues = ['normal', 'shimmer', 'sheen'];
 
 // 만년필 충전 방식 목록 — add_product_bottom_sheet.dart의 _kFillTypes와 동일
-const _fillTypeLabels = ['카트리지·컨버터', '피스톤필러', '아이드로퍼', '진공'];
+const _fillTypeLabels = kPenFillTypes;
 
 String _inkTypeLabelToValue(String label) {
   final idx = _inkTypeLabels.indexOf(label);

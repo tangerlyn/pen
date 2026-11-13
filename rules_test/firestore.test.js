@@ -12,6 +12,7 @@ const {
 const {
   doc, getDoc, setDoc, updateDoc, deleteDoc, addDoc, collection,
   writeBatch, runTransaction, increment, serverTimestamp, deleteField,
+  collectionGroup, query, where, getDocs,
 } = require('firebase/firestore');
 
 let env;
@@ -74,20 +75,25 @@ async function toggleLike(d, col, id, uid, liked) {
   });
 }
 
+// user_repository.dart follow/unfollow — follows 문서 존재를 트랜잭션에서 확인 후 ±1
 function follow(d, from, to) {
-  const b = writeBatch(d);
-  b.update(doc(d, 'users', from), { followingCount: increment(1) });
-  b.update(doc(d, 'users', to), { followerCount: increment(1) });
-  b.set(doc(d, 'follows', `${from}_${to}`), { followerId: from, followeeId: to, createdAt: serverTimestamp() });
-  return b.commit();
+  const ref = doc(d, 'follows', `${from}_${to}`);
+  return runTransaction(d, async (tx) => {
+    if ((await tx.get(ref)).exists()) return;
+    tx.update(doc(d, 'users', from), { followingCount: increment(1) });
+    tx.update(doc(d, 'users', to), { followerCount: increment(1) });
+    tx.set(ref, { followerId: from, followeeId: to, createdAt: serverTimestamp() });
+  });
 }
 
 function unfollow(d, from, to) {
-  const b = writeBatch(d);
-  b.update(doc(d, 'users', from), { followingCount: increment(-1) });
-  b.update(doc(d, 'users', to), { followerCount: increment(-1) });
-  b.delete(doc(d, 'follows', `${from}_${to}`));
-  return b.commit();
+  const ref = doc(d, 'follows', `${from}_${to}`);
+  return runTransaction(d, async (tx) => {
+    if (!(await tx.get(ref)).exists()) return;
+    tx.update(doc(d, 'users', from), { followingCount: increment(-1) });
+    tx.update(doc(d, 'users', to), { followerCount: increment(-1) });
+    tx.delete(ref);
+  });
 }
 
 async function addExpAndCheck(d, uid, amount) {
@@ -284,4 +290,35 @@ test('[공격] 카탈로그 잉크 변조', async () => {
   await assertFails(updateDoc(doc(db(B), 'inks', 'ink1'), { addedBy: C })); // 등록자도 허용 필드 외 불가
   await assertFails(addDoc(collection(d, 'inks'), { brand: 'b', name: 'n', addedBy: B, isUserAdded: true }));
   await assertFails(deleteDoc(doc(db(B), 'inks', 'ink1')));
+});
+
+test('컬렉션 그룹: 내 좋아요 목록·전체 공개 잉크북 목록 조회', async () => {
+  await env.withSecurityRulesDisabled(async (ctx) => {
+    const s = ctx.firestore();
+    await setDoc(doc(s, 'reviews', 'r1', 'likes', B), { uid: B });
+    await setDoc(doc(s, 'posts', 'p1', 'likes', C), { uid: C });
+    await setDoc(doc(s, 'users', A, 'inkBooks', 'pub'), { isPublic: true, visibility: 'public' });
+    await setDoc(doc(s, 'users', A, 'inkBooks', 'priv'), { isPublic: false, visibility: 'private' });
+  });
+  const d = db(B);
+  const mine = await assertSucceeds(
+    getDocs(query(collectionGroup(d, 'likes'), where('uid', '==', B))));
+  if (mine.size !== 1) throw new Error(`expected 1 like, got ${mine.size}`);
+  await assertSucceeds(
+    getDocs(query(collectionGroup(d, 'inkBooks'), where('isPublic', '==', true))));
+});
+
+test('[공격] 컬렉션 그룹으로 남의 좋아요·비공개 잉크북 훑기', async () => {
+  const d = db(B);
+  await assertFails(getDocs(query(collectionGroup(d, 'likes'), where('uid', '==', C))));
+  await assertFails(getDocs(collectionGroup(d, 'likes')));
+  await assertFails(getDocs(collectionGroup(d, 'inkBooks')));
+  await assertFails(getDocs(collectionGroup(env.unauthenticatedContext().firestore(), 'inkBooks')));
+});
+
+test('알림 설정을 계정(users 문서)에 저장', async () => {
+  await assertSucceeds(updateDoc(doc(db(A), 'users', A), {
+    notificationSettings: { likes: false, comments: true, follows: true },
+  }));
+  await assertSucceeds(updateDoc(doc(db(A), 'users', A), { 'notificationSettings.likes': true }));
 });
