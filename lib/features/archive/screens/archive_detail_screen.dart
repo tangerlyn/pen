@@ -10,7 +10,7 @@ import '../../../shared/widgets/wishlist_toast.dart';
 import '../../../shared/widgets/center_toast.dart';
 import '../../../data/models/ink_model.dart';
 import '../../../data/models/pen_model.dart';
-import '../../../shared/widgets/review/review_feed_card.dart';
+import '../../../shared/widgets/review/review_grid_card.dart';
 import '../../../shared/widgets/ink_drop_circle.dart';
 import '../../../shared/widgets/archive/add_product_bottom_sheet.dart'
     show InkColorPicker;

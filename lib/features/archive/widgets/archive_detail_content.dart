@@ -87,24 +87,28 @@ class _DetailBody extends ConsumerWidget {
                   ),
                 );
               }
+              // 리뷰 탭과 같은 3열 그리드 (review_feed_screen.dart와 같은 간격·높이 계산)
               return LayoutBuilder(
                 builder: (ctx, constraints) {
-                  final w = (constraints.maxWidth - 1) / 2;
-                  return Wrap(
-                    spacing: 1,
-                    runSpacing: 1,
-                    children: list
-                        .map(
-                          (review) => SizedBox(
-                            width: w,
-                            height: w / 0.85,
-                            child: ReviewFeedCard(
-                              review: review,
-                              onTap: () => context.push('/review/${review.id}'),
-                            ),
-                          ),
-                        )
-                        .toList(),
+                  const columns = 3;
+                  const gap = 3.0;
+                  final cellWidth =
+                      (constraints.maxWidth - gap * (columns - 1)) / columns;
+                  return GridView.builder(
+                    shrinkWrap: true,
+                    physics: const NeverScrollableScrollPhysics(),
+                    padding: EdgeInsets.zero,
+                    gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                      crossAxisCount: columns,
+                      crossAxisSpacing: gap,
+                      mainAxisSpacing: 12,
+                      mainAxisExtent: ReviewGridCard.extent(ctx, cellWidth),
+                    ),
+                    itemCount: list.length,
+                    itemBuilder: (_, i) => ReviewGridCard(
+                      review: list[i],
+                      onTap: () => context.push('/review/${list[i].id}'),
+                    ),
                   );
                 },
               );
