@@ -5,6 +5,7 @@ import '../../../core/constants/app_constants.dart';
 import '../../../core/theme/app_theme.dart';
 import '../providers/home_discovery_provider.dart';
 import '../providers/notification_provider.dart';
+import '../widgets/home_banner_carousel.dart';
 import '../../community/providers/community_provider.dart';
 import '../../../shared/widgets/community/post_card.dart';
 import '../../../shared/widgets/review/review_grid_card.dart';
@@ -136,6 +137,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
   Future<void> _onRefresh() async {
     // 새로 불러오기가 끝날 때까지 당김 인디케이터를 유지한다. 실패는 각 섹션이 따로 처리한다.
     await Future.wait<Object?>([
+      ref.refresh(homeBannersProvider.future),
       ref.refresh(homeLatestReviewsProvider.future),
       ref.refresh(homePopularInksProvider.future),
       ref.refresh(homePopularPensProvider.future),
@@ -183,7 +185,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      const SizedBox(height: AppSpacing.sm),
+                      const HomeBannerCarousel(),
                       _LatestReviewsSection(),
                       _PopularInksSection(),
                       _CommunitySection(),

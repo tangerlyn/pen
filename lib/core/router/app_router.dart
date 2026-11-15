@@ -29,6 +29,8 @@ import '../../features/mypage/screens/user_profile_screen.dart';
 import '../../features/mypage/screens/terms_screen.dart';
 import '../../features/mypage/screens/privacy_screen.dart';
 import '../../features/home/screens/notification_screen.dart';
+import '../../features/home/screens/banner_detail_screen.dart';
+import '../../data/models/banner_model.dart';
 import '../../features/mypage/screens/wishlist_screen.dart';
 import '../../features/mypage/screens/public_ink_books_screen.dart';
 import '../../shared/providers/providers.dart';
@@ -211,6 +213,16 @@ final routerProvider = Provider<GoRouter>((ref) {
       GoRoute(
         path: '/notifications',
         pageBuilder: (_, state) => _slidePage(state, const NotificationScreen()),
+      ),
+      GoRoute(
+        path: '/banner/:bannerId',
+        pageBuilder: (_, state) => _slidePage(
+          state,
+          BannerDetailScreen(
+            bannerId: state.pathParameters['bannerId']!,
+            initial: state.extra is BannerModel ? state.extra as BannerModel : null,
+          ),
+        ),
       ),
       GoRoute(
         path: '/profile/:uid/followers',

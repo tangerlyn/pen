@@ -322,3 +322,15 @@ test('알림 설정을 계정(users 문서)에 저장', async () => {
   }));
   await assertSucceeds(updateDoc(doc(db(A), 'users', A), { 'notificationSettings.likes': true }));
 });
+
+test('배너: 로그인 사용자는 읽기만, 쓰기는 불가', async () => {
+  await env.withSecurityRulesDisabled(async (ctx) => {
+    await setDoc(doc(ctx.firestore(), 'banners', 'b1'), { title: '공지', active: true, order: 0 });
+  });
+  await assertSucceeds(getDoc(doc(db(A), 'banners', 'b1')));
+  await assertSucceeds(getDocs(collection(db(A), 'banners')));
+  await assertFails(getDoc(doc(env.unauthenticatedContext().firestore(), 'banners', 'b1')));
+  await assertFails(setDoc(doc(db(A), 'banners', 'b2'), { title: 'spam' }));
+  await assertFails(updateDoc(doc(db(A), 'banners', 'b1'), { title: 'hacked' }));
+  await assertFails(deleteDoc(doc(db(A), 'banners', 'b1')));
+});

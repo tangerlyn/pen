@@ -203,6 +203,12 @@ service cloud.firestore {
           && (resource.data.isPublic == true || resource.data.visibility == 'public');
     }
 
+    // 홈 상단 배너 — 운영자가 Firebase 콘솔에서만 관리 (콘솔은 규칙을 거치지 않음)
+    match /banners/{bannerId} {
+      allow read: if isLoggedIn();
+      allow write: if false;
+    }
+
     match /follows/{docId} {
       allow read: if isLoggedIn();
       // 문서 ID를 `팔로워_팔로이`로 고정 — 랜덤 ID로 같은 관계를 계속 만들어

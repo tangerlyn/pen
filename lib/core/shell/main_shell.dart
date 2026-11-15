@@ -27,9 +27,15 @@ class _MainShellState extends ConsumerState<MainShell> {
   }
 
   Future<void> _checkForceUpdate() async {
-    final needs = await ForceUpdateService.needsUpdate();
-    if (needs && mounted) {
-      ForceUpdateService.showForceUpdateDialog(context);
+    final requirement = await ForceUpdateService.checkUpdate();
+    if (!mounted) return;
+    switch (requirement) {
+      case UpdateRequirement.required:
+        ForceUpdateService.showForceUpdateDialog(context);
+      case UpdateRequirement.optional:
+        ForceUpdateService.showOptionalUpdateDialog(context);
+      case UpdateRequirement.none:
+        break;
     }
   }
 
