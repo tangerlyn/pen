@@ -145,8 +145,16 @@ class ArchiveRepository {
     final snap = await col.get();
     return snap.docs.any((doc) {
       final data = doc.data() as Map<String, dynamic>;
-      return _normalize(data['brand'] as String? ?? '') == b &&
-          _normalize(data[nameField] as String? ?? '') == n;
+      // 한국어 표기로 바꾼 만년필은 영어 원문이 *En 필드에 있다 — 둘 다 비교
+      final brands = {
+        _normalize(data['brand'] as String? ?? ''),
+        _normalize(data['brandEn'] as String? ?? ''),
+      };
+      final names = {
+        _normalize(data[nameField] as String? ?? ''),
+        _normalize(data['${nameField}En'] as String? ?? ''),
+      };
+      return brands.contains(b) && names.contains(n);
     });
   }
 
@@ -241,14 +249,7 @@ class ArchiveRepository {
     }
 
     if (search != null && search.isNotEmpty) {
-      final lower = search.toLowerCase();
-      results = results
-          .where(
-            (p) =>
-                p.brand.toLowerCase().contains(lower) ||
-                p.modelName.toLowerCase().contains(lower),
-          )
-          .toList();
+      results = results.where((p) => p.matches(search)).toList();
     }
 
     results = await Future.wait(
@@ -283,11 +284,8 @@ class ArchiveRepository {
         .map(
           (doc) => PenModel.fromMap(doc.data() as Map<String, dynamic>, doc.id),
         )
-        .where(
-          (p) =>
-              p.brand.toLowerCase().contains(lower) ||
-              p.modelName.toLowerCase().contains(lower),
-        )
+        // 한국어 표기(파일럿)와 영어 표기(Pilot) 어느 쪽으로 찾아도 나오게
+        .where((p) => p.matches(lower))
         .toList();
   }
 

@@ -21,9 +21,13 @@ class PenModel {
     this.reviewCount = 0,
     this.avgRating = 0.0,
     this.photoUrl,
+    this.brandEn = '',
+    this.modelNameEn = '',
   });
 
   final String id;
+
+  /// 화면에 보이는 브랜드·모델명 (한국어 표기, 예: 파일럿 / 카쿠노)
   final String brand;
   final String lineup;
   final String modelName;
@@ -35,7 +39,19 @@ class PenModel {
   final double avgRating;
   final String? photoUrl;
 
+  /// 원래 영어 표기 (예: Pilot / Kakuno) — 영어로 검색해도 찾을 수 있게 남겨 둔다.
+  final String brandEn;
+  final String modelNameEn;
+
   String get displayName => '$brand $modelName';
+
+  /// 검색어가 한국어·영어 표기 중 하나에라도 들어 있으면 true.
+  bool matches(String query) {
+    final q = query.trim().toLowerCase();
+    if (q.isEmpty) return true;
+    return [brand, modelName, brandEn, modelNameEn, '$brand $modelName', '$brandEn $modelNameEn']
+        .any((v) => v.toLowerCase().contains(q));
+  }
 
   factory PenModel.fromMap(Map<String, dynamic> data, String id) {
     return PenModel(
@@ -50,6 +66,8 @@ class PenModel {
       reviewCount: (data['reviewCount'] as num?)?.toInt() ?? 0,
       avgRating: (data['avgRating'] as num?)?.toDouble() ?? 0.0,
       photoUrl: data['photoUrl'] as String?,
+      brandEn: data['brandEn'] as String? ?? '',
+      modelNameEn: data['modelNameEn'] as String? ?? '',
     );
   }
 
@@ -77,6 +95,7 @@ class PenModel {
       nibMaterial: nibMaterial ?? this.nibMaterial, fillType: fillType ?? this.fillType,
       priceRange: priceRange ?? this.priceRange, reviewCount: reviewCount ?? this.reviewCount,
       avgRating: avgRating ?? this.avgRating, photoUrl: photoUrl ?? this.photoUrl,
+      brandEn: brandEn, modelNameEn: modelNameEn,
     );
   }
 }
