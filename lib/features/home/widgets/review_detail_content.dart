@@ -379,7 +379,12 @@ class _ActionButton extends StatelessWidget {
       onTap: onTap,
       child: Row(
         children: [
-          Icon(icon, size: 22, color: color ?? AppColors.textSecondary),
+          PopIcon(
+            icon: icon,
+            active: icon == Icons.favorite,
+            size: 22,
+            color: color ?? AppColors.textSecondary,
+          ),
           const SizedBox(width: 4),
           Text(
             label,

@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../../../core/theme/app_theme.dart';
 import '../../home/providers/feed_provider.dart';
+import '../../../shared/widgets/motion.dart';
 import '../../../shared/widgets/review/review_grid_card.dart';
 import '../../../shared/widgets/review/review_list_tile.dart';
 import '../../home/widgets/feed_filter_bar.dart';
@@ -51,15 +52,15 @@ class _ReviewFeedScreenState extends ConsumerState<ReviewFeedScreen> {
     if (ns.innerController.hasClients) {
       ns.innerController.animateTo(
         0,
-        duration: const Duration(milliseconds: 300),
-        curve: Curves.easeOut,
+        duration: const Duration(milliseconds: 450),
+        curve: Curves.easeOutCubic,
       );
     }
     if (ns.outerController.hasClients) {
       ns.outerController.animateTo(
         0,
-        duration: const Duration(milliseconds: 300),
-        curve: Curves.easeOut,
+        duration: const Duration(milliseconds: 450),
+        curve: Curves.easeOutCubic,
       );
     }
   }
@@ -91,6 +92,8 @@ class _ReviewFeedScreenState extends ConsumerState<ReviewFeedScreen> {
       }
     });
 
+    // 떠 있는 하단 바 높이 — 목록 끝과 플로팅 버튼을 그만큼 띄운다.
+    final navInset = MediaQuery.paddingOf(context).bottom;
     return Scaffold(
       backgroundColor: AppColors.background,
       body: Stack(
@@ -302,8 +305,8 @@ class _ReviewFeedScreenState extends ConsumerState<ReviewFeedScreen> {
                                               (state.isLoadingMore ? 1 : 0),
                                         ),
                                       ),
-                                const SliverToBoxAdapter(
-                                  child: SizedBox(height: 16),
+                                SliverToBoxAdapter(
+                                  child: SizedBox(height: 80 + navInset),
                                 ),
                               ],
                             );
@@ -315,10 +318,9 @@ class _ReviewFeedScreenState extends ConsumerState<ReviewFeedScreen> {
           ),
           Positioned(
             right: 16,
-            bottom: 80,
-            child: AnimatedOpacity(
-              opacity: _showScrollTop ? 1.0 : 0.0,
-              duration: const Duration(milliseconds: 200),
+            bottom: 80 + navInset,
+            child: PopReveal(
+              visible: _showScrollTop,
               child: IgnorePointer(
                 ignoring: !_showScrollTop,
                 child: FloatingActionButton.small(
@@ -335,7 +337,7 @@ class _ReviewFeedScreenState extends ConsumerState<ReviewFeedScreen> {
           ),
           Positioned(
             right: 16,
-            bottom: 16,
+            bottom: 16 + navInset,
             child: FloatingActionButton.extended(
               heroTag: 'review_write',
               onPressed: () => context.push('/write/review?entry=review_feed'),

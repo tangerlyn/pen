@@ -1,3 +1,5 @@
+import 'dart:ui' show ImageFilter;
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -69,6 +71,10 @@ class _MainShellState extends ConsumerState<MainShell> {
     final isOnline = ref.watch(connectivityProvider).valueOrNull ?? true;
 
     return Scaffold(
+      // 떠 있는 하단 바 뒤로 화면이 비쳐 보이도록 본문을 바 아래까지 늘린다.
+      // 이때 본문의 MediaQuery.padding.bottom이 바 높이만큼 커지므로, 각 탭 화면은
+      // 목록 끝·플로팅 버튼을 그만큼 띄운다 (MediaQuery.paddingOf(context).bottom).
+      extendBody: true,
       body: Column(
         children: [
           AnimatedSize(
@@ -107,63 +113,97 @@ class _MainShellState extends ConsumerState<MainShell> {
   }
 }
 
+/// 떠 있는 캡슐 모양 하단 바 — 반투명 유리 효과, 선택한 탭은 회색 알약 배경.
 class _BottomNav extends StatelessWidget {
   const _BottomNav({required this.shell});
   final StatefulNavigationShell shell;
 
+  static const _items = [
+    (icon: Icons.home_outlined, activeIcon: Icons.home_rounded, label: '홈'),
+    (icon: Icons.grid_view_outlined, activeIcon: Icons.grid_view_rounded, label: '리뷰'),
+    (icon: Icons.forum_outlined, activeIcon: Icons.forum_rounded, label: '커뮤니티'),
+    (icon: Icons.book_outlined, activeIcon: Icons.book_rounded, label: '아카이브'),
+    (icon: Icons.person_outline_rounded, activeIcon: Icons.person_rounded, label: '마이'),
+  ];
+
   @override
   Widget build(BuildContext context) {
-    return Container(
-      decoration: const BoxDecoration(
-        color: Colors.white,
-        border: Border(top: BorderSide(color: AppColors.divider)),
-      ),
-      child: SafeArea(
-        top: false,
-        // 기본 56 높이를 유지하되, 큰 글자(텍스트 스케일)에서 아이콘+라벨이
-        // 56을 넘으면 콘텐츠 높이만큼 늘어나도록 최소 높이로만 고정한다.
-        child: ConstrainedBox(
-          constraints: const BoxConstraints(minHeight: 56),
-          child: IntrinsicHeight(
-            child: Row(
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                _NavItem(
-                  icon: Icons.home_outlined,
-                  activeIcon: Icons.home,
-                  label: '홈',
-                  index: 0,
-                  shell: shell,
+    final safeBottom = MediaQuery.paddingOf(context).bottom;
+    // 홈 인디케이터가 있는 폰은 그 위에 살짝 겹치게, 없는 폰은 12만큼 띄운다.
+    final bottomGap = safeBottom > 0 ? safeBottom - 6 : 12.0;
+
+    return Padding(
+      padding: EdgeInsets.fromLTRB(14, 0, 14, bottomGap),
+      child: DecoratedBox(
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(AppRadius.full),
+          boxShadow: const [
+            BoxShadow(
+              color: Color(0x1A000000),
+              blurRadius: 24,
+              offset: Offset(0, 6),
+            ),
+          ],
+        ),
+        child: ClipRRect(
+          borderRadius: BorderRadius.circular(AppRadius.full),
+          child: BackdropFilter(
+            filter: ImageFilter.blur(sigmaX: 18, sigmaY: 18),
+            child: Container(
+              padding: const EdgeInsets.all(5),
+              decoration: BoxDecoration(
+                color: Colors.white.withValues(alpha: 0.78),
+                borderRadius: BorderRadius.circular(AppRadius.full),
+                border: Border.all(
+                  color: Colors.white.withValues(alpha: 0.9),
+                  width: 1,
                 ),
-                _NavItem(
-                  icon: Icons.grid_view_outlined,
-                  activeIcon: Icons.grid_view,
-                  label: '리뷰',
-                  index: 1,
-                  shell: shell,
-                ),
-                _NavItem(
-                  icon: Icons.forum_outlined,
-                  activeIcon: Icons.forum,
-                  label: '커뮤니티',
-                  index: 2,
-                  shell: shell,
-                ),
-                _NavItem(
-                  icon: Icons.book_outlined,
-                  activeIcon: Icons.book,
-                  label: '아카이브',
-                  index: 3,
-                  shell: shell,
-                ),
-                _NavItem(
-                  icon: Icons.person_outline,
-                  activeIcon: Icons.person,
-                  label: '마이',
-                  index: 4,
-                  shell: shell,
-                ),
-              ],
+              ),
+              // 기본 높이를 유지하되, 큰 글자에서는 아이콘+라벨 높이만큼 늘어난다.
+              // 선택 표시(회색 알약)는 탭 뒤에 한 장만 두고, 탭을 바꾸면 그 자리로
+              // 미끄러지듯 옮겨 간다.
+              child: LayoutBuilder(
+                builder: (context, constraints) {
+                  final slot = constraints.maxWidth / _items.length;
+                  return ConstrainedBox(
+                    constraints: const BoxConstraints(minHeight: 54),
+                    child: IntrinsicHeight(
+                      child: Stack(
+                        children: [
+                          AnimatedPositioned(
+                            duration: const Duration(milliseconds: 380),
+                            curve: const Cubic(0.2, 0.9, 0.3, 1.04),
+                            left: slot * shell.currentIndex,
+                            top: 0,
+                            bottom: 0,
+                            width: slot,
+                            child: DecoratedBox(
+                              decoration: BoxDecoration(
+                                color: const Color(0xFFEBECEF),
+                                borderRadius:
+                                    BorderRadius.circular(AppRadius.full),
+                              ),
+                            ),
+                          ),
+                          Row(
+                            crossAxisAlignment: CrossAxisAlignment.stretch,
+                            children: [
+                              for (var i = 0; i < _items.length; i++)
+                                _NavItem(
+                                  icon: _items[i].icon,
+                                  activeIcon: _items[i].activeIcon,
+                                  label: _items[i].label,
+                                  index: i,
+                                  shell: shell,
+                                ),
+                            ],
+                          ),
+                        ],
+                      ),
+                    ),
+                  );
+                },
+              ),
             ),
           ),
         ),
@@ -198,6 +238,7 @@ class _NavItem extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final isActive = shell.currentIndex == index;
+    final color = isActive ? AppColors.primary : AppColors.textSecondary;
     return Expanded(
       child: TapScale(
         onTap: () {
@@ -213,62 +254,57 @@ class _NavItem extends ConsumerWidget {
             shell.goBranch(index);
           }
         },
-        // TapScale 내부 GestureDetector는 deferToChild라 Container에 투명 color를
-        // 지정해 기존 opaque 히트테스트(전체 영역 탭 가능)를 유지한다.
-        child: Container(
-          width: double.infinity,
+        // 투명색이라도 지정해야 칸 전체가 눌린다 (TapScale은 deferToChild).
+        child: ColoredBox(
           color: Colors.transparent,
-          padding: const EdgeInsets.symmetric(vertical: 4),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              AnimatedScale(
-                scale: isActive ? 1.15 : 1.0,
-                duration: const Duration(milliseconds: 260),
-                curve: Curves.easeOutBack,
-                child: AnimatedSwitcher(
-                  duration: const Duration(milliseconds: 180),
-                  child: Icon(
-                    isActive ? activeIcon : icon,
-                    key: ValueKey(isActive),
-                    color: isActive
-                        ? AppColors.primary
-                        : AppColors.textTertiary,
-                    size: 22,
+          child: Padding(
+            padding: const EdgeInsets.symmetric(vertical: 6),
+            child: TweenAnimationBuilder<Color?>(
+              duration: const Duration(milliseconds: 260),
+              curve: Curves.easeOut,
+              tween: ColorTween(end: color),
+              builder: (context, c, _) => Column(
+                mainAxisSize: MainAxisSize.min,
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  AnimatedSwitcher(
+                    duration: const Duration(milliseconds: 220),
+                    transitionBuilder: (child, anim) => FadeTransition(
+                      opacity: anim,
+                      child: ScaleTransition(
+                        scale: Tween(begin: 0.85, end: 1.0).animate(anim),
+                        child: child,
+                      ),
+                    ),
+                    child: Icon(
+                      isActive ? activeIcon : icon,
+                      key: ValueKey(isActive),
+                      color: c,
+                      size: 23,
+                    ),
                   ),
-                ),
-              ),
-              const SizedBox(height: 2),
-              AnimatedDefaultTextStyle(
-                duration: const Duration(milliseconds: 200),
-                style: TextStyle(
-                  fontSize: 9,
-                  fontWeight: isActive ? FontWeight.w600 : FontWeight.w400,
-                  color: isActive ? AppColors.primary : AppColors.textTertiary,
-                ),
-                child: Text(
-                  label,
-                  maxLines: 1,
-                  softWrap: false,
-                  overflow: TextOverflow.fade,
-                ),
-              ),
-              SizedBox(
-                height: 5,
-                child: AnimatedContainer(
-                  duration: const Duration(milliseconds: 260),
-                  curve: Curves.easeOutCubic,
-                  margin: const EdgeInsets.only(top: 2),
-                  width: isActive ? 4.0 : 0.0,
-                  height: isActive ? 4.0 : 0.0,
-                  decoration: BoxDecoration(
-                    shape: BoxShape.circle,
-                    color: isActive ? AppColors.primary : Colors.transparent,
+                  const SizedBox(height: 2),
+                  AnimatedDefaultTextStyle(
+                    duration: const Duration(milliseconds: 260),
+                    curve: Curves.easeOut,
+                    style: TextStyle(
+                      fontSize: 10,
+                      height: 1.2,
+                      fontWeight:
+                          isActive ? FontWeight.w700 : FontWeight.w500,
+                      color: c,
+                      fontFamily: DefaultTextStyle.of(context).style.fontFamily,
+                    ),
+                    child: Text(
+                      label,
+                      maxLines: 1,
+                      softWrap: false,
+                      overflow: TextOverflow.fade,
+                    ),
                   ),
-                ),
+                ],
               ),
-            ],
+            ),
           ),
         ),
       ),

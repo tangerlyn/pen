@@ -21,17 +21,23 @@ class CategoryChip extends StatelessWidget {
     return TapScale(
       onTap: onTap,
       child: AnimatedContainer(
-        duration: const Duration(milliseconds: 150),
+        duration: const Duration(milliseconds: 240),
+        curve: Curves.easeOutCubic,
         padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
         alignment: Alignment.center,
         decoration: BoxDecoration(
           color: selected ? AppColors.primary : AppColors.chipBackground,
           borderRadius: BorderRadius.circular(AppRadius.full),
         ),
-        child: Text(
-          label,
-          style: AppTextStyles.labelMedium.copyWith(
-            color: selected ? Colors.white : AppColors.textPrimary,
+        child: TweenAnimationBuilder<Color?>(
+          duration: const Duration(milliseconds: 240),
+          curve: Curves.easeOutCubic,
+          tween: ColorTween(
+            end: selected ? Colors.white : AppColors.textPrimary,
+          ),
+          builder: (_, c, _) => Text(
+            label,
+            style: AppTextStyles.labelMedium.copyWith(color: c),
           ),
         ),
       ),

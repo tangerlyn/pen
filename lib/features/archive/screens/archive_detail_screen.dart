@@ -5,6 +5,7 @@ import 'package:go_router/go_router.dart';
 import '../../../core/theme/app_theme.dart';
 import '../providers/archive_detail_provider.dart';
 import '../../../shared/providers/providers.dart';
+import '../../../shared/providers/recently_viewed_provider.dart';
 import '../../../shared/providers/wishlist_providers.dart';
 import '../../../shared/widgets/wishlist_toast.dart';
 import '../../../shared/widgets/center_toast.dart';
@@ -19,7 +20,7 @@ part '../widgets/archive_detail_content.dart';
 part '../widgets/archive_detail_sheets.dart';
 // import 'ink_compare_screen.dart'; // 색상 비교 — 구현 완료, 적용 보류
 
-class ArchiveDetailScreen extends ConsumerWidget {
+class ArchiveDetailScreen extends ConsumerStatefulWidget {
   const ArchiveDetailScreen({
     super.key,
     required this.type,
@@ -29,7 +30,26 @@ class ArchiveDetailScreen extends ConsumerWidget {
   final String productId;
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<ArchiveDetailScreen> createState() =>
+      _ArchiveDetailScreenState();
+}
+
+class _ArchiveDetailScreenState extends ConsumerState<ArchiveDetailScreen> {
+  String get type => widget.type;
+  String get productId => widget.productId;
+
+  @override
+  void initState() {
+    super.initState();
+    // 홈 "최근 본 잉크·만년필"용 기록. build 중 provider 변경을 피하려고 다음 프레임에.
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+      ref.read(recentlyViewedProvider.notifier).record(type, productId);
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
     final state = ref.watch(
       archiveDetailProvider((type: type, productId: productId)),
     );

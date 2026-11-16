@@ -198,7 +198,10 @@ class _ProfileEditScreenState extends ConsumerState<ProfileEditScreen> {
           ],
         ),
         body: SingleChildScrollView(
-          padding: const EdgeInsets.all(24),
+          // 떠 있는 하단 바에 마지막 내용이 가리지 않도록 아래 여백에 바 높이를 더한다.
+          padding: EdgeInsets.fromLTRB(
+            24, 24, 24, 24 + MediaQuery.paddingOf(context).bottom,
+          ),
           child: Column(
             children: [
               TapScale(

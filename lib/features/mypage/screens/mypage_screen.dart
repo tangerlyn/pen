@@ -46,15 +46,15 @@ class _MypageScreenState extends ConsumerState<MypageScreen>
     if (ns.innerController.hasClients) {
       ns.innerController.animateTo(
         0,
-        duration: const Duration(milliseconds: 300),
-        curve: Curves.easeOut,
+        duration: const Duration(milliseconds: 450),
+        curve: Curves.easeOutCubic,
       );
     }
     if (ns.outerController.hasClients) {
       ns.outerController.animateTo(
         0,
-        duration: const Duration(milliseconds: 300),
-        curve: Curves.easeOut,
+        duration: const Duration(milliseconds: 450),
+        curve: Curves.easeOutCubic,
       );
     }
   }

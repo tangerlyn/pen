@@ -127,6 +127,10 @@ class _InkList extends ConsumerWidget {
           const SliverToBoxAdapter(
             child: _ProductRequestFooter(tabLabel: '잉크'),
           ),
+          // 떠 있는 하단 바에 마지막 줄이 가리지 않도록
+          SliverToBoxAdapter(
+            child: SizedBox(height: MediaQuery.paddingOf(context).bottom + 24),
+          ),
         ],
         ],
       ),
@@ -259,6 +263,10 @@ class _PenList extends ConsumerWidget {
             ),
           const SliverToBoxAdapter(
             child: _ProductRequestFooter(tabLabel: '만년필'),
+          ),
+          // 떠 있는 하단 바에 마지막 줄이 가리지 않도록
+          SliverToBoxAdapter(
+            child: SizedBox(height: MediaQuery.paddingOf(context).bottom + 24),
           ),
         ],
         ],

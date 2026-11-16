@@ -1,3 +1,4 @@
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -7,9 +8,11 @@ import '../providers/home_discovery_provider.dart';
 import '../providers/notification_provider.dart';
 import '../widgets/home_banner_carousel.dart';
 import '../../community/providers/community_provider.dart';
+import '../../../shared/widgets/motion.dart';
 import '../../../shared/widgets/community/post_card.dart';
 import '../../../shared/widgets/review/review_grid_card.dart';
 import '../../../data/models/ink_model.dart';
+import '../../../data/models/review_model.dart';
 import '../../../data/models/pen_model.dart';
 import '../../../shared/widgets/common/skeletons.dart';
 import '../../../shared/widgets/ink_drop_circle.dart';
@@ -46,8 +49,8 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
   void _scrollToTop() {
     _scrollController.animateTo(
       0,
-      duration: const Duration(milliseconds: 300),
-      curve: Curves.easeOut,
+      duration: const Duration(milliseconds: 450),
+      curve: Curves.easeOutCubic,
     );
   }
 
@@ -139,6 +142,8 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     await Future.wait<Object?>([
       ref.refresh(homeBannersProvider.future),
       ref.refresh(homeLatestReviewsProvider.future),
+      ref.refresh(homeWeeklyPopularReviewsProvider.future),
+      ref.refresh(homeRecentProductsProvider.future),
       ref.refresh(homePopularInksProvider.future),
       ref.refresh(homePopularPensProvider.future),
       ref.refresh(filteredPostsProvider.future),
@@ -153,6 +158,8 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
         ref.read(scrollToTopTabProvider.notifier).state = null;
       }
     });
+    // 떠 있는 하단 바 높이 — 목록 끝과 플로팅 버튼을 그만큼 띄운다.
+    final navInset = MediaQuery.paddingOf(context).bottom;
     return Scaffold(
       backgroundColor: AppColors.background,
       body: Stack(
@@ -186,11 +193,21 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       const HomeBannerCarousel(),
-                      _LatestReviewsSection(),
+                      _ReviewRowSection(
+                        title: '최신 리뷰',
+                        provider: homeLatestReviewsProvider,
+                        topPadding: AppSpacing.sm,
+                        showSkeleton: true,
+                      ),
+                      _RecentProductsSection(),
+                      _ReviewRowSection(
+                        title: '이번 주 인기 리뷰',
+                        provider: homeWeeklyPopularReviewsProvider,
+                      ),
                       _PopularInksSection(),
-                      _CommunitySection(),
                       _PopularPensSection(),
-                      const SizedBox(height: 80),
+                      _CommunitySection(),
+                      SizedBox(height: 80 + navInset),
                     ],
                   ),
                 ),
@@ -200,10 +217,9 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
           // 스크롤 탑 버튼
           Positioned(
             right: AppSpacing.lg,
-            bottom: 80,
-            child: AnimatedOpacity(
-              opacity: _showScrollTop ? 1.0 : 0.0,
-              duration: const Duration(milliseconds: 200),
+            bottom: 80 + navInset,
+            child: PopReveal(
+              visible: _showScrollTop,
               child: IgnorePointer(
                 ignoring: !_showScrollTop,
                 child: FloatingActionButton.small(
@@ -221,7 +237,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
           // 글쓰기 FAB
           Positioned(
             right: AppSpacing.lg,
-            bottom: AppSpacing.lg,
+            bottom: AppSpacing.lg + navInset,
             child: FloatingActionButton(
               heroTag: 'home_write',
               onPressed: () => _showWriteModal(context),
@@ -280,12 +296,26 @@ class _SectionHeader extends StatelessWidget {
   }
 }
 
-// ── 최신 리뷰 섹션 ──────────────────────────────────────────────────────────
+// ── 리뷰 가로 목록 섹션 (최신 리뷰 · 이번 주 인기 리뷰) ─────────────────────
 
-class _LatestReviewsSection extends ConsumerWidget {
+class _ReviewRowSection extends ConsumerWidget {
+  const _ReviewRowSection({
+    required this.title,
+    required this.provider,
+    this.topPadding = AppSpacing.section,
+    this.showSkeleton = false,
+  });
+
+  final String title;
+  final FutureProvider<List<ReviewModel>> provider;
+  final double topPadding;
+
+  /// 첫 섹션만 로딩 중 뼈대를 보여주고, 아래 섹션은 준비되면 나타난다.
+  final bool showSkeleton;
+
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final reviewsAsync = ref.watch(homeLatestReviewsProvider);
+    final reviewsAsync = ref.watch(provider);
     // 화면 폭에 비례한 카드 너비 — 좁은 폰에서도 다음 카드가 살짝 보이고,
     // 넓은 폰/기기에서 카드가 지나치게 작아 보이지 않도록 상하한을 둔다.
     // 리뷰 탭과 같은 카드(사진 4:5 + 작성자·제목·본문·시간). 한 화면에 2장 반쯤 보이게.
@@ -295,29 +325,39 @@ class _LatestReviewsSection extends ConsumerWidget {
     );
     // 사진 높이 + 글 영역(실제 글꼴·글자 크기로 계산)
     final listHeight = ReviewGridCard.extent(context, cardWidth);
+    final header = _SectionHeader(
+      title: title,
+      topPadding: topPadding,
+      onMore: () => context.go('/review'),
+    );
 
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        _SectionHeader(
-          title: '최신 리뷰',
-          topPadding: AppSpacing.sm,
-          onMore: () => context.go('/review'),
-        ),
-        reviewsAsync.when(
-          loading: () => SizedBox(
-            height: listHeight,
-            child: ListView.builder(
-              scrollDirection: Axis.horizontal,
-              padding: AppSpacing.pagePadding,
-              itemCount: 4,
-              itemBuilder: (_, _) => HomeReviewCardSkeleton(width: cardWidth),
+    return reviewsAsync.when(
+      loading: () => !showSkeleton
+          ? const SizedBox.shrink()
+          : Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                header,
+                SizedBox(
+                  height: listHeight,
+                  child: ListView.builder(
+                    scrollDirection: Axis.horizontal,
+                    padding: AppSpacing.pagePadding,
+                    itemCount: 4,
+                    itemBuilder: (_, _) =>
+                        HomeReviewCardSkeleton(width: cardWidth),
+                  ),
+                ),
+              ],
             ),
-          ),
-          error: (_, _) => const SizedBox.shrink(),
-          data: (reviews) {
-            if (reviews.isEmpty) return const SizedBox.shrink();
-            return SizedBox(
+      error: (_, _) => const SizedBox.shrink(),
+      data: (reviews) {
+        if (reviews.isEmpty) return const SizedBox.shrink();
+        return Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            header,
+            SizedBox(
               height: listHeight,
               child: ListView.builder(
                 scrollDirection: Axis.horizontal,
@@ -334,10 +374,145 @@ class _LatestReviewsSection extends ConsumerWidget {
                   ),
                 ),
               ),
-            );
-          },
+            ),
+          ],
+        );
+      },
+    );
+  }
+}
+
+// ── 최근 본 잉크·만년필 섹션 ────────────────────────────────────────────────
+
+class _RecentProductsSection extends ConsumerWidget {
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final items = ref.watch(homeRecentProductsProvider).valueOrNull ?? const [];
+    if (items.isEmpty) return const SizedBox.shrink();
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        _SectionHeader(
+          title: '최근 본 잉크·만년필',
+          onMore: () => context.go('/archive'),
+        ),
+        SizedBox(
+          height: _ProductCircleItem.heightOf(context),
+          child: ListView.builder(
+            scrollDirection: Axis.horizontal,
+            padding: AppSpacing.pagePadding,
+            itemCount: items.length,
+            itemBuilder: (_, i) {
+              final item = items[i];
+              if (item is InkModel) {
+                return _ProductCircleItem(
+                  brand: item.brand,
+                  label: item.name,
+                  circle: InkDropCircle(color: item.inkColor, size: 56),
+                  onTap: () => context.push('/archive/ink/${item.id}'),
+                );
+              }
+              final pen = item as PenModel;
+              return _ProductCircleItem(
+                brand: pen.brand,
+                label: pen.modelName,
+                circle: _PenCircle(photoUrl: pen.photoUrl),
+                onTap: () => context.push('/archive/pen/${pen.id}'),
+              );
+            },
+          ),
         ),
       ],
+    );
+  }
+}
+
+/// 동그라미 + 브랜드 + 이름 두 줄 — 아카이브 탭 잉크 목록과 같은 모양.
+/// 인기 잉크 · 인기 만년필 · 최근 본 목록에서 함께 쓴다.
+class _ProductCircleItem extends StatelessWidget {
+  const _ProductCircleItem({
+    required this.brand,
+    required this.label,
+    required this.circle,
+    required this.onTap,
+  });
+
+  final String brand;
+  final String label;
+  final Widget circle;
+  final VoidCallback onTap;
+
+  static const _brandStyle = TextStyle(
+    fontSize: 9,
+    height: 1.3,
+    color: AppColors.textSecondary,
+  );
+  static final _nameStyle = AppTextStyles.caption.copyWith(
+    fontWeight: FontWeight.w600,
+    color: AppColors.textSecondary,
+    height: 1.35,
+  );
+
+  /// 동그라미(56) + 간격(6) + 브랜드 한 줄 + 이름 두 줄(글자 크기에 비례) + 여유.
+  static double heightOf(BuildContext context) =>
+      56 + 6 + MediaQuery.textScalerOf(context).scale(9 * 1.3 + 10 * 1.35 * 2) + 4;
+
+  @override
+  Widget build(BuildContext context) {
+    return TapScale(
+      onTap: onTap,
+      child: Container(
+        width: 72,
+        margin: const EdgeInsets.only(right: AppSpacing.md),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            circle,
+            const SizedBox(height: 6),
+            Text(
+              brand,
+              style: _brandStyle,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              textAlign: TextAlign.center,
+            ),
+            Text(
+              label,
+              style: _nameStyle,
+              maxLines: 2,
+              overflow: TextOverflow.ellipsis,
+              textAlign: TextAlign.center,
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _PenCircle extends StatelessWidget {
+  const _PenCircle({this.photoUrl});
+  final String? photoUrl;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      width: 56,
+      height: 56,
+      decoration: const BoxDecoration(
+        color: AppColors.chipBackground,
+        shape: BoxShape.circle,
+      ),
+      clipBehavior: Clip.antiAlias,
+      child: photoUrl != null && photoUrl!.isNotEmpty
+          ? CachedNetworkImage(
+              imageUrl: photoUrl!,
+              fit: BoxFit.cover,
+              errorWidget: (_, _, _) =>
+                  const Icon(Icons.edit, size: 22, color: AppColors.textSecondary),
+            )
+          : const Icon(Icons.edit, size: 22, color: AppColors.textSecondary),
     );
   }
 }
@@ -362,13 +537,15 @@ class _PopularInksSection extends ConsumerWidget {
               onMore: () => context.go('/archive'),
             ),
             SizedBox(
-              height: 100,
+              height: _ProductCircleItem.heightOf(context),
               child: ListView.builder(
                 scrollDirection: Axis.horizontal,
                 padding: AppSpacing.pagePadding,
                 itemCount: inks.length,
-                itemBuilder: (_, i) => _InkCircleItem(
-                  ink: inks[i],
+                itemBuilder: (_, i) => _ProductCircleItem(
+                  brand: inks[i].brand,
+                  label: inks[i].name,
+                  circle: InkDropCircle(color: inks[i].inkColor, size: 56),
                   onTap: () => context.push('/archive/ink/${inks[i].id}'),
                 ),
               ),
@@ -376,39 +553,6 @@ class _PopularInksSection extends ConsumerWidget {
           ],
         );
       },
-    );
-  }
-}
-
-class _InkCircleItem extends StatelessWidget {
-  const _InkCircleItem({required this.ink, required this.onTap});
-  final InkModel ink;
-  final VoidCallback onTap;
-
-  @override
-  Widget build(BuildContext context) {
-    return TapScale(
-      onTap: onTap,
-      child: Container(
-        width: 72,
-        margin: const EdgeInsets.only(right: AppSpacing.md),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            InkDropCircle(color: ink.inkColor, size: 56),
-            const SizedBox(height: AppSpacing.sm - 2),
-            Text(
-              ink.name,
-              style: AppTextStyles.caption.copyWith(
-                color: AppColors.textSecondary,
-              ),
-              maxLines: 2,
-              overflow: TextOverflow.ellipsis,
-              textAlign: TextAlign.center,
-            ),
-          ],
-        ),
-      ),
     );
   }
 }
@@ -425,7 +569,7 @@ class _CommunitySection extends ConsumerWidget {
       error: (_, __) => const SizedBox.shrink(),
       data: (posts) {
         if (posts.isEmpty) return const SizedBox.shrink();
-        final preview = posts.take(4).toList();
+        final preview = posts.take(5).toList();
         return Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
@@ -462,13 +606,9 @@ class _PopularPensSection extends ConsumerWidget {
 
     return pensAsync.when(
       loading: () => const SizedBox.shrink(),
-      error: (_, __) => const SizedBox.shrink(),
+      error: (_, _) => const SizedBox.shrink(),
       data: (pens) {
         if (pens.isEmpty) return const SizedBox.shrink();
-        final cardWidth = (MediaQuery.of(context).size.width * 0.38).clamp(
-          130.0,
-          175.0,
-        );
         return Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
@@ -477,16 +617,15 @@ class _PopularPensSection extends ConsumerWidget {
               onMore: () => context.go('/archive'),
             ),
             SizedBox(
-              // 패딩·아이콘(64)은 고정, 브랜드·모델명 텍스트(≈48)만 글자 크기에 비례.
-              // 모델명이 2줄일 때도 넘치지 않도록 텍스트 몫을 실제 줄 높이로 잡는다.
-              height: 64 + MediaQuery.textScalerOf(context).scale(48),
+              height: _ProductCircleItem.heightOf(context),
               child: ListView.builder(
                 scrollDirection: Axis.horizontal,
                 padding: AppSpacing.pagePadding,
                 itemCount: pens.length,
-                itemBuilder: (_, i) => _PenCard(
-                  pen: pens[i],
-                  width: cardWidth,
+                itemBuilder: (_, i) => _ProductCircleItem(
+                  brand: pens[i].brand,
+                  label: pens[i].modelName,
+                  circle: _PenCircle(photoUrl: pens[i].photoUrl),
                   onTap: () => context.push('/archive/pen/${pens[i].id}'),
                 ),
               ),
@@ -523,67 +662,6 @@ class _NotificationBell extends ConsumerWidget {
             ),
           ),
       ],
-    );
-  }
-}
-
-class _PenCard extends StatelessWidget {
-  const _PenCard({required this.pen, required this.onTap, this.width = 140});
-  final PenModel pen;
-  final VoidCallback onTap;
-  final double width;
-
-  @override
-  Widget build(BuildContext context) {
-    return TapScale(
-      onTap: onTap,
-      child: Container(
-        width: width,
-        margin: const EdgeInsets.only(right: AppSpacing.md),
-        padding: AppSpacing.cardPadding.add(
-          const EdgeInsets.all(AppSpacing.xs),
-        ),
-        decoration: BoxDecoration(
-          color: Colors.white.withValues(alpha: 0.82),
-          borderRadius: BorderRadius.circular(14),
-          border: Border.all(
-            color: Colors.white.withValues(alpha: 0.70),
-            width: 1.2,
-          ),
-          boxShadow: const [
-            BoxShadow(
-              color: AppColors.cardShadowColor,
-              blurRadius: 16,
-              offset: Offset(0, 4),
-            ),
-          ],
-        ),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            const Icon(Icons.edit, size: 22, color: AppColors.primary),
-            const SizedBox(height: AppSpacing.sm),
-            Text(
-              pen.brand,
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
-              style: AppTextStyles.labelSmall,
-            ),
-            const SizedBox(height: 2),
-            Text(
-              pen.modelName,
-              maxLines: 2,
-              overflow: TextOverflow.ellipsis,
-              style: AppTextStyles.labelMedium.copyWith(
-                fontWeight: FontWeight.w600,
-                color: AppColors.textPrimary,
-                height: 1.3,
-              ),
-            ),
-          ],
-        ),
-      ),
     );
   }
 }

@@ -11,6 +11,28 @@ class ReviewRepository {
   
   CollectionReference get _reviews => _firestore.collection(AppConstants.reviewsCol);
 
+  /// [since] 이후에 올라온 리뷰 중 좋아요가 많은 순.
+  /// 기간 조건과 정렬 필드가 같아야 복합 인덱스 없이 조회되므로, 기간 안의
+  /// 최근 리뷰를 넉넉히 받아 앱에서 좋아요 순으로 정렬한다.
+  Future<List<ReviewModel>> getPopularSince(
+    DateTime since, {
+    int scanLimit = 100,
+  }) async {
+    final snapshot = await _reviews
+        .where('createdAt', isGreaterThanOrEqualTo: Timestamp.fromDate(since))
+        .orderBy('createdAt', descending: true)
+        .limit(scanLimit)
+        .get();
+    final reviews = snapshot.docs
+        .map((d) => ReviewModel.fromMap(d.data() as Map<String, dynamic>, d.id))
+        .toList()
+      ..sort((a, b) {
+        final byLikes = b.likeCount.compareTo(a.likeCount);
+        return byLikes != 0 ? byLikes : b.createdAt.compareTo(a.createdAt);
+      });
+    return reviews;
+  }
+
   Future<(List<ReviewModel>, Object?)> getFeed({
     String? filterCategory,
     String? inkId,

@@ -8,9 +8,11 @@ class TermsScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(title: const Text('이용약관')),
-      body: const SingleChildScrollView(
-        padding: EdgeInsets.fromLTRB(20, 20, 20, 40),
-        child: _TermsContent(),
+      body: SingleChildScrollView(
+        padding: EdgeInsets.fromLTRB(
+          20, 20, 20, 40 + MediaQuery.paddingOf(context).bottom,
+        ),
+        child: const _TermsContent(),
       ),
     );
   }
@@ -21,9 +23,9 @@ class _TermsContent extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Column(
+    return const Column(
       crossAxisAlignment: CrossAxisAlignment.start,
-      children: const [
+      children: [
         _Header('만티 서비스 이용약관'),
         _Body('최종 수정일: 2025년 6월 1일\n시행일: 2025년 6월 1일'),
         SizedBox(height: 8),

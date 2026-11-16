@@ -25,14 +25,16 @@ class _TapScaleState extends State<TapScale> with SingleTickerProviderStateMixin
     super.initState();
     _ctrl = AnimationController(
       vsync: this,
-      duration: const Duration(milliseconds: 80),
-      reverseDuration: const Duration(milliseconds: 220),
+      duration: const Duration(milliseconds: 90),
+      reverseDuration: const Duration(milliseconds: 320),
     );
     _scaleAnim = Tween<double>(begin: 1.0, end: widget.scale).animate(
       CurvedAnimation(
         parent: _ctrl,
-        curve: Curves.easeIn,
-        reverseCurve: Curves.elasticOut,
+        curve: Curves.easeOut,
+        // 놓을 때: 원래 크기를 살짝 넘었다가(1.0 위) 제자리로 — 쫀득한 복귀.
+        // (역방향 재생이라 easeInBack을 쓰면 끝부분에서 0 아래로 내려갔다 돌아온다)
+        reverseCurve: Curves.easeInBack,
       ),
     );
   }
@@ -45,7 +47,14 @@ class _TapScaleState extends State<TapScale> with SingleTickerProviderStateMixin
 
   void _down(TapDownDetails _) => _ctrl.forward();
   void _up(TapUpDetails _) {
-    _ctrl.reverse();
+    // 아주 짧게 톡 눌러도 눌린 느낌이 보이도록, 줄어드는 동작을 끝낸 뒤 복귀한다.
+    if (_ctrl.status == AnimationStatus.forward) {
+      _ctrl.forward().whenCompleteOrCancel(() {
+        if (mounted) _ctrl.reverse();
+      });
+    } else {
+      _ctrl.reverse();
+    }
     widget.onTap?.call();
   }
   void _cancel() => _ctrl.reverse();

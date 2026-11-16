@@ -9,6 +9,7 @@ import '../../../core/theme/app_theme.dart';
 import '../../../core/utils/network_utils.dart';
 import '../../../core/utils/profile_navigation.dart';
 import '../../../core/utils/post_date_format.dart';
+import '../../../shared/widgets/motion.dart';
 import '../../../shared/widgets/image_viewer_screen.dart';
 import '../../../shared/widgets/user_avatar.dart';
 import '../../../data/models/review_model.dart';

@@ -8,9 +8,11 @@ class PrivacyScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(title: const Text('개인정보처리방침')),
-      body: const SingleChildScrollView(
-        padding: EdgeInsets.fromLTRB(20, 20, 20, 40),
-        child: _PrivacyContent(),
+      body: SingleChildScrollView(
+        padding: EdgeInsets.fromLTRB(
+          20, 20, 20, 40 + MediaQuery.paddingOf(context).bottom,
+        ),
+        child: const _PrivacyContent(),
       ),
     );
   }
@@ -21,9 +23,9 @@ class _PrivacyContent extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Column(
+    return const Column(
       crossAxisAlignment: CrossAxisAlignment.start,
-      children: const [
+      children: [
         _Header('개인정보처리방침'),
         _Body(
           '최종 수정일: 2026년 11월 11일\n시행일: 2026년 11월 11일\n\n만티(이하 "회사")는 이용자의 개인정보를 소중히 여기며, 「개인정보 보호법」 등 관련 법령에 따라 개인정보를 처리합니다.',

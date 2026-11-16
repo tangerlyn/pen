@@ -96,6 +96,13 @@ class ArchiveRepository {
     return (items: results, lastDoc: nextCursor, hasMore: hasMore);
   }
 
+  /// 리뷰 통계 없이 잉크 기본 정보만 (홈 "최근 본" 목록처럼 여러 개를 띄울 때).
+  Future<InkModel?> getInkBasic(String inkId) async {
+    final doc = await _inks.doc(inkId).get();
+    if (!doc.exists) return null;
+    return InkModel.fromMap(doc.data() as Map<String, dynamic>, doc.id);
+  }
+
   Future<InkModel?> getInk(String inkId) async {
     final doc = await _inks.doc(inkId).get();
     if (!doc.exists) return null;
@@ -252,6 +259,13 @@ class ArchiveRepository {
     );
 
     return (items: results, lastDoc: nextCursor, hasMore: hasMore);
+  }
+
+  /// 리뷰 통계 없이 만년필 기본 정보만.
+  Future<PenModel?> getPenBasic(String penId) async {
+    final doc = await _pens.doc(penId).get();
+    if (!doc.exists) return null;
+    return PenModel.fromMap(doc.data() as Map<String, dynamic>, doc.id);
   }
 
   Future<PenModel?> getPen(String penId) async {

@@ -1,4 +1,3 @@
-import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -30,7 +29,7 @@ class BannerDetailScreen extends ConsumerWidget {
 
     return Scaffold(
       backgroundColor: AppColors.background,
-      appBar: AppBar(title: const Text('공지')),
+      appBar: AppBar(),
       body: banner == null
           ? Center(
               child: loading
@@ -77,32 +76,12 @@ class _BannerBody extends StatelessWidget {
                 AppSpacing.lg, AppSpacing.sm, AppSpacing.lg, AppSpacing.xxl,
               ),
               children: [
-                AspectRatio(
-                  aspectRatio: HomeBannerCarousel.aspectRatio,
-                  child: ClipRRect(
-                    borderRadius: BorderRadius.circular(AppRadius.lg),
-                    child: banner.imageUrl != null
-                        ? CachedNetworkImage(
-                            imageUrl: banner.imageUrl!,
-                            fit: BoxFit.cover,
-                            placeholder: (_, _) =>
-                                const ColoredBox(color: AppColors.chipBackground),
-                            errorWidget: (_, _, _) => const BannerInkBackground(),
-                          )
-                        : const BannerInkBackground(),
+                LayoutBuilder(
+                  builder: (context, c) => SizedBox(
+                    height: HomeBannerCarousel.cardHeight(context, c.maxWidth),
+                    child: HomeBannerCard(banner: banner),
                   ),
                 ),
-                const SizedBox(height: AppSpacing.xl),
-                Text(banner.title, style: AppTextStyles.headlineSmall),
-                if (banner.subtitle.isNotEmpty) ...[
-                  const SizedBox(height: AppSpacing.xs),
-                  Text(
-                    banner.subtitle,
-                    style: AppTextStyles.bodyMedium.copyWith(
-                      color: AppColors.textSecondary,
-                    ),
-                  ),
-                ],
                 const SizedBox(height: AppSpacing.xl),
                 ..._paragraphs(banner.body),
               ],

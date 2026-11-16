@@ -9,6 +9,7 @@ import '../../../core/utils/level_system.dart';
 import '../../../core/utils/network_utils.dart';
 import '../../../core/utils/profile_navigation.dart';
 import '../../../core/utils/post_date_format.dart';
+import '../../../shared/widgets/motion.dart';
 import '../../../shared/providers/providers.dart';
 import '../../../shared/providers/user_providers.dart';
 import '../providers/community_provider.dart';
@@ -572,8 +573,9 @@ class _PostDetailScreenState extends ConsumerState<PostDetailScreen> {
                                   child: Row(
                                     mainAxisSize: MainAxisSize.min,
                                     children: [
-                                      Icon(
-                                        isLiked
+                                      PopIcon(
+                                        active: isLiked,
+                                        icon: isLiked
                                             ? Icons.favorite
                                             : Icons.favorite_border,
                                         size: 18,

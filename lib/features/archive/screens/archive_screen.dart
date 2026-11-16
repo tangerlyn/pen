@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../../../core/theme/app_theme.dart';
 import '../../../data/models/pen_model.dart';
+import '../../../shared/widgets/motion.dart';
 import '../../../shared/widgets/archive/add_product_bottom_sheet.dart';
 import '../providers/archive_provider.dart';
 import '../controllers/archive_filter_draft_controller.dart';
@@ -51,15 +52,15 @@ class _ArchiveScreenState extends ConsumerState<ArchiveScreen>
     if (ns.innerController.hasClients) {
       ns.innerController.animateTo(
         0,
-        duration: const Duration(milliseconds: 300),
-        curve: Curves.easeOut,
+        duration: const Duration(milliseconds: 450),
+        curve: Curves.easeOutCubic,
       );
     }
     if (ns.outerController.hasClients) {
       ns.outerController.animateTo(
         0,
-        duration: const Duration(milliseconds: 300),
-        curve: Curves.easeOut,
+        duration: const Duration(milliseconds: 450),
+        curve: Curves.easeOutCubic,
       );
     }
   }
@@ -75,6 +76,8 @@ class _ArchiveScreenState extends ConsumerState<ArchiveScreen>
       }
     });
 
+    // 떠 있는 하단 바 높이 — 목록 끝과 플로팅 버튼을 그만큼 띄운다.
+    final navInset = MediaQuery.paddingOf(context).bottom;
     return Scaffold(
       body: Stack(
         children: [
@@ -151,10 +154,9 @@ class _ArchiveScreenState extends ConsumerState<ArchiveScreen>
           // 맨 위로 버튼
           Positioned(
             right: 16,
-            bottom: 16,
-            child: AnimatedOpacity(
-              opacity: _showScrollTop ? 1.0 : 0.0,
-              duration: const Duration(milliseconds: 200),
+            bottom: 16 + navInset,
+            child: PopReveal(
+              visible: _showScrollTop,
               child: IgnorePointer(
                 ignoring: !_showScrollTop,
                 child: FloatingActionButton.small(

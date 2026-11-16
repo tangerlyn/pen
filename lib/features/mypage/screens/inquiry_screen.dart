@@ -73,7 +73,10 @@ class InquiryListScreen extends ConsumerWidget {
             );
           }
           return ListView.separated(
-            padding: const EdgeInsets.symmetric(vertical: 8),
+            padding: EdgeInsets.only(
+              top: 8,
+              bottom: 8 + MediaQuery.paddingOf(context).bottom,
+            ),
             itemCount: list.length,
             separatorBuilder: (_, __) =>
                 const Divider(height: 1, indent: 16, endIndent: 16),
@@ -204,7 +207,9 @@ class _InquiryDetailBody extends StatelessWidget {
     ).format(inquiry.createdAt.toLocal());
 
     return ListView(
-      padding: const EdgeInsets.all(16),
+      padding: EdgeInsets.fromLTRB(
+        16, 16, 16, 16 + MediaQuery.paddingOf(context).bottom,
+      ),
       children: [
         // 제목 + 상태
         Row(
@@ -396,7 +401,9 @@ class _InquiryWriteScreenState extends ConsumerState<InquiryWriteScreen> {
         ],
       ),
       body: SingleChildScrollView(
-        padding: const EdgeInsets.all(16),
+        padding: EdgeInsets.fromLTRB(
+          16, 16, 16, 16 + MediaQuery.paddingOf(context).bottom,
+        ),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [

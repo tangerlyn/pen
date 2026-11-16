@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+import 'package:flutter/cupertino.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../../features/auth/screens/login_screen.dart';
@@ -252,49 +252,20 @@ final routerProvider = Provider<GoRouter>((ref) {
 // ── 화면 전환 헬퍼 ────────────────────────────────────────────────────
 
 // 오른쪽에서 슬라이드 + 페이드 (일반 내비게이션)
-CustomTransitionPage<void> _slidePage(GoRouterState state, Widget child) {
-  return CustomTransitionPage<void>(
-    key: state.pageKey,
-    child: child,
-    transitionDuration: const Duration(milliseconds: 320),
-    reverseTransitionDuration: const Duration(milliseconds: 260),
-    transitionsBuilder: (context, animation, secondaryAnimation, child) {
-      return SlideTransition(
-        position: Tween<Offset>(
-          begin: const Offset(0.06, 0),
-          end: Offset.zero,
-        ).animate(CurvedAnimation(parent: animation, curve: Curves.easeOutCubic)),
-        child: FadeTransition(
-          opacity: CurvedAnimation(
-            parent: animation,
-            curve: const Interval(0.0, 0.65, curve: Curves.easeOut),
-          ),
-          child: child,
-        ),
-      );
-    },
-  );
+// 옆으로 밀려 들어오는 기본 전환. iOS 기본 전환(앞 화면이 살짝 따라 밀리는
+// 시차 효과)을 그대로 쓰고, 화면 왼쪽 끝을 밀어서 뒤로 가기도 된다.
+// (예전 CustomTransitionPage는 밀어서 뒤로 가기가 안 됐다)
+Page<void> _slidePage(GoRouterState state, Widget child) {
+  return CupertinoPage<void>(key: state.pageKey, child: child);
 }
 
 // 아래에서 슬라이드 + 페이드 (글쓰기/작성 화면)
-CustomTransitionPage<void> _slideUpPage(GoRouterState state, Widget child) {
-  return CustomTransitionPage<void>(
+// 글쓰기 화면: iOS 모달처럼 아래에서 끝까지 올라온다.
+Page<void> _slideUpPage(GoRouterState state, Widget child) {
+  return CupertinoPage<void>(
     key: state.pageKey,
+    fullscreenDialog: true,
     child: child,
-    transitionDuration: const Duration(milliseconds: 350),
-    reverseTransitionDuration: const Duration(milliseconds: 280),
-    transitionsBuilder: (context, animation, secondaryAnimation, child) {
-      return SlideTransition(
-        position: Tween<Offset>(
-          begin: const Offset(0, 0.07),
-          end: Offset.zero,
-        ).animate(CurvedAnimation(parent: animation, curve: Curves.easeOutCubic)),
-        child: FadeTransition(
-          opacity: CurvedAnimation(parent: animation, curve: Curves.easeOut),
-          child: child,
-        ),
-      );
-    },
   );
 }
 
